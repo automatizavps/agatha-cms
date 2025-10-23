@@ -90,19 +90,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting }) => {
               <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingProfiles || isSubmitting}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um perfil" />
+                    <SelectValue placeholder={isLoadingProfiles ? "Carregando perfis..." : "Selecione um perfil"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {isLoadingProfiles ? (
-                    <SelectItem value="" disabled>Carregando perfis...</SelectItem>
-                  ) : (
-                    profiles?.map((profile) => (
-                      <SelectItem key={profile.id} value={String(profile.id)}>
-                        {profile.nome}
-                      </SelectItem>
-                    ))
-                  )}
+                  {/* Garantindo que apenas itens com valor válido sejam renderizados */}
+                  {profiles?.map((profile) => (
+                    <SelectItem key={profile.id} value={String(profile.id)}>
+                      {profile.nome}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
