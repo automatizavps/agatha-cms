@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
 import AppointmentForm from "./AppointmentForm";
@@ -39,6 +39,9 @@ const AddAppointmentSheet = () => {
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('add_new_appointment')}</SheetTitle>
+          <SheetDescription className="sr-only">
+            Formulário para criar um novo agendamento.
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <AppointmentForm 

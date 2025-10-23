@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import AppointmentForm from "./AppointmentForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateAppointment, Appointment, useAppointmentItems } from "@/integrations/supabase/appointments";
@@ -68,6 +68,9 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
         <SheetContent className="sm:max-w-md flex flex-col">
           <SheetHeader>
             <SheetTitle>Carregando Agendamento...</SheetTitle>
+            <SheetDescription className="sr-only">
+              Carregando dados do agendamento para edição.
+            </SheetDescription>
           </SheetHeader>
           <div className="py-4 flex-1 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -82,6 +85,9 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Agendamento</SheetTitle>
+          <SheetDescription className="sr-only">
+            Formulário para editar os detalhes do agendamento.
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <AppointmentForm 
