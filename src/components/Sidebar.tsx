@@ -27,12 +27,12 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
       end={to !== "/"} 
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          "flex items-center rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           isActive
             ? "bg-sidebar-primary text-sidebar-primary-foreground"
             : "text-sidebar-foreground",
-          // Estilos para estado colapsado
-          isCollapsed ? "justify-center w-full px-0" : "px-3",
+          // Estilos para estado colapsado: centraliza, remove padding e gap
+          isCollapsed ? "justify-center w-full px-0 gap-0" : "px-3 gap-3",
           // Estilos para sub-item
           isSubItem && !isCollapsed && "pl-8 text-sm py-1.5",
         )
@@ -146,7 +146,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                   isCollapsed ? "justify-center px-0" : "px-3"
                 )}
               >
-                <div className="flex items-center gap-3">
+                <div className={cn("flex items-center", isCollapsed ? "justify-center w-full gap-0" : "gap-3")}>
                   <Package className="h-5 w-5" />
                   {!isCollapsed && t('nav_products_services')}
                 </div>
