@@ -17,7 +17,8 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const formSchema = z.object({
+// Definimos o esquema base
+const baseFormSchema = z.object({
   nome: z.string().min(2, {
     message: "O nome deve ter pelo menos 2 caracteres.",
   }),
@@ -25,13 +26,13 @@ const formSchema = z.object({
     message: "Insira um email válido.",
   }).or(z.literal("")).nullable(), // Permite string vazia ou null
   telefone: z.string().optional().nullable(),
-  endereco_completo: z.string().optional().nullable(), // Novo campo
+  endereco_completo: z.string().optional().nullable(),
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
-  }).optional(), // Opcional, pois será preenchido automaticamente para não-Super Admins
+  }).optional(),
 });
 
-type ClientFormValues = z.infer<typeof formSchema>;
+type ClientFormValues = z.infer<typeof baseFormSchema>;
 
 interface ClientFormProps {
   onSubmit: (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; empresa_id?: string }) => void;
@@ -47,13 +48,22 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
   const isSuperAdmin = profile?.perfil_id === 1;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
+  // Ajusta o schema dinamicamente: se for Super Admin, empresa_id é obrigatório
+  const formSchema = isSuperAdmin
+    ? baseFormSchema.extend({
+        empresa_id: z.string().uuid({
+          message: "Selecione uma empresa válida.",
+        }).min(1, { message: "A empresa é obrigatória para o Super Admin." }),
+      })
+    : baseFormSchema;
+
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome: defaultValues?.nome || "",
       email: defaultValues?.email || "",
       telefone: defaultValues?.telefone || "",
-      endereco_completo: defaultValues?.endereco_completo || "", // Novo default
+      endereco_completo: defaultValues?.endereco_completo || "",
       empresa_id: defaultValues?.empresa_id || "",
     },
   });
@@ -62,7 +72,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     // Normaliza campos vazios para null antes de enviar ao Supabase
     const email = values.email ? values.email : null;
     const telefone = values.telefone ? values.telefone : null;
-    const endereco_completo = values.endereco_completo ? values.endereco_completo : null; // Normalização
+    const endereco_completo = values.endereco_completo ? values.endereco_completo : null;
     
     // Se for Super Admin, envia o empresa_id selecionado. Caso contrário, não envia (será obtido via RPC).
     const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
