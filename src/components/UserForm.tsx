@@ -39,7 +39,7 @@ const baseFormSchema = z.object({
   endereco_completo: z.string().optional().nullable(),
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
-  }).optional().nullable(),
+  }).or(z.literal("")).optional().nullable(),
 });
 
 type UserFormValues = z.infer<typeof baseFormSchema>;
@@ -102,7 +102,14 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     // Normaliza campos vazios para null antes de enviar ao Supabase
     const telefone = values.telefone ? values.telefone : null;
     const endereco_completo = values.endereco_completo ? values.endereco_completo : null;
-    const empresa_id = isSuperAdmin ? (values.empresa_id || null) : undefined;
+    
+    let empresa_id: string | null | undefined = undefined;
+    
+    if (isSuperAdmin) {
+      // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
+      empresa_id = values.empresa_id || null;
+    }
+    // Se não for Super Admin, empresa_id permanece undefined e a Edge Function usa o ID do Admin logado.
 
     onSubmit({
       full_name: values.full_name,

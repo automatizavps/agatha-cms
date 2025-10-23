@@ -81,7 +81,8 @@ serve(async (req) => {
   // Determinar a empresa alvo
   let final_empresa_id = null;
   if (isSuperAdmin) {
-    if (!target_empresa_id) {
+    // Para Super Admin, target_empresa_id deve ser fornecido e não pode ser falsy (incluindo null ou string vazia)
+    if (!target_empresa_id) { 
       return new Response("Missing required field: empresa_id (for Super Admin)", {
         status: 400,
         headers: corsHeaders,

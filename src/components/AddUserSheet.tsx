@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import UserForm from "./UserForm";
@@ -53,6 +53,9 @@ const AddUserSheet = () => {
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('add_new_user')}</SheetTitle>
+          <SheetDescription className="sr-only">
+            Formulário para convidar um novo usuário para a plataforma.
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <UserForm 
