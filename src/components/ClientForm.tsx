@@ -44,7 +44,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   const isSuperAdmin = profile?.perfil_id === 1;
-  
+  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,6 +71,14 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       empresa_id: empresa_id,
     });
   };
+  
+  if (isCheckingPermissions) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
