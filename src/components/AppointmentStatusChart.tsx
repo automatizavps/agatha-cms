@@ -4,12 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-interface AppointmentStatusChartProps {
-  companyId: string | undefined;
-}
-
-const AppointmentStatusChart: React.FC<AppointmentStatusChartProps> = ({ companyId }) => {
-  const { chartData, isLoading, isError } = useAppointmentChartData(companyId);
+const AppointmentStatusChart: React.FC = () => {
+  // O hook useAppointmentChartData agora obtém o companyId do contexto
+  const { chartData, isLoading, isError } = useAppointmentChartData();
   const { t } = useTranslation();
 
   if (isLoading) {
@@ -31,7 +28,7 @@ const AppointmentStatusChart: React.FC<AppointmentStatusChartProps> = ({ company
         <CardHeader>
           <CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle>
         </CardHeader>
-        <CardContent className="text-center p-4 text-muted-foreground h-full flex items-center justify-center">
+        <CardContent className="p-4 text-muted-foreground h-full flex items-center justify-center">
           {isError ? t("chart_error") : t("chart_no_data")}
         </CardContent>
       </Card>
@@ -71,7 +68,7 @@ const AppointmentStatusChart: React.FC<AppointmentStatusChartProps> = ({ company
                 <Bar key={`bar-${index}`} dataKey="count" fill={entry.fill} />
               ))}
             </Bar>
-          </BarChart>
+          </LineChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

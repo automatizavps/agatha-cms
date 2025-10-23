@@ -19,9 +19,9 @@ export interface TopSellingItem {
 /**
  * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
  * nos últimos 24h e 7 dias.
- * @param companyId O ID da empresa a ser filtrada.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
-const fetchRevenueMetrics = async (companyId: string): Promise<RevenueMetrics> => {
+const fetchRevenueMetrics = async (companyId: string | undefined): Promise<RevenueMetrics> => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
@@ -30,12 +30,17 @@ const fetchRevenueMetrics = async (companyId: string): Promise<RevenueMetrics> =
   sevenDaysAgo.setDate(today.getDate() - 7);
 
   // 1. Faturamento Diário (últimas 24h)
-  const { data: dailyData, error: dailyError } = await supabase
+  let dailyQuery = supabase
     .from("pedidos")
     .select("valor_total")
-    .eq("empresa_id", companyId)
     .eq("status", "entregue")
     .gte("created_at", yesterday.toISOString());
+    
+  if (companyId) {
+    dailyQuery = dailyQuery.eq("empresa_id", companyId);
+  }
+
+  const { data: dailyData, error: dailyError } = await dailyQuery;
 
   if (dailyError) {
     console.error("Error fetching daily revenue:", dailyError);
@@ -45,12 +50,17 @@ const fetchRevenueMetrics = async (companyId: string): Promise<RevenueMetrics> =
   const daily_revenue = dailyData.reduce((sum, order) => sum + order.valor_total, 0);
 
   // 2. Faturamento Semanal (últimos 7 dias)
-  const { data: weeklyData, error: weeklyError } = await supabase
+  let weeklyQuery = supabase
     .from("pedidos")
     .select("valor_total")
-    .eq("empresa_id", companyId)
     .eq("status", "entregue")
     .gte("created_at", sevenDaysAgo.toISOString());
+    
+  if (companyId) {
+    weeklyQuery = weeklyQuery.eq("empresa_id", companyId);
+  }
+
+  const { data: weeklyData, error: weeklyError } = await weeklyQuery;
 
   if (weeklyError) {
     console.error("Error fetching weekly revenue:", weeklyError);
@@ -64,14 +74,19 @@ const fetchRevenueMetrics = async (companyId: string): Promise<RevenueMetrics> =
 
 /**
  * Busca a contagem total de produtos (tipo='produto') cadastrados.
- * @param companyId O ID da empresa a ser filtrada.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
-const fetchProductCount = async (companyId: string): Promise<number> => {
-  const { count, error } = await supabase
+const fetchProductCount = async (companyId: string | undefined): Promise<number> => {
+  let query = supabase
     .from("produtos")
     .select("id", { count: 'exact', head: true })
-    .eq("empresa_id", companyId)
     .eq("tipo", "produto");
+    
+  if (companyId) {
+    query = query.eq("empresa_id", companyId);
+  }
+
+  const { count, error } = await query;
 
   if (error) {
     console.error("Error fetching product count:", error);
@@ -83,7 +98,11 @@ const fetchProductCount = async (companyId: string): Promise<number> => {
 
 /**
  * Busca os 10 itens mais vendidos (produtos e serviços) para a empresa.
- * @param companyId O ID da empresa a ser filtrada.
+ * NOTA: A função RPC 'get_top_selling_items' exige um company_id_input. 
+ * Se companyId for undefined, não podemos chamar a RPC.
+ * Para 'Todas as Empresas', esta métrica será desabilitada, pois a lógica de agregação
+ * de vendas de pedidos e agendamentos é complexa demais para ser feita no cliente.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
 const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]> => {
   const { data, error } = await supabase.rpc('get_top_selling_items', { company_id_input: companyId });
@@ -106,16 +125,17 @@ const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]
 export const useRevenueMetrics = (companyId: string | undefined) => {
   return useQuery<RevenueMetrics, Error>({
     queryKey: ["revenueMetrics", companyId],
-    queryFn: () => fetchRevenueMetrics(companyId!),
-    enabled: !!companyId,
+    queryFn: () => fetchRevenueMetrics(companyId),
+    // Sempre habilitado se não estiver carregando o filtro
+    enabled: true, 
   });
 };
 
 export const useProductCount = (companyId: string | undefined) => {
   return useQuery<number, Error>({
     queryKey: ["productCount", companyId],
-    queryFn: () => fetchProductCount(companyId!),
-    enabled: !!companyId,
+    queryFn: () => fetchProductCount(companyId),
+    enabled: true,
   });
 };
 
@@ -123,6 +143,7 @@ export const useTopSellingItems = (companyId: string | undefined) => {
   return useQuery<TopSellingItem[], Error>({
     queryKey: ["topSellingItems", companyId],
     queryFn: () => fetchTopSellingItems(companyId!),
+    // Habilitado APENAS se houver um companyId (a RPC exige)
     enabled: !!companyId,
   });
 };

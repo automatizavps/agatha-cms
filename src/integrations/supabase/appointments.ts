@@ -55,6 +55,7 @@ const fetchAppointments = async (companyId?: string): Promise<Appointment[]> => 
       empresas (nome)
     `);
     
+  // Se companyId for fornecido, filtramos. Se for undefined (Todas as Empresas), não filtramos.
   if (companyId) {
     query = query.eq('empresa_id', companyId);
   }

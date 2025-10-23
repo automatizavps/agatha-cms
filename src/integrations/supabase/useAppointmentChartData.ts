@@ -1,4 +1,5 @@
 import { useAppointments, Appointment } from "./appointments";
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando o hook de filtro
 
 interface ChartData {
   name: string;
@@ -14,8 +15,10 @@ const statusColors: Record<Appointment['status'], string> = {
   concluido: '#60a5fa', // blue-400
 };
 
-export const useAppointmentChartData = (companyId?: string) => {
-  const { data: appointments, isLoading, isError, error } = useAppointments(companyId);
+export const useAppointmentChartData = () => {
+  const { filteredCompanyId } = useDashboardFilter();
+  // Passamos filteredCompanyId para useAppointments
+  const { data: appointments, isLoading, isError, error } = useAppointments(filteredCompanyId);
 
   const metrics: ChartData[] = [];
 
