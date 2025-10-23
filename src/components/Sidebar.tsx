@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Home, Settings, BarChart3, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 
 interface NavItemProps {
   to: string;
@@ -26,6 +27,11 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label }) => (
 );
 
 const Sidebar: React.FC = () => {
+  const { data: profile, isLoading } = useCurrentUserProfile();
+  
+  // Perfis permitidos para Gerenciamento de Usuários: 1 (Super Admin) e 2 (Admin)
+  const canManageUsers = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+
   return (
     <div className="flex h-full flex-col border-r bg-sidebar p-4 shadow-lg">
       <div className="flex items-center justify-center p-4 border-b mb-4">
@@ -38,11 +44,15 @@ const Sidebar: React.FC = () => {
           icon={<BarChart3 className="h-5 w-5" />}
           label="Analytics"
         />
-        <NavItem
-          to="/users"
-          icon={<Users className="h-5 w-5" />}
-          label="Users"
-        />
+        
+        {canManageUsers && (
+          <NavItem
+            to="/users"
+            icon={<Users className="h-5 w-5" />}
+            label="Users"
+          />
+        )}
+        
         <NavItem
           to="/settings"
           icon={<Settings className="h-5 w-5" />}
