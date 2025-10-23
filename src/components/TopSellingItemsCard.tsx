@@ -23,7 +23,7 @@ const TopSellingItemsCard: React.FC<TopSellingItemsCardProps> = ({ companyId }) 
 
   if (isLoading) {
     return (
-      <Card className="lg:col-span-2">
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <ListOrdered className="h-5 w-5" /> {t('top_selling_items_title')}
@@ -38,7 +38,7 @@ const TopSellingItemsCard: React.FC<TopSellingItemsCardProps> = ({ companyId }) 
 
   if (isError || !items || items.length === 0) {
     return (
-      <Card className="lg:col-span-2">
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <ListOrdered className="h-5 w-5" /> {t('top_selling_items_title')}
@@ -52,7 +52,7 @@ const TopSellingItemsCard: React.FC<TopSellingItemsCardProps> = ({ companyId }) 
   }
 
   return (
-    <Card className="lg:col-span-2">
+    <Card>
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
           <ListOrdered className="h-5 w-5" /> {t('top_selling_items_title')}
@@ -69,7 +69,7 @@ const TopSellingItemsCard: React.FC<TopSellingItemsCardProps> = ({ companyId }) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item, index) => (
+              {items.filter(item => item.tipo_produto === 'produto').map((item, index) => (
                 <TableRow key={item.produto_id}>
                   <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                   <TableCell>

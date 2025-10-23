@@ -181,7 +181,7 @@ const Index = () => {
         <LatestProductsCarousel />
         
         {/* Seção 4: Top 10 Produtos e Serviços Mais Vendidos */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
           <TopSellingItemsCard companyId={filteredCompanyId} />
           <TopSellingServicesCard companyId={filteredCompanyId} />
         </div>
