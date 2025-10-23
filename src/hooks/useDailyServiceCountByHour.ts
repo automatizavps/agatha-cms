@@ -24,12 +24,20 @@ const fetchDailyServiceCountByHour = async (companyId: string): Promise<DailySer
   }));
 };
 
-export const useDailyServiceCountByHour = () => {
-  const { companyId, isLoading: isLoadingCompany } = useUserCompany();
+export const useDailyServiceCountByHour = (companyIdOverride?: string | 'all') => {
+  const { companyId: userCompanyId, isLoading: isLoadingCompany, isSuperAdmin } = useUserCompany();
+  
+  // Determina o ID da empresa a ser usado: override (se Super Admin), ou o ID do usuário.
+  const finalCompanyId = isSuperAdmin && companyIdOverride && companyIdOverride !== 'all'
+    ? companyIdOverride
+    : userCompanyId;
+    
+  // Use a data atual como parte da chave para garantir que os dados sejam atualizados diariamente
+  const currentDate = new Date().toISOString().slice(0, 10); 
 
   return useQuery<DailyServiceCount[], Error>({
-    queryKey: ['dailyServiceCountByHour', companyId],
-    queryFn: () => fetchDailyServiceCountByHour(companyId!),
-    enabled: !!companyId && !isLoadingCompany,
+    queryKey: ['dailyServiceCountByHour', finalCompanyId, currentDate],
+    queryFn: () => fetchDailyServiceCountByHour(finalCompanyId!),
+    enabled: !!finalCompanyId && !isLoadingCompany,
   });
 };
