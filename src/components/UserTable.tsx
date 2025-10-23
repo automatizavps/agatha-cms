@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { UserProfile, deleteUser } from "@/integrations/supabase/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin } from "lucide-react";
+import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,6 +103,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
             <TableRow>
               <TableHead className="w-[50px]">Avatar</TableHead>
               <TableHead>Nome</TableHead>
+              <TableHead className="hidden xl:table-cell">Empresa</TableHead> {/* Nova Coluna */}
               <TableHead className="hidden lg:table-cell">Telefone</TableHead>
               <TableHead className="hidden xl:table-cell">Endereço</TableHead>
               <TableHead>Perfil</TableHead>
@@ -121,6 +122,12 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                   </Avatar>
                 </TableCell>
                 <TableCell className="font-medium">{user.nome_completo}</TableCell>
+                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Building className="h-3 w-3" />
+                    {user.empresa?.nome || 'N/A'}
+                  </div>
+                </TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Phone className="h-3 w-3" />

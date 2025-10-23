@@ -12,12 +12,15 @@ export interface UserProfile {
   perfis: {
     nome: string;
   } | null;
+  empresa: { // Novo campo para o nome da empresa
+    nome: string;
+  } | null;
 }
 
 const fetchUsers = async (): Promise<UserProfile[]> => {
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, perfil_id, empresa_id, avatar_url, telefone, endereco_completo, perfis (nome)")
+    .select("id, nome_completo, perfil_id, empresa_id, avatar_url, telefone, endereco_completo, perfis (nome), empresas (nome)") // Incluindo 'empresas (nome)'
     .order("nome_completo", { ascending: true });
 
   if (error) {
