@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Light Theme Defaults (Mantendo o padrão claro, mas ajustando o primário) */
+    /* Light Theme Defaults */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -22,7 +22,7 @@
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%; /* Revertido para cinza padrão */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Cinza padrão */
 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
@@ -39,8 +39,8 @@
     /* Sidebar Light */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 250 80% 50%; /* Roxo */
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary: 250 80% 50%; /* Roxo para item ativo e título */
+    --sidebar-primary-foreground: 0 0% 98%; /* Branco para texto do item ativo */
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
@@ -81,8 +81,8 @@
     /* Sidebar Dark */
     --sidebar-background: 240 5.9% 10%; /* Fundo Escuro */
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 250 80% 70%; /* Roxo */
-    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-primary: 250 80% 70%; /* Roxo para item ativo e título */
+    --sidebar-primary-foreground: 240 5.9% 10%; /* Fundo Escuro para texto do item ativo */
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
