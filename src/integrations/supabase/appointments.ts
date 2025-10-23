@@ -30,6 +30,9 @@ export interface Appointment {
   clientes: {
     nome: string;
   } | null;
+  empresas: { // NOVO: Adicionando relacionamento com a empresa
+    nome: string;
+  } | null;
   // Novo relacionamento para itens
   agendamento_itens: AppointmentItem[];
 }
@@ -37,18 +40,20 @@ export interface Appointment {
 // --- Fetch Geral ---
 
 const fetchAppointments = async (): Promise<Appointment[]> => {
-  // Buscamos agendamentos, o nome do responsável e o nome do cliente
+  // Buscamos agendamentos, o nome do responsável, o nome do cliente E o nome da empresa
   const { data, error } = await supabase
     .from("agendamentos")
     .select(`
       id,
+      empresa_id,
       cliente_id,
       data_hora,
       status,
       responsavel_id,
       created_at,
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
-      clientes (nome)
+      clientes (nome),
+      empresas (nome)
     `)
     .order("data_hora", { ascending: true });
 

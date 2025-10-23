@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppointments, Appointment, deleteAppointment, useAppointmentItems } from "@/integrations/supabase/appointments";
-import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock } from "lucide-react";
+import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -22,6 +22,7 @@ import EditAppointmentSheet from "@/components/EditAppointmentSheet";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importado
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -126,9 +127,12 @@ const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointme
 
 const Appointments = () => {
   const { data: appointments, isLoading, isError, error } = useAppointments();
+  const { data: profile } = useCurrentUserProfile();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { t } = useTranslation();
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -189,9 +193,10 @@ const Appointments = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('order_table_header_client')}</TableHead>
+                    {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
                     <TableHead>{t('nav_products')}</TableHead>
                     <TableHead>{t('order_table_header_date')}</TableHead>
-                    <TableHead>{t('user_table_header_profile')}</TableHead>
+                    <TableHead>{t('responsible')}</TableHead>
                     <TableHead>{t('order_table_header_status')}</TableHead>
                     <TableHead className="text-right">{t('actions')}</TableHead>
                   </TableRow>
@@ -200,6 +205,14 @@ const Appointments = () => {
                   {appointments.map((appointment) => (
                     <TableRow key={appointment.id}>
                       <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
+                      {isSuperAdmin && (
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Building className="h-3 w-3" />
+                            {appointment.empresas?.nome || 'N/A'}
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell>
                         <AppointmentItemDisplay appointmentId={appointment.id} />
                       </TableCell>
