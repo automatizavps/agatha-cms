@@ -67,7 +67,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   const isSuperAdmin = currentProfile?.perfil_id === 1;
-  const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
+  const isCheckingPermissions = isLoadingCurrentProfile || isLoadingCompanies;
   
   const [photos, setPhotos] = useState<string[] | null>(defaultValues?.fotos || null);
 
@@ -90,12 +90,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
       tempo_servico: defaultValues?.tempo_servico ? String(defaultValues.tempo_servico) : "",
       marca: defaultValues?.marca || "",
       categoria: defaultValues?.categoria || "",
-      // Garante que o valor inicial seja o ID da empresa do produto/default
       empresa_id: defaultValues?.empresa_id || "", 
     },
   });
   
   const selectedType = form.watch("tipo");
+  
+  // Determina se o campo empresa deve ser exibido
+  const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
+  
+  // Determina se o campo empresa deve ser editável
+  const isCompanyFieldEditable = isSuperAdmin && !isSubmitting;
+  
+  // Encontra o nome da empresa para exibição desabilitada (se não for Super Admin)
+  const companyName = companies?.find(c => c.id === defaultValues?.empresa_id)?.nome;
+
 
   const handleSubmit = (values: ProductFormValues) => {
     const preco = parseFloat(values.preco);
@@ -110,7 +119,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
     }
     
     // Se for Super Admin, passamos o ID da empresa (seja na criação ou edição).
-    // Se não for Super Admin, passamos undefined, e a função createProduct/updateProduct usará o RPC/RLS.
+    // Se não for Super Admin, passamos undefined, e a função updateProduct/createProduct usará o RPC/RLS.
+    // Na edição, se não for Super Admin, o empresa_id não é enviado, pois a função updateProduct não precisa dele (RLS garante que só pode atualizar na própria empresa).
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     // Normaliza campos vazios para null
@@ -142,28 +152,38 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* O campo Empresa só é visível para Super Admin (criação e edição) */}
-        {isSuperAdmin && (
+        {/* Campo Empresa */}
+        {shouldShowCompanyField && (
           <FormField
             control={form.control}
             name="empresa_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Empresa</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                {isCompanyFieldEditable ? (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies?.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
-                    </SelectTrigger>
+                    <Input 
+                      value={companyName || "Empresa não encontrada"} 
+                      disabled 
+                      className="bg-muted/50"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
