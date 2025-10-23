@@ -4,6 +4,8 @@ import UserForm from "./UserForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUser, UserProfile } from "@/integrations/supabase/users";
 import { showSuccess, showError } from "@/utils/toast";
+import { useUserEmail } from "@/integrations/supabase/useUserEmail"; // Importando o novo hook
+import { Loader2 } from "lucide-react";
 
 interface EditUserSheetProps {
   user: UserProfile;
@@ -13,6 +15,9 @@ interface EditUserSheetProps {
 
 const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
+  
+  // Busca o email real do usuário que está sendo editado
+  const { data: userEmail, isLoading: isLoadingEmail } = useUserEmail(user.id);
 
   const mutation = useMutation({
     mutationFn: updateUser,
@@ -48,12 +53,27 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
   // Valores iniciais para o formulário de edição
   const initialValues = {
     full_name: user.nome_completo,
-    email: user.email, // Usando o email real
+    email: userEmail || 'Carregando...', // Usa o email carregado
     perfil_id: String(user.perfil_id),
     telefone: user.telefone,
     endereco_completo: user.endereco_completo,
     empresa_id: user.empresa_id,
   };
+  
+  if (isLoadingEmail) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
+        <SheetContent className="sm:max-w-md flex flex-col">
+          <SheetHeader>
+            <SheetTitle>Carregando Dados do Usuário...</SheetTitle>
+          </SheetHeader>
+          <div className="py-4 flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
