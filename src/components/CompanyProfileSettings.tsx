@@ -5,11 +5,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import CompanyForm from "./CompanyForm";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useTranslation } from "react-i18next";
 
 const CompanyProfileSettings = () => {
   const { data: companies, isLoading: isLoadingCompanies, isError, error } = useCompanies();
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const isLoading = isLoadingCompanies || isLoadingProfile;
   const company = companies?.[0]; // Para Admin, será a única empresa.
@@ -24,7 +26,7 @@ const CompanyProfileSettings = () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
     },
     onError: (error) => {
-      showError("Falha ao atualizar a empresa: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
@@ -43,7 +45,7 @@ const CompanyProfileSettings = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Detalhes da Empresa</CardTitle>
+          <CardTitle>{t('settings_company_title')}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center items-center h-40">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -60,10 +62,10 @@ const CompanyProfileSettings = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Detalhes da Empresa</CardTitle>
+          <CardTitle>{t('settings_company_title')}</CardTitle>
         </CardHeader>
         <CardContent className="text-destructive">
-          Erro ao carregar dados da empresa.
+          {t('error_loading_data')}
         </CardContent>
       </Card>
     );
@@ -73,10 +75,10 @@ const CompanyProfileSettings = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Detalhes da Empresa</CardTitle>
+          <CardTitle>{t('settings_company_title')}</CardTitle>
         </CardHeader>
         <CardContent className="text-muted-foreground">
-          Nenhuma empresa associada encontrada.
+          {t('no_data_found')}
         </CardContent>
       </Card>
     );
@@ -95,7 +97,7 @@ const CompanyProfileSettings = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building className="h-5 w-5" /> Detalhes da Empresa ({company.nome})
+          <Building className="h-5 w-5" /> {t('settings_company_title')} ({company.nome})
         </CardTitle>
       </CardHeader>
       <CardContent>

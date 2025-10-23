@@ -24,6 +24,7 @@ import EditOrderStatusSheet from "./EditOrderStatusSheet";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface OrderTableProps {
   orders: Order[];
@@ -36,6 +37,7 @@ interface OrderActionsProps {
 
 const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteOrder,
@@ -44,12 +46,12 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir pedido: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o pedido #${order.id.slice(0, 8)} do cliente ${order.clientes?.nome}?`)) {
+    if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(order.id);
     }
   };
@@ -58,14 +60,14 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEditStatus(order)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar Status
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')} {t('order_table_header_status')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -73,7 +75,7 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
           disabled={deleteMutation.isPending}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Excluir Pedido
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')} {t('nav_orders')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -104,6 +106,7 @@ const formatCurrency = (value: number) => {
 const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleEditStatus = (order: Order) => {
     setEditingOrder(order);
@@ -123,12 +126,12 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Pedido #</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead className="hidden md:table-cell">Data</TableHead>
-              <TableHead className="text-right">Valor Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>{t('order_table_header_id')}</TableHead>
+              <TableHead>{t('order_table_header_client')}</TableHead>
+              <TableHead className="hidden md:table-cell">{t('order_table_header_date')}</TableHead>
+              <TableHead className="text-right">{t('order_table_header_total')}</TableHead>
+              <TableHead>{t('order_table_header_status')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -138,7 +141,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
                   {order.id.slice(0, 8)}
                 </TableCell>
                 <TableCell className="font-medium">
-                  {order.clientes?.nome || 'Cliente Removido'}
+                  {order.clientes?.nome || t('no_data_found')}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}

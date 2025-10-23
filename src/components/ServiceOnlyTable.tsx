@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditServiceSheet from "./EditServiceSheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useTranslation } from "react-i18next";
 
 interface ServiceOnlyTableProps {
   services: Product[];
@@ -34,6 +35,7 @@ interface ServiceActionsProps {
 
 const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -42,12 +44,12 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
       queryClient.invalidateQueries({ queryKey: ["services_only"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir serviço: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o serviço ${service.nome}?`)) {
+    if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(service.id);
     }
   };
@@ -56,14 +58,14 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEdit(service)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -71,7 +73,7 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
           disabled={deleteMutation.isPending}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -83,6 +85,7 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
   const [editingService, setEditingService] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
+  const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
 
@@ -111,12 +114,12 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Serviço</TableHead>
-              {isSuperAdmin && <TableHead className="hidden md:table-cell">Empresa</TableHead>}
-              <TableHead className="hidden sm:table-cell">Categoria</TableHead>
-              <TableHead className="text-right">Duração</TableHead>
-              <TableHead className="text-right">Preço</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>{t('nav_services')}</TableHead>
+              {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
+              <TableHead className="hidden sm:table-cell">{t('product_table_header_category')}</TableHead>
+              <TableHead className="text-right">{t('service_table_header_duration')}</TableHead>
+              <TableHead className="text-right">{t('product_table_header_price')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

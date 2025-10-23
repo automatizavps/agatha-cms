@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditUserSheet from "./EditUserSheet";
+import { useTranslation } from "react-i18next";
 
 interface UserTableProps {
   users: UserProfile[];
@@ -34,6 +35,7 @@ interface UserActionsProps {
 
 const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
@@ -42,12 +44,12 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir usuário: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o usuário ${user.nome_completo}?`)) {
+    if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(user.id);
     }
   };
@@ -56,14 +58,14 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEdit(user)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -71,7 +73,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
           disabled={deleteMutation.isPending}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -82,6 +84,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
 const UserTable: React.FC<UserTableProps> = ({ users }) => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleEdit = (user: UserProfile) => {
     setEditingUser(user);
@@ -102,12 +105,12 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">Avatar</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead className="hidden xl:table-cell">Empresa</TableHead>
-              <TableHead className="hidden lg:table-cell">Telefone</TableHead>
-              <TableHead className="hidden xl:table-cell">Endereço</TableHead>
-              <TableHead>Perfil</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>{t('user_table_header_name')}</TableHead>
+              <TableHead className="hidden xl:table-cell">{t('user_table_header_company')}</TableHead>
+              <TableHead className="hidden lg:table-cell">{t('user_table_header_phone')}</TableHead>
+              <TableHead className="hidden xl:table-cell">{t('user_table_header_address')}</TableHead>
+              <TableHead>{t('user_table_header_profile')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditClientSheet from "./EditClientSheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useTranslation } from "react-i18next";
 
 interface ClientTableProps {
   clients: Client[];
@@ -34,6 +35,7 @@ interface ClientActionsProps {
 
 const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteClient,
@@ -42,12 +44,12 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit }) => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir cliente: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o cliente ${client.nome}?`)) {
+    if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(client.id);
     }
   };
@@ -56,14 +58,14 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit }) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEdit(client)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -71,7 +73,7 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit }) => {
           disabled={deleteMutation.isPending}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -83,6 +85,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
+  const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
 
@@ -104,12 +107,12 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              {isSuperAdmin && <TableHead className="hidden md:table-cell">Empresa</TableHead>}
-              <TableHead className="hidden sm:table-cell">Email</TableHead>
-              <TableHead className="hidden md:table-cell">Telefone</TableHead>
-              <TableHead className="hidden lg:table-cell">Endereço</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>{t('user_table_header_name')}</TableHead>
+              {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
+              <TableHead className="hidden sm:table-cell">{t('profile_email')}</TableHead>
+              <TableHead className="hidden md:table-cell">{t('user_table_header_phone')}</TableHead>
+              <TableHead className="hidden lg:table-cell">{t('client_table_header_address')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

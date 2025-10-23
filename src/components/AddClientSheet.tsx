@@ -6,10 +6,12 @@ import ClientForm from "./ClientForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/integrations/supabase/clients";
 import { showSuccess, showError } from "@/utils/toast";
+import { useTranslation } from "react-i18next";
 
 const AddClientSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: createClient,
@@ -19,7 +21,7 @@ const AddClientSheet = () => {
       setIsOpen(false);
     },
     onError: (error) => {
-      showError("Falha ao cadastrar cliente: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
@@ -38,12 +40,12 @@ const AddClientSheet = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Novo Cliente
+          <PlusCircle className="mr-2 h-4 w-4" /> {t('add_new_client')}
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>Cadastrar Novo Cliente</SheetTitle>
+          <SheetTitle>{t('add_new_client')}</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <ClientForm 

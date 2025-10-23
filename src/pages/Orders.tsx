@@ -9,13 +9,15 @@ import OrderTable from "@/components/OrderTable";
 import AddOrderSheet from "@/components/AddOrderSheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
 
 const OrdersContent = () => {
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation();
 
   if (isError && error) {
-    showError("Erro ao carregar pedidos: " + error.message);
+    showError(t("error_loading_data") + ": " + error.message);
   }
   
   const filteredOrders = useMemo(() => {
@@ -34,14 +36,14 @@ const OrdersContent = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Gestão de Pedidos</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_orders')}</h1>
         <AddOrderSheet />
       </div>
       
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" /> Lista de Pedidos
+            <ShoppingCart className="h-5 w-5" /> {t('order_list_title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -49,7 +51,7 @@ const OrdersContent = () => {
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por cliente, status ou ID..."
+                placeholder={t('order_search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -78,7 +80,7 @@ const OrdersContent = () => {
           ) : isError ? (
             <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
               <p className="text-destructive">
-                Não foi possível carregar os dados dos pedidos.
+                {t('error_loading_data')}
               </p>
               <Button onClick={() => refetch()} disabled={isRefetching}>
                 {isRefetching ? (
@@ -86,14 +88,14 @@ const OrdersContent = () => {
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}
-                Tentar Novamente
+                {t('try_again')}
               </Button>
             </div>
           ) : filteredOrders.length > 0 ? (
             <OrderTable orders={filteredOrders} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm ? "Nenhum pedido encontrado com o termo de busca." : "Nenhum pedido cadastrado."}
+              {searchTerm ? t('no_data_found') : t('no_orders_found')}
             </div>
           )}
         </CardContent>

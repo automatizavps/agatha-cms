@@ -6,10 +6,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProduct, ProductType } from "@/integrations/supabase/products";
 import { showSuccess, showError } from "@/utils/toast";
 import ServiceOnlyForm from "./ServiceOnlyForm";
+import { useTranslation } from "react-i18next";
 
 const AddServiceSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: createProduct,
@@ -19,7 +21,7 @@ const AddServiceSheet = () => {
       setIsOpen(false);
     },
     onError: (error) => {
-      showError("Falha ao cadastrar serviço: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
@@ -42,12 +44,12 @@ const AddServiceSheet = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Novo Serviço
+          <PlusCircle className="mr-2 h-4 w-4" /> {t('add_new_service')}
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>Cadastrar Novo Serviço</SheetTitle>
+          <SheetTitle>{t('add_new_service')}</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <ServiceOnlyForm 

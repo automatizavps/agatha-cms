@@ -9,25 +9,26 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Home } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Mapeamento de rotas para nomes amigáveis
-const routeNameMap: Record<string, string> = {
-  "/": "Home",
-  "/analytics": "Analytics",
-  "/users": "Gestão de Usuários",
-  "/clients": "Gestão de Clientes",
-  "/products": "Produtos",
-  "/services": "Serviços",
-  "/orders": "Pedidos", // Novo mapeamento
-  "/companies": "Gestão de Empresas",
-  "/settings": "Configurações",
-  "/appointments": "Agendamentos",
-  "/profile": "Meu Perfil",
-};
+import { useTranslation } from "react-i18next";
 
 const BreadcrumbNavigation = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   const pathnames = location.pathname.split("/").filter((x) => x);
+
+  // Mapeamento de rotas para chaves de tradução
+  const routeKeyMap: Record<string, string> = {
+    "/": "nav_home",
+    "/analytics": "nav_analytics",
+    "/users": "nav_users",
+    "/clients": "nav_clients",
+    "/products": "nav_products",
+    "/services": "nav_services",
+    "/orders": "nav_orders",
+    "/companies": "nav_companies",
+    "/settings": "nav_settings",
+    "/profile": "nav_profile",
+  };
 
   // Se estiver na raiz, não exibe breadcrumbs
   if (pathnames.length === 0) {
@@ -41,7 +42,7 @@ const BreadcrumbNavigation = () => {
           <BreadcrumbLink asChild>
             <Link to="/" className="flex items-center gap-1">
               <Home className="h-4 w-4" />
-              Home
+              {t('nav_home')}
             </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
@@ -49,7 +50,10 @@ const BreadcrumbNavigation = () => {
         {pathnames.map((value, index) => {
           const to = `/${pathnames.slice(0, index + 1).join("/")}`;
           const isLast = index === pathnames.length - 1;
-          const name = routeNameMap[to] || value.charAt(0).toUpperCase() + value.slice(1);
+          
+          // Usa a chave de tradução ou o valor da rota como fallback
+          const translationKey = routeKeyMap[to];
+          const name = translationKey ? t(translationKey) : value.charAt(0).toUpperCase() + value.slice(1);
 
           return (
             <React.Fragment key={to}>

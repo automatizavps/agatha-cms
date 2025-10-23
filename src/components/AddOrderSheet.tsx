@@ -6,10 +6,12 @@ import OrderForm from "./OrderForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createOrder } from "@/integrations/supabase/orders";
 import { showSuccess, showError } from "@/utils/toast";
+import { useTranslation } from "react-i18next";
 
 const AddOrderSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: createOrder,
@@ -19,7 +21,7 @@ const AddOrderSheet = () => {
       setIsOpen(false);
     },
     onError: (error) => {
-      showError("Falha ao criar pedido: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
@@ -31,12 +33,12 @@ const AddOrderSheet = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <ShoppingCart className="mr-2 h-4 w-4" /> Novo Pedido
+          <ShoppingCart className="mr-2 h-4 w-4" /> {t('add_new_order')}
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
-          <SheetTitle>Criar Novo Pedido</SheetTitle>
+          <SheetTitle>{t('add_new_order')}</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <OrderForm 

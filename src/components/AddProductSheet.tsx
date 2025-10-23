@@ -6,10 +6,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProduct, ProductType } from "@/integrations/supabase/products";
 import { showSuccess, showError } from "@/utils/toast";
 import ProductOnlyForm from "./ProductOnlyForm";
+import { useTranslation } from "react-i18next";
 
 const AddProductSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: createProduct,
@@ -19,7 +21,7 @@ const AddProductSheet = () => {
       setIsOpen(false);
     },
     onError: (error) => {
-      showError("Falha ao cadastrar produto: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
@@ -42,12 +44,12 @@ const AddProductSheet = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Novo Produto
+          <PlusCircle className="mr-2 h-4 w-4" /> {t('add_new_product')}
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>Cadastrar Novo Produto</SheetTitle>
+          <SheetTitle>{t('add_new_product')}</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <ProductOnlyForm 

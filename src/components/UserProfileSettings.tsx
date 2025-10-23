@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useTranslation } from "react-i18next";
 
 // Esquema de validação para os campos editáveis
 const profileSchema = z.object({
@@ -74,6 +75,7 @@ const UserProfileSettings = () => {
   const { user } = useSession();
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: updateProfile,
@@ -82,7 +84,7 @@ const UserProfileSettings = () => {
       queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
     },
     onError: (error) => {
-      showError("Falha ao atualizar perfil: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
   
@@ -132,7 +134,7 @@ const UserProfileSettings = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Configurações da Conta</CardTitle>
+          <CardTitle>{t('settings_user_title')}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center items-center h-40">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -149,14 +151,14 @@ const UserProfileSettings = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" /> Configurações da Conta
+          <User className="h-5 w-5" /> {t('settings_user_title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         
         {/* Seção de Avatar */}
         <div className="flex flex-col items-center border-b pb-4">
-          <h3 className="text-lg font-semibold mb-2">Foto de Perfil</h3>
+          <h3 className="text-lg font-semibold mb-2">{t('profile_full_name')}</h3>
           <AvatarUpload 
             currentAvatarUrl={profile.avatar_url}
             onUploadComplete={handleAvatarUploadComplete}
@@ -173,9 +175,9 @@ const UserProfileSettings = () => {
               name="nome_completo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome Completo</FormLabel>
+                  <FormLabel>{t('profile_full_name')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Seu nome completo" {...field} disabled={mutation.isPending} />
+                    <Input placeholder={t('profile_full_name')} {...field} disabled={mutation.isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -183,7 +185,7 @@ const UserProfileSettings = () => {
             />
             
             <FormItem>
-              <FormLabel>Email (Não Editável)</FormLabel>
+              <FormLabel>{t('profile_email')} (Não Editável)</FormLabel>
               <Input value={user?.email || "N/A"} disabled className="bg-muted/50" />
             </FormItem>
             
@@ -192,7 +194,7 @@ const UserProfileSettings = () => {
               name="telefone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefone (Opcional)</FormLabel>
+                  <FormLabel>{t('user_table_header_phone')} (Opcional)</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="(XX) XXXXX-XXXX" 
@@ -211,7 +213,7 @@ const UserProfileSettings = () => {
               name="endereco_completo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Endereço Completo (Opcional)</FormLabel>
+                  <FormLabel>{t('client_table_header_address')} (Opcional)</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="Rua, Número, Bairro, Cidade, Estado" 
@@ -229,7 +231,7 @@ const UserProfileSettings = () => {
               {mutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                "Salvar Alterações Pessoais"
+                t('save_changes')
               )}
             </Button>
           </form>

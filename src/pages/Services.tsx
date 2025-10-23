@@ -9,13 +9,15 @@ import AddServiceSheet from "@/components/AddServiceSheet";
 import ServiceOnlyTable from "@/components/ServiceOnlyTable";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 const ServicesContent = () => {
   const { data: services, isLoading, isError, error, refetch, isRefetching } = useServicesOnly();
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation();
 
   if (isError && error) {
-    showError("Erro ao carregar serviços: " + error.message);
+    showError(t("error_loading_data") + ": " + error.message);
   }
   
   const filteredServices = useMemo(() => {
@@ -32,14 +34,14 @@ const ServicesContent = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Gestão de Serviços</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_services')}</h1>
         <AddServiceSheet />
       </div>
       
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" /> Lista de Serviços
+            <Clock className="h-5 w-5" /> {t('service_list_title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -47,7 +49,7 @@ const ServicesContent = () => {
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome ou categoria..."
+                placeholder={t('service_search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -76,7 +78,7 @@ const ServicesContent = () => {
           ) : isError ? (
             <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
               <p className="text-destructive">
-                Não foi possível carregar os dados dos serviços.
+                {t('error_loading_data')}
               </p>
               <Button onClick={() => refetch()} disabled={isRefetching}>
                 {isRefetching ? (
@@ -84,14 +86,14 @@ const ServicesContent = () => {
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}
-                Tentar Novamente
+                {t('try_again')}
               </Button>
             </div>
           ) : filteredServices.length > 0 ? (
             <ServiceOnlyTable services={filteredServices} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm ? "Nenhum serviço encontrado com o termo de busca." : "Nenhum serviço cadastrado."}
+              {searchTerm ? t('no_data_found') : t('no_services_found')}
             </div>
           )}
         </CardContent>

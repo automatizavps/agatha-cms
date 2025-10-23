@@ -6,10 +6,12 @@ import CompanyForm from "./CompanyForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createCompany } from "@/integrations/supabase/companies";
 import { showSuccess, showError } from "@/utils/toast";
+import { useTranslation } from "react-i18next";
 
 const AddCompanySheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: createCompany,
@@ -19,7 +21,7 @@ const AddCompanySheet = () => {
       setIsOpen(false);
     },
     onError: (error) => {
-      showError("Falha ao cadastrar empresa: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
@@ -31,12 +33,12 @@ const AddCompanySheet = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Nova Empresa
+          <PlusCircle className="mr-2 h-4 w-4" /> {t('add_new_company')}
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>Cadastrar Nova Empresa</SheetTitle>
+          <SheetTitle>{t('add_new_company')}</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <CompanyForm 

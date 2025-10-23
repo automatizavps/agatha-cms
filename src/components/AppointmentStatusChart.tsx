@@ -2,9 +2,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useAppointmentChartData } from '@/integrations/supabase/useAppointmentChartData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const AppointmentStatusChart = () => {
   const { chartData, isLoading, isError } = useAppointmentChartData();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -17,7 +19,7 @@ const AppointmentStatusChart = () => {
   if (isError || chartData.length === 0) {
     return (
       <div className="text-center p-4 text-muted-foreground h-96 flex items-center justify-center">
-        {isError ? "Erro ao carregar dados do gráfico." : "Nenhum dado de agendamento para exibir."}
+        {isError ? t("chart_error") : t("chart_no_data")}
       </div>
     );
   }
@@ -25,7 +27,7 @@ const AppointmentStatusChart = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Distribuição de Status de Agendamentos</CardTitle>
+        <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
       </CardHeader>
       <CardContent className="h-96">
         <ResponsiveContainer width="100%" height="100%">
@@ -49,7 +51,7 @@ const AppointmentStatusChart = () => {
               }}
               labelStyle={{ color: 'hsl(var(--foreground))' }}
             />
-            <Bar dataKey="count" name="Contagem" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))">
+            <Bar dataKey="count" name={t('count')} radius={[4, 4, 0, 0]} fill="hsl(var(--primary))">
               {chartData.map((entry, index) => (
                 <Bar key={`bar-${index}`} dataKey="count" fill={entry.fill} />
               ))}

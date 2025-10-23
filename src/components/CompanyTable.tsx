@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditCompanySheet from "./EditCompanySheet";
+import { useTranslation } from "react-i18next";
 
 interface CompanyTableProps {
   companies: Company[];
@@ -33,6 +34,7 @@ interface CompanyActionsProps {
 
 const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteCompany,
@@ -41,12 +43,12 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir empresa: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir a empresa ${company.nome}? Esta ação é irreversível e excluirá todos os dados associados (usuários, clientes, agendamentos, etc.).`)) {
+    if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(company.id);
     }
   };
@@ -55,14 +57,14 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEdit(company)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -70,7 +72,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
           disabled={deleteMutation.isPending}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -81,6 +83,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
 const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleEdit = (company: Company) => {
     setEditingCompany(company);
@@ -100,11 +103,11 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead className="hidden lg:table-cell">Email</TableHead>
-              <TableHead className="hidden md:table-cell">Telefone</TableHead>
+              <TableHead>{t('user_table_header_name')}</TableHead>
+              <TableHead className="hidden lg:table-cell">{t('profile_email')}</TableHead>
+              <TableHead className="hidden md:table-cell">{t('user_table_header_phone')}</TableHead>
               <TableHead className="hidden sm:table-cell">CNPJ</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

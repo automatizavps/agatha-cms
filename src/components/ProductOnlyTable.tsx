@@ -23,6 +23,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditProductSheet from "./EditProductSheet";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useTranslation } from "react-i18next";
 
 interface ProductOnlyTableProps {
   products: Product[];
@@ -35,6 +36,7 @@ interface ProductActionsProps {
 
 const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -43,12 +45,12 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
       queryClient.invalidateQueries({ queryKey: ["products_only"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir produto: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o produto ${product.nome}?`)) {
+    if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(product.id);
     }
   };
@@ -57,14 +59,14 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEdit(product)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -72,7 +74,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
           disabled={deleteMutation.isPending}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -84,6 +86,7 @@ const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
+  const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
 
@@ -112,13 +115,13 @@ const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Produto</TableHead>
-              {isSuperAdmin && <TableHead className="hidden md:table-cell">Empresa</TableHead>}
-              <TableHead className="hidden sm:table-cell">Categoria</TableHead>
-              <TableHead className="hidden md:table-cell">Marca</TableHead>
-              <TableHead className="text-right">Estoque</TableHead>
-              <TableHead className="text-right">Preço</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>{t('nav_products')}</TableHead>
+              {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
+              <TableHead className="hidden sm:table-cell">{t('product_table_header_category')}</TableHead>
+              <TableHead className="hidden md:table-cell">{t('product_table_header_brand')}</TableHead>
+              <TableHead className="text-right">{t('product_table_header_stock')}</TableHead>
+              <TableHead className="text-right">{t('product_table_header_price')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

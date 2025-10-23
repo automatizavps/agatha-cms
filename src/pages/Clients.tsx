@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
 const ClientsContent = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
@@ -20,12 +21,13 @@ const ClientsContent = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
+  const { t } = useTranslation();
 
   const isSuperAdmin = profile?.perfil_id === 1;
   const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   if (isError && error) {
-    showError("Erro ao carregar clientes: " + error.message);
+    showError(t("error_loading_data") + ": " + error.message);
   }
   
   const filteredClients = useMemo(() => {
@@ -54,18 +56,18 @@ const ClientsContent = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Gestão de Clientes</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_clients')}</h1>
         <AddClientSheet />
       </div>
       
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" /> Lista de Clientes
+            <Users className="h-5 w-5" /> {t('client_list_title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3">
+          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
             
             {/* Filtro de Empresa (Apenas para Super Admin) */}
             {isSuperAdmin && (
@@ -77,10 +79,10 @@ const ClientsContent = () => {
                 >
                   <SelectTrigger className="w-full">
                     <Building className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Filtrar por Empresa" />
+                    <SelectValue placeholder={t('filter_all_companies')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as Empresas</SelectItem>
+                    <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
                     {companies?.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.nome}
@@ -95,7 +97,7 @@ const ClientsContent = () => {
             <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, email, telefone ou endereço..."
+                placeholder={t('client_search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -126,7 +128,7 @@ const ClientsContent = () => {
           ) : isError ? (
             <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
               <p className="text-destructive">
-                Não foi possível carregar os dados dos clientes.
+                {t('error_loading_data')}
               </p>
               <Button onClick={() => refetch()} disabled={isRefetching}>
                 {isRefetching ? (
@@ -134,14 +136,14 @@ const ClientsContent = () => {
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}
-                Tentar Novamente
+                {t('try_again')}
               </Button>
             </div>
           ) : filteredClients.length > 0 ? (
             <ClientTable clients={filteredClients} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm || companyFilterId !== 'all' ? "Nenhum cliente encontrado com os filtros aplicados." : "Nenhum cliente cadastrado."}
+              {t('no_clients_found')}
             </div>
           )}
         </CardContent>

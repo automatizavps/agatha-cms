@@ -20,7 +20,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import EditAppointmentSheet from "@/components/EditAppointmentSheet";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Importando Tooltip
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -29,6 +30,7 @@ interface AppointmentActionsProps {
 
 const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, onEdit }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteAppointment,
@@ -37,13 +39,13 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir agendamento: " + error.message);
+      showError(t("error_loading_data") + ": " + error.message);
     },
   });
 
   const handleDelete = () => {
     const clientName = appointment.clientes?.nome || 'este cliente';
-    if (window.confirm(`Tem certeza que deseja excluir o agendamento de ${clientName} em ${format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm")}?`)) {
+    if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(appointment.id);
     }
   };
@@ -52,14 +54,14 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => onEdit(appointment)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
@@ -67,7 +69,7 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
           disabled={deleteMutation.isPending}
           className="text-destructive focus:text-destructive"
         >
-          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -77,6 +79,7 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
 // Componente auxiliar para carregar e exibir o item principal
 const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointmentId }) => {
   const { data: items, isLoading } = useAppointmentItems(appointmentId);
+  const { t } = useTranslation();
   
   if (isLoading) {
     return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
@@ -87,14 +90,14 @@ const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointme
   }
   
   const firstItem = items[0];
-  const itemName = firstItem.produtos?.nome || 'Item Desconhecido';
+  const itemName = firstItem.produtos?.nome || t('no_data_found');
   
   const tooltipContent = (
     <div className="space-y-1 text-sm">
-      <p className="font-semibold mb-1">Itens do Agendamento:</p>
+      <p className="font-semibold mb-1">{t('nav_appointments')} {t('nav_products')}:</p>
       {items.map((item, index) => (
         <div key={index} className="flex justify-between gap-4">
-          <span className="truncate max-w-[150px]">{item.produtos?.nome || 'Item Removido'}</span>
+          <span className="truncate max-w-[150px]">{item.produtos?.nome || t('no_data_found')}</span>
           <span className="text-muted-foreground">x{item.quantidade}</span>
         </div>
       ))}
@@ -108,7 +111,7 @@ const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointme
           <span className="font-medium">{itemName}</span>
           {items.length > 1 && (
             <Badge variant="secondary" className="mt-1 text-xs">
-              + {items.length - 1} {items.length === 2 ? 'item' : 'itens'}
+              + {items.length - 1} {items.length === 2 ? t('nav_products') : t('nav_products')}
             </Badge>
           )}
         </div>
@@ -125,9 +128,10 @@ const Appointments = () => {
   const { data: appointments, isLoading, isError, error } = useAppointments();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { t } = useTranslation();
 
   if (isError && error) {
-    showError("Erro ao carregar agendamentos: " + error.message);
+    showError(t("error_loading_data") + ": " + error.message);
   }
   
   const handleEdit = (appointment: Appointment) => {
@@ -160,14 +164,14 @@ const Appointments = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_appointments')}</h1>
         <AddAppointmentSheet />
       </div>
       
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CalendarCheck className="h-5 w-5" /> Lista de Agendamentos
+            <CalendarCheck className="h-5 w-5" /> {t('nav_appointments')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -177,25 +181,25 @@ const Appointments = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-destructive p-4 border border-destructive rounded-md">
-              Não foi possível carregar os agendamentos.
+              {t('error_loading_data')}
             </div>
           ) : appointments && appointments.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Itens</TableHead>
-                    <TableHead>Data e Hora</TableHead>
-                    <TableHead>Responsável</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead>{t('order_table_header_client')}</TableHead>
+                    <TableHead>{t('nav_products')}</TableHead>
+                    <TableHead>{t('order_table_header_date')}</TableHead>
+                    <TableHead>{t('user_table_header_profile')}</TableHead>
+                    <TableHead>{t('order_table_header_status')}</TableHead>
+                    <TableHead className="text-right">{t('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {appointments.map((appointment) => (
                     <TableRow key={appointment.id}>
-                      <TableCell className="font-medium">{appointment.clientes?.nome || "Cliente Removido"}</TableCell>
+                      <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
                       <TableCell>
                         <AppointmentItemDisplay appointmentId={appointment.id} />
                       </TableCell>
@@ -218,7 +222,7 @@ const Appointments = () => {
             </div>
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              Nenhum agendamento encontrado.
+              {t('no_data_found')}
             </div>
           )}
         </CardContent>

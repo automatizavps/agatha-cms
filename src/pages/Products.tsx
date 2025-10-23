@@ -14,6 +14,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Importando Alert
 import { cn } from "@/lib/utils"; // Importando cn para combinar classes
+import { useTranslation } from "react-i18next";
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -26,12 +27,13 @@ const ProductsContent = () => {
   const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
   const [brandFilter, setBrandFilter] = useState<string | 'all'>('all');
   const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
+  const { t } = useTranslation();
 
   const isSuperAdmin = profile?.perfil_id === 1;
   const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   if (isError && error) {
-    showError("Erro ao carregar produtos: " + error.message);
+    showError(t("error_loading_data") + ": " + error.message);
   }
   
   // Extrai categorias e marcas únicas
@@ -98,7 +100,7 @@ const ProductsContent = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_products')}</h1>
         <AddProductSheet />
       </div>
       
@@ -111,14 +113,14 @@ const ProductsContent = () => {
           )}
         >
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="text-yellow-400">Atenção: Estoque Baixo!</AlertTitle>
+          <AlertTitle className="text-yellow-400">{t('low_stock_alert_title')}</AlertTitle>
           <AlertDescription>
-            Os seguintes produtos estão com estoque abaixo de {LOW_STOCK_THRESHOLD} unidades:
+            {t('low_stock_alert_description', { threshold: LOW_STOCK_THRESHOLD })}
             <ul className="list-disc list-inside mt-2 space-y-1">
               {lowStockProducts.map(p => (
                 <li key={p.id}>
-                  {p.nome} ({p.estoque_total} em estoque)
-                  {isSuperAdmin && p.empresa?.nome && ` - Empresa: ${p.empresa.nome}`}
+                  {p.nome} ({p.estoque_total} {t('product_table_header_stock').toLowerCase()})
+                  {isSuperAdmin && p.empresa?.nome && ` - ${t('user_table_header_company')}: ${p.empresa.nome}`}
                 </li>
               ))}
             </ul>
@@ -129,7 +131,7 @@ const ProductsContent = () => {
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" /> Lista de Produtos
+            <Package className="h-5 w-5" /> {t('product_list_title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -145,10 +147,10 @@ const ProductsContent = () => {
                 >
                   <SelectTrigger className="w-full">
                     <Building className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Filtrar por Empresa" />
+                    <SelectValue placeholder={t('filter_all_companies')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as Empresas</SelectItem>
+                    <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
                     {companies?.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.nome}
@@ -168,10 +170,10 @@ const ProductsContent = () => {
               >
                 <SelectTrigger className="w-full">
                   <Tag className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Filtrar por Categoria" />
+                  <SelectValue placeholder={t('filter_all_categories')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as Categorias</SelectItem>
+                  <SelectItem value="all">{t('filter_all_categories')}</SelectItem>
                   {uniqueCategories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -190,10 +192,10 @@ const ProductsContent = () => {
               >
                 <SelectTrigger className="w-full">
                   <Factory className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Filtrar por Marca" />
+                  <SelectValue placeholder={t('filter_all_brands')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as Marcas</SelectItem>
+                  <SelectItem value="all">{t('filter_all_brands')}</SelectItem>
                   {uniqueBrands.map((brand) => (
                     <SelectItem key={brand} value={brand}>
                       {brand}
@@ -207,7 +209,7 @@ const ProductsContent = () => {
             <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, categoria ou marca..."
+                placeholder={t('product_search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -238,7 +240,7 @@ const ProductsContent = () => {
           ) : isError ? (
             <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
               <p className="text-destructive">
-                Não foi possível carregar os dados dos produtos.
+                {t('error_loading_data')}
               </p>
               <Button onClick={() => refetch()} disabled={isRefetching}>
                 {isRefetching ? (
@@ -246,14 +248,14 @@ const ProductsContent = () => {
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}
-                Tentar Novamente
+                {t('try_again')}
               </Button>
             </div>
           ) : filteredProducts.length > 0 ? (
             <ProductOnlyTable products={filteredProducts} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm || categoryFilter !== 'all' || brandFilter !== 'all' || companyFilterId !== 'all' ? "Nenhum produto encontrado com os filtros aplicados." : "Nenhum produto cadastrado."}
+              {t('no_products_found')}
             </div>
           )}
         </CardContent>
