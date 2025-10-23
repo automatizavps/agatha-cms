@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils"; // Importando cn
 import LatestProductsCarousel from "@/components/LatestProductsCarousel"; // Importando o novo componente
 import TopSellingItemsCard from "@/components/TopSellingItemsCard"; // Importando o novo componente
 import TopSellingServicesCard from "@/components/TopSellingServicesCard"; // Importando o novo componente
+import DailyServiceByHourChart from "@/components/DailyServiceByHourChart"; // NOVO
+import AppointmentStatusChart from "@/components/AppointmentStatusChart"; // Movido para cá
 
 const Index = () => {
   const { t } = useTranslation();
@@ -150,7 +152,18 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Metas das Equipes */}
+        {/* Seção 2: Gráficos de Serviços (Novo) */}
+        <div className="grid gap-6 grid-cols-12">
+          {/* Gráfico de Serviços por Hora (Linha) */}
+          <DailyServiceByHourChart companyId={filteredCompanyId} />
+          
+          {/* Gráfico de Status de Agendamentos (Barra) - Ocupa o espaço restante */}
+          <div className="col-span-12 lg:col-span-4">
+            <AppointmentStatusChart />
+          </div>
+        </div>
+        
+        {/* Seção 3: Metas das Equipes */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Target className="h-6 w-6 text-muted-foreground" />
@@ -176,10 +189,10 @@ const Index = () => {
           )}
         </div>
         
-        {/* Seção 3: Últimos Produtos Cadastrados (Carousel) */}
+        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) */}
         <LatestProductsCarousel />
         
-        {/* Seção 4: Top 10 Produtos e Serviços Mais Vendidos */}
+        {/* Seção 5: Top 10 Produtos e Serviços Mais Vendidos */}
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
           <TopSellingItemsCard companyId={filteredCompanyId} />
           <TopSellingServicesCard companyId={filteredCompanyId} />

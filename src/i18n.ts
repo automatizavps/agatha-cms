@@ -211,6 +211,12 @@ const resources = {
       "new_password": "Nova Senha",
       "confirm_new_password": "Confirmar Nova Senha",
       "update_password_button": "Atualizar Senha",
+      
+      // Gráfico de Serviços por Hora (NOVO)
+      "chart_title_daily_services": "Serviços Concluídos por Hora (Hoje)",
+      "chart_no_data_today": "Nenhum serviço concluído hoje para exibir.",
+      "services_completed": "Serviços Concluídos",
+      "count": "Contagem",
     },
   },
   en: {
@@ -421,6 +427,12 @@ const resources = {
       "new_password": "New Password",
       "confirm_new_password": "Confirm New Password",
       "update_password_button": "Update Password",
+      
+      // Gráfico de Serviços por Hora (NOVO)
+      "chart_title_daily_services": "Completed Services by Hour (Today)",
+      "chart_no_data_today": "No services completed today to display.",
+      "services_completed": "Services Completed",
+      "count": "Count",
     },
   },
 };
