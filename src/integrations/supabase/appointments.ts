@@ -18,6 +18,7 @@ export interface Appointment {
 
 const fetchAppointments = async (): Promise<Appointment[]> => {
   // Buscamos agendamentos e o nome do responsável (responsavel_id -> usuarios)
+  // Usamos a sintaxe explícita 'responsavel_id!usuarios' para resolver a ambiguidade
   const { data, error } = await supabase
     .from("agendamentos")
     .select(`
@@ -26,7 +27,7 @@ const fetchAppointments = async (): Promise<Appointment[]> => {
       data_hora,
       status,
       responsavel_id,
-      responsavel:usuarios (nome_completo)
+      responsavel:responsavel_id!usuarios (nome_completo)
     `)
     .order("data_hora", { ascending: true });
 
