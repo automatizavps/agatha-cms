@@ -25,12 +25,14 @@ const EditClientSheet: React.FC<EditClientSheetProps> = ({ client, isOpen, onOpe
     },
   });
 
-  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null }) => {
+  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null; empresa_id?: string }) => {
     mutation.mutate({
       id: client.id,
       nome: values.nome,
       email: values.email,
       telefone: values.telefone,
+      // O updateClient não usa empresa_id, mas se fosse necessário, seria passado aqui.
+      // Por enquanto, o updateClient só atualiza nome, email e telefone.
     });
   };
 
@@ -39,6 +41,7 @@ const EditClientSheet: React.FC<EditClientSheetProps> = ({ client, isOpen, onOpe
     nome: client.nome,
     email: client.email,
     telefone: client.telefone,
+    empresa_id: client.empresa_id, // Passando o ID da empresa para o formulário
   };
 
   return (

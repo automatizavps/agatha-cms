@@ -39,18 +39,25 @@ interface CreateClientParams {
   nome: string;
   email: string | null;
   telefone: string | null;
+  empresa_id?: string; // Opcional: Usado apenas pelo Super Admin
 }
 
-export const createClient = async ({ nome, email, telefone }: CreateClientParams) => {
-  // 1. Obter o ID da empresa do usuário logado
-  const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+export const createClient = async ({ nome, email, telefone, empresa_id: provided_empresa_id }: CreateClientParams) => {
+  let empresa_id: string;
 
-  if (companyError || !companyData) {
-    console.error("Error fetching user company ID:", companyError);
-    throw new Error("Não foi possível determinar a empresa do usuário.");
+  if (provided_empresa_id) {
+    // Se o ID da empresa foi fornecido (Super Admin), usamos ele.
+    empresa_id = provided_empresa_id;
+  } else {
+    // Caso contrário (Admin/Funcionário), obtemos o ID da empresa do usuário logado.
+    const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+
+    if (companyError || !companyData) {
+      console.error("Error fetching user company ID:", companyError);
+      throw new Error("Não foi possível determinar a empresa do usuário.");
+    }
+    empresa_id = companyData;
   }
-  
-  const empresa_id = companyData;
 
   // 2. Inserir o cliente
   const { data, error } = await supabase

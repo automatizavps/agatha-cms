@@ -23,8 +23,14 @@ const AddClientSheet = () => {
     },
   });
 
-  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null }) => {
-    mutation.mutate(values);
+  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null; empresa_id?: string }) => {
+    mutation.mutate({
+      nome: values.nome,
+      email: values.email,
+      telefone: values.telefone,
+      // Passa empresa_id se estiver presente (Super Admin)
+      empresa_id: values.empresa_id, 
+    });
   };
 
   return (

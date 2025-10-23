@@ -13,6 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { Client } from "@/integrations/supabase/clients";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
   nome: z.string().min(2, {
@@ -22,18 +25,25 @@ const formSchema = z.object({
     message: "Insira um email válido.",
   }).or(z.literal("")).nullable(), // Permite string vazia ou null
   telefone: z.string().optional().nullable(),
+  empresa_id: z.string().uuid({
+    message: "Selecione uma empresa válida.",
+  }).optional(), // Opcional, pois será preenchido automaticamente para não-Super Admins
 });
 
 type ClientFormValues = z.infer<typeof formSchema>;
 
 interface ClientFormProps {
-  onSubmit: (values: { nome: string; email: string | null; telefone: string | null }) => void;
+  onSubmit: (values: { nome: string; email: string | null; telefone: string | null; empresa_id?: string }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<ClientFormValues>;
   isEditing?: boolean;
 }
 
 const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
   
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(formSchema),
@@ -41,6 +51,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       nome: defaultValues?.nome || "",
       email: defaultValues?.email || "",
       telefone: defaultValues?.telefone || "",
+      empresa_id: defaultValues?.empresa_id || "",
     },
   });
 
@@ -49,16 +60,48 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     const email = values.email ? values.email : null;
     const telefone = values.telefone ? values.telefone : null;
     
+    // Se for Super Admin, envia o empresa_id selecionado. Caso contrário, não envia (será obtido via RPC).
+    const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
+
     onSubmit({
       nome: values.nome,
       email: email,
       telefone: telefone,
+      empresa_id: empresa_id,
     });
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        
+        {isSuperAdmin && (
+          <FormField
+            control={form.control}
+            name="empresa_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Empresa</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="nome"
