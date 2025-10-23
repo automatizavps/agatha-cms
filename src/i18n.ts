@@ -139,6 +139,8 @@ const resources = {
       "order_table_header_total": "Valor Total",
       "order_table_header_status": "Status",
       "no_orders_found": "Nenhum pedido cadastrado.",
+      "create_order": "Criar Pedido", // NOVO
+      "update_order_button": "Atualizar Pedido", // NOVO
       
       "page_title_settings": "Configurações",
       "page_subtitle_settings": "Gerencie as configurações da sua conta e da sua empresa.",

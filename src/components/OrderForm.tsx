@@ -275,7 +275,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           )}
         />
         
-        {/* Status (Apenas na Edição) */}
+        {/* Status (Sempre visível na Edição) */}
         {isEditing && (
           <FormField
             control={form.control}
@@ -441,7 +441,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            t('update_password_button')
+            t('update_order_button') // <-- CORRIGIDO
           ) : (
             t('create_order')
           )}
