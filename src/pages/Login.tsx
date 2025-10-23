@@ -2,13 +2,21 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { PublicRoute } from '@/integrations/supabase/auth';
+import { Bot } from 'lucide-react'; // Importando o ícone Bot
 
 const Login = () => {
   return (
     <PublicRoute>
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg border">
-          <h1 className="text-2xl font-bold text-center text-foreground">Bem-vindo</h1>
+          
+          {/* Logo e Nome do App */}
+          <div className="flex items-center justify-center mb-6">
+            <Bot className="h-8 w-8 text-primary mr-2" />
+            <h1 className="text-2xl font-bold text-primary">AGATHA IA</h1>
+          </div>
+          
+          <h1 className="text-xl font-bold text-center text-foreground">Bem-vindo</h1>
           <Auth
             supabaseClient={supabase}
             providers={[]}
