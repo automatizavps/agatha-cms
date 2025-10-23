@@ -6,13 +6,71 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserProfile } from "@/integrations/supabase/users";
+import { UserProfile, deleteUser } from "@/integrations/supabase/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "lucide-react";
+import { User, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { showError, showSuccess } from "@/utils/toast";
 
 interface UserTableProps {
   users: UserProfile[];
 }
+
+const UserActions: React.FC<{ user: UserProfile }> = ({ user }) => {
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      showSuccess(`Usuário ${user.nome_completo} excluído com sucesso.`);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (error) => {
+      showError("Falha ao excluir usuário: " + error.message);
+    },
+  });
+
+  const handleDelete = () => {
+    if (window.confirm(`Tem certeza que deseja excluir o usuário ${user.nome_completo}?`)) {
+      deleteMutation.mutate(user.id);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Abrir menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => console.log("Edit user:", user.id)}>
+          <Pencil className="mr-2 h-4 w-4" /> Editar
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          onClick={handleDelete} 
+          disabled={deleteMutation.isPending}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 
 const UserTable: React.FC<UserTableProps> = ({ users }) => {
   return (
@@ -40,8 +98,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
               <TableCell className="font-medium">{user.nome_completo}</TableCell>
               <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
               <TableCell className="text-right">
-                {/* Placeholder for actions like Edit/Delete */}
-                <span className="text-sm text-muted-foreground">...</span>
+                <UserActions user={user} />
               </TableCell>
             </TableRow>
           ))}

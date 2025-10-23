@@ -55,3 +55,20 @@ export const inviteUser = async ({ email, full_name, perfil_id }: InviteUserPara
 
   return data;
 };
+
+export const deleteUser = async (userIdToDelete: string) => {
+  const { data, error } = await supabase.functions.invoke("delete-user", {
+    body: { userIdToDelete },
+  });
+
+  if (error) {
+    console.error("Error deleting user:", error);
+    throw new Error(error.message);
+  }
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
+};
