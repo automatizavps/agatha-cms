@@ -10,7 +10,7 @@ const AppointmentStatusChart = () => {
 
   if (isLoading) {
     return (
-      <Card className="h-80">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
         </CardHeader>
@@ -23,7 +23,7 @@ const AppointmentStatusChart = () => {
 
   if (isError || chartData.length === 0) {
     return (
-      <Card className="h-80">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
         </CardHeader>
@@ -35,7 +35,7 @@ const AppointmentStatusChart = () => {
   }
 
   return (
-    <Card className="h-80">
+    <Card className="h-64">
       <CardHeader>
         <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
       </CardHeader>
@@ -45,19 +45,20 @@ const AppointmentStatusChart = () => {
             data={chartData}
             margin={{
               top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
+              right: 10, // Reduzido de 30
+              left: -20, // Movido para a esquerda para economizar espaço
+              bottom: 0, // Reduzido de 5
             }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-            <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
-            <YAxis allowDecimals={false} stroke="hsl(var(--foreground))" />
+            <XAxis dataKey="name" stroke="hsl(var(--foreground))" fontSize={10} />
+            <YAxis allowDecimals={false} stroke="hsl(var(--foreground))" fontSize={10} />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'hsl(var(--card))', 
                 border: '1px solid hsl(var(--border))', 
-                borderRadius: '0.5rem' 
+                borderRadius: '0.5rem',
+                fontSize: '0.8rem' // Fonte menor no tooltip
               }}
               labelStyle={{ color: 'hsl(var(--foreground))' }}
             />

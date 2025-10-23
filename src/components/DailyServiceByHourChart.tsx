@@ -25,7 +25,7 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
 
   if (isLoading) {
     return (
-      <Card className="h-80">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
@@ -40,7 +40,7 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
 
   if (isError || formattedData.length === 0) {
     return (
-      <Card className="h-80">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
@@ -54,7 +54,7 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
   }
 
   return (
-    <Card className="h-80">
+    <Card className="h-64">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
           <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
@@ -65,28 +65,31 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
           <LineChart
             data={formattedData}
             margin={{
-              top: 20,
-              right: 30,
-              left: 0,
-              bottom: 5,
+              top: 10, // Reduzido de 20
+              right: 10, // Reduzido de 30
+              left: -20, // Movido para a esquerda para economizar espaço
+              bottom: 0, // Reduzido de 5
             }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis 
               dataKey="name" 
               stroke="hsl(var(--foreground))" 
-              interval={3} // Mostra a cada 4 horas para não sobrecarregar
+              interval={3}
+              fontSize={10} // Fonte menor para compactar
             />
             <YAxis 
               allowDecimals={false} 
               stroke="hsl(var(--foreground))" 
               label={{ value: t('count'), angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: 'hsl(var(--foreground))' } }}
+              fontSize={10} // Fonte menor para compactar
             />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'hsl(var(--card))', 
                 border: '1px solid hsl(var(--border))', 
-                borderRadius: '0.5rem' 
+                borderRadius: '0.5rem',
+                fontSize: '0.8rem' // Fonte menor no tooltip
               }}
               labelStyle={{ color: 'hsl(var(--foreground))' }}
               formatter={(value, name, props) => [value, t('services_completed')]}
@@ -96,8 +99,8 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
               dataKey="count" 
               stroke="hsl(var(--primary))" 
               strokeWidth={2} 
-              dot={{ r: 4 }}
-              activeDot={{ r: 8 }}
+              dot={{ r: 3 }} // Ponto menor
+              activeDot={{ r: 6 }} // Ponto ativo menor
             />
           </LineChart>
         </ResponsiveContainer>
