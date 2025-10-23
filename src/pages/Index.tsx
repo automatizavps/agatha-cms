@@ -88,7 +88,8 @@ const Index = () => {
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        {/* Ajustado para 3 colunas no md e 4 colunas no lg para melhor distribuição de 7 itens */}
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           
           {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
           <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
@@ -114,7 +115,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 3: Faturamento Mensal (NOVO) */}
+          {/* Card 3: Faturamento Mensal */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('monthly_revenue')}</CardTitle>
@@ -150,7 +151,19 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 6: Total de Clientes */}
+          {/* Card 6: Total de Produtos (RE-ADICIONADO) */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(productCount || 0)}
+              <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 7: Total de Clientes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
