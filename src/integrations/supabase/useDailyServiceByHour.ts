@@ -28,5 +28,8 @@ export const useDailyServiceByHour = (companyId: string | undefined) => {
     queryKey: ["dailyServiceByHour", companyId, currentDate],
     queryFn: () => fetchDailyServiceCountByHour(companyId!),
     enabled: !!companyId,
+    // Adicionando refetch para garantir que os dados sejam frescos
+    refetchOnWindowFocus: true, 
+    staleTime: 1000 * 60 * 5, // 5 minutos de validade
   });
 };
