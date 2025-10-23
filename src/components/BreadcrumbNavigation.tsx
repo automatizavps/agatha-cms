@@ -25,10 +25,11 @@ const BreadcrumbNavigation = () => {
     "/products": "nav_products",
     "/services": "nav_services",
     "/orders": "nav_orders",
-    "/teams": "nav_teams", // Adicionado
+    "/teams": "nav_teams",
     "/companies": "nav_companies",
     "/settings": "nav_settings",
     "/profile": "nav_profile",
+    "/products/categories": "nav_categories", // Adicionado
   };
 
   // Se estiver na raiz, não exibe breadcrumbs

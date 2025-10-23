@@ -19,7 +19,10 @@ const resources = {
       "edit": "Editar",
       "delete": "Excluir",
       "confirm_delete": "Tem certeza que deseja excluir?",
-      "achieved": "atingido", // NOVO
+      "achieved": "atingido",
+      "units": "unidades",
+      "none": "Nenhum", // NOVO
+      "minutes": "minutos", // NOVO
       
       // Navegação
       "nav_home": "Home",
@@ -30,13 +33,15 @@ const resources = {
       "nav_products": "Produtos",
       "nav_services": "Serviços",
       "nav_orders": "Pedidos",
-      "nav_teams": "Equipes", // NOVO
+      "nav_teams": "Equipes",
       "nav_companies": "Empresas",
       "nav_settings": "Configurações",
       "nav_profile": "Meu Perfil",
       "nav_general": "Geral",
       "nav_operational": "Operacional",
       "nav_config": "Configurações",
+      "nav_products_services": "Produtos & Serviços", // NOVO
+      "nav_categories": "Categorias", // NOVO
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
@@ -46,8 +51,8 @@ const resources = {
       "appointments_overview": "Visão geral de todos os agendamentos",
       "confirmed_status": "Agendamentos com status 'confirmado'",
       "pending_status": "Aguardando confirmação",
-      "team_goals_section_title": "Metas das Equipes", // NOVO
-      "team_goals_progress_placeholder": "Progresso em relação à meta será exibido aqui.", // NOVO
+      "team_goals_section_title": "Metas das Equipes",
+      "team_goals_progress_placeholder": "Progresso em relação à meta será exibido aqui.",
       
       // Páginas
       "page_title_analytics": "Analytics",
@@ -95,6 +100,10 @@ const resources = {
       "product_table_header_brand": "Marca",
       "product_table_header_category": "Categoria",
       "no_products_found": "Nenhum produto encontrado com os filtros aplicados.",
+      "product_name": "Nome do Produto", // NOVO
+      "product_name_placeholder": "Nome do produto", // NOVO
+      "create_product": "Cadastrar Produto", // NOVO
+      "stock_quantity_placeholder": "Quantidade em estoque", // NOVO
       
       "page_title_services": "Gestão de Serviços",
       "service_list_title": "Lista de Serviços",
@@ -102,6 +111,9 @@ const resources = {
       "service_search_placeholder": "Buscar por nome ou categoria...",
       "service_table_header_duration": "Duração",
       "no_services_found": "Nenhum serviço cadastrado.",
+      "service_name": "Nome do Serviço", // NOVO
+      "service_name_placeholder": "Nome do serviço", // NOVO
+      "create_service": "Cadastrar Serviço", // NOVO
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -131,7 +143,7 @@ const resources = {
       "not_found_message": "Oops! Página não encontrada",
       "not_found_return": "Voltar para Home",
       
-      // Equipes (Teams) - NOVO
+      // Equipes (Teams)
       "page_title_teams": "Gestão de Equipes",
       "team_list_title": "Lista de Equipes",
       "add_new_team": "Nova Equipe",
@@ -145,7 +157,6 @@ const resources = {
       "select_members": "Selecione os membros",
       "members_selected": "{{count}} membro(s) selecionado(s)",
       "no_members": "Nenhum membro",
-      "units": "unidades",
       "create_team": "Criar Equipe",
       "edit_team": "Editar Equipe",
       "loading_team_data": "Carregando dados da equipe...",
@@ -158,6 +169,23 @@ const resources = {
       "loading_companies": "Carregando empresas...",
       "select_company": "Selecione a empresa",
       "search_user": "Buscar usuário...",
+      "company_not_found": "Empresa não encontrada", // NOVO
+      
+      // Categorias (Categories) - NOVO
+      "page_title_categories": "Gestão de Categorias",
+      "category_list_title": "Lista de Categorias",
+      "add_new_category": "Nova Categoria",
+      "no_categories_found": "Nenhuma categoria encontrada.",
+      "category_search_placeholder": "Buscar por nome da categoria...",
+      "category_name": "Nome da Categoria",
+      "category_name_placeholder": "Ex: Shampoos, Cortes de Cabelo",
+      "create_category": "Criar Categoria",
+      "edit_category": "Editar Categoria",
+      "category_created_success": "Categoria {{name}} criada com sucesso!",
+      "category_updated_success": "Categoria {{name}} atualizada com sucesso!",
+      "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
+      "select_category": "Selecione a categoria",
+      "search_category": "Buscar categoria...",
     },
   },
   en: {
@@ -176,7 +204,10 @@ const resources = {
       "edit": "Edit",
       "delete": "Delete",
       "confirm_delete": "Are you sure you want to delete?",
-      "achieved": "achieved", // NOVO
+      "achieved": "achieved",
+      "units": "units",
+      "none": "None", // NOVO
+      "minutes": "minutes", // NOVO
 
       // Navigation
       "nav_home": "Home",
@@ -187,13 +218,15 @@ const resources = {
       "nav_products": "Products",
       "nav_services": "Services",
       "nav_orders": "Orders",
-      "nav_teams": "Teams", // NOVO
+      "nav_teams": "Teams",
       "nav_companies": "Companies",
       "nav_settings": "Settings",
       "nav_profile": "My Profile",
       "nav_general": "General",
       "nav_operational": "Operational",
       "nav_config": "Settings",
+      "nav_products_services": "Products & Services", // NOVO
+      "nav_categories": "Categories", // NOVO
 
       // Dashboard
       "dashboard_title": "Dashboard Overview",
@@ -203,8 +236,8 @@ const resources = {
       "appointments_overview": "Overview of all appointments",
       "confirmed_status": "Appointments with 'confirmed' status",
       "pending_status": "Awaiting confirmation",
-      "team_goals_section_title": "Team Goals", // NOVO
-      "team_goals_progress_placeholder": "Progress towards the goal will be displayed here.", // NOVO
+      "team_goals_section_title": "Team Goals",
+      "team_goals_progress_placeholder": "Progress towards the goal will be displayed here.",
       
       // Pages
       "page_title_analytics": "Analytics",
@@ -252,6 +285,10 @@ const resources = {
       "product_table_header_brand": "Brand",
       "product_table_header_category": "Category",
       "no_products_found": "No products found with the applied filters.",
+      "product_name": "Product Name", // NOVO
+      "product_name_placeholder": "Product name", // NOVO
+      "create_product": "Register Product", // NOVO
+      "stock_quantity_placeholder": "Quantity in stock", // NOVO
       
       "page_title_services": "Service Management",
       "service_list_title": "Service List",
@@ -259,6 +296,9 @@ const resources = {
       "service_search_placeholder": "Search by name or category...",
       "service_table_header_duration": "Duration",
       "no_services_found": "No services registered.",
+      "service_name": "Service Name", // NOVO
+      "service_name_placeholder": "Service name", // NOVO
+      "create_service": "Register Service", // NOVO
       
       "page_title_orders": "Order Management",
       "order_list_title": "Order List",
@@ -288,7 +328,7 @@ const resources = {
       "not_found_message": "Oops! Page not found",
       "not_found_return": "Return to Home",
       
-      // Equipes (Teams) - NOVO
+      // Equipes (Teams)
       "page_title_teams": "Team Management",
       "team_list_title": "Team List",
       "add_new_team": "New Team",
@@ -302,7 +342,6 @@ const resources = {
       "select_members": "Select members",
       "members_selected": "{{count}} member(s) selected",
       "no_members": "No members",
-      "units": "units",
       "create_team": "Create Team",
       "edit_team": "Edit Team",
       "loading_team_data": "Loading team data...",
@@ -315,6 +354,23 @@ const resources = {
       "loading_companies": "Loading companies...",
       "select_company": "Select company",
       "search_user": "Search user...",
+      "company_not_found": "Company not found", // NOVO
+      
+      // Categorias (Categories) - NOVO
+      "page_title_categories": "Category Management",
+      "category_list_title": "Category List",
+      "add_new_category": "New Category",
+      "no_categories_found": "No categories found.",
+      "category_search_placeholder": "Search by category name...",
+      "category_name": "Category Name",
+      "category_name_placeholder": "Ex: Shampoos, Haircuts",
+      "create_category": "Create Category",
+      "edit_category": "Edit Category",
+      "category_created_success": "Category {{name}} created successfully!",
+      "category_updated_success": "Category {{name}} updated successfully!",
+      "category_deleted_success": "Category {{name}} deleted successfully!",
+      "select_category": "Select category",
+      "search_category": "Search category...",
     },
   },
   'es': {
@@ -333,7 +389,10 @@ const resources = {
       "edit": "Editar",
       "delete": "Eliminar",
       "confirm_delete": "¿Está seguro que desea eliminar?",
-      "achieved": "alcanzado", // NOVO
+      "achieved": "alcanzado",
+      "units": "unidades",
+      "none": "Ninguno", // NOVO
+      "minutes": "minutos", // NOVO
 
       // Navegación
       "nav_home": "Inicio",
@@ -344,13 +403,15 @@ const resources = {
       "nav_products": "Productos",
       "nav_services": "Servicios",
       "nav_orders": "Pedidos",
-      "nav_teams": "Equipos", // NOVO
+      "nav_teams": "Equipos",
       "nav_companies": "Empresas",
       "nav_settings": "Configuración",
       "nav_profile": "Mi Perfil",
       "nav_general": "General",
       "nav_operational": "Operacional",
       "nav_config": "Configuración",
+      "nav_products_services": "Productos y Servicios", // NOVO
+      "nav_categories": "Categorías", // NOVO
 
       // Dashboard
       "dashboard_title": "Vista General del Panel",
@@ -360,8 +421,8 @@ const resources = {
       "appointments_overview": "Vista general de todas las citas",
       "confirmed_status": "Citas con estado 'confirmado'",
       "pending_status": "Esperando confirmación",
-      "team_goals_section_title": "Metas de los Equipos", // NOVO
-      "team_goals_progress_placeholder": "El progreso hacia el objetivo se mostrará aquí.", // NOVO
+      "team_goals_section_title": "Metas de los Equipos",
+      "team_goals_progress_placeholder": "El progreso hacia el objetivo se mostrará aquí.",
       
       // Páginas
       "page_title_analytics": "Analíticas",
@@ -409,6 +470,10 @@ const resources = {
       "product_table_header_brand": "Marca",
       "product_table_header_category": "Categoría",
       "no_products_found": "No se encontraron productos con los filtros aplicados.",
+      "product_name": "Nombre del Producto", // NOVO
+      "product_name_placeholder": "Nombre del producto", // NOVO
+      "create_product": "Registrar Producto", // NOVO
+      "stock_quantity_placeholder": "Cantidad en stock", // NOVO
       
       "page_title_services": "Gestión de Servicios",
       "service_list_title": "Lista de Servicios",
@@ -416,6 +481,9 @@ const resources = {
       "service_search_placeholder": "Buscar por nombre o categoría...",
       "service_table_header_duration": "Duración",
       "no_services_found": "No hay servicios registrados.",
+      "service_name": "Nombre del Servicio", // NOVO
+      "service_name_placeholder": "Nombre del servicio", // NOVO
+      "create_service": "Registrar Servicio", // NOVO
       
       "page_title_orders": "Gestión de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -445,7 +513,7 @@ const resources = {
       "not_found_message": "¡Ups! Página no encontrada",
       "not_found_return": "Volver a Inicio",
       
-      // Equipes (Teams) - NOVO
+      // Equipes (Teams)
       "page_title_teams": "Gestión de Equipos",
       "team_list_title": "Lista de Equipos",
       "add_new_team": "Nuevo Equipo",
@@ -459,7 +527,6 @@ const resources = {
       "select_members": "Seleccionar miembros",
       "members_selected": "{{count}} miembro(s) seleccionado(s)",
       "no_members": "Ningún miembro",
-      "units": "unidades",
       "create_team": "Crear Equipo",
       "edit_team": "Editar Equipo",
       "loading_team_data": "Cargando datos del equipo...",
@@ -472,6 +539,23 @@ const resources = {
       "loading_companies": "Cargando empresas...",
       "select_company": "Seleccionar empresa",
       "search_user": "Buscar usuario...",
+      "company_not_found": "Empresa no encontrada", // NOVO
+      
+      // Categorias (Categories) - NOVO
+      "page_title_categories": "Gestión de Categorías",
+      "category_list_title": "Lista de Categorías",
+      "add_new_category": "Nueva Categoría",
+      "no_categories_found": "No se encontraron categorías.",
+      "category_search_placeholder": "Buscar por nombre de la categoría...",
+      "category_name": "Nombre de la Categoría",
+      "category_name_placeholder": "Ej: Champús, Cortes de Pelo",
+      "create_category": "Crear Categoría",
+      "edit_category": "Editar Categoría",
+      "category_created_success": "¡Categoría {{name}} creada con éxito!",
+      "category_updated_success": "¡Categoría {{name}} actualizada con éxito!",
+      "category_deleted_success": "¡Categoría {{name}} eliminada con éxito!",
+      "select_category": "Seleccionar categoría",
+      "search_category": "Buscar categoría...",
     },
   },
   'fr': {
@@ -490,7 +574,10 @@ const resources = {
       "edit": "Modifier",
       "delete": "Supprimer",
       "confirm_delete": "Êtes-vous sûr de vouloir supprimer?",
-      "achieved": "atteint", // NOVO
+      "achieved": "atteint",
+      "units": "unités",
+      "none": "Aucun", // NOVO
+      "minutes": "minutes", // NOVO
 
       // Navigation
       "nav_home": "Accueil",
@@ -501,13 +588,15 @@ const resources = {
       "nav_products": "Produits",
       "nav_services": "Services",
       "nav_orders": "Commandes",
-      "nav_teams": "Équipes", // NOVO
+      "nav_teams": "Équipes",
       "nav_companies": "Entreprises",
       "nav_settings": "Paramètres",
       "nav_profile": "Mon Profil",
       "nav_general": "Général",
       "nav_operational": "Opérationnel",
       "nav_config": "Configuration",
+      "nav_products_services": "Produits & Services", // NOVO
+      "nav_categories": "Catégories", // NOVO
 
       // Tableau de bord
       "dashboard_title": "Aperçu du Tableau de Bord",
@@ -517,8 +606,8 @@ const resources = {
       "appointments_overview": "Aperçu de tous les rendez-vous",
       "confirmed_status": "Rendez-vous avec le statut 'confirmé'",
       "pending_status": "En attente de confirmation",
-      "team_goals_section_title": "Objectifs d'Équipe", // NOVO
-      "team_goals_progress_placeholder": "La progression vers l'objectif sera affichée ici.", // NOVO
+      "team_goals_section_title": "Objectifs d'Équipe",
+      "team_goals_progress_placeholder": "La progression vers l'objectif sera affichée ici.",
       
       // Pages
       "page_title_analytics": "Analytiques",
@@ -566,6 +655,10 @@ const resources = {
       "product_table_header_brand": "Marque",
       "product_table_header_category": "Catégorie",
       "no_products_found": "Aucun produit trouvé avec les filtres appliqués.",
+      "product_name": "Nom du Produit", // NOVO
+      "product_name_placeholder": "Nom du produit", // NOVO
+      "create_product": "Enregistrer le Produit", // NOVO
+      "stock_quantity_placeholder": "Quantité en stock", // NOVO
       
       "page_title_services": "Gestion des Services",
       "service_list_title": "Liste des Services",
@@ -573,6 +666,9 @@ const resources = {
       "service_search_placeholder": "Rechercher par nom ou catégorie...",
       "service_table_header_duration": "Durée",
       "no_services_found": "Aucun service enregistré.",
+      "service_name": "Nom du Service", // NOVO
+      "service_name_placeholder": "Nom du service", // NOVO
+      "create_service": "Enregistrer le Service", // NOVO
       
       "page_title_orders": "Gestion des Commandes",
       "order_list_title": "Liste des Commandes",
@@ -602,7 +698,7 @@ const resources = {
       "not_found_message": "Oups! Page non trouvée",
       "not_found_return": "Retour à l'Accueil",
       
-      // Equipes (Teams) - NOVO
+      // Equipes (Teams)
       "page_title_teams": "Gestion des Équipes",
       "team_list_title": "Liste des Équipes",
       "add_new_team": "Nouvelle Équipe",
@@ -616,7 +712,6 @@ const resources = {
       "select_members": "Sélectionner les membres",
       "members_selected": "{{count}} membre(s) sélectionné(s)",
       "no_members": "Aucun membre",
-      "units": "unités",
       "create_team": "Créer l'Équipe",
       "edit_team": "Modifier l'Équipe",
       "loading_team_data": "Chargement des données de l'équipe...",
@@ -629,6 +724,23 @@ const resources = {
       "loading_companies": "Chargement des entreprises...",
       "select_company": "Sélectionner l'entreprise",
       "search_user": "Rechercher un utilisateur...",
+      "company_not_found": "Entreprise non trouvée", // NOVO
+      
+      // Categorias (Categories) - NOVO
+      "page_title_categories": "Gestion des Catégories",
+      "category_list_title": "Liste des Catégories",
+      "add_new_category": "Nouvelle Catégorie",
+      "no_categories_found": "Aucune catégorie trouvée.",
+      "category_search_placeholder": "Rechercher par nom de catégorie...",
+      "category_name": "Nom de la Catégorie",
+      "category_name_placeholder": "Ex: Shampoings, Coupes de Cheveux",
+      "create_category": "Créer la Catégorie",
+      "edit_category": "Modifier la Catégorie",
+      "category_created_success": "Catégorie {{name}} créée avec succès!",
+      "category_updated_success": "Catégorie {{name}} mise à jour avec succès!",
+      "category_deleted_success": "Catégorie {{name}} supprimée avec succès!",
+      "select_category": "Sélectionner la catégorie",
+      "search_category": "Rechercher une catégorie...",
     },
   },
   'it': {
@@ -647,7 +759,10 @@ const resources = {
       "edit": "Modifica",
       "delete": "Elimina",
       "confirm_delete": "Sei sicuro di voler eliminare?",
-      "achieved": "raggiunto", // NOVO
+      "achieved": "raggiunto",
+      "units": "unità",
+      "none": "Nessuno", // NOVO
+      "minutes": "minuti", // NOVO
 
       // Navigazione
       "nav_home": "Home",
@@ -658,13 +773,15 @@ const resources = {
       "nav_products": "Prodotti",
       "nav_services": "Servizi",
       "nav_orders": "Ordini",
-      "nav_teams": "Squadre", // NOVO
+      "nav_teams": "Squadre",
       "nav_companies": "Aziende",
       "nav_settings": "Impostazioni",
       "nav_profile": "Il Mio Profilo",
       "nav_general": "Generale",
       "nav_operational": "Operativo",
       "nav_config": "Configurazione",
+      "nav_products_services": "Prodotti e Servizi", // NOVO
+      "nav_categories": "Categorie", // NOVO
 
       // Dashboard
       "dashboard_title": "Panoramica Dashboard",
@@ -674,8 +791,8 @@ const resources = {
       "appointments_overview": "Panoramica di tutti gli appuntamenti",
       "confirmed_status": "Appuntamenti con stato 'confermato'",
       "pending_status": "In attesa di conferma",
-      "team_goals_section_title": "Obiettivi della Squadra", // NOVO
-      "team_goals_progress_placeholder": "Il progresso verso l'obiettivo verrà visualizzato qui.", // NOVO
+      "team_goals_section_title": "Obiettivi della Squadra",
+      "team_goals_progress_placeholder": "Il progresso verso l'obiettivo verrà visualizzato qui.",
       
       // Pagine
       "page_title_analytics": "Analisi",
@@ -723,6 +840,10 @@ const resources = {
       "product_table_header_brand": "Marca",
       "product_table_header_category": "Categoria",
       "no_products_found": "Nessun prodotto trovato con i filtri applicados.",
+      "product_name": "Nome del Prodotto", // NOVO
+      "product_name_placeholder": "Nome del prodotto", // NOVO
+      "create_product": "Registra Prodotto", // NOVO
+      "stock_quantity_placeholder": "Quantità in magazzino", // NOVO
       
       "page_title_services": "Gestione Servizi",
       "service_list_title": "Elenco Servizi",
@@ -730,6 +851,9 @@ const resources = {
       "service_search_placeholder": "Cerca per nome o categoria...",
       "service_table_header_duration": "Durata",
       "no_services_found": "Nessun servizio registrato.",
+      "service_name": "Nome del Servizio", // NOVO
+      "service_name_placeholder": "Nome del servizio", // NOVO
+      "create_service": "Registra Servizio", // NOVO
       
       "page_title_orders": "Gestione Ordini",
       "order_list_title": "Elenco Ordini",
@@ -759,7 +883,7 @@ const resources = {
       "not_found_message": "Ops! Pagina non trovata",
       "not_found_return": "Torna alla Home",
       
-      // Equipes (Teams) - NOVO
+      // Equipes (Teams)
       "page_title_teams": "Gestão Squadre",
       "team_list_title": "Elenco Squadre",
       "add_new_team": "Nuova Squadra",
@@ -773,7 +897,6 @@ const resources = {
       "select_members": "Seleziona membri",
       "members_selected": "{{count}} membro(i) selezionato(i)",
       "no_members": "Nessun membro",
-      "units": "unità",
       "create_team": "Crea Squadra",
       "edit_team": "Modifica Squadra",
       "loading_team_data": "Caricamento dati squadra...",
@@ -786,6 +909,23 @@ const resources = {
       "loading_companies": "Caricamento aziende...",
       "select_company": "Seleziona azienda",
       "search_user": "Cerca utente...",
+      "company_not_found": "Azienda non trovata", // NOVO
+      
+      // Categorias (Categories) - NOVO
+      "page_title_categories": "Gestione Categorie",
+      "category_list_title": "Elenco Categorie",
+      "add_new_category": "Nuova Categoria",
+      "no_categories_found": "Nessuna categoria trovata.",
+      "category_search_placeholder": "Cerca per nome della categoria...",
+      "category_name": "Nome della Categoria",
+      "category_name_placeholder": "Es: Shampoo, Tagli di Capelli",
+      "create_category": "Crea Categoria",
+      "edit_category": "Modifica Categoria",
+      "category_created_success": "Categoria {{name}} creata con successo!",
+      "category_updated_success": "Categoria {{name}} aggiornata con successo!",
+      "category_deleted_success": "Categoria {{name}} eliminata con successo!",
+      "select_category": "Seleziona categoria",
+      "search_category": "Cerca categoria...",
     },
   },
   'de': {
@@ -804,7 +944,10 @@ const resources = {
       "edit": "Bearbeiten",
       "delete": "Löschen",
       "confirm_delete": "Sind Sie sicher, dass Sie löschen möchten?",
-      "achieved": "erreicht", // NOVO
+      "achieved": "erreicht",
+      "units": "Einheiten",
+      "none": "Keine", // NOVO
+      "minutes": "Minuten", // NOVO
 
       // Navegação
       "nav_home": "Startseite",
@@ -815,13 +958,15 @@ const resources = {
       "nav_products": "Produkte",
       "nav_services": "Dienstleistungen",
       "nav_orders": "Bestellungen",
-      "nav_teams": "Teams", // NOVO
+      "nav_teams": "Teams",
       "nav_companies": "Unternehmen",
       "nav_settings": "Einstellungen",
       "nav_profile": "Mein Profil",
       "nav_general": "Allgemein",
       "nav_operational": "Operativ",
       "nav_config": "Einstellungen",
+      "nav_products_services": "Produkte & Dienstleistungen", // NOVO
+      "nav_categories": "Kategorien", // NOVO
 
       // Dashboard
       "dashboard_title": "Dashboard Übersicht",
@@ -831,8 +976,8 @@ const resources = {
       "appointments_overview": "Übersicht aller Termine",
       "confirmed_status": "Termine mit Status 'bestätigt'",
       "pending_status": "Warten auf Bestätigung",
-      "team_goals_section_title": "Teamziele", // NOVO
-      "team_goals_progress_placeholder": "Der Fortschritt zum Ziel wird hier angezeigt.", // NOVO
+      "team_goals_section_title": "Teamziele",
+      "team_goals_progress_placeholder": "Der Fortschritt zum Ziel wird hier angezeigt.",
       
       // Páginas
       "page_title_analytics": "Analytik",
@@ -880,6 +1025,10 @@ const resources = {
       "product_table_header_brand": "Marke",
       "product_table_header_category": "Kategorie",
       "no_products_found": "Keine Produkte mit den angewendeten Filtern gefunden.",
+      "product_name": "Produktname", // NOVO
+      "product_name_placeholder": "Produktname", // NOVO
+      "create_product": "Produkt registrieren", // NOVO
+      "stock_quantity_placeholder": "Menge auf Lager", // NOVO
       
       "page_title_services": "Dienstleistungsverwaltung",
       "service_list_title": "Dienstleistungsliste",
@@ -887,6 +1036,9 @@ const resources = {
       "service_search_placeholder": "Nach Name oder Kategorie suchen...",
       "service_table_header_duration": "Dauer",
       "no_services_found": "Keine Dienstleistungen registriert.",
+      "service_name": "Dienstleistungsname", // NOVO
+      "service_name_placeholder": "Dienstleistungsname", // NOVO
+      "create_service": "Dienstleistung registrieren", // NOVO
       
       "page_title_orders": "Bestellverwaltung",
       "order_list_title": "Bestellliste",
@@ -916,7 +1068,7 @@ const resources = {
       "not_found_message": "Hoppla! Seite nicht gefunden",
       "not_found_return": "Zur Startseite zurückkehren",
       
-      // Equipes (Teams) - NOVO
+      // Equipes (Teams)
       "page_title_teams": "Teamverwaltung",
       "team_list_title": "Teamliste",
       "add_new_team": "Neues Team",
@@ -930,7 +1082,6 @@ const resources = {
       "select_members": "Mitglieder auswählen",
       "members_selected": "{{count}} Mitglied(er) ausgewählt",
       "no_members": "Keine Mitglieder",
-      "units": "Einheiten",
       "create_team": "Team erstellen",
       "edit_team": "Team bearbeiten",
       "loading_team_data": "Teamdaten werden geladen...",
@@ -943,6 +1094,23 @@ const resources = {
       "loading_companies": "Unternehmen werden geladen...",
       "select_company": "Unternehmen auswählen",
       "search_user": "Benutzer suchen...",
+      "company_not_found": "Unternehmen nicht gefunden", // NOVO
+      
+      // Categorias (Categories) - NOVO
+      "page_title_categories": "Kategorienverwaltung",
+      "category_list_title": "Kategorienliste",
+      "add_new_category": "Neue Kategorie",
+      "no_categories_found": "Keine Kategorien gefunden.",
+      "category_search_placeholder": "Nach Kategorienamen suchen...",
+      "category_name": "Kategoriename",
+      "category_name_placeholder": "Bsp.: Shampoos, Haarschnitte",
+      "create_category": "Kategorie erstellen",
+      "edit_category": "Kategorie bearbeiten",
+      "category_created_success": "Kategorie {{name}} erfolgreich erstellt!",
+      "category_updated_success": "Kategorie {{name}} erfolgreich aktualisiert!",
+      "category_deleted_success": "Kategorie {{name}} erfolgreich gelöscht!",
+      "select_category": "Kategorie auswählen",
+      "search_category": "Kategorie suchen...",
     },
   },
   'ja': {
@@ -961,7 +1129,10 @@ const resources = {
       "edit": "編集",
       "delete": "削除",
       "confirm_delete": "本当に削除しますか？",
-      "achieved": "達成", // NOVO
+      "achieved": "達成",
+      "units": "ユニット",
+      "none": "なし", // NOVO
+      "minutes": "分", // NOVO
 
       // Navegação
       "nav_home": "ホーム",
@@ -972,13 +1143,15 @@ const resources = {
       "nav_products": "製品",
       "nav_services": "サービス",
       "nav_orders": "注文",
-      "nav_teams": "チーム", // NOVO
+      "nav_teams": "チーム",
       "nav_companies": "企業",
       "nav_settings": "設定",
       "nav_profile": "マイプロフィール",
       "nav_general": "一般",
       "nav_operational": "運用",
       "nav_config": "設定",
+      "nav_products_services": "製品とサービス", // NOVO
+      "nav_categories": "カテゴリ", // NOVO
 
       // Dashboard
       "dashboard_title": "ダッシュボード概要",
@@ -988,8 +1161,8 @@ const resources = {
       "appointments_overview": "すべての予約の概要",
       "confirmed_status": "「確定済み」ステータスの予約",
       "pending_status": "確認待ち",
-      "team_goals_section_title": "チームの目標", // NOVO
-      "team_goals_progress_placeholder": "目標に対する進捗がここに表示されます。", // NOVO
+      "team_goals_section_title": "チームの目標",
+      "team_goals_progress_placeholder": "目標に対する進捗がここに表示されます。",
       
       // Páginas
       "page_title_analytics": "分析",
@@ -1037,6 +1210,10 @@ const resources = {
       "product_table_header_brand": "ブランド",
       "product_table_header_category": "カテゴリ",
       "no_products_found": "適用されたフィルターに一致する製品は見つかりません。",
+      "product_name": "製品名", // NOVO
+      "product_name_placeholder": "製品名", // NOVO
+      "create_product": "製品を登録", // NOVO
+      "stock_quantity_placeholder": "在庫数", // NOVO
       
       "page_title_services": "サービス管理",
       "service_list_title": "サービスリスト",
@@ -1044,6 +1221,9 @@ const resources = {
       "service_search_placeholder": "名前またはカテゴリで検索...",
       "service_table_header_duration": "期間",
       "no_services_found": "登録されているサービスはありません。",
+      "service_name": "サービス名", // NOVO
+      "service_name_placeholder": "サービス名", // NOVO
+      "create_service": "サービスを登録", // NOVO
       
       "page_title_orders": "注文管理",
       "order_list_title": "注文リスト",
@@ -1073,7 +1253,7 @@ const resources = {
       "not_found_message": "おっと！ページが見つかりません",
       "not_found_return": "ホームに戻る",
       
-      // Equipes (Teams) - NOVO
+      // Equipes (Teams)
       "page_title_teams": "チーム管理",
       "team_list_title": "チームリスト",
       "add_new_team": "新規チーム",
@@ -1087,7 +1267,6 @@ const resources = {
       "select_members": "メンバーを選択",
       "members_selected": "{{count}}人のメンバーが選択されました",
       "no_members": "メンバーなし",
-      "units": "ユニット",
       "create_team": "チームを作成",
       "edit_team": "チームを編集",
       "loading_team_data": "チームデータをロード中...",
@@ -1100,6 +1279,23 @@ const resources = {
       "loading_companies": "企業をロード中...",
       "select_company": "企業を選択",
       "search_user": "ユーザーを検索...",
+      "company_not_found": "企業が見つかりません", // NOVO
+      
+      // Categorias (Categories) - NOVO
+      "page_title_categories": "カテゴリ管理",
+      "category_list_title": "カテゴリリスト",
+      "add_new_category": "新規カテゴリ",
+      "no_categories_found": "カテゴリが見つかりません。",
+      "category_search_placeholder": "カテゴリ名で検索...",
+      "category_name": "カテゴリ名",
+      "category_name_placeholder": "例: シャンプー、ヘアカット",
+      "create_category": "カテゴリを作成",
+      "edit_category": "カテゴリを編集",
+      "category_created_success": "カテゴリ {{name}} が正常に作成されました！",
+      "category_updated_success": "カテゴリ {{name}} が正常に更新されました！",
+      "category_deleted_success": "カテゴリ {{name}} が正常に削除されました！",
+      "select_category": "カテゴリを選択",
+      "search_category": "カテゴリを検索...",
     },
   },
 };

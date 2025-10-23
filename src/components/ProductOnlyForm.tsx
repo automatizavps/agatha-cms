@@ -11,13 +11,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown } from "lucide-react";
 import { Product } from "@/integrations/supabase/products";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MultiImageUpload from "./MultiImageUpload";
 import { useState } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
+import { useCategories } from "@/integrations/supabase/categories"; // Importando hook de categorias
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // Definimos o esquema para PRODUTO
 const formSchema = z.object({
@@ -32,7 +37,7 @@ const formSchema = z.object({
   }).optional().nullable(),
   
   marca: z.string().optional().nullable(),
-  categoria: z.string().optional().nullable(),
+  categoria: z.string().optional().nullable(), // Agora armazena o nome da categoria
   
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
@@ -61,9 +66,11 @@ interface ProductOnlyFormProps {
 const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: currentProfile, isLoading: isLoadingCurrentProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  const { data: categories, isLoading: isLoadingCategories } = useCategories(); // Novo hook
+  const { t } = useTranslation();
   
   const isSuperAdmin = currentProfile?.perfil_id === 1;
-  const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
+  const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies) || isLoadingCategories;
   
   const [photos, setPhotos] = useState<string[] | null>(defaultValues?.fotos || null);
 
@@ -71,8 +78,8 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
   const finalFormSchema = isSuperAdmin && !isEditing
     ? formSchema.extend({
         empresa_id: z.string().uuid({
-          message: "Selecione uma empresa válida.",
-        }).min(1, { message: "A empresa é obrigatória para o Super Admin." }),
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
       })
     : formSchema;
 
@@ -142,12 +149,12 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
             name="empresa_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Empresa</FormLabel>
+                <FormLabel>{t('user_table_header_company')}</FormLabel>
                 {isCompanyFieldEditable ? (
                   <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
+                        <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -161,7 +168,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
                 ) : (
                   <FormControl>
                     <Input 
-                      value={companyName || "Empresa não encontrada"} 
+                      value={companyName || t("company_not_found")} 
                       disabled 
                       className="bg-muted/50"
                     />
@@ -178,9 +185,9 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           name="nome"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome do Produto</FormLabel>
+              <FormLabel>{t('product_name')}</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do produto" {...field} disabled={isSubmitting} />
+                <Input placeholder={t('product_name_placeholder')} {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -192,7 +199,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           name="preco"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Preço (R$)</FormLabel>
+              <FormLabel>{t('product_table_header_price')} (R$)</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Ex: 50.00" 
@@ -207,21 +214,77 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           )}
         />
         
-        {/* Categoria */}
+        {/* Categoria (Combobox) */}
         <FormField
           control={form.control}
           name="categoria"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Categoria</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Ex: Shampoo, Maquiagem" 
-                  {...field} 
-                  disabled={isSubmitting}
-                  value={field.value || ""}
-                />
-              </FormControl>
+            <FormItem className="flex flex-col">
+              <FormLabel>{t('product_table_header_category')}</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoadingCategories || isSubmitting}
+                    >
+                      {field.value
+                        ? categories?.find(
+                            (category) => category.nome === field.value
+                          )?.nome
+                        : t('select_category')}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder={t('search_category')} />
+                    <CommandEmpty>{t('no_categories_found')}</CommandEmpty>
+                    <CommandGroup>
+                      {/* Opção para limpar/deixar vazio */}
+                      <CommandItem
+                        value=""
+                        onSelect={() => {
+                          form.setValue("categoria", null);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            !field.value ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {t('none')}
+                      </CommandItem>
+                      {categories?.map((category) => (
+                        <CommandItem
+                          value={category.nome}
+                          key={category.id}
+                          onSelect={() => {
+                            form.setValue("categoria", category.nome);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              category.nome === field.value
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {category.nome}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -233,7 +296,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           name="marca"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Marca</FormLabel>
+              <FormLabel>{t('product_table_header_brand')}</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Ex: L'Oréal" 
@@ -253,10 +316,10 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           name="estoque_total"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Estoque Total</FormLabel>
+              <FormLabel>{t('product_table_header_stock')}</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="Quantidade em estoque" 
+                  placeholder={t('stock_quantity_placeholder')} 
                   {...field} 
                   disabled={isSubmitting}
                   type="number"
@@ -279,9 +342,9 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            "Salvar Alterações"
+            t('save_changes')
           ) : (
-            "Cadastrar Produto"
+            t('create_product')
           )}
         </Button>
       </form>

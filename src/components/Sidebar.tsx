@@ -1,10 +1,12 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useTranslation } from "react-i18next"; // Importando useTranslation
+import { useTranslation } from "react-i18next";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Importando Collapsible
+import { ChevronDown } from "lucide-react"; // Ícone para o collapsible
 
 interface NavItemProps {
   to: string;
@@ -12,9 +14,10 @@ interface NavItemProps {
   label: string;
   isCollapsed: boolean;
   onClick?: () => void;
+  isSubItem?: boolean; // Novo prop para sub-itens
 }
 
-const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick }) => {
+const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick, isSubItem = false }) => {
   const content = (
     <NavLink
       to={to}
@@ -26,6 +29,7 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
             ? "bg-sidebar-primary text-sidebar-primary-foreground"
             : "text-sidebar-foreground",
           isCollapsed && "justify-center",
+          isSubItem && !isCollapsed && "pl-8 text-sm py-1.5", // Estilo para sub-item
         )
       }
     >
@@ -53,11 +57,9 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
-  const { t } = useTranslation(); // Hook de tradução
+  const { t } = useTranslation();
   
-  // Permissão para gerenciar pedidos, produtos, serviços e usuários (Admin/Super Admin)
   const canManageInventory = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
-  // Permissão para gerenciar clientes (Admin/Super Admin/Funcionário)
   const canManageClients = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2 || profile.perfil_id === 3);
   const isSuperAdmin = !isLoading && profile && profile.perfil_id === 1;
 
@@ -124,18 +126,45 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
 
         {canManageInventory && (
           <>
-            <NavItem
-              to="/products"
-              icon={<Package className="h-5 w-5" />}
-              label={t('nav_products')}
-              {...navItemProps}
-            />
-            <NavItem
-              to="/services"
-              icon={<Clock className="h-5 w-5" />}
-              label={t('nav_services')}
-              {...navItemProps}
-            />
+            {/* Submenu de Produtos/Serviços */}
+            <Collapsible defaultOpen={false} disabled={isCollapsed}>
+              <CollapsibleTrigger 
+                className={cn(
+                  "flex items-center justify-between w-full rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  isCollapsed && "justify-center"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Package className="h-5 w-5" />
+                  {!isCollapsed && t('nav_products_services')}
+                </div>
+                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1">
+                <NavItem
+                  to="/products"
+                  icon={<Package className="h-5 w-5" />}
+                  label={t('nav_products')}
+                  isSubItem
+                  {...navItemProps}
+                />
+                <NavItem
+                  to="/services"
+                  icon={<Clock className="h-5 w-5" />}
+                  label={t('nav_services')}
+                  isSubItem
+                  {...navItemProps}
+                />
+                <NavItem
+                  to="/products/categories"
+                  icon={<Tag className="h-5 w-5" />}
+                  label={t('nav_categories')}
+                  isSubItem
+                  {...navItemProps}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+            
             <NavItem
               to="/users"
               icon={<Users className="h-5 w-5" />}
