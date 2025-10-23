@@ -28,7 +28,14 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
         )
       }
     >
-      {icon}
+      {/* Aplicando a cor primária ao ícone quando não ativo, mas mantendo a cor do texto ativo */}
+      {React.cloneElement(icon as React.ReactElement, { 
+        className: cn(
+          (icon as React.ReactElement).props.className,
+          "h-5 w-5",
+          !isActive && "text-primary dark:text-primary", // Força o roxo (primary) no ícone quando não ativo
+        )
+      })}
       {!isCollapsed && label}
     </NavLink>
   );
@@ -78,10 +85,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         {!isCollapsed && (
           <div className="text-xs font-semibold text-muted-foreground uppercase mt-2 mb-1 px-3">Geral</div>
         )}
-        <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" {...navItemProps} />
+        <NavItem to="/" icon={<Home />} label="Home" {...navItemProps} />
         <NavItem
           to="/analytics"
-          icon={<BarChart3 className="h-5 w-5" />}
+          icon={<BarChart3 />}
           label="Analytics"
           {...navItemProps}
         />
@@ -94,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
         <NavItem
           to="/appointments"
-          icon={<Calendar className="h-5 w-5" />}
+          icon={<Calendar />}
           label="Agendamentos"
           {...navItemProps}
         />
@@ -102,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         {canManageClients && (
           <NavItem
             to="/clients"
-            icon={<Briefcase className="h-5 w-5" />}
+            icon={<Briefcase />}
             label="Clientes"
             {...navItemProps}
           />
@@ -112,19 +119,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           <>
             <NavItem
               to="/products"
-              icon={<Package className="h-5 w-5" />}
+              icon={<Package />}
               label="Produtos"
               {...navItemProps}
             />
             <NavItem
               to="/services"
-              icon={<Clock className="h-5 w-5" />}
+              icon={<Clock />}
               label="Serviços"
               {...navItemProps}
             />
             <NavItem
               to="/users"
-              icon={<Users className="h-5 w-5" />}
+              icon={<Users />}
               label="Usuários"
               {...navItemProps}
             />
@@ -134,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         {isSuperAdmin && (
           <NavItem
             to="/companies"
-            icon={<Building className="h-5 w-5" />}
+            icon={<Building />}
             label="Empresas"
             {...navItemProps}
           />
@@ -148,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
         <NavItem
           to="/settings"
-          icon={<Settings className="h-5 w-5" />}
+          icon={<Settings />}
           label="Configurações"
           {...navItemProps}
         />
