@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -80,10 +80,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
       )}
     >
       <div className={cn("flex items-center p-4 border-b mb-4", isCollapsed ? "justify-center" : "justify-start")}>
+        {/* Ícone do Robô */}
+        <Bot className="h-8 w-8 text-sidebar-primary mr-2 flex-shrink-0" />
+        
+        {/* Título do App */}
         <h1 className={cn("text-xl font-bold text-sidebar-primary overflow-hidden transition-opacity duration-300", isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto")}>
           {t('app_name')}
         </h1>
-        {isCollapsed && <Home className="h-8 w-8 text-sidebar-primary" />}
+        {/* Removemos o ícone Home duplicado no estado colapsado */}
       </div>
       <nav className="grid gap-2 text-sm font-medium overflow-y-auto pb-4">
         
