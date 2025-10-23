@@ -48,9 +48,7 @@ interface CreateCompanyParams {
 }
 
 export const createCompany = async ({ nome, cnpj, telefone, endereco_completo, email }: CreateCompanyParams) => {
-  // Vamos usar o ID do usuário logado como dono_id, e o trigger handle_new_empresa
-  // irá configurar o perfil desse usuário como Admin (2) e associá-lo à empresa.
-  
+  // O dono_id é o usuário logado (Super Admin)
   const { data: { user } } = await supabase.auth.getUser();
   const dono_id = user?.id;
 

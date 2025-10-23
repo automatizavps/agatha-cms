@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building, Mail, Phone } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +21,6 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditCompanySheet from "./EditCompanySheet";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface CompanyTableProps {
   companies: Company[];
