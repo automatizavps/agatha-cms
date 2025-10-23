@@ -33,7 +33,7 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
 
   if (isLoading) {
     return (
-      <Card className="h-full">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
@@ -48,7 +48,7 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
 
   if (isError || formattedData.length === 0) {
     return (
-      <Card className="h-full">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
@@ -62,7 +62,7 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-64">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
           <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
@@ -76,7 +76,7 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
               top: 10,
               right: 10,
               left: -20,
-              bottom: 20,
+              bottom: 20, // Aumentado para 20
             }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
