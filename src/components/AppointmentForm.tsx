@@ -114,7 +114,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       time: defaultValues?.time || "09:00",
       status: defaultValues?.status || 'pendente',
       items: defaultValues?.items || [],
-      empresa_id: defaultValues?.empresa_id || "",
+      empresa_id: defaultValues?.empresa_id || "", // Inicializa com o valor padrão
     },
   });
   
@@ -205,6 +205,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     });
   };
   
+  // Determina se o campo empresa deve ser editável
+  const isCompanyFieldEditable = isSuperAdmin && !isSubmitting && !isEditing;
+  
+  // Encontra o nome da empresa para exibição desabilitada
+  const companyName = companies?.find(c => c.id === defaultValues?.empresa_id)?.nome;
+  
   if (isCheckingPermissions) {
     return (
       <div className="flex justify-center items-center h-40">
@@ -225,20 +231,30 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting || isEditing}>
+                {isCompanyFieldEditable ? (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting || isEditing}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies?.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
-                    </SelectTrigger>
+                    <Input 
+                      value={companyName || defaultValues?.empresa_id || t("company_not_found")} 
+                      disabled 
+                      className="bg-muted/50"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -257,7 +273,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         <FormField
           control={form.control}
           name="cliente_id"
-          render={({ field }) => (
+          render={({ field }) => {
+            const selectedClient = filteredClients.find(c => c.id === field.value);
+            return (
             <FormItem className="flex flex-col">
               <FormLabel>{t('order_table_header_client')}</FormLabel>
               <Popover>
@@ -273,9 +291,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                       disabled={isLoadingClients || isSubmitting || isEditing || !isCompanySelected}
                     >
                       {field.value
-                        ? filteredClients.find(
-                            (client) => client.id === field.value
-                          )?.nome
+                        ? selectedClient?.nome
                         : isLoadingClients ? t("loading_clients") : t("select_client")}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -311,20 +327,24 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
               </Popover>
               <FormMessage />
             </FormItem>
-          )}
+          )}}
         />
         
         {/* Responsável */}
         <FormField
           control={form.control}
           name="responsavel_id"
-          render={({ field }) => (
+          render={({ field }) => {
+            const selectedUser = filteredUsers.find(u => u.id === field.value);
+            return (
             <FormItem>
               <FormLabel>{t('responsible')}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingUsers || isSubmitting || !isCompanySelected}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingUsers ? t("loading_users") : t("select_responsible")} />
+                    <SelectValue placeholder={isLoadingUsers ? t("loading_users") : t("select_responsible")}>
+                      {selectedUser ? `${selectedUser.nome_completo} (${selectedUser.perfis?.nome})` : t("select_responsible")}
+                    </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -337,7 +357,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
               </Select>
               <FormMessage />
             </FormItem>
-          )}
+          )}}
         />
 
         {/* Data e Hora */}

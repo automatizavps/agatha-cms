@@ -53,6 +53,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     date: appointmentDate,
     time: format(appointmentDate, "HH:mm"),
     status: appointment.status,
+    empresa_id: appointment.empresa_id, // <-- Adicionando empresa_id aqui
     // Mapeamos os itens carregados para o formato esperado pelo AppointmentForm
     items: appointmentItems?.map(item => ({
       produto_id: item.produto_id,
