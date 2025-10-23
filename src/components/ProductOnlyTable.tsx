@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, Package, Factory, Image as ImageIcon } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Factory, Image as ImageIcon, Building } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditProductSheet from "./EditProductSheet";
 import { Badge } from "@/components/ui/badge";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 
 interface ProductOnlyTableProps {
   products: Product[];
@@ -82,6 +83,9 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
 const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { data: profile } = useCurrentUserProfile();
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -109,6 +113,7 @@ const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Produto</TableHead>
+              {isSuperAdmin && <TableHead className="hidden md:table-cell">Empresa</TableHead>}
               <TableHead className="hidden sm:table-cell">Categoria</TableHead>
               <TableHead className="hidden md:table-cell">Marca</TableHead>
               <TableHead className="text-right">Estoque</TableHead>
@@ -129,6 +134,14 @@ const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
                     {product.nome}
                   </div>
                 </TableCell>
+                {isSuperAdmin && (
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3" />
+                      {product.empresa?.nome || 'N/A'}
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                   {product.categoria || 'N/A'}
                 </TableCell>

@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, Clock, Image as ImageIcon } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Clock, Image as ImageIcon, Building } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditServiceSheet from "./EditServiceSheet";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 
 interface ServiceOnlyTableProps {
   services: Product[];
@@ -81,6 +82,9 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
 const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
   const [editingService, setEditingService] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { data: profile } = useCurrentUserProfile();
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   const handleEdit = (service: Product) => {
     setEditingService(service);
@@ -108,6 +112,7 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Serviço</TableHead>
+              {isSuperAdmin && <TableHead className="hidden md:table-cell">Empresa</TableHead>}
               <TableHead className="hidden sm:table-cell">Categoria</TableHead>
               <TableHead className="text-right">Duração</TableHead>
               <TableHead className="text-right">Preço</TableHead>
@@ -127,6 +132,14 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
                     {service.nome}
                   </div>
                 </TableCell>
+                {isSuperAdmin && (
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3" />
+                      {service.empresa?.nome || 'N/A'}
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                   {service.categoria || 'N/A'}
                 </TableCell>

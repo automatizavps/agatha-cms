@@ -19,6 +19,11 @@ export interface Product {
   // Novos campos de metadados
   marca: string | null;
   categoria: string | null;
+  
+  // Relacionamento com a empresa
+  empresa: {
+    nome: string;
+  } | null;
 }
 
 // --- Fetch Geral (mantido para compatibilidade, mas não será usado nas novas páginas) ---
@@ -26,7 +31,7 @@ export interface Product {
 const fetchAllProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
     .order("nome", { ascending: true });
 
   if (error) {
@@ -49,7 +54,7 @@ export const useProducts = () => {
 const fetchProductsOnly = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
     .eq('tipo', 'produto')
     .order("nome", { ascending: true });
 
@@ -73,7 +78,7 @@ export const useProductsOnly = () => {
 const fetchServicesOnly = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
     .eq('tipo', 'servico')
     .order("nome", { ascending: true });
 
