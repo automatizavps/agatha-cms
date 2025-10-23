@@ -28,8 +28,8 @@ import { ptBR } from "date-fns/locale";
 import { Appointment } from "@/integrations/supabase/appointments";
 import { useClients } from "@/integrations/supabase/clients";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import React from "react";
-import { useServicesOnly } from "@/integrations/supabase/products"; // Importando serviços
+import React, { useMemo } from "react";
+import { useServicesOnly, useProductsOnly } from "@/integrations/supabase/products"; // Importando ambos
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -37,8 +37,8 @@ const formSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
   }),
-  servico_id: z.string().uuid({ // Novo campo
-    message: "Selecione um serviço válido.",
+  servico_id: z.string().uuid({ // Este campo agora representa o ID do Serviço OU Produto
+    message: "Selecione um serviço ou produto válido.",
   }),
   responsavel_id: z.string().uuid({
     message: "Selecione um responsável válido.",
@@ -66,13 +66,21 @@ interface AppointmentFormProps {
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: users, isLoading: isLoadingUsers } = useUsers();
   const { data: clients, isLoading: isLoadingClients } = useClients();
-  const { data: services, isLoading: isLoadingServices } = useServicesOnly(); // Carregando serviços
+  const { data: services, isLoading: isLoadingServices } = useServicesOnly();
+  const { data: products, isLoading: isLoadingProducts } = useProductsOnly(); // Carregando produtos
+
+  const allItems = useMemo(() => {
+    // Combinamos serviços e produtos
+    return [...(services || []), ...(products || [])].sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [services, products]);
+  
+  const isLoadingItems = isLoadingServices || isLoadingProducts;
 
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
-      servico_id: defaultValues?.servico_id || "", // Novo default
+      servico_id: defaultValues?.servico_id || "",
       responsavel_id: defaultValues?.responsavel_id || "",
       date: defaultValues?.date,
       time: defaultValues?.time || "09:00",
@@ -89,7 +97,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
 
     onSubmit({
       cliente_id: values.cliente_id,
-      servico_id: values.servico_id, // Incluindo servico_id
+      servico_id: values.servico_id,
       responsavel_id: values.responsavel_id,
       data_hora: data_hora,
       status: values.status,
@@ -97,7 +105,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   };
   
   const allClients = clients || [];
-  const allServices = services || [];
 
   return (
     <Form {...form}>
@@ -164,13 +171,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           )}
         />
         
-        {/* Campo Serviço (Combobox) */}
+        {/* Campo Serviço/Produto (Combobox) */}
         <FormField
           control={form.control}
           name="servico_id"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Serviço</FormLabel>
+              <FormLabel>Serviço/Produto</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -181,39 +188,39 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         "w-full justify-between",
                         !field.value && "text-muted-foreground"
                       )}
-                      disabled={isLoadingServices || isSubmitting}
+                      disabled={isLoadingItems || isSubmitting}
                     >
                       {field.value
-                        ? allServices.find(
-                            (service) => service.id === field.value
+                        ? allItems.find(
+                            (item) => item.id === field.value
                           )?.nome
-                        : isLoadingServices ? "Carregando serviços..." : "Selecione o serviço"}
+                        : isLoadingItems ? "Carregando itens..." : "Selecione o item"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                   <Command>
-                    <CommandInput placeholder="Buscar serviço..." />
-                    <CommandEmpty>Nenhum serviço encontrado.</CommandEmpty>
+                    <CommandInput placeholder="Buscar serviço ou produto..." />
+                    <CommandEmpty>Nenhum item encontrado.</CommandEmpty>
                     <CommandGroup>
-                      {allServices.map((service) => (
+                      {allItems.map((item) => (
                         <CommandItem
-                          value={service.nome}
-                          key={service.id}
+                          value={item.nome}
+                          key={item.id}
                           onSelect={() => {
-                            form.setValue("servico_id", service.id);
+                            form.setValue("servico_id", item.id);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              service.id === field.value
+                              item.id === field.value
                                 ? "opacity-100"
                                 : "opacity-0"
                             )}
                           />
-                          {service.nome}
+                          {item.nome} ({item.tipo === 'servico' ? 'Serviço' : 'Produto'})
                         </CommandItem>
                       ))}
                     </CommandGroup>
