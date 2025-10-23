@@ -13,6 +13,8 @@ const fetchDailyServiceCountByHour = async (companyId: string): Promise<DailySer
   });
 
   if (error) {
+    // Logar o erro para debug, mas lançar para o useQuery
+    console.error("Erro ao buscar contagem diária de serviços:", error);
     throw new Error(error.message);
   }
 
@@ -27,17 +29,29 @@ const fetchDailyServiceCountByHour = async (companyId: string): Promise<DailySer
 export const useDailyServiceCountByHour = (companyIdOverride?: string | 'all') => {
   const { companyId: userCompanyId, isLoading: isLoadingCompany, isSuperAdmin } = useUserCompany();
   
-  // Determina o ID da empresa a ser usado: override (se Super Admin), ou o ID do usuário.
-  const finalCompanyId = isSuperAdmin && companyIdOverride && companyIdOverride !== 'all'
-    ? companyIdOverride
-    : userCompanyId;
+  // 1. Determinar o ID da empresa a ser usado
+  let finalCompanyId: string | undefined;
+
+  if (isSuperAdmin && companyIdOverride && companyIdOverride !== 'all') {
+    // Super Admin selecionou uma empresa específica
+    finalCompanyId = companyIdOverride;
+  } else if (!isSuperAdmin || (isSuperAdmin && companyIdOverride === 'all')) {
+    // Usuário normal OU Super Admin com 'all' selecionado.
+    // Se for Super Admin com 'all', não podemos chamar a RPC, então usamos undefined.
+    // Se for usuário normal, usamos o ID da empresa dele.
+    finalCompanyId = isSuperAdmin && companyIdOverride === 'all' ? undefined : userCompanyId;
+  } else {
+    finalCompanyId = userCompanyId;
+  }
     
   // Use a data atual como parte da chave para garantir que os dados sejam atualizados diariamente
   const currentDate = new Date().toISOString().slice(0, 10); 
 
+  const isEnabled = !!finalCompanyId && !isLoadingCompany;
+
   return useQuery<DailyServiceCount[], Error>({
     queryKey: ['dailyServiceCountByHour', finalCompanyId, currentDate],
     queryFn: () => fetchDailyServiceCountByHour(finalCompanyId!),
-    enabled: !!finalCompanyId && !isLoadingCompany,
+    enabled: isEnabled,
   });
 };
