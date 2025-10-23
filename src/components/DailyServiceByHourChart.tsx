@@ -1,113 +1,99 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Clock } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { useDailyServiceByHour } from '@/integrations/supabase/useDailyServiceByHour';
-import React from 'react';
+"use client";
 
-interface DailyServiceByHourChartProps {
-  companyId: string | undefined;
-}
+import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDailyServiceCountByHour, DailyServiceCount } from "@/hooks/useDailyServiceCountByHour";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ companyId }) => {
-  const { t } = useTranslation();
-  const { data: chartData, isLoading, isError } = useDailyServiceByHour(companyId);
+// Função auxiliar para formatar o rótulo do eixo X (hora)
+const formatHour = (tick: number) => {
+  return `${tick}h`;
+};
 
-  // --- DEBUG LOG ---
-  React.useEffect(() => {
-    if (chartData) {
-      console.log("Daily Service Chart Data (Raw):", chartData);
-    }
-  }, [chartData]);
-  // -----------------
+// Função auxiliar para formatar o tooltip
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="p-2 bg-white border rounded-md shadow-md text-sm">
+        <p className="font-bold">{formatHour(label)}</p>
+        <p className="text-sm text-primary">{`Agendamentos: ${payload[0].value}`}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
-  const formattedData = React.useMemo(() => {
-    if (!chartData) return [];
-    
-    // Formata os dados para exibição, garantindo que o eixo X seja formatado como HH:00
-    return chartData.map(item => ({
-      ...item,
-      name: `${String(item.hour).padStart(2, '0')}:00`,
-    }));
-  }, [chartData]);
+export function DailyServiceByHourChart() {
+  const { data, isLoading, isError } = useDailyServiceCountByHour();
 
   if (isLoading) {
     return (
-      <Card className="h-64">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
-          </CardTitle>
+          <CardTitle>Agendamentos por Hora (Hoje)</CardTitle>
         </CardHeader>
-        <CardContent className="flex justify-center items-center h-full">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <CardContent className="h-[350px] flex items-center justify-center">
+          <Skeleton className="w-full h-full" />
         </CardContent>
       </Card>
     );
   }
 
-  if (isError || formattedData.length === 0) {
+  if (isError || !data) {
     return (
-      <Card className="h-64">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
-          </CardTitle>
+          <CardTitle>Agendamentos por Hora (Hoje)</CardTitle>
         </CardHeader>
-        <CardContent className="text-center p-4 text-muted-foreground h-full flex items-center justify-center">
-          {isError ? t("chart_error") : t("chart_no_data_today")}
+        <CardContent className="h-[350px] flex items-center justify-center text-center text-sm text-muted-foreground">
+          Não foi possível carregar os dados de agendamentos diários.
         </CardContent>
       </Card>
     );
   }
+
+  // Os dados já vêm formatados do hook: [{ hour: 0, count: 5 }, ...]
+  const formattedData: DailyServiceCount[] = data;
 
   return (
-    <Card className="h-64">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-          <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
-        </CardTitle>
+        <CardTitle>Agendamentos por Hora (Hoje)</CardTitle>
       </CardHeader>
-      <CardContent className="h-[calc(100%-4rem)] p-0">
+      <CardContent className="h-[350px] pb-0">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={formattedData}
             margin={{
               top: 10,
               right: 10,
-              left: -20,
-              bottom: 20, // Aumentado para 20
+              left: -10,
+              bottom: 0,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-            <XAxis 
-              dataKey="name" 
-              stroke="hsl(var(--foreground))" 
-              interval={3}
-              fontSize={10}
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis
+              dataKey="hour"
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={formatHour}
             />
-            <YAxis 
-              allowDecimals={false} 
-              stroke="hsl(var(--foreground))" 
-              label={{ value: t('count'), angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: 'hsl(var(--foreground))' } }}
-              fontSize={10}
+            <YAxis
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value) => `${value}`}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))', 
-                border: '1px solid hsl(var(--border))', 
-                borderRadius: '0.5rem',
-                fontSize: '0.8rem'
-              }}
-              labelStyle={{ color: 'hsl(var(--foreground))' }}
-              formatter={(value, name, props) => [value, t('services_completed')]}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="count" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth={2} 
-              dot={{ r: 3 }}
+            <Tooltip content={<CustomTooltip />} />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke="#3b82f6" // blue-500
+              strokeWidth={2}
+              dot={{ r: 4 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
@@ -115,6 +101,4 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
       </CardContent>
     </Card>
   );
-};
-
-export default DailyServiceByHourChart;
+}
