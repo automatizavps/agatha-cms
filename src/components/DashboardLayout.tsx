@@ -3,10 +3,11 @@ import Sidebar from "./Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import BreadcrumbNavigation from "./BreadcrumbNavigation";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,12 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const isMobile = useIsMobile();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  // Estado para controlar o colapso da sidebar no desktop
+  const [isCollapsed, setIsCollapsed] = useState(false); 
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
 
   if (isMobile) {
     return (
@@ -29,7 +36,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0 w-64">
               {/* Passa a função de fechamento para o Sidebar */}
-              <Sidebar onNavigate={() => setIsSheetOpen(false)} />
+              <Sidebar onNavigate={() => setIsSheetOpen(false)} isCollapsed={false} />
             </SheetContent>
           </Sheet>
           <div className="w-full flex items-center justify-between">
@@ -46,12 +53,32 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+    <div 
+      className={cn(
+        "grid min-h-screen w-full transition-all duration-300",
+        isCollapsed ? "md:grid-cols-[70px_1fr]" : "md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]"
+      )}
+    >
       <div className="hidden border-r bg-sidebar md:block">
-        <Sidebar />
+        <Sidebar isCollapsed={isCollapsed} />
       </div>
       <div className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-end gap-4 border-b bg-background px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
+          {/* Botão de Toggle */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleCollapse} 
+            className="mr-2"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" />
+            )}
+            <span className="sr-only">Toggle sidebar</span>
+          </Button>
+          
           <div className="flex-1">
             <BreadcrumbNavigation />
           </div>
