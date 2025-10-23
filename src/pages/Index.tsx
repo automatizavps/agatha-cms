@@ -193,8 +193,8 @@ const Index = () => {
           )}
         </div>
         
-        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) */}
-        <LatestProductsCarousel />
+        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) - AGORA FILTRADO */}
+        <LatestProductsCarousel companyId={filteredCompanyId} />
         
         {/* Seção 5: Top 10 Produtos e Serviços Mais Vendidos */}
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2">

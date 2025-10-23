@@ -8,9 +8,14 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
-const LatestProductsCarousel = () => {
+interface LatestProductsCarouselProps {
+  companyId: string | undefined; // Adicionando companyId
+}
+
+const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ companyId }) => {
   const { t } = useTranslation();
-  const { data: products, isLoading, isError } = useLatestProductsOnly();
+  // Passando companyId para o hook
+  const { data: products, isLoading, isError } = useLatestProductsOnly(companyId);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: false, 

@@ -99,11 +99,17 @@ export const useServicesOnly = () => {
 
 // --- Fetch Latest Products Only (tipo='produto') ---
 
-const fetchLatestProductsOnly = async (): Promise<Product[]> => {
-  const { data, error } = await supabase
+const fetchLatestProductsOnly = async (companyId: string): Promise<Product[]> => {
+  let query = supabase
     .from("produtos")
     .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
-    .eq('tipo', 'produto')
+    .eq('tipo', 'produto');
+    
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+    
+  const { data, error } = await query
     .order("created_at", { ascending: false }) // Order by creation date descending
     .limit(10); // Limit to 10
 
@@ -115,10 +121,11 @@ const fetchLatestProductsOnly = async (): Promise<Product[]> => {
   return data as Product[];
 };
 
-export const useLatestProductsOnly = () => {
+export const useLatestProductsOnly = (companyId: string | undefined) => {
   return useQuery<Product[], Error>({
-    queryKey: ["latest_products_only"],
-    queryFn: fetchLatestProductsOnly,
+    queryKey: ["latest_products_only", companyId],
+    queryFn: () => fetchLatestProductsOnly(companyId!),
+    enabled: !!companyId,
   });
 };
 
