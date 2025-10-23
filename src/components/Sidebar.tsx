@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3 } from "lucide-react";
+import { Home, Settings, BarChart3, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 interface NavItemProps {
@@ -37,6 +37,11 @@ const Sidebar: React.FC = () => {
           to="/analytics"
           icon={<BarChart3 className="h-5 w-5" />}
           label="Analytics"
+        />
+        <NavItem
+          to="/users"
+          icon={<Users className="h-5 w-5" />}
+          label="Users"
         />
         <NavItem
           to="/settings"
