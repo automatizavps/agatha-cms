@@ -24,13 +24,9 @@ const CustomTooltip = ({ active, payload, label, t }: any) => {
   return null;
 };
 
-interface DailyServiceByHourChartProps {
-  companyId: string | undefined;
-}
-
-export default function DailyServiceByHourChart({ companyId }: DailyServiceByHourChartProps) {
+export default function DailyServiceByHourChart() {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useDailyServiceCountByHour(companyId);
+  const { data, isLoading, isError } = useDailyServiceCountByHour();
 
   if (isLoading) {
     return (

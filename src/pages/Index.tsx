@@ -5,31 +5,31 @@ import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMet
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
 import { useTranslation } from "react-i18next";
-import { useDashboardCompanyId, useRevenueMetrics, useProductCount, useTopSellingItems, useTopSellingServices } from "@/integrations/supabase/dashboardMetrics";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useRevenueMetrics, useProductCount } from "@/integrations/supabase/dashboardMetrics";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { cn } from "@/lib/utils"; // Importando cn
-import LatestProductsCarousel from "@/components/LatestProductsCarousel"; // Importando o novo componente
-import TopSellingItemsCard from "@/components/TopSellingItemsCard"; // Importando o novo componente
-import TopSellingServicesCard from "@/components/TopSellingServicesCard"; // Importando o novo componente
-import DailyServiceByHourChart from "@/components/DailyServiceByHourChart"; // Importação corrigida
-import AppointmentStatusChart from "@/components/AppointmentStatusChart"; // Movido para cá
+import { cn } from "@/lib/utils";
+import LatestProductsCarousel from "@/components/LatestProductsCarousel";
+import TopSellingItemsCard from "@/components/TopSellingItemsCard";
+import TopSellingServicesCard from "@/components/TopSellingServicesCard";
+import DailyServiceByHourChart from "@/components/DailyServiceByHourChart";
+import AppointmentStatusChart from "@/components/AppointmentStatusChart";
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando o novo hook
 
 const Index = () => {
   const { t } = useTranslation();
-  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  
+  // Usando o contexto de filtro
+  const { 
+    isSuperAdmin, 
+    selectedCompanyId, 
+    setSelectedCompanyId, 
+    filteredCompanyId, 
+    isLoadingFilter 
+  } = useDashboardFilter();
+  
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
-  
-  // Estado para o filtro de empresa (apenas Super Admin)
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | 'all'>('all');
-  
-  // Determina o ID da empresa a ser usado para buscar dados
-  const { companyId: filteredCompanyId, isLoading: isLoadingCompanyId } = useDashboardCompanyId(selectedCompanyId);
-
   // Métricas de Agendamento (AGORA FILTRADO)
   const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
   
@@ -40,7 +40,7 @@ const Index = () => {
   // Métricas de Equipes (AGORA FILTRADO)
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
-  const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingCompanyId || isLoadingProfile;
+  const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -89,7 +89,6 @@ const Index = () => {
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        {/* ALTERADO: grid-cols-2 (mobile) -> md:grid-cols-3 (tablet) -> lg:grid-cols-5 (desktop) */}
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           
           {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
@@ -153,15 +152,14 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Gráficos de Serviços (Novo) */}
-        {/* ALTERADO: Adicionado md:col-span-6 para dividir em 2 colunas no tablet */}
+        {/* Seção 2: Gráficos de Serviços */}
         <div className="grid gap-6 grid-cols-12">
           {/* Gráfico de Serviços por Hora (Linha) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-8">
-            <DailyServiceByHourChart companyId={filteredCompanyId} />
+            <DailyServiceByHourChart />
           </div>
           
-          {/* Gráfico de Status de Agendamentos (Barra) - AGORA FILTRADO */}
+          {/* Gráfico de Status de Agendamentos (Barra) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
             <AppointmentStatusChart companyId={filteredCompanyId} />
           </div>
@@ -193,7 +191,7 @@ const Index = () => {
           )}
         </div>
         
-        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) - AGORA FILTRADO */}
+        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) */}
         <LatestProductsCarousel companyId={filteredCompanyId} />
         
         {/* Seção 5: Top 10 Produtos e Serviços Mais Vendidos */}

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserCompany } from "./useUserCompany";
+import { useDashboardFilter } from "./useDashboardFilter"; // Usando o novo hook
 
 export type DailyServiceCount = {
   hour: number;
@@ -26,32 +26,17 @@ const fetchDailyServiceCountByHour = async (companyId: string): Promise<DailySer
   }));
 };
 
-export const useDailyServiceCountByHour = (companyIdOverride?: string | 'all') => {
-  const { companyId: userCompanyId, isLoading: isLoadingCompany, isSuperAdmin } = useUserCompany();
+export const useDailyServiceCountByHour = () => {
+  const { filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   
-  // 1. Determinar o ID da empresa a ser usado
-  let finalCompanyId: string | undefined;
-
-  if (isSuperAdmin && companyIdOverride && companyIdOverride !== 'all') {
-    // Super Admin selecionou uma empresa específica
-    finalCompanyId = companyIdOverride;
-  } else if (!isSuperAdmin || (isSuperAdmin && companyIdOverride === 'all')) {
-    // Usuário normal OU Super Admin com 'all' selecionado.
-    // Se for Super Admin com 'all', não podemos chamar a RPC, então usamos undefined.
-    // Se for usuário normal, usamos o ID da empresa dele.
-    finalCompanyId = isSuperAdmin && companyIdOverride === 'all' ? undefined : userCompanyId;
-  } else {
-    finalCompanyId = userCompanyId;
-  }
-    
   // Use a data atual como parte da chave para garantir que os dados sejam atualizados diariamente
   const currentDate = new Date().toISOString().slice(0, 10); 
 
-  const isEnabled = !!finalCompanyId && !isLoadingCompany;
+  const isEnabled = !!filteredCompanyId && !isLoadingFilter;
 
   return useQuery<DailyServiceCount[], Error>({
-    queryKey: ['dailyServiceCountByHour', finalCompanyId, currentDate],
-    queryFn: () => fetchDailyServiceCountByHour(finalCompanyId!),
+    queryKey: ['dailyServiceCountByHour', filteredCompanyId, currentDate],
+    queryFn: () => fetchDailyServiceCountByHour(filteredCompanyId!),
     enabled: isEnabled,
   });
 };

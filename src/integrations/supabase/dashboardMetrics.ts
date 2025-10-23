@@ -103,31 +103,6 @@ const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]
 
 // --- Hooks de Uso ---
 
-/**
- * Hook para obter o ID da empresa a ser usado nos filtros.
- * Retorna o ID da empresa do usuário logado, ou o ID da empresa selecionada pelo Super Admin.
- * @param selectedCompanyId O ID da empresa selecionada pelo Super Admin (opcional).
- */
-export const useDashboardCompanyId = (selectedCompanyId?: string | 'all') => {
-  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
-  
-  const companyId = (() => {
-    if (isLoadingProfile) return undefined;
-    
-    const isSuperAdmin = profile?.perfil_id === 1;
-    
-    if (isSuperAdmin && selectedCompanyId && selectedCompanyId !== 'all') {
-      return selectedCompanyId;
-    }
-    
-    // Se for Admin/Funcionário, ou Super Admin sem filtro ativo, usa a empresa do perfil
-    return profile?.empresa_id;
-  })();
-  
-  return { companyId, isLoading: isLoadingProfile };
-};
-
-
 export const useRevenueMetrics = (companyId: string | undefined) => {
   return useQuery<RevenueMetrics, Error>({
     queryKey: ["revenueMetrics", companyId],

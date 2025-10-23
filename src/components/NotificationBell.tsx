@@ -12,6 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { useDashboardFilter } from '@/hooks/useDashboardFilter'; // Importando o hook de filtro
 
 const NotificationItem: React.FC<{ notification: Notification }> = ({ notification }) => {
   const queryClient = useQueryClient();
@@ -71,12 +72,31 @@ const NotificationItem: React.FC<{ notification: Notification }> = ({ notificati
 
 export function NotificationBell() {
   const { data: notifications, isLoading, isError } = useNotifications();
+  const { filteredCompanyId, isSuperAdmin } = useDashboardFilter();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
+  // 1. Filtrar notificações com base no filtro de empresa (se Super Admin)
+  const filteredNotifications = useMemo(() => {
+    if (!notifications) return [];
+    
+    // Se não for Super Admin, ou se o filtro estiver em 'all' (filteredCompanyId é undefined),
+    // mostramos todas as notificações do usuário logado.
+    if (!isSuperAdmin || !filteredCompanyId) {
+      return notifications;
+    }
+    
+    // Se for Super Admin e houver um filtro ativo, filtramos:
+    // a) Notificações que não têm empresa_id (globais/sistema)
+    // b) Notificações que têm empresa_id correspondente ao filtro
+    return notifications.filter(n => 
+      !n.empresa_id || n.empresa_id === filteredCompanyId
+    );
+  }, [notifications, filteredCompanyId, isSuperAdmin]);
+  
   const unreadCount = useMemo(() => {
-    return notifications?.filter(n => !n.lida).length || 0;
-  }, [notifications]);
+    return filteredNotifications.filter(n => !n.lida).length || 0;
+  }, [filteredNotifications]);
   
   const markAllReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
@@ -129,9 +149,9 @@ export function NotificationBell() {
           <div className="p-4 text-center text-destructive">
             {t('chart_error')}
           </div>
-        ) : notifications && notifications.length > 0 ? (
+        ) : filteredNotifications.length > 0 ? (
           <ScrollArea className="h-[300px]">
-            {notifications.map((notification) => (
+            {filteredNotifications.map((notification) => (
               <NotificationItem key={notification.id} notification={notification} />
             ))}
           </ScrollArea>

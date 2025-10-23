@@ -17,8 +17,9 @@ import Companies from "./pages/Companies";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import Teams from "./pages/Teams";
-import Categories from "./pages/Categories"; // Importando a nova página
+import Categories from "./pages/Categories";
 import { SessionContextProvider, ProtectedRoute } from "@/integrations/supabase/auth";
+import { DashboardFilterProvider } from "@/hooks/useDashboardFilter"; // Importando o novo provider
 
 const queryClient = new QueryClient();
 
@@ -33,23 +34,34 @@ const App = () => (
             {/* Public Route */}
             <Route path="/login" element={<Login />} />
 
-            {/* Protected Routes */}
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
-            <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-            <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-            <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
-            <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
-            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-            <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
-            <Route path="/companies" element={<ProtectedRoute><Companies /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/products/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} /> {/* Nova Rota */}
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            {/* Protected Routes Wrapper */}
+            <Route 
+              path="/*" 
+              element={
+                <ProtectedRoute>
+                  <DashboardFilterProvider>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/users" element={<Users />} />
+                      <Route path="/appointments" element={<Appointments />} />
+                      <Route path="/clients" element={<Clients />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/services" element={<Services />} />
+                      <Route path="/orders" element={<Orders />} />
+                      <Route path="/teams" element={<Teams />} />
+                      <Route path="/companies" element={<Companies />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/products/categories" element={<Categories />} />
+                      
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </DashboardFilterProvider>
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
         </SessionContextProvider>
       </BrowserRouter>
