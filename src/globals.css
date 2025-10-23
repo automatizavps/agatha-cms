@@ -98,4 +98,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Aplicar cor primária aos links */
+  a {
+    @apply text-primary hover:text-primary/80 transition-colors;
+  }
 }
