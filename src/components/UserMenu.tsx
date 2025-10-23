@@ -1,4 +1,4 @@
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from "@/utils/toast";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom"; // Importando Link
 
 export function UserMenu() {
   const { user } = useSession();
@@ -62,6 +63,22 @@ export function UserMenu() {
         <DropdownMenuItem className="text-xs text-muted-foreground">
           Perfil: {isProfileLoading ? "..." : userRole}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link to="/profile">
+            <User className="mr-2 h-4 w-4" />
+            <span>Meu Perfil</span>
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link to="/settings">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Configurações</span>
+          </Link>
+        </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />

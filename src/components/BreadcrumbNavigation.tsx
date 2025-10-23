@@ -17,9 +17,10 @@ const routeNameMap: Record<string, string> = {
   "/users": "Gestão de Usuários",
   "/clients": "Gestão de Clientes",
   "/products": "Produtos/Serviços",
-  "/companies": "Gestão de Empresas", // Novo mapeamento
+  "/companies": "Gestão de Empresas",
   "/settings": "Configurações",
   "/appointments": "Agendamentos",
+  "/profile": "Meu Perfil", // Novo mapeamento
 };
 
 const BreadcrumbNavigation = () => {
