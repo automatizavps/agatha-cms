@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, DollarSign } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, DollarSign, Package, Clock, Image as ImageIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditProductSheet from "./EditProductSheet";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductTableProps {
   products: Product[];
@@ -37,16 +38,16 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
     onSuccess: () => {
-      showSuccess(`Produto/Serviço ${product.nome} excluído com sucesso.`);
+      showSuccess(`Item ${product.nome} excluído com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir produto/serviço: " + error.message);
+      showError("Falha ao excluir item: " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o produto/serviço ${product.nome}?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir o item ${product.nome}?`)) {
       deleteMutation.mutate(product.id);
     }
   };
@@ -100,6 +101,32 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
       currency: 'BRL',
     }).format(value);
   };
+  
+  const renderTypeBadge = (type: Product['tipo']) => {
+    const classes = "capitalize";
+    if (type === 'servico') {
+      return <Badge variant="secondary" className={classes}>Serviço</Badge>;
+    }
+    return <Badge className={classes}>Produto</Badge>;
+  };
+  
+  const renderDetail = (product: Product) => {
+    if (product.tipo === 'servico') {
+      return (
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          {product.tempo_servico ? `${product.tempo_servico} min` : 'N/A'}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+        <Package className="h-3 w-3" />
+        {product.estoque_total !== null ? `Estoque: ${product.estoque_total}` : 'N/A'}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -107,7 +134,9 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
+              <TableHead>Item</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead className="hidden md:table-cell">Detalhe</TableHead>
               <TableHead className="text-right">Preço</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -115,9 +144,21 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
           <TableBody>
             {products.map((product) => (
               <TableRow key={product.id}>
-                <TableCell className="font-medium flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  {product.nome}
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {product.fotos && product.fotos.length > 0 ? (
+                      <img src={product.fotos[0]} alt={product.nome} className="h-8 w-8 object-cover rounded-md" />
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-muted-foreground p-1 border rounded-md" />
+                    )}
+                    {product.nome}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {renderTypeBadge(product.tipo)}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {renderDetail(product)}
                 </TableCell>
                 <TableCell className="text-right font-semibold">
                   {formatCurrency(product.preco)}

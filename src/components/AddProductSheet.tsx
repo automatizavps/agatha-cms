@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import ProductForm from "./ProductForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createProduct } from "@/integrations/supabase/products";
+import { createProduct, ProductType } from "@/integrations/supabase/products";
 import { showSuccess, showError } from "@/utils/toast";
 
 const AddProductSheet = () => {
@@ -14,16 +14,24 @@ const AddProductSheet = () => {
   const mutation = useMutation({
     mutationFn: createProduct,
     onSuccess: (data) => {
-      showSuccess(`Produto/Serviço ${data.nome} cadastrado com sucesso!`);
+      showSuccess(`Item ${data.nome} cadastrado como ${data.tipo} com sucesso!`);
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setIsOpen(false);
     },
     onError: (error) => {
-      showError("Falha ao cadastrar produto/serviço: " + error.message);
+      showError("Falha ao cadastrar item: " + error.message);
     },
   });
 
-  const handleSubmit = (values: { nome: string; preco: number }) => {
+  const handleSubmit = (values: { 
+    nome: string; 
+    preco: number; 
+    tipo: ProductType; 
+    tempo_servico: number | null; 
+    estoque_total: number | null;
+    fotos: string[] | null;
+    empresa_id?: string;
+  }) => {
     mutation.mutate(values);
   };
 
@@ -31,12 +39,12 @@ const AddProductSheet = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Novo Produto/Serviço
+          <PlusCircle className="mr-2 h-4 w-4" /> Novo Item
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Cadastrar Novo Produto/Serviço</SheetTitle>
+          <SheetTitle>Cadastrar Novo Item</SheetTitle>
         </SheetHeader>
         <div className="py-4">
           <ProductForm 
