@@ -18,7 +18,7 @@ export interface Appointment {
 
 const fetchAppointments = async (): Promise<Appointment[]> => {
   // Buscamos agendamentos e o nome do responsável (responsavel_id -> usuarios)
-  // Usamos a sintaxe responsavel:usuarios(nome_completo) e deixamos o PostgREST inferir a FK
+  // Usamos a sintaxe explícita para resolver a ambiguidade causada por 'responsavel_id' e 'created_by'
   const { data, error } = await supabase
     .from("agendamentos")
     .select(`
@@ -27,7 +27,7 @@ const fetchAppointments = async (): Promise<Appointment[]> => {
       data_hora,
       status,
       responsavel_id,
-      responsavel:usuarios (nome_completo)
+      responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo)
     `)
     .order("data_hora", { ascending: true });
 
