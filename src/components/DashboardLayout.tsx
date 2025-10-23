@@ -32,7 +32,7 @@ const handleSignOut = async () => {
   await supabase.auth.signOut();
 };
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
 
   return (
@@ -137,4 +137,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
     </div>
   );
-}
+};
+
+export default DashboardLayout;
