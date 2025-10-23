@@ -52,11 +52,13 @@ const TeamGoalsCard: React.FC<TeamGoalsCardProps> = ({ team }) => {
             {/* Meta de Valor */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
+                {/* Reduzindo o tamanho da fonte do label */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <DollarSign className="h-4 w-4" />
                   {t('team_meta_value')}
                 </div>
-                <span className="text-lg font-bold text-primary">
+                {/* Reduzindo o tamanho da fonte do valor e garantindo que fique em uma linha */}
+                <span className="text-base font-bold text-primary whitespace-nowrap">
                   {formatCurrency(valueProgress)} / {formatCurrency(team.meta_mensal_valor)}
                 </span>
               </div>
@@ -71,11 +73,13 @@ const TeamGoalsCard: React.FC<TeamGoalsCardProps> = ({ team }) => {
             {/* Meta de Quantidade */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
+                {/* Reduzindo o tamanho da fonte do label */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Users className="h-4 w-4" />
                   {t('team_meta_quantity')}
                 </div>
-                <span className="text-lg font-bold">
+                {/* Reduzindo o tamanho da fonte do valor e garantindo que fique em uma linha */}
+                <span className="text-base font-bold whitespace-nowrap">
                   {quantityProgress} / {team.meta_mensal_quantidade} {t('units')}
                 </span>
               </div>
