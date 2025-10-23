@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Package, Search, Tag, Factory } from "lucide-react";
+import { Loader2, RefreshCw, Package, Search, Tag, Factory, Building } from "lucide-react";
 import { useProductsOnly } from "@/integrations/supabase/products";
 import { showError } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
@@ -10,12 +10,21 @@ import ProductOnlyTable from "@/components/ProductOnlyTable";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCompanies } from "@/integrations/supabase/companies";
 
 const ProductsContent = () => {
   const { data: products, isLoading, isError, error, refetch, isRefetching } = useProductsOnly();
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
   const [brandFilter, setBrandFilter] = useState<string | 'all'>('all');
+  const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
+
+  const isSuperAdmin = profile?.perfil_id === 1;
+  const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   if (isError && error) {
     showError("Erro ao carregar produtos: " + error.message);
@@ -40,23 +49,26 @@ const ProductsContent = () => {
     return Array.from(brands).sort();
   }, [products]);
   
-  const isChecking = isLoading;
-
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     let filtered = products;
+    
+    // 1. Filtragem por Empresa (se Super Admin e filtro ativo)
+    if (isSuperAdmin && companyFilterId !== 'all') {
+      filtered = filtered.filter(product => product.empresa_id === companyFilterId);
+    }
 
-    // 1. Filtragem por Categoria
+    // 2. Filtragem por Categoria
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(product => product.categoria === categoryFilter);
     }
     
-    // 2. Filtragem por Marca
+    // 3. Filtragem por Marca
     if (brandFilter !== 'all') {
       filtered = filtered.filter(product => product.marca === brandFilter);
     }
 
-    // 3. Filtragem por Termo de Busca
+    // 4. Filtragem por Termo de Busca
     if (searchTerm) {
       const lowerCaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(product => 
@@ -67,7 +79,7 @@ const ProductsContent = () => {
     }
 
     return filtered;
-  }, [products, searchTerm, categoryFilter, brandFilter]);
+  }, [products, searchTerm, categoryFilter, brandFilter, companyFilterId, isSuperAdmin]);
 
   return (
     <DashboardLayout>
@@ -83,7 +95,31 @@ const ProductsContent = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3">
+          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+            
+            {/* Filtro de Empresa (Apenas para Super Admin) */}
+            {isSuperAdmin && (
+              <div className="w-full md:w-48">
+                <Select 
+                  onValueChange={setCompanyFilterId} 
+                  value={companyFilterId} 
+                  disabled={isLoadingCompanies || isChecking}
+                >
+                  <SelectTrigger className="w-full">
+                    <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Filtrar por Empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Empresas</SelectItem>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             {/* Filtro de Categoria */}
             <div className="w-full md:w-48">
@@ -179,7 +215,7 @@ const ProductsContent = () => {
             <ProductOnlyTable products={filteredProducts} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm || categoryFilter !== 'all' || brandFilter !== 'all' ? "Nenhum produto encontrado com os filtros aplicados." : "Nenhum produto cadastrado."}
+              {searchTerm || categoryFilter !== 'all' || brandFilter !== 'all' || companyFilterId !== 'all' ? "Nenhum produto encontrado com os filtros aplicados." : "Nenhum produto cadastrado."}
             </div>
           )}
         </CardContent>
