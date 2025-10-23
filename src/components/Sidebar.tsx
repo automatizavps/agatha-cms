@@ -3,13 +3,14 @@ import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Buildin
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Importando Tooltip
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next"; // Importando useTranslation
 
 interface NavItemProps {
   to: string;
   icon: React.ReactNode;
   label: string;
-  isCollapsed: boolean; // Nova prop
+  isCollapsed: boolean;
   onClick?: () => void;
 }
 
@@ -24,7 +25,7 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
           isActive
             ? "bg-sidebar-primary text-sidebar-primary-foreground"
             : "text-sidebar-foreground",
-          isCollapsed && "justify-center", // Centraliza o ícone quando colapsado
+          isCollapsed && "justify-center",
         )
       }
     >
@@ -47,11 +48,12 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
 
 interface SidebarProps {
   onNavigate?: () => void;
-  isCollapsed: boolean; // Nova prop
+  isCollapsed: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
+  const { t } = useTranslation(); // Hook de tradução
   
   // Permissão para gerenciar pedidos, produtos, serviços e usuários (Admin/Super Admin)
   const canManageInventory = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
@@ -70,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
     >
       <div className={cn("flex items-center p-4 border-b mb-4", isCollapsed ? "justify-center" : "justify-start")}>
         <h1 className={cn("text-xl font-bold text-sidebar-primary overflow-hidden transition-opacity duration-300", isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto")}>
-          AGATHA IA
+          {t('app_name')}
         </h1>
         {isCollapsed && <Home className="h-6 w-6 text-sidebar-primary" />}
       </div>
@@ -78,13 +80,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         
         {/* Categoria: Geral */}
         {!isCollapsed && (
-          <div className="text-xs font-semibold text-muted-foreground uppercase mt-2 mb-1 px-3">Geral</div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase mt-2 mb-1 px-3">{t('nav_general')}</div>
         )}
-        <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" {...navItemProps} />
+        <NavItem to="/" icon={<Home className="h-5 w-5" />} label={t('nav_home')} {...navItemProps} />
         <NavItem
           to="/analytics"
           icon={<BarChart3 className="h-5 w-5" />}
-          label="Analytics"
+          label={t('nav_analytics')}
           {...navItemProps}
         />
         
@@ -92,14 +94,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
 
         {/* Categoria: Operacional */}
         {!isCollapsed && (
-          <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">Operacional</div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_operational')}</div>
         )}
         
         {canManageInventory && (
           <NavItem
             to="/orders"
             icon={<ShoppingCart className="h-5 w-5" />}
-            label="Pedidos"
+            label={t('nav_orders')}
             {...navItemProps}
           />
         )}
@@ -107,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         <NavItem
           to="/appointments"
           icon={<Calendar className="h-5 w-5" />}
-          label="Agendamentos"
+          label={t('nav_appointments')}
           {...navItemProps}
         />
 
@@ -115,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           <NavItem
             to="/clients"
             icon={<Briefcase className="h-5 w-5" />}
-            label="Clientes"
+            label={t('nav_clients')}
             {...navItemProps}
           />
         )}
@@ -125,19 +127,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             <NavItem
               to="/products"
               icon={<Package className="h-5 w-5" />}
-              label="Produtos"
+              label={t('nav_products')}
               {...navItemProps}
             />
             <NavItem
               to="/services"
               icon={<Clock className="h-5 w-5" />}
-              label="Serviços"
+              label={t('nav_services')}
               {...navItemProps}
             />
             <NavItem
               to="/users"
               icon={<Users className="h-5 w-5" />}
-              label="Usuários"
+              label={t('nav_users')}
               {...navItemProps}
             />
           </>
@@ -147,7 +149,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           <NavItem
             to="/companies"
             icon={<Building className="h-5 w-5" />}
-            label="Empresas"
+            label={t('nav_companies')}
             {...navItemProps}
           />
         )}
@@ -156,12 +158,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
 
         {/* Categoria: Configurações */}
         {!isCollapsed && (
-          <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">Configurações</div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_config')}</div>
         )}
         <NavItem
           to="/settings"
           icon={<Settings className="h-5 w-5" />}
-          label="Configurações"
+          label={t('nav_settings')}
           {...navItemProps}
         />
       </nav>

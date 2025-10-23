@@ -8,6 +8,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import BreadcrumbNavigation from "./BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "./LanguageSwitcher"; // Importando LanguageSwitcher
+import { useTranslation } from "react-i18next"; // Importando useTranslation
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,6 +20,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   // Estado para controlar o colapso da sidebar no desktop
   const [isCollapsed, setIsCollapsed] = useState(false); 
+  const { t } = useTranslation(); // Usando tradução
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -40,8 +43,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </SheetContent>
           </Sheet>
           <div className="w-full flex items-center justify-between">
-            <h1 className="text-lg font-semibold">AGATHA IA</h1>
+            <h1 className="text-lg font-semibold">{t('app_name')}</h1>
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <ThemeToggle />
               <UserMenu />
             </div>
@@ -82,6 +86,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex-1">
             <BreadcrumbNavigation />
           </div>
+          <LanguageSwitcher />
           <ThemeToggle />
           <UserMenu />
         </header>
