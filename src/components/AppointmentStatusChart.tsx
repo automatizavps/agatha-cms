@@ -12,7 +12,7 @@ const AppointmentStatusChart = () => {
     return (
       <Card className="h-64">
         <CardHeader>
-          <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
+          <CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center items-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -25,7 +25,7 @@ const AppointmentStatusChart = () => {
     return (
       <Card className="h-64">
         <CardHeader>
-          <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
+          <CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle>
         </CardHeader>
         <CardContent className="text-center p-4 text-muted-foreground h-full flex items-center justify-center">
           {isError ? t("chart_error") : t("chart_no_data")}
@@ -37,7 +37,7 @@ const AppointmentStatusChart = () => {
   return (
     <Card className="h-64">
       <CardHeader>
-        <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
+        <CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle>
       </CardHeader>
       <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
