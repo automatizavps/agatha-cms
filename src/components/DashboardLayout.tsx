@@ -33,7 +33,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
@@ -63,12 +63,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   // Layout Desktop/Tablet
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full overflow-x-hidden">
       
       {/* Sidebar Fixa */}
       <div 
         className={cn(
-          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden", // Adicionado overflow-y-hidden
+          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden overflow-x-hidden", // Adicionado overflow-x-hidden
           isCollapsed ? "w-[70px]" : "w-[280px]"
         )}
         style={{ width: isCollapsed ? sidebarWidthMd : sidebarWidth }}
