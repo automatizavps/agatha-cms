@@ -256,6 +256,27 @@ const resources = {
       
       // Chave que faltava
       "page_title_appointments": "Gestão de Agendamentos",
+      
+      // Relatórios (Reports) - NOVO
+      "select_date_range": "Selecione o intervalo de datas",
+      "filter_all_status": "Todos os Status",
+      "export_data": "Exportar Dados",
+      "export_select_format": "Selecione o Formato",
+      "export_success": "Dados exportados com sucesso para {{format}}!",
+      "export_error": "Erro ao exportar dados: ",
+      "export_no_data": "Não há dados para exportar.",
+      "export_sheet_name": "Relatório",
+      "report_total_revenue": "Faturamento Total (Entregues)",
+      "report_total_completed_services": "Total de Serviços Concluídos",
+      "appointment_search_placeholder": "Buscar por cliente ou responsável...",
+      
+      // Status (para tradução nos relatórios)
+      "pendente_entrega": "Pendente Entrega",
+      "entregue": "Entregue",
+      "cancelado": "Cancelado",
+      "pendente": "Pendente",
+      "confirmado": "Confirmado",
+      "concluido": "Concluído",
     },
   },
 };

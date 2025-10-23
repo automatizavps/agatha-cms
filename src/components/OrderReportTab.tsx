@@ -1,0 +1,274 @@
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, Search, RefreshCw, CalendarIcon, Filter, DollarSign, ShoppingCart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
+import { useDashboardFilter } from '@/hooks/useDashboardFilter';
+import { useOrderReport } from '@/integrations/supabase/reportHooks';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import ExportButton from './ExportButton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { OrderStatus } from '@/integrations/supabase/orders';
+
+const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
+
+const OrderReportTab: React.FC = () => {
+  const { t } = useTranslation();
+  const { filteredCompanyId, isLoadingFilter } = useDashboardFilter();
+  
+  // Estados de Filtro
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+
+  // Hook de Dados
+  const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrderReport(
+    filteredCompanyId,
+    {
+      startDate: startDate ? format(startDate, 'yyyy-MM-dd') : '',
+      endDate: endDate ? format(endDate, 'yyyy-MM-dd') : '',
+    }
+  );
+  
+  const isDataLoading = isLoading || isLoadingFilter;
+
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    let filtered = orders;
+
+    // 1. Filtragem por Status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(order => order.status === statusFilter);
+    }
+    
+    // 2. Filtragem por Termo de Busca
+    if (searchTerm) {
+      const lowerCaseSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(order => 
+        order.clientes?.nome.toLowerCase().includes(lowerCaseSearch) ||
+        order.id.slice(0, 8).toLowerCase().includes(lowerCaseSearch) ||
+        order.status.toLowerCase().includes(lowerCaseSearch)
+      );
+    }
+
+    return filtered;
+  }, [orders, searchTerm, statusFilter]);
+  
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.valor_total, 0);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+  
+  const getStatusBadge = (status: OrderStatus) => {
+    const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
+    switch (status) {
+      case 'entregue':
+        return <span className={cn(baseClasses, "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200")}>{t(status)}</span>;
+      case 'cancelado':
+        return <span className={cn(baseClasses, "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200")}>{t(status)}</span>;
+      case 'pendente_entrega':
+      default:
+        return <span className={cn(baseClasses, "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200")}>{t(status.replace('_', ' '))}</span>;
+    }
+  };
+  
+  // Mapeamento de dados para exportação
+  const exportData = useMemo(() => {
+    return filteredOrders.map(order => ({
+      ID_Pedido: order.id,
+      Data_Criacao: format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      Status: order.status.replace('_', ' ').toUpperCase(),
+      Valor_Total: order.valor_total,
+      Cliente_Nome: order.clientes?.nome || 'N/A',
+      Cliente_Email: order.clientes?.email || 'N/A',
+      Cliente_Telefone: order.clientes?.telefone || 'N/A',
+      Cliente_Endereco: order.clientes?.endereco_completo || 'N/A',
+      Itens: order.pedido_itens.map(item => 
+        `${item.produtos?.nome || 'N/A'} (x${item.quantidade} @ ${formatCurrency(item.preco_unitario)})`
+      ).join('; '),
+    }));
+  }, [filteredOrders]);
+
+
+  if (isError && error) {
+    showError(t("error_loading_data") + ": " + error.message);
+  }
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ShoppingCart className="h-5 w-5" /> {t('order_list_title')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        
+        {/* Filtros e Ações */}
+        <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+          
+          {/* Filtro de Data */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full md:w-[280px] justify-start text-left font-normal",
+                  (!startDate || !endDate) && "text-muted-foreground"
+                )}
+                disabled={isDataLoading}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {startDate && endDate ? (
+                  `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                ) : (
+                  <span>{t('select_date_range')}</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={{ from: startDate, to: endDate }}
+                onSelect={(range) => {
+                  setStartDate(range?.from);
+                  setEndDate(range?.to);
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
+          
+          {/* Filtro de Status */}
+          <Select onValueChange={(val) => setStatusFilter(val as OrderStatus | 'all')} value={statusFilter} disabled={isDataLoading}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+              <SelectValue placeholder={t('filter_all_status')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filter_all_status')}</SelectItem>
+              {statusOptions.map((status) => (
+                <SelectItem key={status} value={status} className="capitalize">
+                  {t(status.replace('_', ' '))}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Campo de Busca Textual */}
+          <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('order_search_placeholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+              disabled={isDataLoading}
+            />
+          </div>
+          
+          {/* Botões de Ação */}
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => refetch()} 
+              disabled={isRefetching}
+              className="shrink-0"
+            >
+              {isRefetching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+            <ExportButton 
+              data={exportData} 
+              fileName={`Relatorio_Pedidos_${format(new Date(), 'yyyyMMdd')}`}
+              disabled={isDataLoading || filteredOrders.length === 0}
+              isLoading={false}
+            />
+          </div>
+        </div>
+        
+        {/* Métrica de Faturamento Total */}
+        <div className="mb-4 p-4 border rounded-lg bg-secondary/50 flex items-center justify-between">
+          <span className="text-sm font-medium">{t('report_total_revenue')}:</span>
+          <span className="text-xl font-bold text-primary flex items-center gap-1">
+            <DollarSign className="h-5 w-5" />
+            {formatCurrency(totalRevenue)}
+          </span>
+        </div>
+
+        {/* Tabela de Dados */}
+        {isDataLoading && !isRefetching ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : isError ? (
+          <div className="text-center p-4 text-destructive">
+            {t('chart_error')}
+          </div>
+        ) : filteredOrders.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('order_table_header_id')}</TableHead>
+                  <TableHead>{t('order_table_header_client')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('order_table_header_date')}</TableHead>
+                  <TableHead className="text-right">{t('order_table_header_total')}</TableHead>
+                  <TableHead className="text-center">{t('order_table_header_status')}</TableHead>
+                  <TableHead className="hidden lg:table-cell">{t('order_list_title')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium text-xs text-muted-foreground">
+                      {order.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {order.clientes?.nome || t('no_data_found')}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatCurrency(order.valor_total)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {getStatusBadge(order.status)}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                      {order.pedido_itens.map(item => 
+                        `${item.produtos?.nome || 'N/A'} (x${item.quantidade})`
+                      ).join(', ')}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="text-center p-4 text-muted-foreground">
+            {t('no_orders_found')}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default OrderReportTab;
