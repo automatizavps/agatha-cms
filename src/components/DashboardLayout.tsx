@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
+import BreadcrumbNavigation from "./BreadcrumbNavigation";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -51,6 +52,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </div>
       <div className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-end gap-4 border-b bg-background px-6">
+          <div className="flex-1">
+            <BreadcrumbNavigation />
+          </div>
           <ThemeToggle />
           <UserMenu />
         </header>
