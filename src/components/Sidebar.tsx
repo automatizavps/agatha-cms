@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 
@@ -45,6 +45,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
       </div>
       <nav className="grid gap-2 text-sm font-medium">
         <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" onClick={onNavigate} />
+        <NavItem
+          to="/appointments"
+          icon={<Calendar className="h-5 w-5" />}
+          label="Agendamentos"
+          onClick={onNavigate}
+        />
         <NavItem
           to="/analytics"
           icon={<BarChart3 className="h-5 w-5" />}
