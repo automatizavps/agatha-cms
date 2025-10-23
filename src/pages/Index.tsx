@@ -89,7 +89,8 @@ const Index = () => {
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+        {/* ALTERADO: grid-cols-2 (mobile) -> md:grid-cols-3 (tablet) -> lg:grid-cols-5 (desktop) */}
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           
           {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
           <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
@@ -153,14 +154,15 @@ const Index = () => {
         </div>
         
         {/* Seção 2: Gráficos de Serviços (Novo) */}
+        {/* ALTERADO: Adicionado md:col-span-6 para dividir em 2 colunas no tablet */}
         <div className="grid gap-6 grid-cols-12">
           {/* Gráfico de Serviços por Hora (Linha) */}
-          <div className="col-span-12 lg:col-span-8">
+          <div className="col-span-12 md:col-span-6 lg:col-span-8">
             <DailyServiceByHourChart companyId={filteredCompanyId} />
           </div>
           
           {/* Gráfico de Status de Agendamentos (Barra) - Ocupa o espaço restante */}
-          <div className="col-span-12 lg:col-span-4">
+          <div className="col-span-12 md:col-span-6 lg:col-span-4">
             <AppointmentStatusChart />
           </div>
         </div>
