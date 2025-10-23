@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { useCurrentUserProfile } from "./user-profile"; // Importando para verificar o perfil
 
 export interface Client {
   id: string;
@@ -56,9 +57,15 @@ export const createClient = async ({ nome, email, telefone, endereco_completo, e
 
     if (companyError || !companyData) {
       console.error("Error fetching user company ID:", companyError);
-      throw new Error("Não foi possível determinar a empresa do usuário.");
+      // Se o usuário não for Super Admin e não tiver empresa, isso é um erro de configuração.
+      throw new Error("Não foi possível determinar a empresa do usuário. Verifique se o seu perfil está associado a uma empresa.");
     }
     empresa_id = companyData;
+  }
+  
+  // Se empresa_id for nulo ou indefinido neste ponto, a inserção falhará no RLS ou na restrição NOT NULL.
+  if (!empresa_id) {
+     throw new Error("ID da empresa é obrigatório para criar um cliente.");
   }
 
   // 2. Inserir o cliente
