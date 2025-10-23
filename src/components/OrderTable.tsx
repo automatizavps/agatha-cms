@@ -124,10 +124,12 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 
   // Verifica se a classe 'text-right' está presente para aplicar 'justify-end'
   const isTextRight = className?.includes('text-right');
+  // Verifica se a classe 'text-center' está presente para aplicar 'justify-center'
+  const isTextCenter = className?.includes('text-center');
 
   return (
     <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className={cn("flex items-center gap-1", isTextRight && "justify-end")}>
+      <div className={cn("flex items-center gap-1", isTextRight && "justify-end", isTextCenter && "justify-center")}>
         {children}
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
@@ -245,7 +247,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-right" // Mantido text-right
+                className="text-right"
               >
                 {t('order_table_header_total')}
               </SortableHeader>
@@ -254,6 +256,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
+                className="text-center" // Adicionando text-center ao cabeçalho
               >
                 {t('order_table_header_status')}
               </SortableHeader>
@@ -275,7 +278,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
                 <TableCell className="text-right font-semibold">
                   {formatCurrency(order.valor_total)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
                   {getStatusBadge(order.status)}
                 </TableCell>
                 <TableCell className="text-right">
