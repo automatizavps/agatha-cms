@@ -6,6 +6,7 @@ import { showError } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import AddAppointmentSheet from "@/components/AddAppointmentSheet";
 
 const Appointments = () => {
   const { data: appointments, isLoading, isError, error } = useAppointments();
@@ -18,8 +19,7 @@ const Appointments = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
-        {/* Futuro: Botão para adicionar novo agendamento */}
-        {/* <Button>Novo Agendamento</Button> */}
+        <AddAppointmentSheet />
       </div>
       
       <Card className="mt-4">

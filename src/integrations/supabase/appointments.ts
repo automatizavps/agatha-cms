@@ -44,3 +44,50 @@ export const useAppointments = () => {
     queryFn: fetchAppointments,
   });
 };
+
+interface CreateAppointmentParams {
+  cliente_nome: string;
+  responsavel_id: string;
+  data_hora: Date;
+}
+
+export const createAppointment = async ({ cliente_nome, responsavel_id, data_hora }: CreateAppointmentParams) => {
+  // 1. Obter o ID da empresa do usuário logado
+  const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+
+  if (companyError || !companyData) {
+    console.error("Error fetching user company ID:", companyError);
+    throw new Error("Não foi possível determinar a empresa do usuário.");
+  }
+  
+  const empresa_id = companyData;
+  
+  // 2. Obter o ID do usuário logado (created_by)
+  const { data: { user } } = await supabase.auth.getUser();
+  const created_by = user?.id;
+
+  if (!created_by) {
+    throw new Error("Usuário não autenticado.");
+  }
+
+  // 3. Inserir o agendamento
+  const { data, error } = await supabase
+    .from("agendamentos")
+    .insert({
+      empresa_id: empresa_id,
+      cliente_nome: cliente_nome,
+      responsavel_id: responsavel_id,
+      data_hora: data_hora.toISOString(),
+      created_by: created_by,
+      status: 'pendente', // Padrão
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating appointment:", error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
