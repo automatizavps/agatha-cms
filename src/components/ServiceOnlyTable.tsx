@@ -242,7 +242,7 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-right"
+                className="text-right" // CORREÇÃO APLICADA AQUI
               >
                 {t('product_table_header_price')}
               </SortableHeader>
