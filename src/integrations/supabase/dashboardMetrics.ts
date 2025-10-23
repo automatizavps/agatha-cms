@@ -1,0 +1,119 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "./client";
+import { useCurrentUserProfile } from "./user-profile";
+
+// --- Funções de Fetch ---
+
+interface RevenueMetrics {
+  daily_revenue: number;
+  weekly_revenue: number;
+}
+
+/**
+ * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
+ * nos últimos 24h e 7 dias.
+ * @param companyId O ID da empresa a ser filtrada.
+ */
+const fetchRevenueMetrics = async (companyId: string): Promise<RevenueMetrics> => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(today.getDate() - 7);
+
+  // 1. Faturamento Diário (últimas 24h)
+  const { data: dailyData, error: dailyError } = await supabase
+    .from("pedidos")
+    .select("valor_total")
+    .eq("empresa_id", companyId)
+    .eq("status", "entregue")
+    .gte("created_at", yesterday.toISOString());
+
+  if (dailyError) {
+    console.error("Error fetching daily revenue:", dailyError);
+    throw new Error("Failed to fetch daily revenue");
+  }
+  
+  const daily_revenue = dailyData.reduce((sum, order) => sum + order.valor_total, 0);
+
+  // 2. Faturamento Semanal (últimos 7 dias)
+  const { data: weeklyData, error: weeklyError } = await supabase
+    .from("pedidos")
+    .select("valor_total")
+    .eq("empresa_id", companyId)
+    .eq("status", "entregue")
+    .gte("created_at", sevenDaysAgo.toISOString());
+
+  if (weeklyError) {
+    console.error("Error fetching weekly revenue:", weeklyError);
+    throw new Error("Failed to fetch weekly revenue");
+  }
+  
+  const weekly_revenue = weeklyData.reduce((sum, order) => sum + order.valor_total, 0);
+
+  return { daily_revenue, weekly_revenue };
+};
+
+/**
+ * Busca a contagem total de produtos (tipo='produto') cadastrados.
+ * @param companyId O ID da empresa a ser filtrada.
+ */
+const fetchProductCount = async (companyId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from("produtos")
+    .select("id", { count: 'exact', head: true })
+    .eq("empresa_id", companyId)
+    .eq("tipo", "produto");
+
+  if (error) {
+    console.error("Error fetching product count:", error);
+    throw new Error("Failed to fetch product count");
+  }
+
+  return count || 0;
+};
+
+
+// --- Hooks de Uso ---
+
+/**
+ * Hook para obter o ID da empresa a ser usado nos filtros.
+ * Retorna o ID da empresa do usuário logado, ou o ID da empresa selecionada pelo Super Admin.
+ * @param selectedCompanyId O ID da empresa selecionada pelo Super Admin (opcional).
+ */
+export const useDashboardCompanyId = (selectedCompanyId?: string | 'all') => {
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  
+  const companyId = (() => {
+    if (isLoadingProfile) return undefined;
+    
+    const isSuperAdmin = profile?.perfil_id === 1;
+    
+    if (isSuperAdmin && selectedCompanyId && selectedCompanyId !== 'all') {
+      return selectedCompanyId;
+    }
+    
+    // Se for Admin/Funcionário, ou Super Admin sem filtro ativo, usa a empresa do perfil
+    return profile?.empresa_id;
+  })();
+  
+  return { companyId, isLoading: isLoadingProfile };
+};
+
+
+export const useRevenueMetrics = (companyId: string | undefined) => {
+  return useQuery<RevenueMetrics, Error>({
+    queryKey: ["revenueMetrics", companyId],
+    queryFn: () => fetchRevenueMetrics(companyId!),
+    enabled: !!companyId,
+  });
+};
+
+export const useProductCount = (companyId: string | undefined) => {
+  return useQuery<number, Error>({
+    queryKey: ["productCount", companyId],
+    queryFn: () => fetchProductCount(companyId!),
+    enabled: !!companyId,
+  });
+};

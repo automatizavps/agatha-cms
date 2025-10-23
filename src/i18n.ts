@@ -55,6 +55,14 @@ const resources = {
       "team_goals_section_title": "Metas das Equipes",
       "team_goals_progress_placeholder": "Progresso em relação à meta será exibido aqui.",
       
+      // Novas Métricas do Dashboard
+      "daily_revenue": "Faturamento Diário",
+      "daily_revenue_overview": "Pedidos entregues nas últimas 24h",
+      "weekly_revenue": "Faturamento Semanal",
+      "weekly_revenue_overview": "Pedidos entregues nos últimos 7 dias",
+      "total_products": "Total de Produtos",
+      "total_products_overview": "Produtos cadastrados na empresa",
+      
       // Páginas
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Relatórios detalhados e visualizações de dados.",
@@ -246,6 +254,14 @@ const resources = {
       "team_goals_section_title": "Team Goals",
       "team_goals_progress_placeholder": "Progress towards the goal will be displayed here.",
       
+      // Novas Métricas do Dashboard
+      "daily_revenue": "Daily Revenue",
+      "daily_revenue_overview": "Orders delivered in the last 24h",
+      "weekly_revenue": "Weekly Revenue",
+      "weekly_revenue_overview": "Orders delivered in the last 7 days",
+      "total_products": "Total Products",
+      "total_products_overview": "Products registered in the company",
+
       // Pages
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Detailed reports and data visualizations.",

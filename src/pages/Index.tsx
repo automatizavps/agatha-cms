@@ -1,22 +1,55 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarCheck, Clock, Users, Loader2, Target } from "lucide-react";
+import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building } from "lucide-react";
 import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMetrics";
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
 import { useTranslation } from "react-i18next";
+import { useDashboardCompanyId, useRevenueMetrics, useProductCount } from "@/integrations/supabase/dashboardMetrics";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 const Index = () => {
-  const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics();
-  const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams();
   const { t } = useTranslation();
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
+  
+  // Estado para o filtro de empresa (apenas Super Admin)
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | 'all'>('all');
+  
+  // Determina o ID da empresa a ser usado para buscar dados
+  const { companyId: filteredCompanyId, isLoading: isLoadingCompanyId } = useDashboardCompanyId(selectedCompanyId);
 
-  const isLoading = isLoadingMetrics || isLoadingTeams;
+  // Métricas de Agendamento
+  const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics();
+  
+  // Métricas de Faturamento e Produtos
+  const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
+  const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
+  
+  // Métricas de Equipes
+  const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams();
 
-  const renderMetricValue = (value: number) => {
-    if (isLoadingMetrics) {
+  const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingCompanyId || isLoadingProfile;
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
+  const renderMetricValue = (value: number | string, isCurrency: boolean = false) => {
+    if (isLoading) {
       return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
+    }
+    if (isCurrency) {
+      return <div className="text-2xl font-bold">{formatCurrency(value as number)}</div>;
     }
     return <div className="text-2xl font-bold">{value}</div>;
   };
@@ -26,10 +59,70 @@ const Index = () => {
       <div className="flex flex-col gap-6">
         <h1 className="text-3xl font-bold tracking-tight">{t('dashboard_title')}</h1>
         
-        {/* Seção 1: Métricas de Agendamento */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Filtro de Empresa (Apenas Super Admin) */}
+        {isSuperAdmin && (
+          <div className="w-full md:w-64">
+            <Select 
+              onValueChange={setSelectedCompanyId} 
+              value={selectedCompanyId} 
+              disabled={isLoadingCompanies || isLoading}
+            >
+              <SelectTrigger className="w-full">
+                <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder={t('filter_all_companies')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                {companies?.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {/* Seção 1: Métricas de Agendamento e Faturamento */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           
-          {/* Card 1: Total de Agendamentos */}
+          {/* Card 1: Faturamento Diário */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
+              <p className="text-xs text-muted-foreground">{t('daily_revenue_overview')}</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 2: Faturamento Semanal */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('weekly_revenue')}</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(revenueMetrics?.weekly_revenue || 0, true)}
+              <p className="text-xs text-muted-foreground">{t('weekly_revenue_overview')}</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 3: Total de Produtos */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(productCount || 0)}
+              <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 4: Total de Agendamentos */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
@@ -41,19 +134,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 2: Agendamentos Confirmados */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('confirmed_appointments')}</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(metrics.confirmedAppointments)}
-              <p className="text-xs text-muted-foreground">{t('confirmed_status')}</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 3: Agendamentos Pendentes */}
+          {/* Card 5: Agendamentos Pendentes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
