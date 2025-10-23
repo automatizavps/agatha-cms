@@ -7,6 +7,7 @@ import { useCurrentUserProfile } from "./user-profile";
 interface RevenueMetrics {
   daily_revenue: number;
   weekly_revenue: number;
+  monthly_revenue: number; // NOVO
 }
 
 export interface TopSellingItem {
@@ -18,7 +19,7 @@ export interface TopSellingItem {
 
 /**
  * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
- * na data atual e na semana atual.
+ * na data atual, na semana atual e no mês atual.
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
 const fetchRevenueMetrics = async (companyId: string | undefined): Promise<RevenueMetrics> => {
@@ -30,6 +31,9 @@ const fetchRevenueMetrics = async (companyId: string | undefined): Promise<Reven
   const dayOfWeek = todayStart.getDay(); // 0 = Domingo, 6 = Sábado
   const weekStart = new Date(todayStart);
   weekStart.setDate(todayStart.getDate() - dayOfWeek);
+  
+  // Define o início do mês (Dia 1, 00:00:00)
+  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
 
 
   // 1. Faturamento Diário (Hoje)
@@ -71,8 +75,29 @@ const fetchRevenueMetrics = async (companyId: string | undefined): Promise<Reven
   }
   
   const weekly_revenue = weeklyData.reduce((sum, order) => sum + order.valor_total, 0);
+  
+  // 3. Faturamento Mensal (Este Mês)
+  let monthlyQuery = supabase
+    .from("pedidos")
+    .select("valor_total")
+    .eq("status", "entregue")
+    .gte("created_at", monthStart.toISOString());
+    
+  if (companyId) {
+    monthlyQuery = monthlyQuery.eq("empresa_id", companyId);
+  }
 
-  return { daily_revenue, weekly_revenue };
+  const { data: monthlyData, error: monthlyError } = await monthlyQuery;
+
+  if (monthlyError) {
+    console.error("Error fetching monthly revenue:", monthlyError);
+    throw new Error("Failed to fetch monthly revenue");
+  }
+  
+  const monthly_revenue = monthlyData.reduce((sum, order) => sum + order.valor_total, 0);
+
+
+  return { daily_revenue, weekly_revenue, monthly_revenue };
 };
 
 /**
@@ -152,9 +177,10 @@ const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]
 export const useRevenueMetrics = (companyId: string | undefined) => {
   // Adiciona a data atual na query key para garantir que o cache seja atualizado diariamente
   const currentDate = new Date().toISOString().slice(0, 10); 
+  const currentMonth = new Date().toISOString().slice(0, 7); // Adiciona o mês na chave
   
   return useQuery<RevenueMetrics, Error>({
-    queryKey: ["revenueMetrics", companyId, currentDate],
+    queryKey: ["revenueMetrics", companyId, currentDate, currentMonth],
     queryFn: () => fetchRevenueMetrics(companyId),
     enabled: true, 
   });

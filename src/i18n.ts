@@ -60,6 +60,8 @@ const resources = {
       "daily_revenue_overview": "Pedidos entregues hoje",
       "weekly_revenue": "Faturamento Semanal",
       "weekly_revenue_overview": "Pedidos entregues esta semana",
+      "monthly_revenue": "Faturamento Mensal", // NOVO
+      "monthly_revenue_overview": "Pedidos entregues este mês", // NOVO
       "total_products": "Total de Produtos",
       "total_products_overview": "Produtos cadastrados na empresa",
       "total_clients": "Total de Clientes", // NOVO
