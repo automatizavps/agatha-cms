@@ -65,14 +65,14 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
       <CardHeader>
         <CardTitle>{t('chart_title_daily_services')}</CardTitle>
       </CardHeader>
-      <CardContent className="h-[calc(100%-4rem)] pb-0">
+      <CardContent className="h-[calc(100%-4rem)] pb-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={formattedData}
             margin={{
-              top: 5, // Reduzido
-              right: 5, // Reduzido
-              left: -15, // Ajustado para compensar
+              top: 5,
+              right: 5,
+              left: -15,
               bottom: 0,
             }}
           >
@@ -80,14 +80,14 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
             <XAxis
               dataKey="hour"
               stroke="hsl(var(--foreground))"
-              fontSize={10} // Reduzido
+              fontSize={10}
               tickLine={false}
               axisLine={false}
               tickFormatter={formatHour}
             />
             <YAxis
               stroke="hsl(var(--foreground))"
-              fontSize={10} // Reduzido
+              fontSize={10}
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${value}`}
@@ -100,8 +100,8 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
               name={t('services_completed')}
               stroke="hsl(var(--primary))"
               strokeWidth={2}
-              dot={{ r: 3 }} // Reduzido
-              activeDot={{ r: 5 }} // Reduzido
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
             />
           </LineChart>
         </ResponsiveContainer>
