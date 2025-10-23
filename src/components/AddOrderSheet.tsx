@@ -25,8 +25,8 @@ const AddOrderSheet = () => {
     },
   });
 
-  const handleSubmit = (values: { cliente_id: string; valor_total: number; items: { produto_id: string; quantidade: number; preco_unitario: number; }[] }) => {
-    mutation.mutate(values);
+  const handleSubmit = (values: { cliente_id: string; valor_total: number; items: { produto_id: string; quantidade: number; preco_unitario: number; }[]; empresa_id?: string }) => {
+    mutation.mutate({ ...values, queryClient });
   };
 
   return (

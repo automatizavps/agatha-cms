@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, QueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { createNotification } from "./notifications"; // Importando
 
@@ -109,10 +109,11 @@ interface CreateOrderParams {
   cliente_id: string;
   valor_total: number;
   items: ItemToCreate[];
-  empresa_id?: string; // NOVO: Opcional para Super Admin
+  queryClient: QueryClient; // NOVO: Adicionando QueryClient
+  empresa_id?: string; // Opcional para Super Admin
 }
 
-export const createOrder = async ({ cliente_id, valor_total, items, empresa_id: provided_empresa_id }: CreateOrderParams) => {
+export const createOrder = async ({ cliente_id, valor_total, items, queryClient, empresa_id: provided_empresa_id }: CreateOrderParams) => {
   let empresa_id: string;
 
   if (provided_empresa_id) {
@@ -181,7 +182,7 @@ export const createOrder = async ({ cliente_id, valor_total, items, empresa_id: 
       titulo: "Novo Pedido Criado",
       mensagem: `Pedido #${pedido_id.slice(0, 8)} no valor de R$ ${valor_total.toFixed(2)} foi criado.`,
       link: "/orders", // Link para a página de pedidos
-      queryClient: queryClient, // Adicionado queryClient
+      queryClient: queryClient, // Passando o queryClient
     });
   }
 
@@ -194,9 +195,10 @@ export const createOrder = async ({ cliente_id, valor_total, items, empresa_id: 
 interface UpdateOrderStatusParams {
   id: string;
   status: OrderStatus;
+  queryClient: QueryClient; // Adicionando QueryClient aqui também, pois é usado na notificação
 }
 
-export const updateOrderStatus = async ({ id, status }: UpdateOrderStatusParams) => {
+export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrderStatusParams) => {
   const { data, error } = await supabase
     .from("pedidos")
     .update({ status: status })

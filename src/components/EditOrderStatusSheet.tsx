@@ -37,6 +37,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
     mutation.mutate({
       id: order.id,
       status: values.status,
+      queryClient: queryClient, // Passando o queryClient
     });
   };
 
@@ -50,6 +51,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
       quantidade: item.quantidade,
       preco_unitario: item.preco_unitario,
     })) || [],
+    empresa_id: order.empresa_id, // Garantindo que o ID da empresa esteja no defaultValues
   };
   
   if (isLoadingItems) {
