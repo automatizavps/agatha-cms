@@ -124,9 +124,10 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   });
   
   // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
-  const selectedCompanyId = isSuperAdmin 
-    ? form.watch('empresa_id') 
-    : profile?.empresa_id;
+  // Se estiver editando, usamos o valor inicial da empresa, que é fixo.
+  const selectedCompanyId = isEditing 
+    ? defaultValues?.empresa_id 
+    : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
     
   const isCompanySelected = !!selectedCompanyId;
 
@@ -156,7 +157,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   useEffect(() => {
     if (isEditing && defaultValues) {
       // Se os itens foram carregados (indicando que os dados do agendamento estão prontos)
-      if (defaultValues.items && defaultValues.items.length > 0) {
+      // E se o ID da empresa estiver presente (garantindo que o contexto de dados está pronto)
+      if (defaultValues.items && defaultValues.items.length > 0 && defaultValues.empresa_id) {
         form.reset({
           cliente_id: defaultValues.cliente_id || "",
           responsavel_id: defaultValues.responsavel_id || "",
@@ -164,7 +166,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           time: defaultValues.time || "09:00",
           status: defaultValues.status || 'pendente',
           items: defaultValues.items,
-          empresa_id: defaultValues.empresa_id || "",
+          empresa_id: defaultValues.empresa_id,
         });
       }
     }
@@ -213,11 +215,18 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     });
   };
   
-  // Determina se o campo empresa deve ser editável
+  // Determina se o campo empresa deve ser editável (apenas Super Admin na CRIAÇÃO)
   const isCompanyFieldEditable = isSuperAdmin && !isSubmitting && !isEditing;
   
   // Encontra o nome da empresa para exibição desabilitada
-  const companyName = companies?.find(c => c.id === (isEditing ? defaultValues?.empresa_id : form.watch('empresa_id')) )?.nome;
+  const companyIdToDisplay = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
+  const companyName = companies?.find(c => c.id === companyIdToDisplay)?.nome;
+  
+  // Determina se o campo empresa deve ser exibido (Super Admin ou se estiver editando)
+  const shouldShowCompanyField = isSuperAdmin || isEditing;
+  
+  // Determina se o aviso deve ser exibido (Apenas Super Admin E empresa não selecionada)
+  const shouldShowWarning = isSuperAdmin && !isCompanySelected;
   
   if (isCheckingPermissions) {
     return (
@@ -231,8 +240,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* Campo Empresa (Apenas Super Admin) */}
-        {isSuperAdmin && (
+        {/* Campo Empresa (Apenas Super Admin ou Edição) */}
+        {shouldShowCompanyField && (
           <FormField
             control={form.control}
             name="empresa_id"
@@ -257,6 +266,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                 ) : (
                   <FormControl>
                     <Input 
+                      // Exibe o nome da empresa ou 'N/A' se não for encontrado
                       value={companyName || t("company_not_found")} 
                       disabled 
                       className="bg-muted/50"
@@ -269,8 +279,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           />
         )}
         
-        {/* Aviso se a empresa não estiver selecionada */}
-        {!isCompanySelected && isSuperAdmin && (
+        {/* Aviso se a empresa não estiver selecionada (Apenas Super Admin na CRIAÇÃO) */}
+        {shouldShowWarning && !isEditing && (
           <div className="p-3 bg-yellow-100/50 dark:bg-yellow-900/20 border border-yellow-400/50 rounded-md text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
             <Building className="h-4 w-4" />
             {t('select_company_to_load_data')}
@@ -296,7 +306,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         "w-full justify-between",
                         !field.value && "text-muted-foreground"
                       )}
-                      disabled={isLoadingClients || isSubmitting || isEditing || !isCompanySelected}
+                      disabled={isLoadingClients || isSubmitting || !isCompanySelected}
                     >
                       {field.value
                         ? selectedClient?.nome
