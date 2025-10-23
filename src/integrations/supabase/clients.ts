@@ -10,6 +10,9 @@ export interface Client {
   telefone: string | null;
   endereco_completo: string | null; // Novo campo
   created_at: string;
+  empresa: { // Adicionando o relacionamento com a empresa
+    nome: string;
+  } | null;
 }
 
 // --- Fetch ---
@@ -17,7 +20,7 @@ export interface Client {
 const fetchClients = async (): Promise<Client[]> => {
   const { data, error } = await supabase
     .from("clientes")
-    .select("id, empresa_id, nome, email, telefone, endereco_completo, created_at")
+    .select("id, empresa_id, nome, email, telefone, endereco_completo, created_at, empresas (nome)") // Incluindo o nome da empresa
     .order("nome", { ascending: true });
 
   if (error) {

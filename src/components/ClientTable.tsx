@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Client, deleteClient } from "@/integrations/supabase/clients";
-import { MoreHorizontal, Trash2, Pencil, User } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, User, Building } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditClientSheet from "./EditClientSheet";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 
 interface ClientTableProps {
   clients: Client[];
@@ -81,6 +82,9 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit }) => {
 const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { data: profile } = useCurrentUserProfile();
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   const handleEdit = (client: Client) => {
     setEditingClient(client);
@@ -101,6 +105,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              {isSuperAdmin && <TableHead className="hidden md:table-cell">Empresa</TableHead>}
               <TableHead className="hidden sm:table-cell">Email</TableHead>
               <TableHead className="hidden md:table-cell">Telefone</TableHead>
               <TableHead className="hidden lg:table-cell">Endereço</TableHead>
@@ -114,6 +119,14 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
                   <User className="h-4 w-4 text-muted-foreground" />
                   {client.nome}
                 </TableCell>
+                {isSuperAdmin && (
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3" />
+                      {client.empresa?.nome || 'N/A'}
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell className="hidden sm:table-cell">{client.email || 'N/A'}</TableCell>
                 <TableCell className="hidden md:table-cell">{client.telefone || 'N/A'}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{client.endereco_completo || 'N/A'}</TableCell>
