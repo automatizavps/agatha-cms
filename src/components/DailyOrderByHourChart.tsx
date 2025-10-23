@@ -84,7 +84,7 @@ export default function DailyOrderByHourChart() {
             margin={{
               top: 5,
               right: 5,
-              left: -35, // Ajustado para -35
+              left: -40, // Ajustado para -40
               bottom: 0,
             }}
           >
