@@ -73,10 +73,10 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
           <LineChart
             data={formattedData}
             margin={{
-              top: 10, // Reduzido de 20
-              right: 10, // Reduzido de 30
-              left: -20, // Movido para a esquerda para economizar espaço
-              bottom: 0, // Reduzido de 5
+              top: 10,
+              right: 10,
+              left: -20,
+              bottom: 20, // Aumentado para 20
             }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -84,20 +84,20 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
               dataKey="name" 
               stroke="hsl(var(--foreground))" 
               interval={3}
-              fontSize={10} // Fonte menor para compactar
+              fontSize={10}
             />
             <YAxis 
               allowDecimals={false} 
               stroke="hsl(var(--foreground))" 
               label={{ value: t('count'), angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: 'hsl(var(--foreground))' } }}
-              fontSize={10} // Fonte menor para compactar
+              fontSize={10}
             />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'hsl(var(--card))', 
                 border: '1px solid hsl(var(--border))', 
                 borderRadius: '0.5rem',
-                fontSize: '0.8rem' // Fonte menor no tooltip
+                fontSize: '0.8rem'
               }}
               labelStyle={{ color: 'hsl(var(--foreground))' }}
               formatter={(value, name, props) => [value, t('services_completed')]}
@@ -107,8 +107,8 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
               dataKey="count" 
               stroke="hsl(var(--primary))" 
               strokeWidth={2} 
-              dot={{ r: 3 }} // Ponto menor
-              activeDot={{ r: 6 }} // Ponto ativo menor
+              dot={{ r: 3 }}
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>
