@@ -32,7 +32,7 @@ export default function DailyServiceByHourChart() {
     return (
       <Card className="h-64">
         <CardHeader>
-          <CardTitle>{t('chart_title_daily_services')}</CardTitle>
+          <CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center items-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -45,7 +45,7 @@ export default function DailyServiceByHourChart() {
     return (
       <Card className="h-64">
         <CardHeader>
-          <CardTitle>{t('chart_title_daily_services')}</CardTitle>
+          <CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle>
         </CardHeader>
         <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
           {isError ? t("chart_error") : t("chart_no_data_today")}
@@ -59,7 +59,7 @@ export default function DailyServiceByHourChart() {
   return (
     <Card className="h-64">
       <CardHeader>
-        <CardTitle>{t('chart_title_daily_services')}</CardTitle>
+        <CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle>
       </CardHeader>
       <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
