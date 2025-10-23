@@ -68,7 +68,7 @@ export default function DailyServiceByHourChart() {
             margin={{
               top: 5,
               right: 5,
-              left: -15,
+              left: -25, // Ajustado para reduzir o espaço
               bottom: 0,
             }}
           >
