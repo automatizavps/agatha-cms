@@ -1,4 +1,3 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered } from "lucide-react";
@@ -186,9 +185,6 @@ const Index = () => {
           <TopSellingServicesCard companyId={filteredCompanyId} />
         </div>
         
-        <div className="mt-4">
-          <MadeWithDyad />
-        </div>
       </div>
     </DashboardLayout>
   );
