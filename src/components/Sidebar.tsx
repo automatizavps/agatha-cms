@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   return (
     <div 
       className={cn(
-        "flex h-full flex-col border-r bg-sidebar px-4 py-0 shadow-lg transition-all duration-300",
+        "flex h-full flex-col border-r bg-sidebar px-4 py-0 shadow-lg transition-all duration-300 overflow-x-hidden", // Adicionado overflow-x-hidden
         isCollapsed ? "w-[70px]" : "w-full"
       )}
     >
