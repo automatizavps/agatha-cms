@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Importando Alert
+import { cn } from "@/lib/utils"; // Importando cn para combinar classes
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -101,11 +102,16 @@ const ProductsContent = () => {
         <AddProductSheet />
       </div>
       
-      {/* Alerta de Estoque Baixo */}
+      {/* Alerta de Estoque Baixo com estilo customizado */}
       {lowStockProducts.length > 0 && (
-        <Alert variant="destructive" className="mt-4">
+        <Alert 
+          className={cn(
+            "mt-4 border-yellow-400/50 bg-[#2A2A2A] text-white", // Fundo customizado e texto branco
+            "[&>svg]:text-yellow-400 [&>svg]:dark:text-yellow-400" // Ícone amarelo
+          )}
+        >
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Atenção: Estoque Baixo!</AlertTitle>
+          <AlertTitle className="text-yellow-400">Atenção: Estoque Baixo!</AlertTitle>
           <AlertDescription>
             Os seguintes produtos estão com estoque abaixo de {LOW_STOCK_THRESHOLD} unidades:
             <ul className="list-disc list-inside mt-2 space-y-1">
