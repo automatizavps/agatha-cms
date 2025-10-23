@@ -27,12 +27,14 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
       end={to !== "/"} 
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          "flex items-center gap-3 rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           isActive
             ? "bg-sidebar-primary text-sidebar-primary-foreground"
             : "text-sidebar-foreground",
-          isCollapsed && "justify-center px-0", // Removendo padding horizontal quando colapsado
-          isSubItem && !isCollapsed && "pl-8 text-sm py-1.5", // Estilo para sub-item
+          // Estilos para estado colapsado
+          isCollapsed ? "justify-center w-full px-0" : "px-3",
+          // Estilos para sub-item
+          isSubItem && !isCollapsed && "pl-8 text-sm py-1.5",
         )
       }
     >
@@ -76,11 +78,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
     <div 
       className={cn(
         "flex h-full flex-col border-r bg-sidebar py-0 shadow-lg transition-all duration-300 overflow-x-hidden",
-        isCollapsed ? "w-[70px] px-0" : "w-full px-4" // Ajustando padding aqui
+        isCollapsed ? "w-[70px] px-0" : "w-full px-4"
       )}
     >
+      {/* Cabeçalho: Ícone Bot */}
       <div className={cn("flex items-center border-b mb-4", isCollapsed ? "justify-center p-4" : "justify-start p-4")}>
-        {/* Ícone do Robô */}
         <Bot className={cn("h-8 w-8 text-sidebar-primary flex-shrink-0", !isCollapsed && "mr-2")} />
         
         {/* Título do App */}
@@ -140,8 +142,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             <Collapsible defaultOpen={isProductsServicesOpen} disabled={isCollapsed}>
               <CollapsibleTrigger 
                 className={cn(
-                  "flex items-center justify-between w-full rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isCollapsed && "justify-center px-0"
+                  "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  isCollapsed ? "justify-center px-0" : "px-3"
                 )}
               >
                 <div className="flex items-center gap-3">
