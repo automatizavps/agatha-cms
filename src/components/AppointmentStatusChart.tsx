@@ -47,7 +47,7 @@ const AppointmentStatusChart: React.FC = () => {
             margin={{
               top: 5,
               right: 10, 
-              left: -20, 
+              left: -30, // Ajustado para -30
               bottom: 0, 
             }}
           >
