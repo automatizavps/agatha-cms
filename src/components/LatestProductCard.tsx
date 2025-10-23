@@ -37,8 +37,8 @@ const LatestProductCard: React.FC<LatestProductCardProps> = ({ product }) => {
         <CardTitle className="text-base truncate">{product.nome}</CardTitle>
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-1 text-sm">
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <DollarSign className="h-4 w-4" />
+        {/* Removido o ícone DollarSign */}
+        <div className="flex items-center text-muted-foreground">
           <span>{formatCurrency(product.preco)}</span>
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
