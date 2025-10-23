@@ -20,7 +20,7 @@ export interface Client {
 const fetchClients = async (): Promise<Client[]> => {
   const { data, error } = await supabase
     .from("clientes")
-    .select("id, empresa_id, nome, email, telefone, endereco_completo, created_at, empresas (nome)") // Incluindo o nome da empresa
+    .select("id, empresa_id, nome, email, telefone, endereco_completo, created_at, empresa:empresas (nome)") // Usando alias 'empresa' para o relacionamento 'empresas'
     .order("nome", { ascending: true });
 
   if (error) {
