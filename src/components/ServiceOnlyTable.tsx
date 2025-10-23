@@ -100,14 +100,9 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
     ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
     : ArrowUpDown;
 
-  // Verifica se a classe 'text-right' está presente para aplicar 'justify-end'
-  const isTextRight = className?.includes('text-right');
-  // Verifica se a classe 'text-center' está presente para aplicar 'justify-center'
-  const isTextCenter = className?.includes('text-center');
-
   return (
     <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className={cn("flex items-center gap-1", isTextRight && "justify-end", isTextCenter && "justify-center")}>
+      <div className="flex items-center gap-1">
         {children}
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
@@ -238,7 +233,7 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-center" // ALTERADO para text-center
+                className="text-right" // CORREÇÃO APLICADA AQUI
               >
                 {t('service_table_header_duration')}
               </SortableHeader>
@@ -278,8 +273,8 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
                 <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                   {service.categoria || 'N/A'}
                 </TableCell>
-                <TableCell className="text-center text-sm text-muted-foreground"> {/* ALTERADO para text-center */}
-                  <div className="flex items-center justify-center gap-1">
+                <TableCell className="text-right text-sm text-muted-foreground">
+                  <div className="flex items-center justify-end gap-1">
                     <Clock className="h-3 w-3" />
                     {service.tempo_servico ? `${service.tempo_servico} min` : 'N/A'}
                   </div>
