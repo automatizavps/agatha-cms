@@ -4,6 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,8 +28,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <Sidebar />
             </SheetContent>
           </Sheet>
-          <div className="w-full flex-1 text-center">
+          <div className="w-full flex items-center justify-between">
             <h1 className="text-lg font-semibold">App Dashboard</h1>
+            <ThemeToggle />
           </div>
         </header>
         <main className="flex-1 p-4 overflow-auto">{children}</main>
@@ -42,6 +44,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <Sidebar />
       </div>
       <div className="flex flex-col">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-end gap-4 border-b bg-background px-6">
+          <ThemeToggle />
+        </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
           {children}
         </main>
