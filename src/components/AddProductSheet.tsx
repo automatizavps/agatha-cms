@@ -44,11 +44,11 @@ const AddProductSheet = () => {
           <PlusCircle className="mr-2 h-4 w-4" /> Novo Item
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Cadastrar Novo Item</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="py-4 flex-1 overflow-y-auto">
           <ProductForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 

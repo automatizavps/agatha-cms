@@ -57,11 +57,11 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Usuário: {user.nome_completo}</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="py-4 flex-1 overflow-y-auto">
           <UserForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 

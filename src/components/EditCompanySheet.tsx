@@ -47,11 +47,11 @@ const EditCompanySheet: React.FC<EditCompanySheetProps> = ({ company, isOpen, on
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Empresa: {company.nome}</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="py-4 flex-1 overflow-y-auto">
           <CompanyForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 

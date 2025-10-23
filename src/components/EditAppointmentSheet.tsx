@@ -53,11 +53,11 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Agendamento</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="py-4 flex-1 overflow-y-auto">
           <AppointmentForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 

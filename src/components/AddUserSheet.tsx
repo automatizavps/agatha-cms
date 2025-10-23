@@ -48,11 +48,11 @@ const AddUserSheet = () => {
           <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Novo Usuário
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Adicionar Novo Usuário</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="py-4 flex-1 overflow-y-auto">
           <UserForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 

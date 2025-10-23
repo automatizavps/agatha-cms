@@ -34,11 +34,11 @@ const AddAppointmentSheet = () => {
           <CalendarPlus className="mr-2 h-4 w-4" /> Novo Agendamento
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Novo Agendamento</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="py-4 flex-1 overflow-y-auto">
           <AppointmentForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 

@@ -46,11 +46,11 @@ const EditClientSheet: React.FC<EditClientSheetProps> = ({ client, isOpen, onOpe
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Cliente: {client.nome}</SheetTitle>
         </SheetHeader>
-        <div className="py-4">
+        <div className="py-4 flex-1 overflow-y-auto">
           <ClientForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 
