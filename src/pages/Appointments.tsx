@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppointments, Appointment, deleteAppointment } from "@/integrations/supabase/appointments";
-import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -137,6 +137,7 @@ const Appointments = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cliente</TableHead>
+                    <TableHead>Serviço</TableHead>
                     <TableHead>Data e Hora</TableHead>
                     <TableHead>Responsável</TableHead>
                     <TableHead>Status</TableHead>
@@ -147,6 +148,10 @@ const Appointments = () => {
                   {appointments.map((appointment) => (
                     <TableRow key={appointment.id}>
                       <TableCell className="font-medium">{appointment.clientes?.nome || "Cliente Removido"}</TableCell>
+                      <TableCell className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        {appointment.servicos?.nome || "Serviço Removido"}
+                      </TableCell>
                       <TableCell>
                         {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>

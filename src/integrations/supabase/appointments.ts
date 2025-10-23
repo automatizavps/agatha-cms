@@ -5,6 +5,7 @@ export interface Appointment {
   id: string;
   empresa_id: string;
   cliente_id: string | null; // Agora usamos o ID do cliente
+  servico_id: string | null; // Novo campo
   responsavel_id: string | null;
   data_hora: string; // ISO string
   status: 'pendente' | 'confirmado' | 'cancelado' | 'concluido';
@@ -17,20 +18,25 @@ export interface Appointment {
   clientes: { // Novo relacionamento para obter o nome do cliente
     nome: string;
   } | null;
+  servicos: { // Novo relacionamento para obter o nome do serviço
+    nome: string;
+  } | null;
 }
 
 const fetchAppointments = async (): Promise<Appointment[]> => {
-  // Buscamos agendamentos, o nome do responsável e o nome do cliente
+  // Buscamos agendamentos, o nome do responsável, o nome do cliente e o nome do serviço
   const { data, error } = await supabase
     .from("agendamentos")
     .select(`
       id,
       cliente_id,
+      servico_id,
       data_hora,
       status,
       responsavel_id,
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
-      clientes (nome)
+      clientes (nome),
+      servicos:produtos!agendamentos_servico_id_fkey (nome)
     `)
     .order("data_hora", { ascending: true });
 
@@ -50,12 +56,13 @@ export const useAppointments = () => {
 };
 
 interface CreateAppointmentParams {
-  cliente_id: string; // Alterado
+  cliente_id: string;
+  servico_id: string; // Novo campo
   responsavel_id: string;
   data_hora: Date;
 }
 
-export const createAppointment = async ({ cliente_id, responsavel_id, data_hora }: CreateAppointmentParams) => {
+export const createAppointment = async ({ cliente_id, servico_id, responsavel_id, data_hora }: CreateAppointmentParams) => {
   // 1. Obter o ID da empresa do usuário logado
   const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
 
@@ -79,7 +86,8 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora 
     .from("agendamentos")
     .insert({
       empresa_id: empresa_id,
-      cliente_id: cliente_id, // Usando cliente_id
+      cliente_id: cliente_id,
+      servico_id: servico_id, // Incluindo servico_id
       responsavel_id: responsavel_id,
       data_hora: data_hora.toISOString(),
       created_by: created_by,
@@ -98,17 +106,19 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora 
 
 interface UpdateAppointmentParams {
   id: string;
-  cliente_id: string; // Alterado
+  cliente_id: string;
+  servico_id: string; // Novo campo
   responsavel_id: string;
   data_hora: Date;
   status: Appointment['status'];
 }
 
-export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_hora, status }: UpdateAppointmentParams) => {
+export const updateAppointment = async ({ id, cliente_id, servico_id, responsavel_id, data_hora, status }: UpdateAppointmentParams) => {
   const { data, error } = await supabase
     .from("agendamentos")
     .update({
-      cliente_id: cliente_id, // Usando cliente_id
+      cliente_id: cliente_id,
+      servico_id: servico_id, // Incluindo servico_id
       responsavel_id: responsavel_id,
       data_hora: data_hora.toISOString(),
       status: status,

@@ -29,13 +29,16 @@ import { Appointment } from "@/integrations/supabase/appointments";
 import { useClients } from "@/integrations/supabase/clients";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import React from "react";
+import { useServicesOnly } from "@/integrations/supabase/products"; // Importando serviços
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
 const formSchema = z.object({
-  // Alterado de cliente_nome para cliente_id
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
+  }),
+  servico_id: z.string().uuid({ // Novo campo
+    message: "Selecione um serviço válido.",
   }),
   responsavel_id: z.string().uuid({
     message: "Selecione um responsável válido.",
@@ -48,13 +51,13 @@ const formSchema = z.object({
   }),
   status: z.enum(statusOptions, {
     required_error: "O status é obrigatório.",
-  }).optional(), // Opcional na criação, mas presente na edição
+  }).optional(),
 });
 
 type AppointmentFormValues = z.infer<typeof formSchema>;
 
 interface AppointmentFormProps {
-  onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => void;
+  onSubmit: (values: { cliente_id: string; servico_id: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<AppointmentFormValues>;
   isEditing?: boolean;
@@ -63,11 +66,13 @@ interface AppointmentFormProps {
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: users, isLoading: isLoadingUsers } = useUsers();
   const { data: clients, isLoading: isLoadingClients } = useClients();
+  const { data: services, isLoading: isLoadingServices } = useServicesOnly(); // Carregando serviços
 
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
+      servico_id: defaultValues?.servico_id || "", // Novo default
       responsavel_id: defaultValues?.responsavel_id || "",
       date: defaultValues?.date,
       time: defaultValues?.time || "09:00",
@@ -84,6 +89,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
 
     onSubmit({
       cliente_id: values.cliente_id,
+      servico_id: values.servico_id, // Incluindo servico_id
       responsavel_id: values.responsavel_id,
       data_hora: data_hora,
       status: values.status,
@@ -91,6 +97,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   };
   
   const allClients = clients || [];
+  const allServices = services || [];
 
   return (
     <Form {...form}>
@@ -146,6 +153,67 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                             )}
                           />
                           {client.nome}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Campo Serviço (Combobox) */}
+        <FormField
+          control={form.control}
+          name="servico_id"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Serviço</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoadingServices || isSubmitting}
+                    >
+                      {field.value
+                        ? allServices.find(
+                            (service) => service.id === field.value
+                          )?.nome
+                        : isLoadingServices ? "Carregando serviços..." : "Selecione o serviço"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar serviço..." />
+                    <CommandEmpty>Nenhum serviço encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {allServices.map((service) => (
+                        <CommandItem
+                          value={service.nome}
+                          key={service.id}
+                          onSelect={() => {
+                            form.setValue("servico_id", service.id);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              service.id === field.value
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {service.nome}
                         </CommandItem>
                       ))}
                     </CommandGroup>
