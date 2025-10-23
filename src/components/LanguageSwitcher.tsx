@@ -33,6 +33,9 @@ export function LanguageSwitcher() {
         <DropdownMenuItem onClick={() => changeLanguage('es')}>
           Español
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+          Français
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
