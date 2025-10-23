@@ -96,7 +96,14 @@ const LatestProductsCarousel = () => {
         <div className="embla overflow-hidden" ref={emblaRef}>
           <div className="embla__container flex touch-pan-y">
             {products.map((product) => (
-              <div key={product.id} className="embla__slide flex-none min-w-0 pl-6 py-4">
+              <div 
+                key={product.id} 
+                className={cn(
+                  "embla__slide flex-none min-w-0 pl-6 py-4",
+                  // Define a largura do slide para ser responsiva
+                  "w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5"
+                )}
+              >
                 <LatestProductCard product={product} />
               </div>
             ))}

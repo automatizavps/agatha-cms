@@ -21,7 +21,7 @@ const LatestProductCard: React.FC<LatestProductCardProps> = ({ product }) => {
   };
 
   return (
-    <Card className="w-[280px] flex flex-col overflow-hidden h-full">
+    <Card className="w-full flex flex-col overflow-hidden h-full">
       <div className="relative h-32 w-full bg-muted/50 flex items-center justify-center">
         {product.fotos && product.fotos.length > 0 ? (
           <img 
