@@ -100,8 +100,11 @@ const LatestProductsCarousel = () => {
                 key={product.id} 
                 className={cn(
                   "embla__slide flex-none min-w-0 pl-6 py-4",
-                  // Define a largura do slide para ser responsiva
-                  "w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5"
+                  // Mobile (padrão) 2 colunas: w-1/2
+                  // Tablet (sm) 3 colunas: sm:w-1/3
+                  // Desktop (md) 4 colunas: md:w-1/4
+                  // Desktop (lg) 5 colunas: lg:w-1/5
+                  "w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
                 )}
               >
                 <LatestProductCard product={product} />
