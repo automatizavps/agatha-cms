@@ -79,13 +79,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         isCollapsed ? "w-[70px]" : "w-full"
       )}
     >
-      <div className={cn("flex items-center p-4 border-b mb-4", isCollapsed ? "justify-center" : "justify-start")}>
+      {/* Ajustado para h-16 (4rem) e removido mb-4 */}
+      <div className={cn("flex items-center h-16 border-b", isCollapsed ? "justify-center px-0" : "justify-start px-2")}>
         <h1 className={cn("text-xl font-bold text-sidebar-primary overflow-hidden transition-opacity duration-300", isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto")}>
           {t('app_name')}
         </h1>
         {isCollapsed && <Home className="h-6 w-6 text-sidebar-primary" />}
       </div>
-      <nav className="grid gap-2 text-sm font-medium">
+      <nav className="grid gap-2 text-sm font-medium overflow-y-auto flex-1 pt-4">
         
         {/* Categoria: Geral */}
         {!isCollapsed && (
