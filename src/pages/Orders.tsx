@@ -26,7 +26,8 @@ const OrdersContent = () => {
     return orders.filter(order => 
       order.clientes?.nome.toLowerCase().includes(lowerCaseSearch) ||
       order.status.toLowerCase().includes(lowerCaseSearch) ||
-      order.id.toLowerCase().includes(lowerCaseSearch)
+      // Adicionando busca pelo prefixo do ID (os 8 primeiros caracteres)
+      order.id.slice(0, 8).toLowerCase().includes(lowerCaseSearch)
     );
   }, [orders, searchTerm]);
 
