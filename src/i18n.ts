@@ -57,9 +57,9 @@ const resources = {
       
       // Novas Métricas do Dashboard
       "daily_revenue": "Faturamento Diário",
-      "daily_revenue_overview": "Pedidos entregues nas últimas 24h",
+      "daily_revenue_overview": "Pedidos entregues hoje",
       "weekly_revenue": "Faturamento Semanal",
-      "weekly_revenue_overview": "Pedidos entregues nos últimos 7 dias",
+      "weekly_revenue_overview": "Pedidos entregues esta semana",
       "total_products": "Total de Produtos",
       "total_products_overview": "Produtos cadastrados na empresa",
       "latest_products_title": "Últimos Produtos Cadastrados", // NOVO
@@ -71,7 +71,7 @@ const resources = {
       // Páginas
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Relatórios detalhados e visualizações de dados.",
-      "chart_title_appointment_status": "Status dos Agendamentos", // ALTERADO
+      "chart_title_appointment_status": "Status dos Agendamentos (Hoje)", // ALTERADO
       "chart_no_data": "Nenhum dado de agendamento para exibir.",
       "chart_error": "Erro ao carregar dados do gráfico.",
       "analytics_placeholder": "Outros relatórios e métricas virão aqui.",
@@ -218,6 +218,14 @@ const resources = {
       "chart_title_daily_services": "Serviços Concluídos por Hora (Hoje)",
       "chart_no_data_today": "Nenhum serviço concluído hoje para exibir.",
       "services_completed": "Serviços Concluídos",
+      
+      // Gráfico de Pedidos por Hora (NOVO)
+      "chart_title_daily_orders": "Pedidos Entregues por Hora (Hoje)",
+      "chart_no_data_today_orders": "Nenhum pedido entregue hoje para exibir.",
+      "orders_delivered": "Pedidos Entregues",
+      "chart_title_order_status": "Status dos Pedidos (Hoje)",
+      "select_company_for_metrics": "Selecione uma empresa para visualizar métricas detalhadas.",
+      
       "count": "Contagem",
       
       // Agendamento (Appointment) - NOVO

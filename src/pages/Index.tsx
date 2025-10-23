@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered } from "lucide-react";
+import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered, ShoppingCart } from "lucide-react";
 import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMetrics";
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
@@ -14,12 +14,13 @@ import TopSellingItemsCard from "@/components/TopSellingItemsCard";
 import TopSellingServicesCard from "@/components/TopSellingServicesCard";
 import DailyServiceByHourChart from "@/components/DailyServiceByHourChart";
 import AppointmentStatusChart from "@/components/AppointmentStatusChart";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando o novo hook
+import DailyOrderByHourChart from "@/components/DailyOrderByHourChart"; // NOVO
+import OrderStatusChart from "@/components/OrderStatusChart"; // NOVO
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 
 const Index = () => {
   const { t } = useTranslation();
   
-  // Usando o contexto de filtro
   const { 
     isSuperAdmin, 
     selectedCompanyId, 
@@ -30,14 +31,11 @@ const Index = () => {
   
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Métricas de Agendamento (AGORA FILTRADO)
   const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
   
-  // Métricas de Faturamento e Produtos (JÁ FILTRADO)
   const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
   
-  // Métricas de Equipes (AGORA FILTRADO)
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
   const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter;
@@ -152,7 +150,7 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Gráficos de Serviços */}
+        {/* Seção 2: Gráficos de Agendamentos */}
         <div className="grid gap-6 grid-cols-12">
           {/* Gráfico de Serviços por Hora (Linha) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-8">
@@ -162,6 +160,19 @@ const Index = () => {
           {/* Gráfico de Status de Agendamentos (Barra) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
             <AppointmentStatusChart />
+          </div>
+        </div>
+        
+        {/* NOVO: Seção 2.1: Gráficos de Pedidos */}
+        <div className="grid gap-6 grid-cols-12">
+          {/* Gráfico de Pedidos Entregues por Hora (Linha) */}
+          <div className="col-span-12 md:col-span-6 lg:col-span-8">
+            <DailyOrderByHourChart />
+          </div>
+          
+          {/* Gráfico de Status dos Pedidos (Barra) */}
+          <div className="col-span-12 md:col-span-6 lg:col-span-4">
+            <OrderStatusChart />
           </div>
         </div>
         
