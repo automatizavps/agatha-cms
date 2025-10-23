@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Home, Settings, BarChart3, Users, Calendar, Briefcase } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { Separator } from "@/components/ui/separator";
 
 interface NavItemProps {
   to: string;
@@ -44,13 +45,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
         <h1 className="text-xl font-bold text-sidebar-primary">App Dashboard</h1>
       </div>
       <nav className="grid gap-2 text-sm font-medium">
+        
+        {/* Categoria: Geral */}
+        <div className="text-xs font-semibold text-muted-foreground uppercase mt-2 mb-1 px-3">Geral</div>
         <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" onClick={onNavigate} />
-        <NavItem
-          to="/appointments"
-          icon={<Calendar className="h-5 w-5" />}
-          label="Agendamentos"
-          onClick={onNavigate}
-        />
         <NavItem
           to="/analytics"
           icon={<BarChart3 className="h-5 w-5" />}
@@ -58,8 +56,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
           onClick={onNavigate}
         />
         
+        <Separator className="my-2 bg-sidebar-border" />
+
+        {/* Categoria: Operacional */}
+        <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">Operacional</div>
+        <NavItem
+          to="/appointments"
+          icon={<Calendar className="h-5 w-5" />}
+          label="Agendamentos"
+          onClick={onNavigate}
+        />
+
         {canManage && (
           <>
+            <Separator className="my-2 bg-sidebar-border" />
+            {/* Categoria: Gestão */}
+            <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">Gestão</div>
             <NavItem
               to="/clients"
               icon={<Briefcase className="h-5 w-5" />}
@@ -69,16 +81,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
             <NavItem
               to="/users"
               icon={<Users className="h-5 w-5" />}
-              label="Users"
+              label="Usuários"
               onClick={onNavigate}
             />
           </>
         )}
         
+        <Separator className="my-2 bg-sidebar-border" />
+
+        {/* Categoria: Configurações */}
+        <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">Configurações</div>
         <NavItem
           to="/settings"
           icon={<Settings className="h-5 w-5" />}
-          label="Settings"
+          label="Configurações"
           onClick={onNavigate}
         />
       </nav>
