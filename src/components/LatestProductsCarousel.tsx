@@ -17,11 +17,18 @@ const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ company
   // Passando companyId para o hook
   const { data: products, isLoading, isError } = useLatestProductsOnly(companyId);
   
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+  const [emblaRef, emblaApi] = React.useState<any>(null);
+  const [emblaRefCallback, emblaApiCallback] = useEmblaCarousel({ 
     loop: false, 
     align: 'start',
     dragFree: true,
   });
+  
+  React.useEffect(() => {
+    if (emblaApiCallback) {
+      emblaApiCallback.on('init', () => setEmblaRef(emblaApiCallback));
+    }
+  }, [emblaApiCallback]);
   
   const [prevBtnDisabled, setPrevBtnDisabled] = React.useState(true);
   const [nextBtnDisabled, setNextBtnDisabled] = React.useState(true);
@@ -46,7 +53,7 @@ const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ company
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2">
             <Package className="h-5 w-5" /> {t('latest_products_title')}
           </CardTitle>
         </CardHeader>
@@ -61,7 +68,7 @@ const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ company
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2">
             <Package className="h-5 w-5" /> {t('latest_products_title')}
           </CardTitle>
         </CardHeader>
@@ -75,7 +82,7 @@ const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ company
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl flex items-center gap-2">
+        <CardTitle className="text-lg flex items-center gap-2">
           <Package className="h-5 w-5" /> {t('latest_products_title')}
         </CardTitle>
         <div className="flex gap-2">
@@ -98,7 +105,7 @@ const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ company
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="embla overflow-hidden" ref={emblaRef}>
+        <div className="embla overflow-hidden" ref={emblaRefCallback}>
           <div className="embla__container flex touch-pan-y">
             {products.map((product) => (
               <div 
