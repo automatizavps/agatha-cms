@@ -39,9 +39,8 @@ export interface Appointment {
 
 // --- Fetch Geral ---
 
-const fetchAppointments = async (): Promise<Appointment[]> => {
-  // Buscamos agendamentos, o nome do responsável, o nome do cliente E o nome da empresa
-  const { data, error } = await supabase
+const fetchAppointments = async (companyId?: string): Promise<Appointment[]> => {
+  let query = supabase
     .from("agendamentos")
     .select(`
       id,
@@ -54,8 +53,13 @@ const fetchAppointments = async (): Promise<Appointment[]> => {
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
       clientes (nome),
       empresas (nome)
-    `)
-    .order("data_hora", { ascending: true });
+    `);
+    
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query.order("data_hora", { ascending: true });
 
   if (error) {
     console.error("Error fetching appointments:", error);
@@ -65,10 +69,10 @@ const fetchAppointments = async (): Promise<Appointment[]> => {
   return data as Appointment[];
 };
 
-export const useAppointments = () => {
+export const useAppointments = (companyId?: string) => {
   return useQuery<Appointment[], Error>({
-    queryKey: ["appointments"],
-    queryFn: fetchAppointments,
+    queryKey: ["appointments", companyId],
+    queryFn: () => fetchAppointments(companyId),
   });
 };
 

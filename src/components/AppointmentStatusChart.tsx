@@ -4,8 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const AppointmentStatusChart = () => {
-  const { chartData, isLoading, isError } = useAppointmentChartData();
+interface AppointmentStatusChartProps {
+  companyId: string | undefined;
+}
+
+const AppointmentStatusChart: React.FC<AppointmentStatusChartProps> = ({ companyId }) => {
+  const { chartData, isLoading, isError } = useAppointmentChartData(companyId);
   const { t } = useTranslation();
 
   if (isLoading) {

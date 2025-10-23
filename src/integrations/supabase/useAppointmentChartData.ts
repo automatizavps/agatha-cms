@@ -14,8 +14,8 @@ const statusColors: Record<Appointment['status'], string> = {
   concluido: '#60a5fa', // blue-400
 };
 
-export const useAppointmentChartData = () => {
-  const { data: appointments, isLoading, isError, error } = useAppointments();
+export const useAppointmentChartData = (companyId?: string) => {
+  const { data: appointments, isLoading, isError, error } = useAppointments(companyId);
 
   const metrics: ChartData[] = [];
 

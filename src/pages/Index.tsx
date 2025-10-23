@@ -5,7 +5,7 @@ import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMet
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
 import { useTranslation } from "react-i18next";
-import { useDashboardCompanyId, useRevenueMetrics, useProductCount } from "@/integrations/supabase/dashboardMetrics";
+import { useDashboardCompanyId, useRevenueMetrics, useProductCount, useTopSellingItems, useTopSellingServices } from "@/integrations/supabase/dashboardMetrics";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,15 +30,15 @@ const Index = () => {
   // Determina o ID da empresa a ser usado para buscar dados
   const { companyId: filteredCompanyId, isLoading: isLoadingCompanyId } = useDashboardCompanyId(selectedCompanyId);
 
-  // Métricas de Agendamento
-  const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics();
+  // Métricas de Agendamento (AGORA FILTRADO)
+  const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
   
-  // Métricas de Faturamento e Produtos
+  // Métricas de Faturamento e Produtos (JÁ FILTRADO)
   const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
   
-  // Métricas de Equipes
-  const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams();
+  // Métricas de Equipes (AGORA FILTRADO)
+  const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
   const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingCompanyId || isLoadingProfile;
 
@@ -161,9 +161,9 @@ const Index = () => {
             <DailyServiceByHourChart companyId={filteredCompanyId} />
           </div>
           
-          {/* Gráfico de Status de Agendamentos (Barra) - Ocupa o espaço restante */}
+          {/* Gráfico de Status de Agendamentos (Barra) - AGORA FILTRADO */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
-            <AppointmentStatusChart />
+            <AppointmentStatusChart companyId={filteredCompanyId} />
           </div>
         </div>
         

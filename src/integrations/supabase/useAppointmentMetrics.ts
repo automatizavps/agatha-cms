@@ -6,8 +6,8 @@ interface AppointmentMetrics {
   pendingAppointments: number;
 }
 
-export const useAppointmentMetrics = () => {
-  const { data: appointments, isLoading, isError, error } = useAppointments();
+export const useAppointmentMetrics = (companyId?: string) => {
+  const { data: appointments, isLoading, isError, error } = useAppointments(companyId);
 
   const metrics: AppointmentMetrics = {
     totalAppointments: 0,

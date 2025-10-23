@@ -28,8 +28,8 @@ export interface TeamMember {
 
 // --- Fetch Teams ---
 
-const fetchTeams = async (): Promise<Team[]> => {
-  const { data, error } = await supabase
+const fetchTeams = async (companyId?: string): Promise<Team[]> => {
+  let query = supabase
     .from("equipes")
     .select(`
       id,
@@ -39,8 +39,13 @@ const fetchTeams = async (): Promise<Team[]> => {
       meta_mensal_quantidade,
       created_at,
       empresas (nome)
-    `)
-    .order("nome", { ascending: true });
+    `);
+    
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query.order("nome", { ascending: true });
 
   if (error) {
     console.error("Error fetching teams:", error);
@@ -50,10 +55,10 @@ const fetchTeams = async (): Promise<Team[]> => {
   return data as Team[];
 };
 
-export const useTeams = () => {
+export const useTeams = (companyId?: string) => {
   return useQuery<Team[], Error>({
-    queryKey: ["teams"],
-    queryFn: fetchTeams,
+    queryKey: ["teams", companyId],
+    queryFn: () => fetchTeams(companyId),
   });
 };
 
