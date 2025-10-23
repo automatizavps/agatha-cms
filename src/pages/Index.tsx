@@ -88,7 +88,6 @@ const Index = () => {
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        {/* Ajustado para 3 colunas em md e 6 colunas em lg */}
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           
           {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
@@ -115,19 +114,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 3: Faturamento Mensal (NOVO) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('monthly_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.monthly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">{t('monthly_revenue_overview')}</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 4: Total de Agendamentos */}
+          {/* Card 3: Total de Agendamentos (MOVIDO PARA CÁ) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
@@ -139,7 +126,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 5: Agendamentos Pendentes */}
+          {/* Card 4: Agendamentos Pendentes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
@@ -151,7 +138,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 6: Total de Produtos */}
+          {/* Card 5: Total de Produtos */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
@@ -163,92 +150,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 7: Total de Clientes (Movido para a próxima linha, se necessário, ou ajustado o grid) */}
-          {/* Como o grid é 6 colunas, o 7º card cairá na próxima linha. Vamos manter 6 cards por linha para consistência. */}
-          {/* Removendo o card de clientes para manter 6 cards na primeira linha, conforme o layout original (6 colunas) */}
-          {/* Se você quiser 7 cards, o grid precisa ser ajustado, mas por enquanto, vamos manter 6 cards de maior prioridade. */}
-          {/* Se o cliente for essencial, podemos reduzir o tamanho dos cards para 4 colunas em lg e ter 8 cards. */}
-          
-          {/* Vamos manter o card de clientes e ajustar o grid para 3 colunas em md e 4 colunas em lg, para ter 8 cards em 2 linhas. */}
-          {/* Revertendo o grid para 4 colunas em lg para ter 2 linhas de 4 cards, totalizando 8 métricas. */}
-        </div>
-        
-        {/* REAJUSTANDO O GRID PARA 4 COLUNAS EM LG PARA ACOMODAR MAIS CARDS */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          
-          {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
-          <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues hoje</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 2: Faturamento Semanal */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('weekly_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.weekly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues esta semana</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 3: Faturamento Mensal (NOVO) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('monthly_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.monthly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">{t('monthly_revenue_overview')}</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 4: Total de Agendamentos */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
-              <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(metrics.totalAppointments)}
-              <p className="text-xs text-muted-foreground">Agendamentos para hoje</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 5: Agendamentos Pendentes */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(metrics.pendingAppointments)}
-              <p className="text-xs text-muted-foreground">Pendentes para hoje</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 6: Total de Produtos */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(productCount || 0)}
-              <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 7: Total de Clientes */}
+          {/* Card 6: Total de Clientes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
@@ -259,20 +161,9 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">{t('total_clients_overview')}</p>
             </CardContent>
           </Card>
-          
-          {/* Card 8: Vazio (Placeholder para manter o layout) */}
-          <Card className="hidden lg:block opacity-0 pointer-events-none">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium"></CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold"></div>
-              <p className="text-xs text-muted-foreground"></p>
-            </CardContent>
-          </Card>
         </div>
         
-        {/* Seção 2: Metas das Equipes */}
+        {/* Seção 2: Metas das Equipes (NOVA POSIÇÃO) */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Target className="h-6 w-6 text-muted-foreground" />
