@@ -39,12 +39,33 @@ const passwordSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const updatePassword = async (newPassword: string) => {
+  // 1. Tenta obter a sessão atual e forçar um refresh
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session) {
+    throw new Error("Sessão de autenticação ausente ou inválida. Por favor, faça login novamente.");
+  }
+  
+  // 2. Tenta atualizar o token de sessão (refresh)
+  const { error: refreshError } = await supabase.auth.refreshSession();
+  
+  if (refreshError) {
+    // Se o refresh falhar, a sessão está muito antiga.
+    throw new Error("Sessão expirada. Por favor, faça logout e login novamente para alterar a senha.");
+  }
+  
+  // 3. Tenta atualizar a senha com a sessão fresca
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
   });
 
   if (error) {
     console.error("Error updating password:", error);
+    // Se o erro for 'Auth session missing' mesmo após o refresh, 
+    // é um problema de segurança que exige re-login.
+    if (error.message.includes("Auth session missing")) {
+      throw new Error("Sessão de autenticação inválida. Por favor, faça logout e login novamente.");
+    }
     throw new Error(error.message);
   }
 };
