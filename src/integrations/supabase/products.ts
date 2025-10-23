@@ -116,21 +116,29 @@ interface UpdateProductParams {
   fotos: string[] | null;
   marca: string | null;
   categoria: string | null;
+  empresa_id?: string; // Adicionado para Super Admin
 }
 
-export const updateProduct = async ({ id, nome, preco, tipo, tempo_servico, estoque_total, fotos, marca, categoria }: UpdateProductParams) => {
+export const updateProduct = async ({ id, nome, preco, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa_id }: UpdateProductParams) => {
+  const updatePayload: Record<string, any> = {
+    nome: nome,
+    preco: preco,
+    tipo: tipo,
+    tempo_servico: tipo === 'servico' ? tempo_servico : null,
+    estoque_total: tipo === 'produto' ? estoque_total : null,
+    fotos: fotos,
+    marca: tipo === 'produto' ? marca : null, // Marca só para produto
+    categoria: categoria, // Categoria para ambos
+  };
+  
+  // Permite que o Super Admin altere a empresa_id
+  if (empresa_id) {
+    updatePayload.empresa_id = empresa_id;
+  }
+  
   const { data, error } = await supabase
     .from("produtos")
-    .update({
-      nome: nome,
-      preco: preco,
-      tipo: tipo,
-      tempo_servico: tipo === 'servico' ? tempo_servico : null,
-      estoque_total: tipo === 'produto' ? estoque_total : null,
-      fotos: fotos,
-      marca: tipo === 'produto' ? marca : null, // Marca só para produto
-      categoria: categoria, // Categoria para ambos
-    })
+    .update(updatePayload)
     .eq("id", id)
     .select()
     .single();

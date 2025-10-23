@@ -34,6 +34,8 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
     fotos: string[] | null;
     marca: string | null;
     categoria: string | null;
+    // O empresa_id não é atualizado aqui, pois a função updateProduct não o aceita.
+    // Ele é apenas lido no formulário para Super Admin.
   }) => {
     mutation.mutate({
       id: product.id,
@@ -58,6 +60,7 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
     fotos: product.fotos,
     marca: product.marca,
     categoria: product.categoria,
+    empresa_id: product.empresa_id, // <-- Adicionado o ID da empresa
   };
 
   return (

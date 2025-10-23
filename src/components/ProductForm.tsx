@@ -37,9 +37,10 @@ const baseFormSchema = z.object({
   marca: z.string().optional().nullable(),
   categoria: z.string().optional().nullable(),
   
+  // empresa_id é opcional por padrão, mas pode ser tornado obrigatório na criação para Super Admin
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
-  }).or(z.literal("")).optional(), // Permite string vazia para o Select
+  }).or(z.literal("")).optional(), 
 });
 
 type ProductFormValues = z.infer<typeof baseFormSchema>;
@@ -70,7 +71,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
   
   const [photos, setPhotos] = useState<string[] | null>(defaultValues?.fotos || null);
 
-  // Ajusta o schema dinamicamente: se for Super Admin, empresa_id é obrigatório na criação
+  // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
   const formSchema = isSuperAdmin && !isEditing
     ? baseFormSchema.extend({
         empresa_id: z.string().uuid({
@@ -89,7 +90,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
       tempo_servico: defaultValues?.tempo_servico ? String(defaultValues.tempo_servico) : "",
       marca: defaultValues?.marca || "",
       categoria: defaultValues?.categoria || "",
-      empresa_id: defaultValues?.empresa_id || "",
+      // Garante que o valor inicial seja o ID da empresa do produto/default
+      empresa_id: defaultValues?.empresa_id || "", 
     },
   });
   
@@ -107,9 +109,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
       estoque_total = values.estoque_total ? parseInt(values.estoque_total) : null;
     }
     
-    // Se for Super Admin, pega o ID da empresa. Se o ID for uma string vazia (não selecionado), 
-    // ele será tratado como undefined, permitindo que a função createProduct use o provided_empresa_id.
-    // Se a validação passou, values.empresa_id deve ser um UUID válido.
+    // Se for Super Admin, passamos o ID da empresa (seja na criação ou edição).
+    // Se não for Super Admin, passamos undefined, e a função createProduct/updateProduct usará o RPC/RLS.
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     // Normaliza campos vazios para null
@@ -141,6 +142,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
+        {/* O campo Empresa só é visível para Super Admin (criação e edição) */}
         {isSuperAdmin && (
           <FormField
             control={form.control}
