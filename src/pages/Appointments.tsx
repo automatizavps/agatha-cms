@@ -24,6 +24,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { cn } from "@/lib/utils";
+import { PermissionGuard } from "@/hooks/use-permission"; // CORREÇÃO: Importando PermissionGuard
 
 interface AppointmentActionsProps {
   appointment: Appointment;
