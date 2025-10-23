@@ -13,6 +13,14 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
   const { t } = useTranslation();
   const { data: chartData, isLoading, isError } = useDailyServiceByHour(companyId);
 
+  // --- DEBUG LOG ---
+  React.useEffect(() => {
+    if (chartData) {
+      console.log("Daily Service Chart Data (Raw):", chartData);
+    }
+  }, [chartData]);
+  // -----------------
+
   const formattedData = React.useMemo(() => {
     if (!chartData) return [];
     
