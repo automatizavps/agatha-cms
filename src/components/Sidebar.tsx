@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -53,7 +53,9 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   
+  // Permissão para gerenciar pedidos, produtos, serviços e usuários (Admin/Super Admin)
   const canManageInventory = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+  // Permissão para gerenciar clientes (Admin/Super Admin/Funcionário)
   const canManageClients = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2 || profile.perfil_id === 3);
   const isSuperAdmin = !isLoading && profile && profile.perfil_id === 1;
 
@@ -92,6 +94,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         {!isCollapsed && (
           <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">Operacional</div>
         )}
+        
+        {canManageInventory && (
+          <NavItem
+            to="/orders"
+            icon={<ShoppingCart className="h-5 w-5" />}
+            label="Pedidos"
+            {...navItemProps}
+          />
+        )}
+        
         <NavItem
           to="/appointments"
           icon={<Calendar className="h-5 w-5" />}
