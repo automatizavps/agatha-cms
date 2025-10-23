@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import OrderForm from "./OrderForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateOrderStatus, Order, OrderStatus, useOrderItems } from "@/integrations/supabase/orders";
@@ -60,6 +60,9 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
         <SheetContent className="sm:max-w-lg flex flex-col">
           <SheetHeader>
             <SheetTitle>Carregando Pedido...</SheetTitle>
+            <SheetDescription className="sr-only">
+              Carregando dados do pedido para edição.
+            </SheetDescription>
           </SheetHeader>
           <div className="py-4 flex-1 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -74,6 +77,9 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
       <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Status do Pedido #{order.id.slice(0, 8)}</SheetTitle>
+          <SheetDescription className="sr-only">
+            Formulário para editar o status do pedido.
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <OrderForm 
