@@ -114,7 +114,19 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 3: Total de Agendamentos (MOVIDO PARA CÁ) */}
+          {/* Card 3: Faturamento Mensal (NOVO) */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('monthly_revenue')}</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(revenueMetrics?.monthly_revenue || 0, true)}
+              <p className="text-xs text-muted-foreground">Pedidos entregues este mês</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 4: Total de Agendamentos */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
@@ -126,7 +138,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 4: Agendamentos Pendentes */}
+          {/* Card 5: Agendamentos Pendentes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
@@ -135,18 +147,6 @@ const Index = () => {
             <CardContent>
               {renderMetricValue(metrics.pendingAppointments)}
               <p className="text-xs text-muted-foreground">Pendentes para hoje</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 5: Total de Produtos */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(productCount || 0)}
-              <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
             </CardContent>
           </Card>
           
