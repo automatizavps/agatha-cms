@@ -27,6 +27,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     setIsCollapsed(!isCollapsed);
   };
 
+  // Larguras da sidebar para compensação
+  const sidebarWidth = isCollapsed ? "70px" : "280px";
+  const sidebarWidthMd = isCollapsed ? "70px" : "220px";
+
+
   if (isMobile) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -58,17 +63,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     );
   }
 
+  // Layout Desktop/Tablet
   return (
-    <div 
-      className={cn(
-        "grid min-h-screen w-full transition-all duration-300",
-        isCollapsed ? "md:grid-cols-[70px_1fr]" : "md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]"
-      )}
-    >
-      <div className="hidden border-r bg-sidebar md:block">
+    <div className="flex min-h-screen w-full">
+      
+      {/* Sidebar Fixa */}
+      <div 
+        className={cn(
+          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20",
+          isCollapsed ? "w-[70px]" : "w-[280px]"
+        )}
+        style={{ width: isCollapsed ? sidebarWidthMd : sidebarWidth }}
+      >
         <Sidebar isCollapsed={isCollapsed} />
       </div>
-      <div className="flex flex-col">
+      
+      {/* Conteúdo Principal */}
+      <div 
+        className="flex flex-col flex-1 transition-all duration-300"
+        style={{ marginLeft: isCollapsed ? sidebarWidthMd : sidebarWidth }}
+      >
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
           {/* Botão de Toggle */}
           <Button 
