@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -20,12 +21,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
+import EditUserSheet from "./EditUserSheet";
 
 interface UserTableProps {
   users: UserProfile[];
 }
 
-const UserActions: React.FC<{ user: UserProfile }> = ({ user }) => {
+interface UserActionsProps {
+  user: UserProfile;
+  onEdit: (user: UserProfile) => void;
+}
+
+const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
@@ -55,7 +62,7 @@ const UserActions: React.FC<{ user: UserProfile }> = ({ user }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => console.log("Edit user:", user.id)}>
+        <DropdownMenuItem onClick={() => onEdit(user)}>
           <Pencil className="mr-2 h-4 w-4" /> Editar
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -73,38 +80,63 @@ const UserActions: React.FC<{ user: UserProfile }> = ({ user }) => {
 
 
 const UserTable: React.FC<UserTableProps> = ({ users }) => {
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+
+  const handleEdit = (user: UserProfile) => {
+    setEditingUser(user);
+    setIsEditSheetOpen(true);
+  };
+
+  const handleCloseEditSheet = (open: boolean) => {
+    setIsEditSheetOpen(open);
+    if (!open) {
+      setEditingUser(null);
+    }
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]">Avatar</TableHead>
-            <TableHead>Nome</TableHead>
-            <TableHead>Perfil</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar_url || undefined} alt={user.nome_completo} />
-                  <AvatarFallback>
-                    {user.nome_completo ? user.nome_completo[0] : <User className="h-4 w-4" />}
-                  </AvatarFallback>
-                </Avatar>
-              </TableCell>
-              <TableCell className="font-medium">{user.nome_completo}</TableCell>
-              <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
-              <TableCell className="text-right">
-                <UserActions user={user} />
-              </TableCell>
+    <>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">Avatar</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Perfil</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatar_url || undefined} alt={user.nome_completo} />
+                    <AvatarFallback>
+                      {user.nome_completo ? user.nome_completo[0] : <User className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                </TableCell>
+                <TableCell className="font-medium">{user.nome_completo}</TableCell>
+                <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
+                <TableCell className="text-right">
+                  <UserActions user={user} onEdit={handleEdit} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {editingUser && (
+        <EditUserSheet 
+          user={editingUser} 
+          isOpen={isEditSheetOpen} 
+          onOpenChange={handleCloseEditSheet} 
+        />
+      )}
+    </>
   );
 };
 

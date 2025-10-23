@@ -43,7 +43,12 @@ const AddUserSheet = () => {
           <SheetTitle>Adicionar Novo Usuário</SheetTitle>
         </SheetHeader>
         <div className="py-4">
-          <UserForm onSubmit={handleSubmit} isSubmitting={mutation.isPending} />
+          <UserForm 
+            onSubmit={handleSubmit} 
+            isSubmitting={mutation.isPending} 
+            defaultValues={{ full_name: "", email: "", perfil_id: "" }}
+            isEditing={false}
+          />
         </div>
       </SheetContent>
     </Sheet>

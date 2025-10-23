@@ -56,6 +56,29 @@ export const inviteUser = async ({ email, full_name, perfil_id }: InviteUserPara
   return data;
 };
 
+interface UpdateUserParams {
+  userIdToUpdate: string;
+  full_name: string;
+  perfil_id: number;
+}
+
+export const updateUser = async ({ userIdToUpdate, full_name, perfil_id }: UpdateUserParams) => {
+  const { data, error } = await supabase.functions.invoke("update-user", {
+    body: { userIdToUpdate, full_name, perfil_id },
+  });
+
+  if (error) {
+    console.error("Error updating user:", error);
+    throw new Error(error.message);
+  }
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
+};
+
 export const deleteUser = async (userIdToDelete: string) => {
   const { data, error } = await supabase.functions.invoke("delete-user", {
     body: { userIdToDelete },

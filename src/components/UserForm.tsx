@@ -38,14 +38,16 @@ type UserFormValues = z.infer<typeof formSchema>;
 interface UserFormProps {
   onSubmit: (values: UserFormValues) => void;
   isSubmitting: boolean;
+  defaultValues?: Partial<UserFormValues>;
+  isEditing?: boolean;
 }
 
-const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting }) => {
+const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: defaultValues || {
       full_name: "",
       email: "",
       perfil_id: "",
@@ -62,7 +64,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting }) => {
             <FormItem>
               <FormLabel>Nome Completo</FormLabel>
               <FormControl>
-                <Input placeholder="Nome completo do usuário" {...field} />
+                <Input placeholder="Nome completo do usuário" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -75,7 +77,11 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting }) => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="email@exemplo.com" {...field} />
+                <Input 
+                  placeholder="email@exemplo.com" 
+                  {...field} 
+                  disabled={isEditing || isSubmitting} // Desabilita email na edição
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -87,14 +93,13 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Perfil</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingProfiles || isSubmitting}>
+              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingProfiles || isSubmitting}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingProfiles ? "Carregando perfis..." : "Selecione um perfil"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {/* Garantindo que apenas itens com valor válido sejam renderizados */}
                   {profiles?.map((profile) => (
                     <SelectItem key={profile.id} value={String(profile.id)}>
                       {profile.nome}
@@ -109,6 +114,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting }) => {
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : isEditing ? (
+            "Salvar Alterações"
           ) : (
             "Adicionar Usuário"
           )}
