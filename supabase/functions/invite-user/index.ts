@@ -41,13 +41,13 @@ serve(async (req) => {
     });
   }
   
-  const userId = userResponse.user.id;
+  const inviterUserId = userResponse.user.id;
 
   // Check if the user is an Admin (Perfil ID 2 - Administrador, ou 1 - Super Admin)
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("perfil_id")
-    .eq("id", userId)
+    .select("perfil_id, empresa_id")
+    .eq("id", inviterUserId)
     .single();
 
   if (profileError || !profileData || (profileData.perfil_id !== 1 && profileData.perfil_id !== 2)) {
@@ -56,6 +56,10 @@ serve(async (req) => {
       headers: corsHeaders,
     });
   }
+  
+  const isSuperAdmin = profileData.perfil_id === 1;
+  const inviterCompanyId = profileData.empresa_id;
+
 
   // 2. Processar o corpo da requisição
   let data;
@@ -65,7 +69,7 @@ serve(async (req) => {
     return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
   }
 
-  const { email, full_name, perfil_id } = data;
+  const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id } = data;
 
   if (!email || !full_name || !perfil_id) {
     return new Response("Missing required fields: email, full_name, or perfil_id", {
@@ -74,6 +78,28 @@ serve(async (req) => {
     });
   }
   
+  // Determinar a empresa alvo
+  let final_empresa_id = null;
+  if (isSuperAdmin) {
+    if (!target_empresa_id) {
+      return new Response("Missing required field: empresa_id (for Super Admin)", {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+    final_empresa_id = target_empresa_id;
+  } else {
+    // Admin/Funcionário só pode convidar para sua própria empresa
+    final_empresa_id = inviterCompanyId;
+  }
+
+  if (!final_empresa_id) {
+    return new Response("Cannot determine target company ID.", {
+      status: 400,
+      headers: corsHeaders,
+    });
+  }
+
   // Garantir que o redirectTo seja um URL completo e seguro (usando a URL base + /login)
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const redirectUrl = `${supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl}/auth/v1/verify?redirect_to=/login`;
@@ -85,9 +111,11 @@ serve(async (req) => {
     {
       data: {
         full_name: full_name,
-        perfil_id: perfil_id, // Passamos o perfil_id para o raw_user_meta_data
+        perfil_id: perfil_id,
+        telefone: telefone, // Passando para raw_user_meta_data
+        endereco_completo: endereco_completo, // Passando para raw_user_meta_data
       },
-      redirectTo: redirectUrl, // Usando o URL de redirecionamento corrigido
+      redirectTo: redirectUrl,
     }
   );
 
@@ -98,6 +126,28 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  
+  // 4. Atualizar a empresa_id diretamente na tabela usuarios (o trigger handle_new_user já inseriu o registro)
+  // Isso é necessário porque o trigger só insere o que está no raw_user_meta_data, mas não a empresa_id.
+  // O trigger handle_new_empresa só funciona quando uma empresa é criada.
+  // Para convites, precisamos garantir que a empresa_id seja definida.
+  
+  // O usuário convidado ainda não tem um ID no auth.users até que ele clique no link.
+  // No entanto, o inviteUserByEmail retorna o ID do usuário pendente.
+  const invitedUserId = inviteData.user?.id;
+
+  if (invitedUserId) {
+    const { error: updateCompanyError } = await supabaseAdmin
+      .from("usuarios")
+      .update({ empresa_id: final_empresa_id })
+      .eq("id", invitedUserId);
+
+    if (updateCompanyError) {
+      console.error("Supabase Update Company ID Error:", updateCompanyError);
+      // Isso é um erro sério, mas o convite foi enviado.
+    }
+  }
+
 
   return new Response(JSON.stringify({ message: "User invited successfully", user: inviteData.user }), {
     status: 200,

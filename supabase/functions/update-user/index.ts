@@ -56,6 +56,8 @@ serve(async (req) => {
       headers: corsHeaders,
     });
   }
+  
+  const isSuperAdmin = profileData.perfil_id === 1;
 
   // 2. Processar o corpo da requisição
   let data;
@@ -65,7 +67,7 @@ serve(async (req) => {
     return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
   }
 
-  const { userIdToUpdate, full_name, perfil_id } = data;
+  const { userIdToUpdate, full_name, perfil_id, telefone, endereco_completo, empresa_id } = data;
 
   if (!userIdToUpdate || !full_name || !perfil_id) {
     return new Response("Missing required fields: userIdToUpdate, full_name, or perfil_id", {
@@ -74,13 +76,23 @@ serve(async (req) => {
     });
   }
   
+  // Construir o objeto de atualização
+  const updatePayload: Record<string, any> = {
+    nome_completo: full_name, 
+    perfil_id: perfil_id,
+    telefone: telefone,
+    endereco_completo: endereco_completo,
+  };
+  
+  // Apenas Super Admin pode alterar a empresa_id
+  if (isSuperAdmin && empresa_id !== undefined) {
+    updatePayload.empresa_id = empresa_id;
+  }
+
   // 3. Atualizar o perfil do usuário na tabela 'usuarios'
   const { error: updateError } = await supabaseAdmin
     .from("usuarios")
-    .update({ 
-      nome_completo: full_name, 
-      perfil_id: perfil_id 
-    })
+    .update(updatePayload)
     .eq("id", userIdToUpdate);
 
   if (updateError) {
@@ -91,21 +103,21 @@ serve(async (req) => {
     });
   }
 
-  // 4. Opcional: Atualizar o metadado do usuário no auth.users (para consistência, embora o trigger use a tabela 'usuarios')
-  // Isso é útil se o nome completo for usado em outros lugares do Auth.
+  // 4. Opcional: Atualizar o metadado do usuário no auth.users (para consistência)
   const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
     userIdToUpdate,
     {
       user_metadata: {
         full_name: full_name,
         perfil_id: perfil_id,
+        telefone: telefone,
+        endereco_completo: endereco_completo,
       }
     }
   );
 
   if (authUpdateError) {
     console.warn("Supabase Auth Metadata Update Warning (non-critical):", authUpdateError);
-    // Continuamos, pois a atualização crítica ocorreu na tabela 'usuarios'
   }
 
 

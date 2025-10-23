@@ -20,8 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProfiles } from "@/integrations/supabase/profiles";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCompanies } from "@/integrations/supabase/companies";
 
-const formSchema = z.object({
+// Definimos o esquema base
+const baseFormSchema = z.object({
   full_name: z.string().min(2, {
     message: "O nome completo deve ter pelo menos 2 caracteres.",
   }),
@@ -31,12 +34,24 @@ const formSchema = z.object({
   perfil_id: z.string().min(1, {
     message: "Selecione um perfil.",
   }),
+  telefone: z.string().optional().nullable(),
+  endereco_completo: z.string().optional().nullable(),
+  empresa_id: z.string().uuid({
+    message: "Selecione uma empresa válida.",
+  }).optional().nullable(),
 });
 
-type UserFormValues = z.infer<typeof formSchema>;
+type UserFormValues = z.infer<typeof baseFormSchema>;
 
 interface UserFormProps {
-  onSubmit: (values: UserFormValues) => void;
+  onSubmit: (values: { 
+    full_name: string; 
+    email: string; 
+    perfil_id: string; 
+    telefone: string | null; 
+    endereco_completo: string | null;
+    empresa_id?: string | null;
+  }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<UserFormValues>;
   isEditing?: boolean;
@@ -44,19 +59,88 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
+  const { data: currentProfile, isLoading: isLoadingCurrentProfile } = useCurrentUserProfile();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  
+  const isSuperAdmin = currentProfile?.perfil_id === 1;
+  const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
+
+  // Ajusta o schema dinamicamente: se for Super Admin e não estiver editando, empresa_id é obrigatório
+  const formSchema = isSuperAdmin && !isEditing
+    ? baseFormSchema.extend({
+        empresa_id: z.string().uuid({
+          message: "Selecione uma empresa válida.",
+        }).min(1, { message: "A empresa é obrigatória para o Super Admin ao convidar." }),
+      })
+    : baseFormSchema;
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues || {
-      full_name: "",
-      email: "",
-      perfil_id: "",
+    defaultValues: {
+      full_name: defaultValues?.full_name || "",
+      email: defaultValues?.email || "",
+      perfil_id: defaultValues?.perfil_id || "",
+      telefone: defaultValues?.telefone || "",
+      endereco_completo: defaultValues?.endereco_completo || "",
+      empresa_id: defaultValues?.empresa_id || "",
     },
   });
 
+  const handleSubmit = (values: UserFormValues) => {
+    // Normaliza campos vazios para null antes de enviar ao Supabase
+    const telefone = values.telefone ? values.telefone : null;
+    const endereco_completo = values.endereco_completo ? values.endereco_completo : null;
+    const empresa_id = isSuperAdmin ? (values.empresa_id || null) : undefined;
+
+    onSubmit({
+      full_name: values.full_name,
+      email: values.email,
+      perfil_id: values.perfil_id,
+      telefone: telefone,
+      endereco_completo: endereco_completo,
+      empresa_id: empresa_id,
+    });
+  };
+  
+  if (isCheckingPermissions) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        
+        {isSuperAdmin && (
+          <FormField
+            control={form.control}
+            name="empresa_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Empresa</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ""} disabled={isLoadingCompanies || isSubmitting}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
         <FormField
           control={form.control}
           name="full_name"
@@ -88,6 +172,45 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
             </FormItem>
           )}
         />
+        
+        <FormField
+          control={form.control}
+          name="telefone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Telefone (Opcional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="(XX) XXXXX-XXXX" 
+                  {...field} 
+                  disabled={isSubmitting}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="endereco_completo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Endereço Completo (Opcional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Rua, Número, Bairro, Cidade, Estado" 
+                  {...field} 
+                  disabled={isSubmitting}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="perfil_id"

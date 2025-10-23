@@ -26,13 +26,22 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
     },
   });
 
-  const handleSubmit = (values: { full_name: string; email: string; perfil_id: string }) => {
+  const handleSubmit = (values: { 
+    full_name: string; 
+    email: string; 
+    perfil_id: string; 
+    telefone: string | null; 
+    endereco_completo: string | null;
+    empresa_id?: string | null;
+  }) => {
     // O email não é editável neste formulário, mas é passado no UserFormValues.
-    // A Edge Function de update só usa full_name e perfil_id.
     mutation.mutate({
       userIdToUpdate: user.id,
       full_name: values.full_name,
       perfil_id: parseInt(values.perfil_id),
+      telefone: values.telefone,
+      endereco_completo: values.endereco_completo,
+      empresa_id: values.empresa_id,
     });
   };
 
@@ -41,6 +50,9 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
     full_name: user.nome_completo,
     email: "Email não editável", // Email não pode ser alterado via este endpoint
     perfil_id: String(user.perfil_id),
+    telefone: user.telefone,
+    endereco_completo: user.endereco_completo,
+    empresa_id: user.empresa_id,
   };
 
   return (

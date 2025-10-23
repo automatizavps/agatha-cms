@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { UserProfile, deleteUser } from "@/integrations/supabase/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,6 +103,8 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
             <TableRow>
               <TableHead className="w-[50px]">Avatar</TableHead>
               <TableHead>Nome</TableHead>
+              <TableHead className="hidden lg:table-cell">Telefone</TableHead>
+              <TableHead className="hidden xl:table-cell">Endereço</TableHead>
               <TableHead>Perfil</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -119,6 +121,18 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                   </Avatar>
                 </TableCell>
                 <TableCell className="font-medium">{user.nome_completo}</TableCell>
+                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    {user.telefone || 'N/A'}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {user.endereco_completo || 'N/A'}
+                  </div>
+                </TableCell>
                 <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
                 <TableCell className="text-right">
                   <UserActions user={user} onEdit={handleEdit} />
