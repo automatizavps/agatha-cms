@@ -3,7 +3,7 @@
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDailyServiceCountByHour, DailyServiceCount } from "@/hooks/useDailyServiceCountByHour";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // Função auxiliar para formatar o rótulo do eixo X (hora)
@@ -28,7 +28,7 @@ interface DailyServiceByHourChartProps {
   companyId: string | undefined;
 }
 
-export function DailyServiceByHourChart({ companyId }: DailyServiceByHourChartProps) {
+export default function DailyServiceByHourChart({ companyId }: DailyServiceByHourChartProps) {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useDailyServiceCountByHour(companyId);
 

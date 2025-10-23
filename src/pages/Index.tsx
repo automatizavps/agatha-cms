@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"; // Importando cn
 import LatestProductsCarousel from "@/components/LatestProductsCarousel"; // Importando o novo componente
 import TopSellingItemsCard from "@/components/TopSellingItemsCard"; // Importando o novo componente
 import TopSellingServicesCard from "@/components/TopSellingServicesCard"; // Importando o novo componente
-import DailyServiceByHourChart from "@/components/DailyServiceByHourChart"; // NOVO
+import DailyServiceByHourChart from "@/components/DailyServiceByHourChart"; // Importação corrigida
 import AppointmentStatusChart from "@/components/AppointmentStatusChart"; // Movido para cá
 
 const Index = () => {
