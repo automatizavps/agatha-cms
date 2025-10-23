@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Importando Collapsible
-import { ChevronDown } from "lucide-react"; // Ícone para o collapsible
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 interface NavItemProps {
   to: string;
@@ -58,12 +58,16 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   const { t } = useTranslation();
+  const location = useLocation(); // Usando useLocation
   
   const canManageInventory = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
   const canManageClients = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2 || profile.perfil_id === 3);
   const isSuperAdmin = !isLoading && profile && profile.perfil_id === 1;
 
   const navItemProps = { isCollapsed, onClick: onNavigate };
+  
+  // Determina se o submenu de Produtos/Serviços deve estar aberto
+  const isProductsServicesOpen = location.pathname.startsWith('/products') || location.pathname.startsWith('/services');
 
   return (
     <div 
@@ -127,7 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         {canManageInventory && (
           <>
             {/* Submenu de Produtos/Serviços */}
-            <Collapsible defaultOpen={false} disabled={isCollapsed}>
+            <Collapsible defaultOpen={isProductsServicesOpen} disabled={isCollapsed}>
               <CollapsibleTrigger 
                 className={cn(
                   "flex items-center justify-between w-full rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
