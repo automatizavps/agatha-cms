@@ -45,6 +45,8 @@ const resources = {
       "appointments_overview": "Visão geral de todos os agendamentos",
       "confirmed_status": "Agendamentos com status 'confirmado'",
       "pending_status": "Aguardando confirmação",
+      "team_goals_section_title": "Metas das Equipes", // NOVO
+      "team_goals_progress_placeholder": "Progresso em relação à meta será exibido aqui.", // NOVO
       
       // Páginas
       "page_title_analytics": "Analytics",
@@ -199,6 +201,8 @@ const resources = {
       "appointments_overview": "Overview of all appointments",
       "confirmed_status": "Appointments with 'confirmed' status",
       "pending_status": "Awaiting confirmation",
+      "team_goals_section_title": "Team Goals", // NOVO
+      "team_goals_progress_placeholder": "Progress towards the goal will be displayed here.", // NOVO
       
       // Pages
       "page_title_analytics": "Analytics",
@@ -353,6 +357,8 @@ const resources = {
       "appointments_overview": "Vista general de todas las citas",
       "confirmed_status": "Citas con estado 'confirmado'",
       "pending_status": "Esperando confirmación",
+      "team_goals_section_title": "Metas de los Equipos", // NOVO
+      "team_goals_progress_placeholder": "El progreso hacia el objetivo se mostrará aquí.", // NOVO
       
       // Páginas
       "page_title_analytics": "Analíticas",
@@ -507,6 +513,8 @@ const resources = {
       "appointments_overview": "Aperçu de tous les rendez-vous",
       "confirmed_status": "Rendez-vous avec le statut 'confirmé'",
       "pending_status": "En attente de confirmation",
+      "team_goals_section_title": "Objectifs d'Équipe", // NOVO
+      "team_goals_progress_placeholder": "La progression vers l'objectif sera affichée ici.", // NOVO
       
       // Pages
       "page_title_analytics": "Analytiques",
@@ -661,6 +669,8 @@ const resources = {
       "appointments_overview": "Panoramica di tutti gli appuntamenti",
       "confirmed_status": "Appuntamenti con stato 'confermato'",
       "pending_status": "In attesa di conferma",
+      "team_goals_section_title": "Obiettivi della Squadra", // NOVO
+      "team_goals_progress_placeholder": "Il progresso verso l'obiettivo verrà visualizzato qui.", // NOVO
       
       // Pagine
       "page_title_analytics": "Analisi",
@@ -745,7 +755,7 @@ const resources = {
       "not_found_return": "Torna alla Home",
       
       // Equipes (Teams) - NOVO
-      "page_title_teams": "Gestione Squadre",
+      "page_title_teams": "Gestão Squadre",
       "team_list_title": "Elenco Squadre",
       "add_new_team": "Nuova Squadra",
       "no_teams_found": "Nessuna squadra registrata.",
@@ -815,6 +825,8 @@ const resources = {
       "appointments_overview": "Übersicht aller Termine",
       "confirmed_status": "Termine mit Status 'bestätigt'",
       "pending_status": "Warten auf Bestätigung",
+      "team_goals_section_title": "Teamziele", // NOVO
+      "team_goals_progress_placeholder": "Der Fortschritt zum Ziel wird hier angezeigt.", // NOVO
       
       // Páginas
       "page_title_analytics": "Analytik",
@@ -969,6 +981,8 @@ const resources = {
       "appointments_overview": "すべての予約の概要",
       "confirmed_status": "「確定済み」ステータスの予約",
       "pending_status": "確認待ち",
+      "team_goals_section_title": "チームの目標", // NOVO
+      "team_goals_progress_placeholder": "目標に対する進捗がここに表示されます。", // NOVO
       
       // Páginas
       "page_title_analytics": "分析",
