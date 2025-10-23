@@ -1,274 +1,123 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Package, Search, Tag, Factory, Building, AlertTriangle } from "lucide-react";
-import { useProductsOnly } from "@/integrations/supabase/products";
-import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
-import AddProductSheet from "@/components/AddProductSheet";
-import ProductOnlyTable from "@/components/ProductOnlyTable";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useProducts } from "@/integrations/supabase/products";
+import { Loader2, Package, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
-import { useCompanies } from "@/integrations/supabase/companies";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Importando Alert
-import { cn } from "@/lib/utils"; // Importando cn para combinar classes
-import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
-const LOW_STOCK_THRESHOLD = 10;
-
-const ProductsContent = () => {
-  const { data: products, isLoading, isError, error, refetch, isRefetching } = useProductsOnly();
-  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
-  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
-  
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
-  const [brandFilter, setBrandFilter] = useState<string | 'all'>('all');
-  const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
+const Products = () => {
   const { t } = useTranslation();
+  const { data: products, isLoading, refetch } = useProducts();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const isSuperAdmin = profile?.perfil_id === 1;
-  const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
-
-  if (isError && error) {
-    showError(t("error_loading_data") + ": " + error.message);
-  }
-  
-  // Extrai categorias e marcas únicas
-  const uniqueCategories = useMemo(() => {
-    if (!products) return [];
-    const categories = new Set<string>();
-    products.forEach(p => {
-      if (p.categoria) categories.add(p.categoria);
-    });
-    return Array.from(categories).sort();
-  }, [products]);
-
-  const uniqueBrands = useMemo(() => {
-    if (!products) return [];
-    const brands = new Set<string>();
-    products.forEach(p => {
-      if (p.marca) brands.add(p.marca);
-    });
-    return Array.from(brands).sort();
-  }, [products]);
-  
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    let filtered = products;
-    
-    // 1. Filtragem por Empresa (se Super Admin e filtro ativo)
-    if (isSuperAdmin && companyFilterId !== 'all') {
-      filtered = filtered.filter(product => product.empresa_id === companyFilterId);
-    }
+    if (!searchTerm) return products;
 
-    // 2. Filtragem por Categoria
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(product => product.categoria === categoryFilter);
-    }
-    
-    // 3. Filtragem por Marca
-    if (brandFilter !== 'all') {
-      filtered = filtered.filter(product => product.marca === brandFilter);
-    }
-
-    // 4. Filtragem por Termo de Busca
-    if (searchTerm) {
-      const lowerCaseSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(product => 
-        product.nome.toLowerCase().includes(lowerCaseSearch) ||
-        (product.categoria && product.categoria.toLowerCase().includes(lowerCaseSearch)) ||
-        (product.marca && product.marca.toLowerCase().includes(lowerCaseSearch))
-      );
-    }
-
-    return filtered;
-  }, [products, searchTerm, categoryFilter, brandFilter, companyFilterId, isSuperAdmin]);
-  
-  // Produtos com estoque baixo (apenas produtos, excluindo serviços)
-  const lowStockProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter(p => 
-      p.tipo === 'produto' && 
-      p.estoque_total !== null && 
-      p.estoque_total < LOW_STOCK_THRESHOLD
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return products.filter(product =>
+      product.nome.toLowerCase().includes(lowerCaseSearch) ||
+      product.marca?.toLowerCase().includes(lowerCaseSearch) ||
+      product.categoria?.toLowerCase().includes(lowerCaseSearch)
     );
-  }, [products]);
+  }, [products, searchTerm]);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_products')}</h1>
-        <AddProductSheet />
-      </div>
-      
-      {/* Alerta de Estoque Baixo com estilo customizado */}
-      {lowStockProducts.length > 0 && (
-        <Alert 
-          className={cn(
-            "mt-4 border-yellow-400/50 bg-[#2A2A2A] text-white", // Fundo customizado e texto branco
-            "[&>svg]:text-yellow-400 [&>svg]:dark:text-yellow-400" // Ícone amarelo
-          )}
-        >
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="text-yellow-400">{t('low_stock_alert_title')}</AlertTitle>
-          <AlertDescription>
-            {t('low_stock_alert_description', { threshold: LOW_STOCK_THRESHOLD })}
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              {lowStockProducts.map(p => (
-                <li key={p.id}>
-                  {p.nome} ({p.estoque_total} {t('product_table_header_stock').toLowerCase()})
-                  {isSuperAdmin && p.empresa?.nome && ` - ${t('user_table_header_company')}: ${p.empresa.nome}`}
-                </li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" /> {t('product_list_title')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
-            
-            {/* Filtro de Empresa (Apenas para Super Admin) */}
-            {isSuperAdmin && (
-              <div className="w-full md:w-48">
-                <Select 
-                  onValueChange={setCompanyFilterId} 
-                  value={companyFilterId} 
-                  disabled={isLoadingCompanies || isChecking}
-                >
-                  <SelectTrigger className="w-full">
-                    <Building className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder={t('filter_all_companies')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
-                    {companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Package className="h-7 w-7" />
+          {t('nav_products')}
+        </h1>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-semibold">{t('product_list')}</CardTitle>
+            <div className="flex items-center space-x-2">
+              {/* Botão de recarregar removido */}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 flex justify-between items-center">
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={t('search_products')}
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-            )}
-            
-            {/* Filtro de Categoria */}
-            <div className="w-full md:w-48">
-              <Select 
-                onValueChange={setCategoryFilter} 
-                value={categoryFilter} 
-                disabled={isChecking}
-              >
-                <SelectTrigger className="w-full">
-                  <Tag className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder={t('filter_all_categories')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('filter_all_categories')}</SelectItem>
-                  {uniqueCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Filtro de Marca */}
-            <div className="w-full md:w-48">
-              <Select 
-                onValueChange={setBrandFilter} 
-                value={brandFilter} 
-                disabled={isChecking}
-              >
-                <SelectTrigger className="w-full">
-                  <Factory className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder={t('filter_all_brands')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('filter_all_brands')}</SelectItem>
-                  {uniqueBrands.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
-                      {brand}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Campo de Busca Textual */}
-            <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={t('product_search_placeholder')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-                disabled={isChecking}
-              />
-            </div>
-            
-            {/* Botão de Recarregar */}
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => refetch()} 
-              disabled={isRefetching}
-              className="shrink-0"
-            >
-              {isRefetching ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-
-          {isLoading && !isRefetching ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : isError ? (
-            <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
-              <p className="text-destructive">
-                {t('error_loading_data')}
-              </p>
-              <Button onClick={() => refetch()} disabled={isRefetching}>
-                {isRefetching ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                {t('try_again')}
+              <Button asChild>
+                <Link to="/products/new">{t('add_new_product')}</Link>
               </Button>
             </div>
-          ) : filteredProducts.length > 0 ? (
-            <ProductOnlyTable products={filteredProducts} />
-          ) : (
-            <div className="text-center p-4 text-muted-foreground">
-              {t('no_products_found')}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {isLoading ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('name')}</TableHead>
+                      <TableHead>{t('price')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{t('brand')}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t('category')}</TableHead>
+                      <TableHead className="text-center">{t('stock')}</TableHead>
+                      <TableHead className="text-right">{t('actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProducts.length > 0 ? (
+                      filteredProducts.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell className="font-medium">{product.nome}</TableCell>
+                          <TableCell>{formatCurrency(product.preco)}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{product.marca || '-'}</TableCell>
+                          <TableCell className="hidden md:table-cell">{product.categoria || '-'}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant={product.estoque_total && product.estoque_total < 10 ? "destructive" : "secondary"}>
+                              {product.estoque_total ?? t('not_applicable')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/products/${product.id}`}>{t('view')}</Link>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          {t('no_products_found')}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </DashboardLayout>
   );
 };
-
-const Products = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar produtos
-  <PermissionGuard allowedProfileIds={[1, 2]}>
-    <ProductsContent />
-  </PermissionGuard>
-);
 
 export default Products;

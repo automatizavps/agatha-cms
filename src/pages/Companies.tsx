@@ -1,72 +1,114 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Building } from "lucide-react";
-import { useCompanies } from "@/integrations/supabase/companies";
-import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
-import AddCompanySheet from "@/components/AddCompanySheet";
-import CompanyTable from "@/components/CompanyTable";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Loader2, Building, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Input } from "@/components/ui/input";
+import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 
-const CompaniesContent = () => {
-  const { data: companies, isLoading, isError, error, refetch, isRefetching } = useCompanies();
+const Companies = () => {
   const { t } = useTranslation();
+  const { data: profile } = useCurrentUserProfile();
+  const isSuperAdmin = profile?.perfil_id === 1;
+  
+  // Se não for Super Admin, só carrega a própria empresa (se houver)
+  const { data: companies, isLoading, refetch } = useCompanies(isSuperAdmin ? undefined : profile?.empresa_id);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  if (isError && error) {
-    showError(t("error_loading_data") + ": " + error.message);
-  }
+  const filteredCompanies = useMemo(() => {
+    if (!companies) return [];
+    if (!searchTerm) return companies;
+
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return companies.filter(company =>
+      company.nome.toLowerCase().includes(lowerCaseSearch) ||
+      company.cnpj?.toLowerCase().includes(lowerCaseSearch) ||
+      company.email?.toLowerCase().includes(lowerCaseSearch)
+    );
+  }, [companies, searchTerm]);
 
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_companies')}</h1>
-        <AddCompanySheet />
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Building className="h-7 w-7" />
+          {t('nav_companies')}
+        </h1>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-semibold">{t('company_list')}</CardTitle>
+            <div className="flex items-center space-x-2">
+              {/* Botão de recarregar removido */}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 flex justify-between items-center">
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={t('search_companies')}
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              {isSuperAdmin && (
+                <Button asChild>
+                  <Link to="/companies/new">{t('add_new_company')}</Link>
+                </Button>
+              )}
+            </div>
+
+            {isLoading ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('name')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{t('cnpj')}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t('email')}</TableHead>
+                      <TableHead className="text-right">{t('actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCompanies.length > 0 ? (
+                      filteredCompanies.map((company) => (
+                        <TableRow key={company.id}>
+                          <TableCell className="font-medium">{company.nome}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{company.cnpj || '-'}</TableCell>
+                          <TableCell className="hidden md:table-cell">{company.email || '-'}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/companies/${company.id}`}>{t('view')}</Link>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          {t('no_companies_found')}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-      
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" /> {t('company_list_title')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading && !isRefetching ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : isError ? (
-            <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
-              <p className="text-destructive">
-                {t('error_loading_data')}
-              </p>
-              <Button onClick={() => refetch()} disabled={isRefetching}>
-                {isRefetching ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                {t('try_again')}
-              </Button>
-            </div>
-          ) : companies && companies.length > 0 ? (
-            <CompanyTable companies={companies} />
-          ) : (
-            <div className="text-center p-4 text-muted-foreground">
-              {t('no_companies_found')}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </DashboardLayout>
   );
 };
-
-const Companies = () => (
-  // Apenas Super Admin (Perfil ID 1) pode gerenciar empresas
-  <PermissionGuard allowedProfileIds={[1]}>
-    <CompaniesContent />
-  </PermissionGuard>
-);
 
 export default Companies;
