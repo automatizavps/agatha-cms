@@ -12,6 +12,7 @@ interface RevenueMetrics {
 export interface TopSellingItem {
   produto_id: string;
   nome_produto: string;
+  tipo_produto: 'produto' | 'servico'; // Adicionado
   total_vendido: number;
 }
 
@@ -149,4 +150,21 @@ export const useTopSellingItems = (companyId: string | undefined) => {
     queryFn: () => fetchTopSellingItems(companyId!),
     enabled: !!companyId,
   });
+};
+
+// Novo hook para buscar apenas os Top 10 Serviços
+export const useTopSellingServices = (companyId: string | undefined) => {
+  const { data: allItems, isLoading, isError, error } = useTopSellingItems(companyId);
+  
+  const services = allItems?.filter(item => item.tipo_produto === 'servico') || [];
+  
+  // Limita a 10, embora a RPC já limite, garantimos aqui
+  const top10Services = services.slice(0, 10);
+
+  return {
+    data: top10Services,
+    isLoading,
+    isError,
+    error,
+  };
 };

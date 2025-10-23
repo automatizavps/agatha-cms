@@ -14,6 +14,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils"; // Importando cn
 import LatestProductsCarousel from "@/components/LatestProductsCarousel"; // Importando o novo componente
 import TopSellingItemsCard from "@/components/TopSellingItemsCard"; // Importando o novo componente
+import TopSellingServicesCard from "@/components/TopSellingServicesCard"; // Importando o novo componente
 
 const Index = () => {
   const { t } = useTranslation();
@@ -150,7 +151,7 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Metas das Equipes (NOVA POSIÇÃO) */}
+        {/* Seção 2: Metas das Equipes */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Target className="h-6 w-6 text-muted-foreground" />
@@ -179,9 +180,10 @@ const Index = () => {
         {/* Seção 3: Últimos Produtos Cadastrados (Carousel) */}
         <LatestProductsCarousel />
         
-        {/* Seção 4: Top 10 Produtos Mais Vendidos */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        {/* Seção 4: Top 10 Produtos e Serviços Mais Vendidos */}
+        <div className="grid gap-6 lg:grid-cols-2">
           <TopSellingItemsCard companyId={filteredCompanyId} />
+          <TopSellingServicesCard companyId={filteredCompanyId} />
         </div>
         
         <div className="mt-4">

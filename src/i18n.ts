@@ -63,8 +63,10 @@ const resources = {
       "total_products": "Total de Produtos",
       "total_products_overview": "Produtos cadastrados na empresa",
       "latest_products_title": "Últimos Produtos Cadastrados", // NOVO
-      "top_selling_items_title": "Top 10 Mais Vendidos (Unidades)", // NOVO
+      "top_selling_items_title": "Top 10 Produtos Mais Vendidos (Unidades)", // NOVO
+      "top_selling_services_title": "Top 10 Serviços Mais Realizados", // NOVO
       "total_sold": "Total Vendido", // NOVO
+      "total_realized": "Total Realizado", // NOVO
       
       // Páginas
       "page_title_analytics": "Analytics",
@@ -265,8 +267,10 @@ const resources = {
       "total_products": "Total Products",
       "total_products_overview": "Products registered in the company",
       "latest_products_title": "Latest Registered Products", // NOVO
-      "top_selling_items_title": "Top 10 Selling Items (Units)", // NOVO
+      "top_selling_items_title": "Top 10 Selling Products (Units)", // NOVO
+      "top_selling_services_title": "Top 10 Realized Services", // NOVO
       "total_sold": "Total Sold", // NOVO
+      "total_realized": "Total Realized", // NOVO
 
       // Pages
       "page_title_analytics": "Analytics",
