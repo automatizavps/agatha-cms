@@ -7,6 +7,9 @@ export interface CurrentUserProfile {
   nome_completo: string;
   perfil_id: number;
   avatar_url: string | null;
+  telefone: string | null; // Adicionado
+  endereco_completo: string | null; // Adicionado
+  empresa_id: string | null; // Adicionado
   perfis: {
     nome: string;
   } | null;
@@ -15,7 +18,7 @@ export interface CurrentUserProfile {
 const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfile | null> => {
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, perfil_id, avatar_url, perfis (nome)")
+    .select("id, nome_completo, perfil_id, avatar_url, telefone, endereco_completo, empresa_id, perfis (nome)")
     .eq("id", userId)
     // Removido .single() para evitar PGRST116 se o perfil não existir
     .limit(1); 
