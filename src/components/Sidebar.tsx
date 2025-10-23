@@ -31,8 +31,8 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
           isActive
             ? "bg-sidebar-primary text-sidebar-primary-foreground"
             : "text-sidebar-foreground",
-          // Estilos para estado colapsado: centraliza, usa w-full
-          isCollapsed ? "justify-center w-full gap-0" : "px-3 gap-3",
+          // Estilos para estado colapsado: centraliza, usa px-3 para alinhamento visual
+          isCollapsed ? "justify-center w-full px-3 gap-0" : "px-3 gap-3",
           // Estilos para sub-item
           isSubItem && !isCollapsed && "pl-8 text-sm py-1.5",
         )
@@ -143,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
               <CollapsibleTrigger 
                 className={cn(
                   "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isCollapsed ? "justify-center px-4" : "px-3" // Mantendo px-4 aqui para o CollapsibleTrigger
+                  isCollapsed ? "justify-center px-3" : "px-3" // Alterado para px-3
                 )}
               >
                 <div className={cn("flex items-center", isCollapsed ? "justify-center w-full gap-0" : "gap-3")}>
