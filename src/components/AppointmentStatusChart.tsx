@@ -68,7 +68,7 @@ const AppointmentStatusChart: React.FC = () => {
                 <Bar key={`bar-${index}`} dataKey="count" fill={entry.fill} />
               ))}
             </Bar>
-          </LineChart>
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
