@@ -35,6 +35,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsLoading(false);
 
       if (event === 'SIGNED_OUT') {
+        // Redireciona para a página de login quando o evento SIGNED_OUT é disparado
         navigate('/login');
       }
     });
@@ -72,7 +73,8 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     if (!isLoading && !session) {
-      navigate('/login');
+      // Redireciona para o login se não estiver autenticado
+      navigate('/login', { replace: true });
     }
   }, [session, isLoading, navigate]);
 
@@ -95,8 +97,8 @@ export const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     if (!isLoading && session) {
-      // Redirect authenticated users away from login/public pages
-      navigate('/');
+      // Redireciona usuários autenticados para a página inicial
+      navigate('/', { replace: true });
     }
   }, [session, isLoading, navigate]);
 

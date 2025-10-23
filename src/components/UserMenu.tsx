@@ -14,31 +14,37 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from "@/utils/toast";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "react-router-dom"; // Importando Link
+import { Link, useNavigate } from "react-router-dom"; // Importando useNavigate
 
 export function UserMenu() {
   const { user, session } = useSession();
   const { data: profile, isLoading: isProfileLoading } = useCurrentUserProfile();
+  const navigate = useNavigate(); // Usando useNavigate
 
   const handleLogout = async () => {
-    // Só tenta o signOut se houver uma sessão ativa.
-    // Se não houver sessão, o AuthStateChange em src/integrations/supabase/auth.tsx
-    // já deve ter redirecionado, mas tentamos garantir.
+    let logoutSuccessful = false;
+    
     if (session) {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        // Se o erro for "Auth session missing", podemos ignorar e ainda mostrar sucesso/redirecionar.
-        // Caso contrário, mostramos o erro.
+        // Se o erro for "Auth session missing", ignoramos, pois o objetivo é deslogar.
         if (!error.message.includes("Auth session missing")) {
           showError("Falha ao fazer logout: " + error.message);
-          return;
+          // Se for um erro crítico, não prosseguimos com o sucesso/redirecionamento forçado
+          return; 
         }
       }
+      logoutSuccessful = true;
+    } else {
+      // Se não houver sessão, consideramos o logout como "já feito"
+      logoutSuccessful = true;
     }
     
-    // Se o signOut for bem-sucedido ou se o erro for ignorado (session missing),
-    // mostramos sucesso. O SessionContextProvider cuidará do redirecionamento.
-    showSuccess("Logout realizado com sucesso.");
+    if (logoutSuccessful) {
+      showSuccess("Logout realizado com sucesso.");
+      // Força o redirecionamento para /login, garantindo que o router reaja.
+      navigate('/login');
+    }
   };
 
   const userEmail = user?.email || "Usuário";
