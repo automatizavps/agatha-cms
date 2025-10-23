@@ -161,7 +161,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 
   return (
     <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className="flex items-center gap-1">
+      <div className={cn("flex items-center gap-1", className?.includes('text-right') && "justify-end", className?.includes('text-center') && "justify-center")}>
         {children}
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
@@ -319,6 +319,7 @@ const AppointmentsContent = () => {
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
+                      className="text-center" // Adicionando text-center ao cabeçalho
                     >
                       {t('order_table_header_status')}
                     </SortableHeader>
@@ -344,7 +345,7 @@ const AppointmentsContent = () => {
                         {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>
                       <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
                         <span className={getStatusBadge(appointment.status)}>
                           {appointment.status}
                         </span>
