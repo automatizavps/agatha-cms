@@ -113,7 +113,7 @@ const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointme
           )}
         </div>
       </TooltipTrigger>
-      <TooltipContent side="right" className="max-w-xs">
+      <TooltipContent className="max-w-xs">
         {tooltipContent}
       </TooltipContent>
     </Tooltip>
