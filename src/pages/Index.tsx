@@ -114,31 +114,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 3: Total de Produtos */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(productCount || 0)}
-              <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 4: Total de Clientes (NOVO) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(clientCount || 0)}
-              <p className="text-xs text-muted-foreground">{t('total_clients_overview')}</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 5: Total de Agendamentos */}
+          {/* Card 3: Total de Agendamentos (MOVIDO PARA CÁ) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
@@ -150,7 +126,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 6: Agendamentos Pendentes */}
+          {/* Card 4: Agendamentos Pendentes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
@@ -159,6 +135,30 @@ const Index = () => {
             <CardContent>
               {renderMetricValue(metrics.pendingAppointments)}
               <p className="text-xs text-muted-foreground">Pendentes para hoje</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 5: Total de Produtos */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(productCount || 0)}
+              <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 6: Total de Clientes */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(clientCount || 0)}
+              <p className="text-xs text-muted-foreground">{t('total_clients_overview')}</p>
             </CardContent>
           </Card>
         </div>
