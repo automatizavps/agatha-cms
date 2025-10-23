@@ -22,6 +22,9 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
     <NavLink
       to={to}
       onClick={onClick}
+      // Usamos 'end' para garantir que apenas a rota exata seja ativada,
+      // a menos que seja a rota raiz "/"
+      end={to !== "/"} 
       className={({ isActive }) =>
         cn(
           "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
