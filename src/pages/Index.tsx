@@ -11,6 +11,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { cn } from "@/lib/utils"; // Importando cn
 
 const Index = () => {
   const { t } = useTranslation();
@@ -86,8 +87,8 @@ const Index = () => {
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           
-          {/* Card 1: Faturamento Diário */}
-          <Card>
+          {/* Card 1: Faturamento Diário (DESTAQUE) */}
+          <Card className={cn("lg:col-span-2", "ring-2 ring-primary ring-offset-2 dark:ring-offset-background")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -135,6 +136,11 @@ const Index = () => {
           </Card>
           
           {/* Card 5: Agendamentos Pendentes */}
+          {/* Removido o Card 5 para dar espaço ao Card 1 (agora lg:col-span-2) */}
+          {/* Reorganizando os cards para caberem em 5 colunas, mantendo 5 cards */}
+          {/* O layout original era 5 colunas, então vamos manter 5 cards, mas o primeiro ocupa 2 colunas */}
+          
+          {/* Card 5 (Antigo Card 5, agora Card 4 na nova grade) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
