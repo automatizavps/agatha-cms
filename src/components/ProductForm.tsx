@@ -39,7 +39,7 @@ const baseFormSchema = z.object({
   
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
-  }).optional(),
+  }).or(z.literal("")).optional(), // Permite string vazia para o Select
 });
 
 type ProductFormValues = z.infer<typeof baseFormSchema>;
@@ -107,7 +107,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
       estoque_total = values.estoque_total ? parseInt(values.estoque_total) : null;
     }
     
-    const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
+    // Se for Super Admin, pega o ID da empresa. Se o ID for uma string vazia (não selecionado), 
+    // ele será tratado como undefined, permitindo que a função createProduct use o provided_empresa_id.
+    // Se a validação passou, values.empresa_id deve ser um UUID válido.
+    const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     // Normaliza campos vazios para null
     const marca = values.marca ? values.marca : null;
