@@ -104,10 +104,12 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 
   // Verifica se a classe 'text-right' está presente para aplicar 'justify-end'
   const isTextRight = className?.includes('text-right');
+  // Verifica se a classe 'text-center' está presente para aplicar 'justify-center'
+  const isTextCenter = className?.includes('text-center');
 
   return (
     <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className={cn("flex items-center gap-1", isTextRight && "justify-end")}>
+      <div className={cn("flex items-center gap-1", isTextRight && "justify-end", isTextCenter && "justify-center")}>
         {children}
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
@@ -257,7 +259,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-right"
+                className="text-center" // ALTERADO para text-center
               >
                 {t('product_table_header_stock')}
               </SortableHeader>
@@ -266,7 +268,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-right" // Aplicando text-right aqui
+                className="text-right"
               >
                 {t('product_table_header_price')}
               </SortableHeader>
@@ -303,7 +305,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                     {product.marca || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-semibold">
+                <TableCell className="text-center font-semibold"> {/* ALTERADO para text-center */}
                   <Badge variant={product.estoque_total && product.estoque_total > 0 ? 'default' : 'destructive'}>
                     {product.estoque_total !== null ? product.estoque_total : 'N/A'}
                   </Badge>
