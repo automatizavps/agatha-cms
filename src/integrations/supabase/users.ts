@@ -9,6 +9,7 @@ export interface UserProfile {
   avatar_url: string | null;
   telefone: string | null; // Novo campo
   endereco_completo: string | null; // Novo campo
+  email: string; // Adicionando email
   perfis: {
     nome: string;
   } | null;
@@ -18,17 +19,23 @@ export interface UserProfile {
 }
 
 const fetchUsers = async (): Promise<UserProfile[]> => {
+  // Buscamos dados do perfil e o email do auth.users (usando o relacionamento implícito)
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, perfil_id, empresa_id, avatar_url, telefone, endereco_completo, perfis (nome), empresas (nome)") // Incluindo 'empresas (nome)'
+    .select("id, nome_completo, perfil_id, empresa_id, avatar_url, telefone, endereco_completo, perfis (nome), empresas (nome), auth_users:auth.users (email)") // Incluindo 'auth.users (email)'
     .order("nome_completo", { ascending: true });
 
   if (error) {
     console.error("Error fetching users:", error);
     throw new Error("Failed to fetch users");
   }
-
-  return data as UserProfile[];
+  
+  // Mapeamos os dados para a interface UserProfile, extraindo o email
+  return data.map(user => ({
+    ...user,
+    email: user.auth_users?.[0]?.email || 'N/A', // Extrai o email do array de auth_users
+    auth_users: undefined, // Remove a propriedade temporária
+  })) as UserProfile[];
 };
 
 export const useUsers = () => {

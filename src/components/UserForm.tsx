@@ -78,7 +78,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: defaultValues?.full_name || "",
-      email: defaultValues?.email || "",
+      email: defaultValues?.email || "", // Usando o email real
       perfil_id: defaultValues?.perfil_id || "",
       telefone: defaultValues?.telefone || "",
       endereco_completo: defaultValues?.endereco_completo || "",
@@ -166,6 +166,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
                   {...field} 
                   disabled={isEditing || isSubmitting} // Desabilita email na edição
                   value={field.value || ""} // Garante que o valor seja sempre uma string
+                  className={isEditing ? "bg-muted/50" : ""} // Adiciona estilo desabilitado
                 />
               </FormControl>
               <FormMessage />

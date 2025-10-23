@@ -48,7 +48,7 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
   // Valores iniciais para o formulário de edição
   const initialValues = {
     full_name: user.nome_completo,
-    email: "Email não editável", // Email não pode ser alterado via este endpoint
+    email: user.email, // Usando o email real
     perfil_id: String(user.perfil_id),
     telefone: user.telefone,
     endereco_completo: user.endereco_completo,
