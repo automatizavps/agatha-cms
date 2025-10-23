@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, Clock, Image as ImageIcon, Building } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Clock, Image as ImageIcon, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditServiceSheet from "./EditServiceSheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface ServiceOnlyTableProps {
   services: Product[];
@@ -32,6 +33,9 @@ interface ServiceActionsProps {
   service: Product;
   onEdit: (service: Product) => void;
 }
+
+type SortKey = 'nome' | 'empresa' | 'categoria' | 'tempo_servico' | 'preco';
+type SortDirection = 'asc' | 'desc';
 
 const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
   const queryClient = useQueryClient();
@@ -80,11 +84,39 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
   );
 };
 
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
 
 const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
   const [editingService, setEditingService] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
+  const [sortKey, setSortKey] = useState<SortKey>('nome');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
@@ -100,6 +132,60 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
       setEditingService(null);
     }
   };
+  
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+  
+  const sortedServices = useMemo(() => {
+    if (!services) return [];
+    
+    const sorted = [...services].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'nome':
+          aValue = a.nome;
+          bValue = b.nome;
+          break;
+        case 'empresa':
+          aValue = a.empresa?.nome || '';
+          bValue = b.empresa?.nome || '';
+          break;
+        case 'categoria':
+          aValue = a.categoria || '';
+          bValue = b.categoria || '';
+          break;
+        case 'tempo_servico':
+          aValue = a.tempo_servico || 0;
+          bValue = b.tempo_servico || 0;
+          break;
+        case 'preco':
+          aValue = a.preco;
+          bValue = b.preco;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [services, sortKey, sortDirection]);
+
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -114,16 +200,57 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('nav_services')}</TableHead>
-              {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
-              <TableHead className="hidden sm:table-cell">{t('product_table_header_category')}</TableHead>
-              <TableHead className="text-right">{t('service_table_header_duration')}</TableHead>
-              <TableHead className="text-right">{t('product_table_header_price')}</TableHead>
+              <SortableHeader 
+                sortKey="nome" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('nav_services')}
+              </SortableHeader>
+              {isSuperAdmin && (
+                <SortableHeader 
+                  sortKey="empresa" 
+                  currentSortKey={sortKey} 
+                  currentSortDirection={sortDirection} 
+                  onSort={handleSort}
+                  className="hidden md:table-cell"
+                >
+                  {t('user_table_header_company')}
+                </SortableHeader>
+              )}
+              <SortableHeader 
+                sortKey="categoria" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden sm:table-cell"
+              >
+                {t('product_table_header_category')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="tempo_servico" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-right"
+              >
+                {t('service_table_header_duration')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="preco" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-right"
+              >
+                {t('product_table_header_price')}
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {services.map((service) => (
+            {sortedServices.map((service) => (
               <TableRow key={service.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">

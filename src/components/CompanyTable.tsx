@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditCompanySheet from "./EditCompanySheet";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface CompanyTableProps {
   companies: Company[];
@@ -31,6 +32,9 @@ interface CompanyActionsProps {
   company: Company;
   onEdit: (company: Company) => void;
 }
+
+type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj';
+type SortDirection = 'asc' | 'desc';
 
 const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
   const queryClient = useQueryClient();
@@ -79,10 +83,38 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
   );
 };
 
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
 
 const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('nome');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
 
   const handleEdit = (company: Company) => {
@@ -96,6 +128,56 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
       setEditingCompany(null);
     }
   };
+  
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+  
+  const sortedCompanies = useMemo(() => {
+    if (!companies) return [];
+    
+    const sorted = [...companies].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'nome':
+          aValue = a.nome;
+          bValue = b.nome;
+          break;
+        case 'email':
+          aValue = a.email || '';
+          bValue = b.email || '';
+          break;
+        case 'telefone':
+          aValue = a.telefone || '';
+          bValue = b.telefone || '';
+          break;
+        case 'cnpj':
+          aValue = a.cnpj || '';
+          bValue = b.cnpj || '';
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [companies, sortKey, sortDirection]);
+
 
   return (
     <>
@@ -103,15 +185,46 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('user_table_header_name')}</TableHead>
-              <TableHead className="hidden lg:table-cell">{t('profile_email')}</TableHead>
-              <TableHead className="hidden md:table-cell">{t('user_table_header_phone')}</TableHead>
-              <TableHead className="hidden sm:table-cell">CNPJ</TableHead>
+              <SortableHeader 
+                sortKey="nome" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('user_table_header_name')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="email" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden lg:table-cell"
+              >
+                {t('profile_email')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="telefone" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden md:table-cell"
+              >
+                {t('user_table_header_phone')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="cnpj" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden sm:table-cell"
+              >
+                CNPJ
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {companies.map((company) => (
+            {sortedCompanies.map((company) => (
               <TableRow key={company.id}>
                 <TableCell className="font-medium flex items-center gap-2">
                   <Building className="h-4 w-4 text-muted-foreground" />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Team, deleteTeam, useTeamMembers } from "@/integrations/supabase/teams";
-import { MoreHorizontal, Trash2, Pencil, Users, DollarSign, Target, Building, Loader2 } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Users, DollarSign, Target, Building, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface TeamTableProps {
   teams: Team[];
@@ -34,6 +35,9 @@ interface TeamActionsProps {
   team: Team;
   onEdit: (team: Team) => void;
 }
+
+type SortKey = 'nome' | 'empresa' | 'meta_valor' | 'meta_quantidade';
+type SortDirection = 'asc' | 'desc';
 
 const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit }) => {
   const queryClient = useQueryClient();
@@ -81,6 +85,33 @@ const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit }) => {
     </DropdownMenu>
   );
 };
+
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
 
 // Componente para exibir os membros da equipe
 const TeamMembersDisplay: React.FC<{ teamId: string }> = ({ teamId }) => {
@@ -144,6 +175,8 @@ const TeamTable: React.FC<TeamTableProps> = ({ teams }) => {
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
+  const [sortKey, setSortKey] = useState<SortKey>('nome');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
@@ -159,6 +192,56 @@ const TeamTable: React.FC<TeamTableProps> = ({ teams }) => {
       setEditingTeam(null);
     }
   };
+  
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+  
+  const sortedTeams = useMemo(() => {
+    if (!teams) return [];
+    
+    const sorted = [...teams].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'nome':
+          aValue = a.nome;
+          bValue = b.nome;
+          break;
+        case 'empresa':
+          aValue = a.empresas?.nome || '';
+          bValue = b.empresas?.nome || '';
+          break;
+        case 'meta_valor':
+          aValue = a.meta_mensal_valor;
+          bValue = b.meta_mensal_valor;
+          break;
+        case 'meta_quantidade':
+          aValue = a.meta_mensal_quantidade;
+          bValue = b.meta_mensal_quantidade;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [teams, sortKey, sortDirection]);
+
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -173,16 +256,49 @@ const TeamTable: React.FC<TeamTableProps> = ({ teams }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('team_name')}</TableHead>
-              {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
+              <SortableHeader 
+                sortKey="nome" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('team_name')}
+              </SortableHeader>
+              {isSuperAdmin && (
+                <SortableHeader 
+                  sortKey="empresa" 
+                  currentSortKey={sortKey} 
+                  currentSortDirection={sortDirection} 
+                  onSort={handleSort}
+                  className="hidden md:table-cell"
+                >
+                  {t('user_table_header_company')}
+                </SortableHeader>
+              )}
               <TableHead className="hidden sm:table-cell">{t('team_members')}</TableHead>
-              <TableHead className="text-right hidden md:table-cell">{t('team_meta_value')}</TableHead>
-              <TableHead className="text-right hidden md:table-cell">{t('team_meta_quantity')}</TableHead>
+              <SortableHeader 
+                sortKey="meta_valor" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-right hidden md:table-cell"
+              >
+                {t('team_meta_value')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="meta_quantidade" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-right hidden md:table-cell"
+              >
+                {t('team_meta_quantity')}
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {teams.map((team) => (
+            {sortedTeams.map((team) => (
               <TableRow key={team.id}>
                 <TableCell className="font-medium flex items-center gap-2">
                   <Target className="h-4 w-4 text-muted-foreground" />

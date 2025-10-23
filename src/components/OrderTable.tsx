@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Order, deleteOrder, OrderStatus } from "@/integrations/supabase/orders";
-import { MoreHorizontal, Trash2, Pencil, DollarSign, Package } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface OrderTableProps {
   orders: Order[];
@@ -34,6 +35,9 @@ interface OrderActionsProps {
   order: Order;
   onEditStatus: (order: Order) => void;
 }
+
+type SortKey = 'id' | 'cliente' | 'data' | 'valor_total' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
   const queryClient = useQueryClient();
@@ -88,10 +92,10 @@ const getStatusBadge = (status: OrderStatus) => {
     case 'entregue':
       return <Badge className={baseClasses} variant="default">Entregue</Badge>;
     case 'cancelado':
-      return <Badge className={baseClasses} variant="destructive">Cancelado</Badge>;
     case 'pendente_entrega':
     default:
-      return <Badge className={baseClasses} variant="secondary">Pendente</Badge>;
+      // Usando secondary para pendente e destructive para cancelado
+      return <Badge className={baseClasses} variant={status === 'cancelado' ? 'destructive' : 'secondary'}>{status.replace('_', ' ')}</Badge>;
   }
 };
 
@@ -102,10 +106,38 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
 
 const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('data');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { t } = useTranslation();
 
   const handleEditStatus = (order: Order) => {
@@ -119,6 +151,60 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
       setEditingOrder(null);
     }
   };
+  
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+  
+  const sortedOrders = useMemo(() => {
+    if (!orders) return [];
+    
+    const sorted = [...orders].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'id':
+          aValue = a.id;
+          bValue = b.id;
+          break;
+        case 'cliente':
+          aValue = a.clientes?.nome || '';
+          bValue = b.clientes?.nome || '';
+          break;
+        case 'data':
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+          break;
+        case 'valor_total':
+          aValue = a.valor_total;
+          bValue = b.valor_total;
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [orders, sortKey, sortDirection]);
+
 
   return (
     <>
@@ -126,16 +212,53 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('order_table_header_id')}</TableHead>
-              <TableHead>{t('order_table_header_client')}</TableHead>
-              <TableHead className="hidden md:table-cell">{t('order_table_header_date')}</TableHead>
-              <TableHead className="text-right">{t('order_table_header_total')}</TableHead>
-              <TableHead>{t('order_table_header_status')}</TableHead>
+              <SortableHeader 
+                sortKey="id" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('order_table_header_id')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="cliente" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('order_table_header_client')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="data" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden md:table-cell"
+              >
+                {t('order_table_header_date')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="valor_total" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-right"
+              >
+                {t('order_table_header_total')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="status" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('order_table_header_status')}
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
+            {sortedOrders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium text-xs text-muted-foreground">
                   {order.id.slice(0, 8)}

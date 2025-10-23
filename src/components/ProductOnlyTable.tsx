@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, Factory, Image as ImageIcon, Building } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Factory, Image as ImageIcon, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ import EditProductSheet from "./EditProductSheet";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface ProductTableProps {
   products: Product[];
@@ -34,6 +35,9 @@ interface ProductActionsProps {
   product: Product;
   onEdit: (product: Product) => void;
 }
+
+type SortKey = 'nome' | 'empresa' | 'categoria' | 'marca' | 'estoque_total' | 'preco';
+type SortDirection = 'asc' | 'desc';
 
 const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
   const queryClient = useQueryClient();
@@ -82,11 +86,39 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
   );
 };
 
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
 
 const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEditProp }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
+  const [sortKey, setSortKey] = useState<SortKey>('nome');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
@@ -109,6 +141,64 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
     }
   };
 
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+  
+  const sortedProducts = useMemo(() => {
+    if (!products) return [];
+    
+    const sorted = [...products].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'nome':
+          aValue = a.nome;
+          bValue = b.nome;
+          break;
+        case 'empresa':
+          aValue = a.empresa?.nome || '';
+          bValue = b.empresa?.nome || '';
+          break;
+        case 'categoria':
+          aValue = a.categoria || '';
+          bValue = b.categoria || '';
+          break;
+        case 'marca':
+          aValue = a.marca || '';
+          bValue = b.marca || '';
+          break;
+        case 'estoque_total':
+          aValue = a.estoque_total || -1; // -1 para null/undefined
+          bValue = b.estoque_total || -1;
+          break;
+        case 'preco':
+          aValue = a.preco;
+          bValue = b.preco;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [products, sortKey, sortDirection]);
+
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -122,17 +212,66 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('nav_products')}</TableHead>
-              {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
-              <TableHead className="hidden sm:table-cell">{t('product_table_header_category')}</TableHead>
-              <TableHead className="hidden md:table-cell">{t('product_table_header_brand')}</TableHead>
-              <TableHead className="text-right">{t('product_table_header_stock')}</TableHead>
-              <TableHead className="text-right">{t('product_table_header_price')}</TableHead>
+              <SortableHeader 
+                sortKey="nome" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('nav_products')}
+              </SortableHeader>
+              {isSuperAdmin && (
+                <SortableHeader 
+                  sortKey="empresa" 
+                  currentSortKey={sortKey} 
+                  currentSortDirection={sortDirection} 
+                  onSort={handleSort}
+                  className="hidden md:table-cell"
+                >
+                  {t('user_table_header_company')}
+                </SortableHeader>
+              )}
+              <SortableHeader 
+                sortKey="categoria" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden sm:table-cell"
+              >
+                {t('product_table_header_category')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="marca" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden md:table-cell"
+              >
+                {t('product_table_header_brand')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="estoque_total" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-right"
+              >
+                {t('product_table_header_stock')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="preco" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-right"
+              >
+                {t('product_table_header_price')}
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
+            {sortedProducts.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">

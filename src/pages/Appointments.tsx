@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppointments, Appointment, deleteAppointment, useAppointmentItems } from "@/integrations/supabase/appointments";
-import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building } from "lucide-react";
+import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -17,17 +17,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import EditAppointmentSheet from "@/components/EditAppointmentSheet";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importado
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { cn } from "@/lib/utils";
 
 interface AppointmentActionsProps {
   appointment: Appointment;
   onEdit: (appointment: Appointment) => void;
 }
+
+type SortKey = 'cliente' | 'empresa' | 'data_hora' | 'responsavel' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, onEdit }) => {
   const queryClient = useQueryClient();
@@ -45,7 +49,6 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
   });
 
   const handleDelete = () => {
-    const clientName = appointment.clientes?.nome || 'este cliente';
     if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(appointment.id);
     }
@@ -124,12 +127,55 @@ const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointme
   );
 };
 
+const getStatusBadge = (status: Appointment['status']) => {
+  const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
+  switch (status) {
+    case 'confirmado':
+      return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
+    case 'cancelado':
+      return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`;
+    case 'concluido':
+      return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`;
+    case 'pendente':
+    default:
+      return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
+  }
+};
 
-const Appointments = () => {
-  const { data: appointments, isLoading, isError, error } = useAppointments();
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
+
+const AppointmentsContent = () => {
+  const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments();
   const { data: profile } = useCurrentUserProfile();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('data_hora');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
@@ -149,21 +195,60 @@ const Appointments = () => {
       setEditingAppointment(null);
     }
   };
-
-  const getStatusBadge = (status: Appointment['status']) => {
-    const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
-    switch (status) {
-      case 'confirmado':
-        return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
-      case 'cancelado':
-        return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`;
-      case 'concluido':
-        return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`;
-      case 'pendente':
-      default:
-        return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
+  
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
     }
   };
+  
+  const sortedAppointments = useMemo(() => {
+    if (!appointments) return [];
+    
+    const sorted = [...appointments].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'cliente':
+          aValue = a.clientes?.nome || '';
+          bValue = b.clientes?.nome || '';
+          break;
+        case 'empresa':
+          aValue = a.empresas?.nome || '';
+          bValue = b.empresas?.nome || '';
+          break;
+        case 'data_hora':
+          aValue = new Date(a.data_hora).getTime();
+          bValue = new Date(b.data_hora).getTime();
+          break;
+        case 'responsavel':
+          aValue = a.responsavel?.nome_completo || '';
+          bValue = b.responsavel?.nome_completo || '';
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [appointments, sortKey, sortDirection]);
+
 
   return (
     <DashboardLayout>
@@ -179,7 +264,7 @@ const Appointments = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoading && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -187,22 +272,60 @@ const Appointments = () => {
             <div className="text-center text-destructive p-4 border border-destructive rounded-md">
               {t('error_loading_data')}
             </div>
-          ) : appointments && appointments.length > 0 ? (
+          ) : sortedAppointments && sortedAppointments.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('order_table_header_client')}</TableHead>
-                    {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
+                    <SortableHeader 
+                      sortKey="cliente" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                    >
+                      {t('order_table_header_client')}
+                    </SortableHeader>
+                    {isSuperAdmin && (
+                      <SortableHeader 
+                        sortKey="empresa" 
+                        currentSortKey={sortKey} 
+                        currentSortDirection={sortDirection} 
+                        onSort={handleSort}
+                        className="hidden md:table-cell"
+                      >
+                        {t('user_table_header_company')}
+                      </SortableHeader>
+                    )}
                     <TableHead>{t('nav_products')}</TableHead>
-                    <TableHead>{t('order_table_header_date')}</TableHead>
-                    <TableHead>{t('responsible')}</TableHead>
-                    <TableHead>{t('order_table_header_status')}</TableHead>
+                    <SortableHeader 
+                      sortKey="data_hora" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                    >
+                      {t('order_table_header_date')}
+                    </SortableHeader>
+                    <SortableHeader 
+                      sortKey="responsavel" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                    >
+                      {t('responsible')}
+                    </SortableHeader>
+                    <SortableHeader 
+                      sortKey="status" 
+                      currentSortKey={sortKey} 
+                      currentSortDirection={sortDirection} 
+                      onSort={handleSort}
+                    >
+                      {t('order_table_header_status')}
+                    </SortableHeader>
                     <TableHead className="text-right">{t('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {appointments.map((appointment) => (
+                  {sortedAppointments.map((appointment) => (
                     <TableRow key={appointment.id}>
                       <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
                       {isSuperAdmin && (
@@ -251,5 +374,12 @@ const Appointments = () => {
     </DashboardLayout>
   );
 };
+
+const Appointments = () => (
+  // Perfis 1 (Super Admin), 2 (Admin) e 3 (Funcionário) têm permissão para gerenciar agendamentos
+  <PermissionGuard allowedProfileIds={[1, 2, 3]}>
+    <AppointmentsContent />
+  </PermissionGuard>
+);
 
 export default Appointments;

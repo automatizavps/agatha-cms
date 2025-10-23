@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { UserProfile, deleteUser } from "@/integrations/supabase/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building } from "lucide-react";
+import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditUserSheet from "./EditUserSheet";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface UserTableProps {
   users: UserProfile[];
@@ -32,6 +33,9 @@ interface UserActionsProps {
   user: UserProfile;
   onEdit: (user: UserProfile) => void;
 }
+
+type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil';
+type SortDirection = 'asc' | 'desc';
 
 const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
   const queryClient = useQueryClient();
@@ -80,10 +84,38 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
   );
 };
 
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
 
 const UserTable: React.FC<UserTableProps> = ({ users }) => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('nome_completo');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
 
   const handleEdit = (user: UserProfile) => {
@@ -97,6 +129,60 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
       setEditingUser(null);
     }
   };
+  
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+  
+  const sortedUsers = useMemo(() => {
+    if (!users) return [];
+    
+    const sorted = [...users].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'nome_completo':
+          aValue = a.nome_completo;
+          bValue = b.nome_completo;
+          break;
+        case 'empresa':
+          aValue = a.empresa?.nome || '';
+          bValue = b.empresa?.nome || '';
+          break;
+        case 'telefone':
+          aValue = a.telefone || '';
+          bValue = b.telefone || '';
+          break;
+        case 'endereco_completo':
+          aValue = a.endereco_completo || '';
+          bValue = b.endereco_completo || '';
+          break;
+        case 'perfil':
+          aValue = a.perfis?.nome || '';
+          bValue = b.perfis?.nome || '';
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [users, sortKey, sortDirection]);
+
 
   return (
     <>
@@ -105,16 +191,54 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">Avatar</TableHead>
-              <TableHead>{t('user_table_header_name')}</TableHead>
-              <TableHead className="hidden xl:table-cell">{t('user_table_header_company')}</TableHead>
-              <TableHead className="hidden lg:table-cell">{t('user_table_header_phone')}</TableHead>
-              <TableHead className="hidden xl:table-cell">{t('user_table_header_address')}</TableHead>
-              <TableHead>{t('user_table_header_profile')}</TableHead>
+              <SortableHeader 
+                sortKey="nome_completo" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('user_table_header_name')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="empresa" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden xl:table-cell"
+              >
+                {t('user_table_header_company')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="telefone" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden lg:table-cell"
+              >
+                {t('user_table_header_phone')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="endereco_completo" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden xl:table-cell"
+              >
+                {t('user_table_header_address')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="perfil" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('user_table_header_profile')}
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {sortedUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
                   <Avatar className="h-8 w-8">
