@@ -35,11 +35,9 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
     // Clona o elemento para injetar as classes de cor e tamanho
     if (React.isValidElement(icon)) {
       // Remove classes de cor existentes e aplica as novas
-      const existingClasses = icon.props.className || "";
-      const cleanedClasses = existingClasses.replace(/text-\S+/g, ''); // Remove qualquer classe de cor existente
-      
+      // Usamos cn para garantir que a classe de cor seja aplicada corretamente
       return React.cloneElement(icon as React.ReactElement, { 
-        className: cn(cleanedClasses, iconClasses) 
+        className: cn(icon.props.className, iconClasses) 
       });
     }
     return <span className={iconClasses}>{icon}</span>;
@@ -59,7 +57,7 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
             ? "bg-sidebar-primary text-sidebar-primary-foreground" // Ativo: Fundo roxo, texto branco
             : "text-sidebar-foreground", // Inativo: Texto cinza (para o label)
           // Estilos para estado colapsado: pl-6 pr-2 para centralização visual
-          isCollapsed ? "justify-start w-full pl-6 pr-2 gap-0" : "px-3 gap-0",
+          isCollapsed ? "justify-start w-full pl-6 pr-2 gap-0" : "px-3 gap-3",
           // Estilos para sub-item
           isSubItem && !isCollapsed && "pl-8 text-sm py-1.5",
         )
