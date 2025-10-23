@@ -7,7 +7,9 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
-import Users from "./pages/Users"; // Importando a nova página
+import Users from "./pages/Users";
+import Login from "./pages/Login";
+import { SessionContextProvider, ProtectedRoute } from "@/integrations/supabase/auth";
 
 const queryClient = new QueryClient();
 
@@ -17,14 +19,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/users" element={<Users />} /> {/* Nova Rota */}
-          <Route path="/settings" element={<Settings />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <SessionContextProvider>
+          <Routes>
+            {/* Public Route */}
+            <Route path="/login" element={<Login />} />
+
+            {/* Protected Routes */}
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </SessionContextProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
