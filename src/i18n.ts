@@ -71,7 +71,7 @@ const resources = {
       // Páginas
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Relatórios detalhados e visualizações de dados.",
-      "chart_title_appointment_status": "Distribuição de Status de Agendamentos",
+      "chart_title_appointment_status": "Status dos Agendamentos", // ALTERADO
       "chart_no_data": "Nenhum dado de agendamento para exibir.",
       "chart_error": "Erro ao carregar dados do gráfico.",
       "analytics_placeholder": "Outros relatórios e métricas virão aqui.",
