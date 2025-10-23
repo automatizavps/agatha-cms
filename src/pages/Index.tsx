@@ -153,37 +153,35 @@ const Index = () => {
         {/* Seção 2: Últimos Produtos Cadastrados (Carousel) */}
         <LatestProductsCarousel />
         
-        {/* Seção 3: Top 10 Produtos Mais Vendidos e Metas das Equipes */}
+        {/* Seção 3: Top 10 Produtos Mais Vendidos */}
         <div className="grid gap-6 lg:grid-cols-3">
-          
-          {/* Top 10 Produtos Mais Vendidos (Ocupa 2/3 no desktop) */}
           <TopSellingItemsCard companyId={filteredCompanyId} />
+        </div>
+        
+        {/* Seção 4: Metas das Equipes */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Target className="h-6 w-6 text-muted-foreground" />
+            {t('team_goals_section_title')}
+          </h2>
           
-          {/* Metas das Equipes (Ocupa 1/3 no desktop) */}
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Target className="h-6 w-6 text-muted-foreground" />
-              {t('team_goals_section_title')}
-            </h2>
-            
-            {isLoadingTeams ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : isTeamsError || !teams || teams.length === 0 ? (
-              <Card>
-                <CardContent className="p-4 text-muted-foreground">
-                  {t('no_teams_found')}
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {teams.map((team) => (
-                  <TeamGoalsCard key={team.id} team={team} />
-                ))}
-              </div>
-            )}
-          </div>
+          {isLoadingTeams ? (
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : isTeamsError || !teams || teams.length === 0 ? (
+            <Card>
+              <CardContent className="p-4 text-muted-foreground">
+                {t('no_teams_found')}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {teams.map((team) => (
+                <TeamGoalsCard key={team.id} team={team} />
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="mt-4">
