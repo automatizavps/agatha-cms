@@ -61,7 +61,7 @@ export default function DailyServiceByHourChart() {
       <CardHeader>
         <CardTitle>{t('chart_title_daily_services')}</CardTitle>
       </CardHeader>
-      <CardContent className="h-[calc(100%-4rem)] pb-4">
+      <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={formattedData}
