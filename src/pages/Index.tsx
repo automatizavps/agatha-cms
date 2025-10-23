@@ -89,7 +89,7 @@ const Index = () => {
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
           
           {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
           <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
