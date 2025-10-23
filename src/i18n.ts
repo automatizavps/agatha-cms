@@ -42,6 +42,7 @@ const resources = {
       "nav_config": "Configurações",
       "nav_products_services": "Produtos & Serviços", // NOVO
       "nav_categories": "Categorias", // NOVO
+      "nav_notifications": "Notificações", // NOVO
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
@@ -186,6 +187,11 @@ const resources = {
       "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
       "select_category": "Selecione a categoria",
       "search_category": "Buscar categoria...",
+      
+      // Notificações (Notifications) - NOVO
+      "notifications_marked_read": "Todas as notificações marcadas como lidas.",
+      "mark_all_read": "Marcar todas como lidas",
+      "no_notifications_found": "Nenhuma notificação recente.",
     },
   },
   en: {
@@ -227,6 +233,7 @@ const resources = {
       "nav_config": "Settings",
       "nav_products_services": "Products & Services", // NOVO
       "nav_categories": "Categories", // NOVO
+      "nav_notifications": "Notifications", // NOVO
 
       // Dashboard
       "dashboard_title": "Dashboard Overview",
@@ -371,6 +378,11 @@ const resources = {
       "category_deleted_success": "Category {{name}} deleted successfully!",
       "select_category": "Select category",
       "search_category": "Search category...",
+      
+      // Notificações (Notifications) - NOVO
+      "notifications_marked_read": "All notifications marked as read.",
+      "mark_all_read": "Mark all as read",
+      "no_notifications_found": "No recent notifications.",
     },
   },
 };
