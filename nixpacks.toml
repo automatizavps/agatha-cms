@@ -1,0 +1,18 @@
+# Força o uso do Node.js e pnpm
+providers = ["node"]
+
+[phases.setup]
+# Garante que o pnpm esteja disponível
+nixPkgs = ["nodejs", "pnpm"]
+
+[phases.install]
+# Sobrescreve o comando de instalação padrão (que está incorretamente definido como 'npm install')
+cmd = "pnpm install"
+
+[phases.build]
+# Mantém o comando de build
+cmd = "npm run build"
+
+[start]
+# Mantém o comando de start
+cmd = "npm run preview -- --port $PORT --host"
