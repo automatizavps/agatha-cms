@@ -75,6 +75,42 @@ const resources = {
       "pending_status": "Awaiting confirmation",
     },
   },
+  'es': {
+    translation: {
+      // General
+      "app_name": "AGATHA IA",
+      "loading": "Cargando...",
+      "actions": "Acciones",
+      "save_changes": "Guardar Cambios",
+      "try_again": "Intentar de Nuevo",
+      "not_found": "Página no encontrada",
+
+      // Navegación
+      "nav_home": "Inicio",
+      "nav_analytics": "Analíticas",
+      "nav_users": "Usuarios",
+      "nav_appointments": "Citas",
+      "nav_clients": "Clientes",
+      "nav_products": "Productos",
+      "nav_services": "Servicios",
+      "nav_orders": "Pedidos",
+      "nav_companies": "Empresas",
+      "nav_settings": "Configuración",
+      "nav_profile": "Mi Perfil",
+      "nav_general": "General",
+      "nav_operational": "Operacional",
+      "nav_config": "Configuración",
+
+      // Dashboard
+      "dashboard_title": "Vista General del Panel",
+      "total_appointments": "Total de Citas",
+      "confirmed_appointments": "Confirmadas",
+      "pending_appointments": "Pendientes",
+      "appointments_overview": "Vista general de todas las citas",
+      "confirmed_status": "Citas con estado 'confirmado'",
+      "pending_status": "Esperando confirmación",
+    },
+  },
 };
 
 i18n
