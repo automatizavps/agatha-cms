@@ -70,7 +70,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Sidebar Fixa */}
       <div 
         className={cn(
-          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20",
+          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden", // Adicionado overflow-y-hidden
           isCollapsed ? "w-[70px]" : "w-[280px]"
         )}
         style={{ width: isCollapsed ? sidebarWidthMd : sidebarWidth }}
