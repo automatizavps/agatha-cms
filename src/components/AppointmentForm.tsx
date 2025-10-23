@@ -25,6 +25,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Appointment } from "@/integrations/supabase/appointments";
+
+const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
 const formSchema = z.object({
   cliente_nome: z.string().min(2, {
@@ -39,17 +42,21 @@ const formSchema = z.object({
   time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
     message: "Formato de hora inválido (HH:mm).",
   }),
+  status: z.enum(statusOptions, {
+    required_error: "O status é obrigatório.",
+  }).optional(), // Opcional na criação, mas presente na edição
 });
 
 type AppointmentFormValues = z.infer<typeof formSchema>;
 
 interface AppointmentFormProps {
-  onSubmit: (values: { cliente_nome: string; responsavel_id: string; data_hora: Date }) => void;
+  onSubmit: (values: { cliente_nome: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<AppointmentFormValues>;
+  isEditing?: boolean;
 }
 
-const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues }) => {
+const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: users, isLoading: isLoadingUsers } = useUsers();
 
   const form = useForm<AppointmentFormValues>({
@@ -59,6 +66,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       responsavel_id: defaultValues?.responsavel_id || "",
       date: defaultValues?.date,
       time: defaultValues?.time || "09:00",
+      status: defaultValues?.status || 'pendente',
     },
   });
 
@@ -73,6 +81,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       cliente_nome: values.cliente_nome,
       responsavel_id: values.responsavel_id,
       data_hora: data_hora,
+      status: values.status,
     });
   };
 
@@ -146,7 +155,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} // Permite selecionar a data de hoje
                       initialFocus
                       locale={ptBR}
                     />
@@ -176,10 +185,39 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             )}
           />
         </div>
+        
+        {isEditing && (
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status} value={status} className="capitalize">
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : isEditing ? (
+            "Salvar Alterações"
           ) : (
             "Agendar"
           )}

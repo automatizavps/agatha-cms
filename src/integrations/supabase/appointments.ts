@@ -91,3 +91,44 @@ export const createAppointment = async ({ cliente_nome, responsavel_id, data_hor
 
   return data;
 };
+
+interface UpdateAppointmentParams {
+  id: string;
+  cliente_nome: string;
+  responsavel_id: string;
+  data_hora: Date;
+  status: Appointment['status'];
+}
+
+export const updateAppointment = async ({ id, cliente_nome, responsavel_id, data_hora, status }: UpdateAppointmentParams) => {
+  const { data, error } = await supabase
+    .from("agendamentos")
+    .update({
+      cliente_nome: cliente_nome,
+      responsavel_id: responsavel_id,
+      data_hora: data_hora.toISOString(),
+      status: status,
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating appointment:", error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+export const deleteAppointment = async (id: string) => {
+  const { error } = await supabase
+    .from("agendamentos")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting appointment:", error);
+    throw new Error(error.message);
+  }
+};
