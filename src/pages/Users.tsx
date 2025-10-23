@@ -5,8 +5,9 @@ import { useUsers } from "@/integrations/supabase/users";
 import UserTable from "@/components/UserTable";
 import { showError } from "@/utils/toast";
 import AddUserSheet from "@/components/AddUserSheet";
+import { PermissionGuard } from "@/hooks/use-permission";
 
-const Users = () => {
+const UsersContent = () => {
   const { data: users, isLoading, isError, error } = useUsers();
 
   if (isError && error) {
@@ -46,5 +47,12 @@ const Users = () => {
     </DashboardLayout>
   );
 };
+
+const Users = () => (
+  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão
+  <PermissionGuard allowedProfileIds={[1, 2]}>
+    <UsersContent />
+  </PermissionGuard>
+);
 
 export default Users;
