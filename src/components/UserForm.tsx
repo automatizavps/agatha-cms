@@ -28,6 +28,7 @@ const baseFormSchema = z.object({
   full_name: z.string().min(2, {
     message: "O nome completo deve ter pelo menos 2 caracteres.",
   }),
+  // O email é validado apenas na criação (isEditing = false)
   email: z.string().email({
     message: "Insira um email válido.",
   }),
@@ -65,17 +66,28 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   const isSuperAdmin = currentProfile?.perfil_id === 1;
   const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
 
-  // Ajusta o schema dinamicamente: se for Super Admin e não estiver editando, empresa_id é obrigatório
-  const formSchema = isSuperAdmin && !isEditing
-    ? baseFormSchema.extend({
+  // Ajusta o schema dinamicamente: 
+  // 1. Se for Super Admin e não estiver editando, empresa_id é obrigatório.
+  // 2. Se estiver editando, o email não precisa ser validado (pois está desabilitado).
+  let finalFormSchema = baseFormSchema;
+  
+  if (isEditing) {
+    // Remove a validação de email na edição, pois o campo está desabilitado
+    finalFormSchema = finalFormSchema.extend({
+      email: z.string().optional(),
+    });
+  } else if (isSuperAdmin) {
+    // Torna empresa_id obrigatório na criação para Super Admin
+    finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: "Selecione uma empresa válida.",
         }).min(1, { message: "A empresa é obrigatória para o Super Admin ao convidar." }),
-      })
-    : baseFormSchema;
+      });
+  }
+
 
   const form = useForm<UserFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(finalFormSchema),
     defaultValues: {
       full_name: defaultValues?.full_name || "",
       email: defaultValues?.email || "", // Usando o email real
@@ -162,7 +174,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="email@exemplo.com" 
+                  // Remove o placeholder na edição para exibir o valor real
+                  placeholder={isEditing ? undefined : "email@exemplo.com"} 
                   {...field} 
                   disabled={isEditing || isSubmitting} // Desabilita email na edição
                   value={field.value || ""} // Garante que o valor seja sempre uma string
