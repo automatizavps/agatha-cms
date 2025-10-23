@@ -102,9 +102,12 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
     ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
     : ArrowUpDown;
 
+  // Verifica se a classe 'text-right' está presente para aplicar 'justify-end'
+  const isTextRight = className?.includes('text-right');
+
   return (
     <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className="flex items-center gap-1">
+      <div className={cn("flex items-center gap-1", isTextRight && "justify-end")}>
         {children}
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
@@ -263,7 +266,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-right" // CORREÇÃO APLICADA AQUI
+                className="text-right" // Aplicando text-right aqui
               >
                 {t('product_table_header_price')}
               </SortableHeader>
