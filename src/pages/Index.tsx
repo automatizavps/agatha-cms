@@ -176,7 +176,7 @@ const Index = () => {
           </div>
         </div>
         
-        {/* NOVO: Seção 2.1: Gráficos de Pedidos */}
+        {/* Seção 2.1: Gráficos de Pedidos */}
         <div className="grid gap-6 grid-cols-12">
           {/* Gráfico de Pedidos Entregues por Hora (Linha) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-8">
@@ -189,7 +189,16 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Seção 3: Metas das Equipes */}
+        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) */}
+        <LatestProductsCarousel companyId={filteredCompanyId} />
+        
+        {/* Seção 5: Top 10 Produtos e Serviços Mais Vendidos */}
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+          <TopSellingItemsCard companyId={filteredCompanyId} />
+          <TopSellingServicesCard companyId={filteredCompanyId} />
+        </div>
+        
+        {/* Seção 3: Metas das Equipes (MOVIDA PARA CÁ) */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Target className="h-6 w-6 text-muted-foreground" />
@@ -213,15 +222,6 @@ const Index = () => {
               ))}
             </div>
           )}
-        </div>
-        
-        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) */}
-        <LatestProductsCarousel companyId={filteredCompanyId} />
-        
-        {/* Seção 5: Top 10 Produtos e Serviços Mais Vendidos */}
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-          <TopSellingItemsCard companyId={filteredCompanyId} />
-          <TopSellingServicesCard companyId={filteredCompanyId} />
         </div>
         
       </div>
