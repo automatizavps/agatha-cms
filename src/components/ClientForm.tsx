@@ -25,6 +25,7 @@ const formSchema = z.object({
     message: "Insira um email válido.",
   }).or(z.literal("")).nullable(), // Permite string vazia ou null
   telefone: z.string().optional().nullable(),
+  endereco_completo: z.string().optional().nullable(), // Novo campo
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).optional(), // Opcional, pois será preenchido automaticamente para não-Super Admins
@@ -33,7 +34,7 @@ const formSchema = z.object({
 type ClientFormValues = z.infer<typeof formSchema>;
 
 interface ClientFormProps {
-  onSubmit: (values: { nome: string; email: string | null; telefone: string | null; empresa_id?: string }) => void;
+  onSubmit: (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; empresa_id?: string }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<ClientFormValues>;
   isEditing?: boolean;
@@ -52,6 +53,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       nome: defaultValues?.nome || "",
       email: defaultValues?.email || "",
       telefone: defaultValues?.telefone || "",
+      endereco_completo: defaultValues?.endereco_completo || "", // Novo default
       empresa_id: defaultValues?.empresa_id || "",
     },
   });
@@ -60,6 +62,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     // Normaliza campos vazios para null antes de enviar ao Supabase
     const email = values.email ? values.email : null;
     const telefone = values.telefone ? values.telefone : null;
+    const endereco_completo = values.endereco_completo ? values.endereco_completo : null; // Normalização
     
     // Se for Super Admin, envia o empresa_id selecionado. Caso contrário, não envia (será obtido via RPC).
     const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
@@ -68,6 +71,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       nome: values.nome,
       email: email,
       telefone: telefone,
+      endereco_completo: endereco_completo,
       empresa_id: empresa_id,
     });
   };
@@ -154,6 +158,24 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
                   {...field} 
                   disabled={isSubmitting}
                   value={field.value || ""} // Garante que o input não seja undefined
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="endereco_completo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Endereço Completo (Opcional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Rua, Número, Bairro, Cidade, Estado" 
+                  {...field} 
+                  disabled={isSubmitting}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />

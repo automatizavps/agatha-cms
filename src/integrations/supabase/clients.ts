@@ -7,6 +7,7 @@ export interface Client {
   nome: string;
   email: string | null;
   telefone: string | null;
+  endereco_completo: string | null; // Novo campo
   created_at: string;
 }
 
@@ -15,7 +16,7 @@ export interface Client {
 const fetchClients = async (): Promise<Client[]> => {
   const { data, error } = await supabase
     .from("clientes")
-    .select("id, empresa_id, nome, email, telefone, created_at")
+    .select("id, empresa_id, nome, email, telefone, endereco_completo, created_at")
     .order("nome", { ascending: true });
 
   if (error) {
@@ -39,10 +40,11 @@ interface CreateClientParams {
   nome: string;
   email: string | null;
   telefone: string | null;
+  endereco_completo: string | null; // Novo campo
   empresa_id?: string; // Opcional: Usado apenas pelo Super Admin
 }
 
-export const createClient = async ({ nome, email, telefone, empresa_id: provided_empresa_id }: CreateClientParams) => {
+export const createClient = async ({ nome, email, telefone, endereco_completo, empresa_id: provided_empresa_id }: CreateClientParams) => {
   let empresa_id: string;
 
   if (provided_empresa_id) {
@@ -67,6 +69,7 @@ export const createClient = async ({ nome, email, telefone, empresa_id: provided
       nome: nome,
       email: email,
       telefone: telefone,
+      endereco_completo: endereco_completo, // Novo campo
     })
     .select()
     .single();
@@ -86,15 +89,17 @@ interface UpdateClientParams {
   nome: string;
   email: string | null;
   telefone: string | null;
+  endereco_completo: string | null; // Novo campo
 }
 
-export const updateClient = async ({ id, nome, email, telefone }: UpdateClientParams) => {
+export const updateClient = async ({ id, nome, email, telefone, endereco_completo }: UpdateClientParams) => {
   const { data, error } = await supabase
     .from("clientes")
     .update({
       nome: nome,
       email: email,
       telefone: telefone,
+      endereco_completo: endereco_completo, // Novo campo
     })
     .eq("id", id)
     .select()

@@ -23,11 +23,12 @@ const AddClientSheet = () => {
     },
   });
 
-  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null; empresa_id?: string }) => {
+  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; empresa_id?: string }) => {
     mutation.mutate({
       nome: values.nome,
       email: values.email,
       telefone: values.telefone,
+      endereco_completo: values.endereco_completo, // Novo campo
       // Passa empresa_id se estiver presente (Super Admin)
       empresa_id: values.empresa_id, 
     });

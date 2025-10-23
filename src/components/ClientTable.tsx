@@ -103,6 +103,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
               <TableHead>Nome</TableHead>
               <TableHead className="hidden sm:table-cell">Email</TableHead>
               <TableHead className="hidden md:table-cell">Telefone</TableHead>
+              <TableHead className="hidden lg:table-cell">Endereço</TableHead> {/* Nova Coluna */}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -115,6 +116,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">{client.email || 'N/A'}</TableCell>
                 <TableCell className="hidden md:table-cell">{client.telefone || 'N/A'}</TableCell>
+                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{client.endereco_completo || 'N/A'}</TableCell> {/* Novo Campo */}
                 <TableCell className="text-right">
                   <ClientActions client={client} onEdit={handleEdit} />
                 </TableCell>
