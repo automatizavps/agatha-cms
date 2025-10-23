@@ -40,8 +40,8 @@ const resources = {
       "nav_general": "Geral",
       "nav_operational": "Operacional",
       "nav_config": "Configurações",
-      "nav_products_services": "Produtos & Serviços", // NOVO
-      "nav_categories": "Categorias", // NOVO
+      "nav_products_services": "Produtos & Serviços",
+      "nav_categories": "Categorias",
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
@@ -53,6 +53,10 @@ const resources = {
       "pending_status": "Aguardando confirmação",
       "team_goals_section_title": "Metas das Equipes",
       "team_goals_progress_placeholder": "Progresso em relação à meta será exibido aqui.",
+      "total_products_count": "Total de Produtos", // NOVO
+      "total_products_description": "Produtos físicos cadastrados", // NOVO
+      "total_services_count": "Total de Serviços", // NOVO
+      "total_services_description": "Serviços cadastrados", // NOVO
       
       // Páginas
       "page_title_analytics": "Analytics",
@@ -100,10 +104,10 @@ const resources = {
       "product_table_header_brand": "Marca",
       "product_table_header_category": "Categoria",
       "no_products_found": "Nenhum produto encontrado com os filtros aplicados.",
-      "product_name": "Nome do Produto", // NOVO
-      "product_name_placeholder": "Nome do produto", // NOVO
-      "create_product": "Cadastrar Produto", // NOVO
-      "stock_quantity_placeholder": "Quantidade em estoque", // NOVO
+      "product_name": "Nome do Produto",
+      "product_name_placeholder": "Nome do produto",
+      "create_product": "Cadastrar Produto",
+      "stock_quantity_placeholder": "Quantidade em estoque",
       
       "page_title_services": "Gestão de Serviços",
       "service_list_title": "Lista de Serviços",
@@ -111,9 +115,9 @@ const resources = {
       "service_search_placeholder": "Buscar por nome ou categoria...",
       "service_table_header_duration": "Duração",
       "no_services_found": "Nenhum serviço cadastrado.",
-      "service_name": "Nome do Serviço", // NOVO
-      "service_name_placeholder": "Nome do serviço", // NOVO
-      "create_service": "Cadastrar Serviço", // NOVO
+      "service_name": "Nome do Serviço",
+      "service_name_placeholder": "Nome do serviço",
+      "create_service": "Cadastrar Serviço",
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -169,9 +173,9 @@ const resources = {
       "loading_companies": "Carregando empresas...",
       "select_company": "Selecione a empresa",
       "search_user": "Buscar usuário...",
-      "company_not_found": "Empresa não encontrada", // NOVO
+      "company_not_found": "Empresa não encontrada",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "Gestão de Categorias",
       "category_list_title": "Lista de Categorias",
       "add_new_category": "Nova Categoria",
@@ -225,8 +229,8 @@ const resources = {
       "nav_general": "General",
       "nav_operational": "Operational",
       "nav_config": "Settings",
-      "nav_products_services": "Products & Services", // NOVO
-      "nav_categories": "Categories", // NOVO
+      "nav_products_services": "Products & Services",
+      "nav_categories": "Categories",
 
       // Dashboard
       "dashboard_title": "Dashboard Overview",
@@ -238,6 +242,10 @@ const resources = {
       "pending_status": "Awaiting confirmation",
       "team_goals_section_title": "Team Goals",
       "team_goals_progress_placeholder": "Progress towards the goal will be displayed here.",
+      "total_products_count": "Total Products", // NOVO
+      "total_products_description": "Physical products registered", // NOVO
+      "total_services_count": "Total Services", // NOVO
+      "total_services_description": "Services registered", // NOVO
       
       // Pages
       "page_title_analytics": "Analytics",
@@ -285,10 +293,10 @@ const resources = {
       "product_table_header_brand": "Brand",
       "product_table_header_category": "Category",
       "no_products_found": "No products found with the applied filters.",
-      "product_name": "Product Name", // NOVO
-      "product_name_placeholder": "Product name", // NOVO
-      "create_product": "Register Product", // NOVO
-      "stock_quantity_placeholder": "Quantity in stock", // NOVO
+      "product_name": "Product Name",
+      "product_name_placeholder": "Product name",
+      "create_product": "Register Product",
+      "stock_quantity_placeholder": "Quantity in stock",
       
       "page_title_services": "Service Management",
       "service_list_title": "Service List",
@@ -296,9 +304,9 @@ const resources = {
       "service_search_placeholder": "Search by name or category...",
       "service_table_header_duration": "Duration",
       "no_services_found": "No services registered.",
-      "service_name": "Service Name", // NOVO
-      "service_name_placeholder": "Service name", // NOVO
-      "create_service": "Register Service", // NOVO
+      "service_name": "Service Name",
+      "service_name_placeholder": "Service name",
+      "create_service": "Register Service",
       
       "page_title_orders": "Order Management",
       "order_list_title": "Order List",
@@ -342,6 +350,7 @@ const resources = {
       "select_members": "Select members",
       "members_selected": "{{count}} member(s) selected",
       "no_members": "No members",
+      "units": "units",
       "create_team": "Create Team",
       "edit_team": "Edit Team",
       "loading_team_data": "Loading team data...",
@@ -354,9 +363,9 @@ const resources = {
       "loading_companies": "Loading companies...",
       "select_company": "Select company",
       "search_user": "Search user...",
-      "company_not_found": "Company not found", // NOVO
+      "company_not_found": "Company not found",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "Category Management",
       "category_list_title": "Category List",
       "add_new_category": "New Category",
@@ -410,8 +419,8 @@ const resources = {
       "nav_general": "General",
       "nav_operational": "Operacional",
       "nav_config": "Configuración",
-      "nav_products_services": "Productos y Servicios", // NOVO
-      "nav_categories": "Categorías", // NOVO
+      "nav_products_services": "Productos y Servicios",
+      "nav_categories": "Categorías",
 
       // Dashboard
       "dashboard_title": "Vista General del Panel",
@@ -423,6 +432,10 @@ const resources = {
       "pending_status": "Esperando confirmación",
       "team_goals_section_title": "Metas de los Equipos",
       "team_goals_progress_placeholder": "El progreso hacia el objetivo se mostrará aquí.",
+      "total_products_count": "Total de Productos", // NOVO
+      "total_products_description": "Productos físicos registrados", // NOVO
+      "total_services_count": "Total de Servicios", // NOVO
+      "total_services_description": "Servicios registrados", // NOVO
       
       // Páginas
       "page_title_analytics": "Analíticas",
@@ -470,10 +483,10 @@ const resources = {
       "product_table_header_brand": "Marca",
       "product_table_header_category": "Categoría",
       "no_products_found": "No se encontraron productos con los filtros aplicados.",
-      "product_name": "Nombre del Producto", // NOVO
-      "product_name_placeholder": "Nombre del producto", // NOVO
-      "create_product": "Registrar Producto", // NOVO
-      "stock_quantity_placeholder": "Cantidad en stock", // NOVO
+      "product_name": "Nombre del Producto",
+      "product_name_placeholder": "Nombre del producto",
+      "create_product": "Registrar Producto",
+      "stock_quantity_placeholder": "Cantidad en stock",
       
       "page_title_services": "Gestión de Servicios",
       "service_list_title": "Lista de Servicios",
@@ -481,9 +494,9 @@ const resources = {
       "service_search_placeholder": "Buscar por nombre o categoría...",
       "service_table_header_duration": "Duración",
       "no_services_found": "No hay servicios registrados.",
-      "service_name": "Nombre del Servicio", // NOVO
-      "service_name_placeholder": "Nombre del servicio", // NOVO
-      "create_service": "Registrar Servicio", // NOVO
+      "service_name": "Nombre del Servicio",
+      "service_name_placeholder": "Nombre del servicio",
+      "create_service": "Registrar Servicio",
       
       "page_title_orders": "Gestión de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -539,9 +552,9 @@ const resources = {
       "loading_companies": "Cargando empresas...",
       "select_company": "Seleccionar empresa",
       "search_user": "Buscar usuario...",
-      "company_not_found": "Empresa no encontrada", // NOVO
+      "company_not_found": "Empresa no encontrada",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "Gestión de Categorías",
       "category_list_title": "Lista de Categorías",
       "add_new_category": "Nueva Categoría",
@@ -595,8 +608,8 @@ const resources = {
       "nav_general": "Général",
       "nav_operational": "Opérationnel",
       "nav_config": "Configuration",
-      "nav_products_services": "Produits & Services", // NOVO
-      "nav_categories": "Catégories", // NOVO
+      "nav_products_services": "Produits & Services",
+      "nav_categories": "Catégories",
 
       // Tableau de bord
       "dashboard_title": "Aperçu du Tableau de Bord",
@@ -608,6 +621,10 @@ const resources = {
       "pending_status": "En attente de confirmation",
       "team_goals_section_title": "Objectifs d'Équipe",
       "team_goals_progress_placeholder": "La progression vers l'objectif sera affichée ici.",
+      "total_products_count": "Total des Produits", // NOVO
+      "total_products_description": "Produits physiques enregistrés", // NOVO
+      "total_services_count": "Total des Services", // NOVO
+      "total_services_description": "Services enregistrés", // NOVO
       
       // Pages
       "page_title_analytics": "Analytiques",
@@ -655,10 +672,10 @@ const resources = {
       "product_table_header_brand": "Marque",
       "product_table_header_category": "Catégorie",
       "no_products_found": "Aucun produit trouvé avec les filtres appliqués.",
-      "product_name": "Nom du Produit", // NOVO
-      "product_name_placeholder": "Nom du produit", // NOVO
-      "create_product": "Enregistrer le Produit", // NOVO
-      "stock_quantity_placeholder": "Quantité en stock", // NOVO
+      "product_name": "Nom du Produit",
+      "product_name_placeholder": "Nom du produit",
+      "create_product": "Enregistrer le Produit",
+      "stock_quantity_placeholder": "Quantité en stock",
       
       "page_title_services": "Gestion des Services",
       "service_list_title": "Liste des Services",
@@ -666,9 +683,9 @@ const resources = {
       "service_search_placeholder": "Rechercher par nom ou catégorie...",
       "service_table_header_duration": "Durée",
       "no_services_found": "Aucun service enregistré.",
-      "service_name": "Nom du Service", // NOVO
-      "service_name_placeholder": "Nom du service", // NOVO
-      "create_service": "Enregistrer le Service", // NOVO
+      "service_name": "Nom du Service",
+      "service_name_placeholder": "Nom du service",
+      "create_service": "Enregistrer le Service",
       
       "page_title_orders": "Gestion des Commandes",
       "order_list_title": "Liste des Commandes",
@@ -724,9 +741,9 @@ const resources = {
       "loading_companies": "Chargement des entreprises...",
       "select_company": "Sélectionner l'entreprise",
       "search_user": "Rechercher un utilisateur...",
-      "company_not_found": "Entreprise non trouvée", // NOVO
+      "company_not_found": "Entreprise non trouvée",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "Gestion des Catégories",
       "category_list_title": "Liste des Catégories",
       "add_new_category": "Nouvelle Catégorie",
@@ -780,8 +797,8 @@ const resources = {
       "nav_general": "Generale",
       "nav_operational": "Operativo",
       "nav_config": "Configurazione",
-      "nav_products_services": "Prodotti e Servizi", // NOVO
-      "nav_categories": "Categorie", // NOVO
+      "nav_products_services": "Prodotti e Servizi",
+      "nav_categories": "Categorie",
 
       // Dashboard
       "dashboard_title": "Panoramica Dashboard",
@@ -793,6 +810,10 @@ const resources = {
       "pending_status": "In attesa di conferma",
       "team_goals_section_title": "Obiettivi della Squadra",
       "team_goals_progress_placeholder": "Il progresso verso l'obiettivo verrà visualizzato qui.",
+      "total_products_count": "Totale Prodotti", // NOVO
+      "total_products_description": "Prodotti fisici registrati", // NOVO
+      "total_services_count": "Totale Servizi", // NOVO
+      "total_services_description": "Servizi registrati", // NOVO
       
       // Pagine
       "page_title_analytics": "Analisi",
@@ -840,10 +861,10 @@ const resources = {
       "product_table_header_brand": "Marca",
       "product_table_header_category": "Categoria",
       "no_products_found": "Nessun prodotto trovato con i filtri applicados.",
-      "product_name": "Nome del Prodotto", // NOVO
-      "product_name_placeholder": "Nome del prodotto", // NOVO
-      "create_product": "Registra Prodotto", // NOVO
-      "stock_quantity_placeholder": "Quantità in magazzino", // NOVO
+      "product_name": "Nome del Prodotto",
+      "product_name_placeholder": "Nome del prodotto",
+      "create_product": "Registra Prodotto",
+      "stock_quantity_placeholder": "Quantità in magazzino",
       
       "page_title_services": "Gestione Servizi",
       "service_list_title": "Elenco Servizi",
@@ -851,9 +872,9 @@ const resources = {
       "service_search_placeholder": "Cerca per nome o categoria...",
       "service_table_header_duration": "Durata",
       "no_services_found": "Nessun servizio registrato.",
-      "service_name": "Nome del Servizio", // NOVO
-      "service_name_placeholder": "Nome del servizio", // NOVO
-      "create_service": "Registra Servizio", // NOVO
+      "service_name": "Nome del Servizio",
+      "service_name_placeholder": "Nome del servizio",
+      "create_service": "Registra Servizio",
       
       "page_title_orders": "Gestione Ordini",
       "order_list_title": "Elenco Ordini",
@@ -909,9 +930,9 @@ const resources = {
       "loading_companies": "Caricamento aziende...",
       "select_company": "Seleziona azienda",
       "search_user": "Cerca utente...",
-      "company_not_found": "Azienda non trovata", // NOVO
+      "company_not_found": "Azienda non trovata",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "Gestione Categorie",
       "category_list_title": "Elenco Categorie",
       "add_new_category": "Nuova Categoria",
@@ -965,8 +986,8 @@ const resources = {
       "nav_general": "Allgemein",
       "nav_operational": "Operativ",
       "nav_config": "Einstellungen",
-      "nav_products_services": "Produkte & Dienstleistungen", // NOVO
-      "nav_categories": "Kategorien", // NOVO
+      "nav_products_services": "Produkte & Dienstleistungen",
+      "nav_categories": "Kategorien",
 
       // Dashboard
       "dashboard_title": "Dashboard Übersicht",
@@ -978,6 +999,10 @@ const resources = {
       "pending_status": "Warten auf Bestätigung",
       "team_goals_section_title": "Teamziele",
       "team_goals_progress_placeholder": "Der Fortschritt zum Ziel wird hier angezeigt.",
+      "total_products_count": "Gesamtprodukte", // NOVO
+      "total_products_description": "Registrierte physische Produkte", // NOVO
+      "total_services_count": "Gesamtdienstleistungen", // NOVO
+      "total_services_description": "Registrierte Dienstleistungen", // NOVO
       
       // Páginas
       "page_title_analytics": "Analytik",
@@ -1025,10 +1050,10 @@ const resources = {
       "product_table_header_brand": "Marke",
       "product_table_header_category": "Kategorie",
       "no_products_found": "Keine Produkte mit den angewendeten Filtern gefunden.",
-      "product_name": "Produktname", // NOVO
-      "product_name_placeholder": "Produktname", // NOVO
-      "create_product": "Produkt registrieren", // NOVO
-      "stock_quantity_placeholder": "Menge auf Lager", // NOVO
+      "product_name": "Produktname",
+      "product_name_placeholder": "Produktname",
+      "create_product": "Produkt registrieren",
+      "stock_quantity_placeholder": "Menge auf Lager",
       
       "page_title_services": "Dienstleistungsverwaltung",
       "service_list_title": "Dienstleistungsliste",
@@ -1036,9 +1061,9 @@ const resources = {
       "service_search_placeholder": "Nach Name oder Kategorie suchen...",
       "service_table_header_duration": "Dauer",
       "no_services_found": "Keine Dienstleistungen registriert.",
-      "service_name": "Dienstleistungsname", // NOVO
-      "service_name_placeholder": "Dienstleistungsname", // NOVO
-      "create_service": "Dienstleistung registrieren", // NOVO
+      "service_name": "Dienstleistungsname",
+      "service_name_placeholder": "Dienstleistungsname",
+      "create_service": "Dienstleistung registrieren",
       
       "page_title_orders": "Bestellverwaltung",
       "order_list_title": "Bestellliste",
@@ -1094,9 +1119,9 @@ const resources = {
       "loading_companies": "Unternehmen werden geladen...",
       "select_company": "Unternehmen auswählen",
       "search_user": "Benutzer suchen...",
-      "company_not_found": "Unternehmen nicht gefunden", // NOVO
+      "company_not_found": "Unternehmen nicht gefunden",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "Kategorienverwaltung",
       "category_list_title": "Kategorienliste",
       "add_new_category": "Neue Kategorie",
@@ -1150,8 +1175,8 @@ const resources = {
       "nav_general": "一般",
       "nav_operational": "運用",
       "nav_config": "設定",
-      "nav_products_services": "製品とサービス", // NOVO
-      "nav_categories": "カテゴリ", // NOVO
+      "nav_products_services": "製品とサービス",
+      "nav_categories": "カテゴリ",
 
       // Dashboard
       "dashboard_title": "ダッシュボード概要",
@@ -1163,6 +1188,10 @@ const resources = {
       "pending_status": "確認待ち",
       "team_goals_section_title": "チームの目標",
       "team_goals_progress_placeholder": "目標に対する進捗がここに表示されます。",
+      "total_products_count": "合計製品数", // NOVO
+      "total_products_description": "登録された物理的な製品", // NOVO
+      "total_services_count": "合計サービス数", // NOVO
+      "total_services_description": "登録されたサービス", // NOVO
       
       // Páginas
       "page_title_analytics": "分析",
@@ -1210,10 +1239,10 @@ const resources = {
       "product_table_header_brand": "ブランド",
       "product_table_header_category": "カテゴリ",
       "no_products_found": "適用されたフィルターに一致する製品は見つかりません。",
-      "product_name": "製品名", // NOVO
-      "product_name_placeholder": "製品名", // NOVO
-      "create_product": "製品を登録", // NOVO
-      "stock_quantity_placeholder": "在庫数", // NOVO
+      "product_name": "製品名",
+      "product_name_placeholder": "製品名",
+      "create_product": "製品を登録",
+      "stock_quantity_placeholder": "在庫数",
       
       "page_title_services": "サービス管理",
       "service_list_title": "サービスリスト",
@@ -1221,9 +1250,9 @@ const resources = {
       "service_search_placeholder": "名前またはカテゴリで検索...",
       "service_table_header_duration": "期間",
       "no_services_found": "登録されているサービスはありません。",
-      "service_name": "サービス名", // NOVO
-      "service_name_placeholder": "サービス名", // NOVO
-      "create_service": "サービスを登録", // NOVO
+      "service_name": "サービス名",
+      "service_name_placeholder": "サービス名",
+      "create_service": "サービスを登録",
       
       "page_title_orders": "注文管理",
       "order_list_title": "注文リスト",
@@ -1279,9 +1308,9 @@ const resources = {
       "loading_companies": "企業をロード中...",
       "select_company": "企業を選択",
       "search_user": "ユーザーを検索...",
-      "company_not_found": "企業が見つかりません", // NOVO
+      "company_not_found": "企業が見つかりません",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "カテゴリ管理",
       "category_list_title": "カテゴリリスト",
       "add_new_category": "新規カテゴリ",
