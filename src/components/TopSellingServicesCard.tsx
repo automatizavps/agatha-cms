@@ -25,7 +25,7 @@ const TopSellingServicesCard: React.FC<TopSellingServicesCardProps> = ({ company
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2">
             <ListOrdered className="h-5 w-5" /> {t('top_selling_services_title')}
           </CardTitle>
         </CardHeader>
@@ -40,7 +40,7 @@ const TopSellingServicesCard: React.FC<TopSellingServicesCardProps> = ({ company
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2">
             <ListOrdered className="h-5 w-5" /> {t('top_selling_services_title')}
           </CardTitle>
         </CardHeader>
@@ -54,7 +54,7 @@ const TopSellingServicesCard: React.FC<TopSellingServicesCardProps> = ({ company
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
+        <CardTitle className="text-lg flex items-center gap-2">
           <ListOrdered className="h-5 w-5" /> {t('top_selling_services_title')}
         </CardTitle>
       </CardHeader>
