@@ -29,7 +29,8 @@ const BreadcrumbNavigation = () => {
     "/companies": "nav_companies",
     "/settings": "nav_settings",
     "/profile": "nav_profile",
-    "/products/categories": "nav_categories", // Adicionado
+    "/products/categories": "nav_categories",
+    "/appointments": "nav_appointments", // Adicionado o mapeamento explícito
   };
 
   // Se estiver na raiz, não exibe breadcrumbs
