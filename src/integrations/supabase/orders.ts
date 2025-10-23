@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { createNotification } from "./notifications"; // Importando
 
 export type OrderStatus = 'pendente_entrega' | 'entregue' | 'cancelado';
 
@@ -158,6 +159,19 @@ export const createOrder = async ({ cliente_id, valor_total, items }: CreateOrde
     // Por simplicidade, vamos apenas lançar o erro.
     throw new Error("Pedido criado, mas falha ao adicionar itens: " + itemsError.message);
   }
+  
+  // 4. Criar notificação para o usuário logado
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: empresa_id,
+      titulo: "Novo Pedido Criado",
+      mensagem: `Pedido #${pedido_id.slice(0, 8)} no valor de R$ ${valor_total.toFixed(2)} foi criado.`,
+      link: "/orders", // Link para a página de pedidos
+    });
+  }
+
 
   return orderData;
 };
@@ -180,6 +194,18 @@ export const updateOrderStatus = async ({ id, status }: UpdateOrderStatusParams)
   if (error) {
     console.error("Error updating order status:", error);
     throw new Error(error.message);
+  }
+  
+  // 2. Criar notificação para o usuário logado sobre a atualização
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: data.empresa_id,
+      titulo: "Status do Pedido Atualizado",
+      mensagem: `O status do Pedido #${id.slice(0, 8)} foi alterado para ${status.replace('_', ' ')}.`,
+      link: "/orders",
+    });
   }
 
   return data;

@@ -8,8 +8,9 @@ import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import BreadcrumbNavigation from "./BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
-import { LanguageSwitcher } from "./LanguageSwitcher"; // Importando LanguageSwitcher
-import { useTranslation } from "react-i18next"; // Importando useTranslation
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
+import { NotificationBell } from "./NotificationBell"; // Importando NotificationBell
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -45,6 +46,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="w-full flex items-center justify-between">
             <h1 className="text-lg font-semibold">{t('app_name')}</h1>
             <div className="flex items-center gap-2">
+              <NotificationBell /> {/* Adicionado aqui */}
               <LanguageSwitcher />
               <ThemeToggle />
               <UserMenu />
@@ -86,6 +88,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex-1">
             <BreadcrumbNavigation />
           </div>
+          <NotificationBell /> {/* Adicionado aqui */}
           <LanguageSwitcher />
           <ThemeToggle />
           <UserMenu />

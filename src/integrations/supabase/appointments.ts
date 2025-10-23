@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { createNotification } from "./notifications"; // Importando
 
 export interface AppointmentItem {
   id: string;
@@ -169,6 +170,18 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora,
     // Se a inserção dos itens falhar, idealmente deveríamos reverter o agendamento principal.
     throw new Error("Agendamento criado, mas falha ao adicionar itens: " + itemsError.message);
   }
+  
+  // 5. Criar notificação para o usuário logado
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: empresa_id,
+      titulo: "Novo Agendamento Criado",
+      mensagem: `Agendamento criado para ${data_hora.toLocaleDateString('pt-BR')} às ${data_hora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`,
+      link: "/appointments",
+    });
+  }
+
 
   return appointmentData;
 };
@@ -200,6 +213,18 @@ export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_h
   if (error) {
     console.error("Error updating appointment:", error);
     throw new Error(error.message);
+  }
+  
+  // 2. Criar notificação para o usuário logado sobre a atualização
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: data.empresa_id,
+      titulo: "Status do Agendamento Atualizado",
+      mensagem: `O agendamento foi alterado para o status: ${status}.`,
+      link: "/appointments",
+    });
   }
 
   return data;
