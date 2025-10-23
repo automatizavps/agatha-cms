@@ -242,7 +242,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-right"
+                className="text-right" // Adicionado text-right aqui
               >
                 {t('order_table_header_total')}
               </SortableHeader>
