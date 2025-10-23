@@ -17,35 +17,39 @@ const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ company
   // Passando companyId para o hook
   const { data: products, isLoading, isError } = useLatestProductsOnly(companyId);
   
-  const [emblaRef, emblaApi] = React.useState<any>(null);
-  const [emblaRefCallback, emblaApiCallback] = useEmblaCarousel({ 
+  // Usamos apenas a API e a ref retornadas pelo hook
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: false, 
     align: 'start',
     dragFree: true,
   });
   
-  React.useEffect(() => {
-    if (emblaApiCallback) {
-      emblaApiCallback.on('init', () => setEmblaRef(emblaApiCallback));
-    }
-  }, [emblaApiCallback]);
-  
   const [prevBtnDisabled, setPrevBtnDisabled] = React.useState(true);
   const [nextBtnDisabled, setNextBtnDisabled] = React.useState(true);
+
+  const onSelect = React.useCallback((api: any) => {
+    setPrevBtnDisabled(!api.canScrollPrev());
+    setNextBtnDisabled(!api.canScrollNext());
+  }, []);
 
   const scrollPrev = React.useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = React.useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
-  const onSelect = React.useCallback((emblaApi: any) => {
-    setPrevBtnDisabled(!emblaApi.canScrollPrev());
-    setNextBtnDisabled(!emblaApi.canScrollNext());
-  }, []);
-
   React.useEffect(() => {
     if (!emblaApi) return;
+    
+    // Inicializa o estado dos botões
     onSelect(emblaApi);
+    
+    // Adiciona listeners
     emblaApi.on('reInit', onSelect);
     emblaApi.on('select', onSelect);
+    
+    // Limpa listeners
+    return () => {
+      emblaApi.off('reInit', onSelect);
+      emblaApi.off('select', onSelect);
+    };
   }, [emblaApi, onSelect]);
 
 
@@ -105,7 +109,7 @@ const LatestProductsCarousel: React.FC<LatestProductsCarouselProps> = ({ company
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="embla overflow-hidden" ref={emblaRefCallback}>
+        <div className="embla overflow-hidden" ref={emblaRef}>
           <div className="embla__container flex touch-pan-y">
             {products.map((product) => (
               <div 
