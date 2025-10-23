@@ -25,6 +25,7 @@ const BreadcrumbNavigation = () => {
     "/products": "nav_products",
     "/services": "nav_services",
     "/orders": "nav_orders",
+    "/teams": "nav_teams", // Adicionado
     "/companies": "nav_companies",
     "/settings": "nav_settings",
     "/profile": "nav_profile",

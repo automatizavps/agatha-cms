@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -140,6 +140,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
               to="/users"
               icon={<Users className="h-5 w-5" />}
               label={t('nav_users')}
+              {...navItemProps}
+            />
+            <NavItem
+              to="/teams"
+              icon={<Target className="h-5 w-5" />}
+              label={t('nav_teams')}
               {...navItemProps}
             />
           </>

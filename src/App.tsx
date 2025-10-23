@@ -15,7 +15,8 @@ import Products from "./pages/Products";
 import Services from "./pages/Services";
 import Companies from "./pages/Companies";
 import Profile from "./pages/Profile";
-import Orders from "./pages/Orders"; // Importando a nova página
+import Orders from "./pages/Orders";
+import Teams from "./pages/Teams"; // Importando a nova página
 import { SessionContextProvider, ProtectedRoute } from "@/integrations/supabase/auth";
 
 const queryClient = new QueryClient();
@@ -39,7 +40,8 @@ const App = () => (
             <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
             <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
             <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
-            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} /> {/* Nova Rota */}
+            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} /> {/* Nova Rota */}
             <Route path="/companies" element={<ProtectedRoute><Companies /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
