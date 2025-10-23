@@ -23,9 +23,8 @@ const AddCompanySheet = () => {
     },
   });
 
-  const handleSubmit = (values: { nome: string; cnpj: string | null; dono_email?: string }) => {
-    // O dono_email é ignorado na integração, pois usamos o ID do Super Admin logado como dono_id.
-    // O trigger handle_new_empresa garante que o Super Admin logado seja promovido a Admin (2) e associado à nova empresa.
+  const handleSubmit = (values: { nome: string; cnpj: string | null }) => {
+    // O dono_id é obtido automaticamente na função createCompany (Super Admin logado)
     mutation.mutate(values);
   };
 

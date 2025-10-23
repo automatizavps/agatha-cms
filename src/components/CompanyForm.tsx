@@ -19,18 +19,12 @@ const formSchema = z.object({
     message: "O nome deve ter pelo menos 2 caracteres.",
   }),
   cnpj: z.string().optional().nullable(),
-  // O email do dono só é necessário na criação, onde o Super Admin logado se torna o dono.
-  // Mantemos o campo, mas o Supabase integration file (companies.ts) usará o ID do usuário logado.
-  // Na edição, este campo será ignorado.
-  dono_email: z.string().email({
-    message: "Insira um email válido.",
-  }).optional(), 
 });
 
 type CompanyFormValues = z.infer<typeof formSchema>;
 
 interface CompanyFormProps {
-  onSubmit: (values: { nome: string; cnpj: string | null; dono_email?: string }) => void;
+  onSubmit: (values: { nome: string; cnpj: string | null }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<CompanyFormValues>;
   isEditing?: boolean;
@@ -43,7 +37,6 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ onSubmit, isSubmitting, defau
     defaultValues: {
       nome: defaultValues?.nome || "",
       cnpj: defaultValues?.cnpj || "",
-      dono_email: defaultValues?.dono_email || "",
     },
   });
 
@@ -54,7 +47,6 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ onSubmit, isSubmitting, defau
     onSubmit({
       nome: values.nome,
       cnpj: cnpj,
-      dono_email: values.dono_email,
     });
   };
 
@@ -92,26 +84,6 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ onSubmit, isSubmitting, defau
             </FormItem>
           )}
         />
-        
-        {!isEditing && (
-          <FormField
-            control={form.control}
-            name="dono_email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email do Dono/Admin Inicial</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="admin@empresa.com" 
-                    {...field} 
-                    disabled={isSubmitting}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
         
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? (

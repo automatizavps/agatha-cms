@@ -39,15 +39,9 @@ export const useCompanies = () => {
 interface CreateCompanyParams {
   nome: string;
   cnpj: string | null;
-  dono_email: string; // Email do usuário que será o dono/admin inicial
 }
 
-export const createCompany = async ({ nome, cnpj, dono_email }: CreateCompanyParams) => {
-  // 1. Buscar o ID do usuário pelo email (dono_id)
-  // Nota: Esta operação requer privilégios de Service Role, mas como não estamos usando Edge Functions aqui,
-  // vamos assumir que o usuário logado é o dono_id (que é o Super Admin) e que ele será o dono inicial.
-  // No entanto, a tabela 'empresas' tem uma coluna 'dono_id' que deve ser preenchida.
-  
+export const createCompany = async ({ nome, cnpj }: CreateCompanyParams) => {
   // Vamos usar o ID do usuário logado como dono_id, e o trigger handle_new_empresa
   // irá configurar o perfil desse usuário como Admin (2) e associá-lo à empresa.
   
