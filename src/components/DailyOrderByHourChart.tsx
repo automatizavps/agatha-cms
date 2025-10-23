@@ -83,8 +83,8 @@ export default function DailyOrderByHourChart() {
             data={formattedData}
             margin={{
               top: 5,
-              right: 5,
-              left: -50, // Ajustado para -50
+              right: 0, // Alterado de 5 para 0
+              left: -50, 
               bottom: 0,
             }}
           >
