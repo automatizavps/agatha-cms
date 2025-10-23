@@ -6,7 +6,7 @@ const resources = {
   'pt-BR': {
     translation: {
       // Geral
-      "app_name": "AGATHA IA",
+      "app_name": "AGATHA AI",
       "loading": "Carregando...",
       "actions": "Ações",
       "save_changes": "Salvar Alterações",
