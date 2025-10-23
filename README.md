@@ -1,1 +1,2 @@
-# Welcome to your Dyad app
+# Agatha CMS
+by Karel with Dyad
