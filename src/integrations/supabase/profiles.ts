@@ -8,7 +8,6 @@ export interface Profile {
 }
 
 const fetchProfiles = async (): Promise<Profile[]> => {
-  // Perfis são públicos para leitura
   const { data, error } = await supabase
     .from("perfis")
     .select("id, nome, descricao")
@@ -26,6 +25,5 @@ export const useProfiles = () => {
   return useQuery<Profile[], Error>({
     queryKey: ["profiles"],
     queryFn: fetchProfiles,
-    staleTime: Infinity, // Perfis raramente mudam
   });
 };
