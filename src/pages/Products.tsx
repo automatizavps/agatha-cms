@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Package, Search, Tag, Factory, Building } from "lucide-react";
+import { Loader2, RefreshCw, Package, Search, Tag, Factory, Building, AlertTriangle } from "lucide-react";
 import { useProductsOnly } from "@/integrations/supabase/products";
 import { showError } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
@@ -12,6 +12,9 @@ import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Importando Alert
+
+const LOW_STOCK_THRESHOLD = 10;
 
 const ProductsContent = () => {
   const { data: products, isLoading, isError, error, refetch, isRefetching } = useProductsOnly();
@@ -80,6 +83,16 @@ const ProductsContent = () => {
 
     return filtered;
   }, [products, searchTerm, categoryFilter, brandFilter, companyFilterId, isSuperAdmin]);
+  
+  // Produtos com estoque baixo (apenas produtos, excluindo serviços)
+  const lowStockProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter(p => 
+      p.tipo === 'produto' && 
+      p.estoque_total !== null && 
+      p.estoque_total < LOW_STOCK_THRESHOLD
+    );
+  }, [products]);
 
   return (
     <DashboardLayout>
@@ -87,6 +100,25 @@ const ProductsContent = () => {
         <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
         <AddProductSheet />
       </div>
+      
+      {/* Alerta de Estoque Baixo */}
+      {lowStockProducts.length > 0 && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Atenção: Estoque Baixo!</AlertTitle>
+          <AlertDescription>
+            Os seguintes produtos estão com estoque abaixo de {LOW_STOCK_THRESHOLD} unidades:
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              {lowStockProducts.map(p => (
+                <li key={p.id}>
+                  {p.nome} ({p.estoque_total} em estoque)
+                  {isSuperAdmin && p.empresa?.nome && ` - Empresa: ${p.empresa.nome}`}
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
       
       <Card className="mt-4">
         <CardHeader>
