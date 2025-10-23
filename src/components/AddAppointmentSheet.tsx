@@ -25,7 +25,7 @@ const AddAppointmentSheet = () => {
     },
   });
 
-  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: any[] }) => {
+  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: any[]; empresa_id?: string }) => {
     mutation.mutate({ ...values, queryClient });
   };
 
@@ -33,12 +33,12 @@ const AddAppointmentSheet = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <CalendarPlus className="mr-2 h-4 w-4" /> {t('nav_appointments')}
+          <CalendarPlus className="mr-2 h-4 w-4" /> {t('add_new_appointment')}
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>{t('nav_appointments')}</SheetTitle>
+          <SheetTitle>{t('add_new_appointment')}</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <AppointmentForm 

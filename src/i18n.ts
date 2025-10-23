@@ -238,6 +238,7 @@ const resources = {
       "search_client": "Buscar cliente...",
       "item": "Item",
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
+      "add_new_appointment": "Novo Agendamento", // NOVO
     },
   },
   en: {
@@ -475,6 +476,7 @@ const resources = {
       "search_client": "Search client...",
       "item": "Item",
       "select_company_to_load_data": "Select a company to load clients, users, and items.",
+      "add_new_appointment": "Novo Agendamento", // NOVO
     },
   },
 };
