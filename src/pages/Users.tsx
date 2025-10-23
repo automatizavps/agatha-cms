@@ -1,14 +1,15 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { useUsers } from "@/integrations/supabase/users";
 import UserTable from "@/components/UserTable";
 import { showError } from "@/utils/toast";
 import AddUserSheet from "@/components/AddUserSheet";
 import { PermissionGuard } from "@/hooks/use-permission";
+import { Button } from "@/components/ui/button";
 
 const UsersContent = () => {
-  const { data: users, isLoading, isError, error } = useUsers();
+  const { data: users, isLoading, isError, error, refetch, isRefetching } = useUsers();
 
   if (isError && error) {
     // Note: We only show the toast if there is an actual error object
@@ -27,13 +28,23 @@ const UsersContent = () => {
           <CardTitle>User List</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoading && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : isError ? (
-            <div className="text-center text-destructive p-4 border border-destructive rounded-md">
-              Não foi possível carregar os dados dos usuários.
+            <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
+              <p className="text-destructive">
+                Não foi possível carregar os dados dos usuários.
+              </p>
+              <Button onClick={() => refetch()} disabled={isRefetching}>
+                {isRefetching ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Tentar Novamente
+              </Button>
             </div>
           ) : users && users.length > 0 ? (
             <UserTable users={users} />
