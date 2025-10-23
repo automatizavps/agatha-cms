@@ -2,6 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { Order, OrderItem } from "./orders";
 import { Appointment, AppointmentItem } from "./appointments";
+import { Client } from "./clients";
+import { Team, TeamMember } from "./teams";
+import { Company } from "./companies";
 
 // --- Tipos de Filtro ---
 
@@ -129,6 +132,126 @@ export const useAppointmentReport = (companyId: string | undefined, filters: Dat
   return useQuery<AppointmentReport[], Error>({
     queryKey: ["appointmentReport", companyId, filters],
     queryFn: () => fetchAppointmentReport(companyId, filters),
+    enabled: true,
+  });
+};
+
+// --- Fetch de Clientes para Relatório ---
+
+interface ClientReport extends Omit<Client, 'empresa'> {
+  empresa: { nome: string } | null;
+}
+
+const fetchClientReport = async (companyId: string | undefined): Promise<ClientReport[]> => {
+  let query = supabase
+    .from("clientes")
+    .select(`
+      id,
+      empresa_id,
+      nome,
+      email,
+      telefone,
+      endereco_completo,
+      created_at,
+      empresa:empresas (nome)
+    `);
+    
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query.order("nome", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching client report:", error);
+    throw new Error("Failed to fetch client report: " + error.message);
+  }
+
+  return data as ClientReport[];
+};
+
+export const useClientReport = (companyId: string | undefined) => {
+  return useQuery<ClientReport[], Error>({
+    queryKey: ["clientReport", companyId],
+    queryFn: () => fetchClientReport(companyId),
+    enabled: true,
+  });
+};
+
+// --- Fetch de Equipes para Relatório ---
+
+interface TeamReport extends Omit<Team, 'empresas' | 'membros'> {
+  empresas: { nome: string } | null;
+  membros: TeamMember[];
+}
+
+const fetchTeamReport = async (companyId: string | undefined): Promise<TeamReport[]> => {
+  let query = supabase
+    .from("equipes")
+    .select(`
+      id,
+      empresa_id,
+      nome,
+      meta_mensal_valor,
+      meta_mensal_quantidade,
+      created_at,
+      empresas (nome),
+      membros:equipe_membros (
+        usuario_id,
+        usuarios (nome_completo)
+      )
+    `);
+    
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query.order("nome", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching team report:", error);
+    throw new Error("Failed to fetch team report: " + error.message);
+  }
+
+  // Mapeamos para garantir que a estrutura de membros seja plana para exportação
+  return data.map(team => ({
+    ...team,
+    membros: team.membros.map((m: any) => ({
+      usuario_id: m.usuario_id,
+      usuarios: m.usuarios,
+    })),
+  })) as TeamReport[];
+};
+
+export const useTeamReport = (companyId: string | undefined) => {
+  return useQuery<TeamReport[], Error>({
+    queryKey: ["teamReport", companyId],
+    queryFn: () => fetchTeamReport(companyId),
+    enabled: true,
+  });
+};
+
+// --- Fetch de Empresas para Relatório (Apenas Super Admin) ---
+
+const fetchCompanyReport = async (): Promise<Company[]> => {
+  // A RLS já garante que apenas Super Admins vejam todas as empresas
+  const { data, error } = await supabase
+    .from("empresas")
+    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at")
+    .order("nome", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching company report:", error);
+    throw new Error("Failed to fetch company report: " + error.message);
+  }
+
+  return data as Company[];
+};
+
+export const useCompanyReport = () => {
+  return useQuery<Company[], Error>({
+    queryKey: ["companyReport"],
+    queryFn: fetchCompanyReport,
     enabled: true,
   });
 };

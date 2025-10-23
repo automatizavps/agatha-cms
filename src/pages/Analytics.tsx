@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrderReportTab from "@/components/OrderReportTab";
 import ServiceReportTab from "@/components/ServiceReportTab";
+import ClientReportTab from "@/components/ClientReportTab"; // NOVO
+import TeamReportTab from "@/components/TeamReportTab";     // NOVO
+import CompanyReportTab from "@/components/CompanyReportTab"; // NOVO
 import { PermissionGuard } from "@/hooks/use-permission";
 
 const AnalyticsContent = () => {
@@ -15,9 +18,13 @@ const AnalyticsContent = () => {
         <p className="text-muted-foreground">{t('page_subtitle_analytics')}</p>
         
         <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          {/* Ajustando para 5 colunas no desktop, com overflow horizontal no mobile */}
+          <TabsList className="w-full grid grid-cols-2 md:grid-cols-5 overflow-x-auto">
             <TabsTrigger value="orders">{t('nav_orders')}</TabsTrigger>
             <TabsTrigger value="services">{t('nav_services')}</TabsTrigger>
+            <TabsTrigger value="clients">{t('nav_clients')}</TabsTrigger>
+            <TabsTrigger value="teams">{t('nav_teams')}</TabsTrigger>
+            <TabsTrigger value="companies">{t('nav_companies')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="orders">
@@ -26,6 +33,18 @@ const AnalyticsContent = () => {
           
           <TabsContent value="services">
             <ServiceReportTab />
+          </TabsContent>
+          
+          <TabsContent value="clients">
+            <ClientReportTab />
+          </TabsContent>
+          
+          <TabsContent value="teams">
+            <TeamReportTab />
+          </TabsContent>
+          
+          <TabsContent value="companies">
+            <CompanyReportTab />
           </TabsContent>
         </Tabs>
       </div>
