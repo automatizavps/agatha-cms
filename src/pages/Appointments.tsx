@@ -20,6 +20,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import EditAppointmentSheet from "@/components/EditAppointmentSheet";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Importando Tooltip
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -87,17 +88,35 @@ const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointme
   
   const firstItem = items[0];
   const itemName = firstItem.produtos?.nome || 'Item Desconhecido';
-  const itemType = firstItem.produtos?.tipo === 'servico' ? 'Serviço' : 'Produto';
   
-  return (
-    <div className="flex flex-col items-start">
-      <span className="font-medium">{itemName}</span>
-      {items.length > 1 && (
-        <Badge variant="secondary" className="mt-1 text-xs">
-          + {items.length - 1} {items.length === 2 ? 'item' : 'itens'}
-        </Badge>
-      )}
+  const tooltipContent = (
+    <div className="space-y-1 text-sm">
+      <p className="font-semibold mb-1">Itens do Agendamento:</p>
+      {items.map((item, index) => (
+        <div key={index} className="flex justify-between gap-4">
+          <span className="truncate max-w-[150px]">{item.produtos?.nome || 'Item Removido'}</span>
+          <span className="text-muted-foreground">x{item.quantidade}</span>
+        </div>
+      ))}
     </div>
+  );
+
+  return (
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <div className="flex flex-col items-start cursor-default">
+          <span className="font-medium">{itemName}</span>
+          {items.length > 1 && (
+            <Badge variant="secondary" className="mt-1 text-xs">
+              + {items.length - 1} {items.length === 2 ? 'item' : 'itens'}
+            </Badge>
+          )}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="max-w-xs">
+        {tooltipContent}
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
