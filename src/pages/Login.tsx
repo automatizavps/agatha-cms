@@ -5,6 +5,9 @@ import { PublicRoute } from '@/integrations/supabase/auth';
 import { Bot } from 'lucide-react'; // Importando o ícone Bot
 
 const Login = () => {
+  // Usando o URL base fornecido pelo usuário para garantir o redirecionamento correto
+  const REDIRECT_TO_URL = "https://site-landing3.b9c03f.easypanel.host/";
+  
   return (
     <PublicRoute>
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -33,7 +36,7 @@ const Login = () => {
             }}
             theme="light"
             view="sign_in"
-            redirectTo={window.location.origin + '/'}
+            redirectTo={REDIRECT_TO_URL}
             // Adiciona a localização para Português do Brasil
             localization={{
               variables: {

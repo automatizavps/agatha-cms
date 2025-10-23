@@ -100,9 +100,9 @@ serve(async (req) => {
     });
   }
 
-  // Garantir que o redirectTo seja um URL completo e seguro (usando a URL base + /login)
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const redirectUrl = `${supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl}/auth/v1/verify?redirect_to=/login`;
+  // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
+  // O Supabase adiciona o hash #access_token=...
+  const redirectUrl = `https://site-landing3.b9c03f.easypanel.host/login`;
 
 
   // 3. Convidar o usuário usando o Service Role Key
