@@ -15,6 +15,10 @@ export interface Product {
   tempo_servico: number | null; // Em minutos, para serviços
   estoque_total: number | null; // Para produtos
   fotos: string[] | null; // URLs das fotos
+  
+  // Novos campos de metadados
+  marca: string | null;
+  categoria: string | null;
 }
 
 // --- Fetch ---
@@ -22,7 +26,7 @@ export interface Product {
 const fetchProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria")
     .order("nome", { ascending: true });
 
   if (error) {
@@ -49,10 +53,12 @@ interface CreateProductParams {
   tempo_servico: number | null;
   estoque_total: number | null;
   fotos: string[] | null;
+  marca: string | null;
+  categoria: string | null;
   empresa_id?: string; // Opcional: Usado apenas pelo Super Admin
 }
 
-export const createProduct = async ({ nome, preco, tipo, tempo_servico, estoque_total, fotos, empresa_id: provided_empresa_id }: CreateProductParams) => {
+export const createProduct = async ({ nome, preco, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa_id: provided_empresa_id }: CreateProductParams) => {
   let empresa_id: string;
 
   if (provided_empresa_id) {
@@ -84,6 +90,8 @@ export const createProduct = async ({ nome, preco, tipo, tempo_servico, estoque_
       tempo_servico: tipo === 'servico' ? tempo_servico : null,
       estoque_total: tipo === 'produto' ? estoque_total : null,
       fotos: fotos,
+      marca: tipo === 'produto' ? marca : null, // Marca só para produto
+      categoria: categoria, // Categoria para ambos
     })
     .select()
     .single();
@@ -106,9 +114,11 @@ interface UpdateProductParams {
   tempo_servico: number | null;
   estoque_total: number | null;
   fotos: string[] | null;
+  marca: string | null;
+  categoria: string | null;
 }
 
-export const updateProduct = async ({ id, nome, preco, tipo, tempo_servico, estoque_total, fotos }: UpdateProductParams) => {
+export const updateProduct = async ({ id, nome, preco, tipo, tempo_servico, estoque_total, fotos, marca, categoria }: UpdateProductParams) => {
   const { data, error } = await supabase
     .from("produtos")
     .update({
@@ -118,6 +128,8 @@ export const updateProduct = async ({ id, nome, preco, tipo, tempo_servico, esto
       tempo_servico: tipo === 'servico' ? tempo_servico : null,
       estoque_total: tipo === 'produto' ? estoque_total : null,
       fotos: fotos,
+      marca: tipo === 'produto' ? marca : null, // Marca só para produto
+      categoria: categoria, // Categoria para ambos
     })
     .eq("id", id)
     .select()

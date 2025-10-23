@@ -32,6 +32,8 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
     tempo_servico: number | null; 
     estoque_total: number | null;
     fotos: string[] | null;
+    marca: string | null;
+    categoria: string | null;
   }) => {
     mutation.mutate({
       id: product.id,
@@ -41,6 +43,8 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
       tempo_servico: values.tempo_servico,
       estoque_total: values.estoque_total,
       fotos: values.fotos,
+      marca: values.marca,
+      categoria: values.categoria,
     });
   };
 
@@ -52,6 +56,8 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
     estoque_total: product.estoque_total,
     tempo_servico: product.tempo_servico,
     fotos: product.fotos,
+    marca: product.marca,
+    categoria: product.categoria,
   };
 
   return (

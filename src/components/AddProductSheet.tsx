@@ -30,6 +30,8 @@ const AddProductSheet = () => {
     tempo_servico: number | null; 
     estoque_total: number | null;
     fotos: string[] | null;
+    marca: string | null;
+    categoria: string | null;
     empresa_id?: string;
   }) => {
     mutation.mutate(values);

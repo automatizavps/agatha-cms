@@ -32,6 +32,11 @@ const baseFormSchema = z.object({
   }),
   estoque_total: z.string().optional().nullable(), // Apenas para produto
   tempo_servico: z.string().optional().nullable(), // Apenas para serviço (em minutos)
+  
+  // Novos campos
+  marca: z.string().optional().nullable(),
+  categoria: z.string().optional().nullable(),
+  
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).optional(),
@@ -47,6 +52,8 @@ interface ProductFormProps {
     tempo_servico: number | null; 
     estoque_total: number | null;
     fotos: string[] | null;
+    marca: string | null;
+    categoria: string | null;
     empresa_id?: string;
   }) => void;
   isSubmitting: boolean;
@@ -80,6 +87,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
       tipo: defaultValues?.tipo || 'produto',
       estoque_total: defaultValues?.estoque_total ? String(defaultValues.estoque_total) : "",
       tempo_servico: defaultValues?.tempo_servico ? String(defaultValues.tempo_servico) : "",
+      marca: defaultValues?.marca || "",
+      categoria: defaultValues?.categoria || "",
       empresa_id: defaultValues?.empresa_id || "",
     },
   });
@@ -99,6 +108,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
     }
     
     const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
+    
+    // Normaliza campos vazios para null
+    const marca = values.marca ? values.marca : null;
+    const categoria = values.categoria ? values.categoria : null;
 
     onSubmit({
       nome: values.nome,
@@ -107,6 +120,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
       tempo_servico: tempo_servico,
       estoque_total: estoque_total,
       fotos: photos,
+      marca: marca,
+      categoria: categoria,
       empresa_id: empresa_id,
     });
   };
@@ -150,7 +165,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
           />
         )}
         
-        {/* Campo Tipo movido para cá */}
         <FormField
           control={form.control}
           name="tipo"
@@ -207,28 +221,70 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
           )}
         />
         
+        {/* Categoria (Visível para ambos) */}
+        <FormField
+          control={form.control}
+          name="categoria"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Categoria</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder={selectedType === 'servico' ? "Ex: Corte de Cabelo" : "Ex: Shampoo"} 
+                  {...field} 
+                  disabled={isSubmitting}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         {selectedType === 'produto' && (
-          <FormField
-            control={form.control}
-            name="estoque_total"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Estoque Total</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Quantidade em estoque" 
-                    {...field} 
-                    disabled={isSubmitting}
-                    type="number"
-                    step="1"
-                    value={field.value || ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <>
+            {/* Marca (Apenas para Produto) */}
+            <FormField
+              control={form.control}
+              name="marca"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Marca</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: L'Oréal" 
+                      {...field} 
+                      disabled={isSubmitting}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Estoque Total (Apenas para Produto) */}
+            <FormField
+              control={form.control}
+              name="estoque_total"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estoque Total</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Quantidade em estoque" 
+                      {...field} 
+                      disabled={isSubmitting}
+                      type="number"
+                      step="1"
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
         )}
         
         {selectedType === 'servico' && (

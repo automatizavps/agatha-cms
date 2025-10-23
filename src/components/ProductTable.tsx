@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, DollarSign, Package, Clock, Image as ImageIcon } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, DollarSign, Package, Clock, Image as ImageIcon, Tag, Factory } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,9 +121,15 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
     }
     
     return (
-      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-        <Package className="h-3 w-3" />
-        {product.estoque_total !== null ? `Estoque: ${product.estoque_total}` : 'N/A'}
+      <div className="flex flex-col space-y-1">
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Package className="h-3 w-3" />
+          {product.estoque_total !== null ? `Estoque: ${product.estoque_total}` : 'N/A'}
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Factory className="h-3 w-3" />
+          {product.marca || 'Sem Marca'}
+        </div>
       </div>
     );
   };
@@ -136,7 +142,8 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
             <TableRow>
               <TableHead>Item</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead className="hidden md:table-cell">Detalhe</TableHead>
+              <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+              <TableHead className="hidden md:table-cell">Detalhe / Marca</TableHead>
               <TableHead className="text-right">Preço</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -156,6 +163,12 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
                 </TableCell>
                 <TableCell>
                   {renderTypeBadge(product.tipo)}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Tag className="h-3 w-3" />
+                    {product.categoria || 'N/A'}
+                  </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   {renderDetail(product)}
