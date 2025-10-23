@@ -61,8 +61,8 @@ const ClientsContent = () => {
 };
 
 const Clients = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar clientes
-  <PermissionGuard allowedProfileIds={[1, 2]}>
+  // Perfis 1 (Super Admin), 2 (Admin) e 3 (Funcionário) têm permissão para gerenciar clientes
+  <PermissionGuard allowedProfileIds={[1, 2, 3]}>
     <ClientsContent />
   </PermissionGuard>
 );
