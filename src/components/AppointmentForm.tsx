@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, CalendarIcon } from "lucide-react";
+import { Loader2, CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,12 +26,16 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Appointment } from "@/integrations/supabase/appointments";
+import { useClients } from "@/integrations/supabase/clients";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import React from "react";
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
 const formSchema = z.object({
-  cliente_nome: z.string().min(2, {
-    message: "O nome do cliente deve ter pelo menos 2 caracteres.",
+  // Alterado de cliente_nome para cliente_id
+  cliente_id: z.string().uuid({
+    message: "Selecione um cliente válido.",
   }),
   responsavel_id: z.string().uuid({
     message: "Selecione um responsável válido.",
@@ -50,7 +54,7 @@ const formSchema = z.object({
 type AppointmentFormValues = z.infer<typeof formSchema>;
 
 interface AppointmentFormProps {
-  onSubmit: (values: { cliente_nome: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => void;
+  onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<AppointmentFormValues>;
   isEditing?: boolean;
@@ -58,11 +62,12 @@ interface AppointmentFormProps {
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: users, isLoading: isLoadingUsers } = useUsers();
+  const { data: clients, isLoading: isLoadingClients } = useClients();
 
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      cliente_nome: defaultValues?.cliente_nome || "",
+      cliente_id: defaultValues?.cliente_id || "",
       responsavel_id: defaultValues?.responsavel_id || "",
       date: defaultValues?.date,
       time: defaultValues?.time || "09:00",
@@ -78,25 +83,75 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     data_hora.setHours(hours, minutes, 0, 0);
 
     onSubmit({
-      cliente_nome: values.cliente_nome,
+      cliente_id: values.cliente_id,
       responsavel_id: values.responsavel_id,
       data_hora: data_hora,
       status: values.status,
     });
   };
+  
+  const allClients = clients || [];
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        
+        {/* Campo Cliente (Combobox) */}
         <FormField
           control={form.control}
-          name="cliente_nome"
+          name="cliente_id"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome do Cliente</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome completo do cliente" {...field} disabled={isSubmitting} />
-              </FormControl>
+            <FormItem className="flex flex-col">
+              <FormLabel>Cliente</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoadingClients || isSubmitting}
+                    >
+                      {field.value
+                        ? allClients.find(
+                            (client) => client.id === field.value
+                          )?.nome
+                        : isLoadingClients ? "Carregando clientes..." : "Selecione o cliente"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar cliente..." />
+                    <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {allClients.map((client) => (
+                        <CommandItem
+                          value={client.nome}
+                          key={client.id}
+                          onSelect={() => {
+                            form.setValue("cliente_id", client.id);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              client.id === field.value
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {client.nome}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

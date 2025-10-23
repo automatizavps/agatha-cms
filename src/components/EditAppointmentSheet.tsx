@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateAppointment, Appointment } from "@/integrations/supabase/appointments";
 import { showSuccess, showError } from "@/utils/toast";
 import { format } from "date-fns";
+import { OrderStatus } from "@/integrations/supabase/orders";
 
 interface EditAppointmentSheetProps {
   appointment: Appointment;
@@ -17,7 +18,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
   const mutation = useMutation({
     mutationFn: updateAppointment,
     onSuccess: () => {
-      showSuccess(`Agendamento para ${appointment.cliente_nome} atualizado com sucesso.`);
+      showSuccess(`Agendamento para ${appointment.clientes?.nome || 'Cliente'} atualizado com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       onOpenChange(false);
     },
@@ -26,7 +27,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     },
   });
 
-  const handleSubmit = (values: { cliente_nome: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => {
+  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => {
     if (!values.status) {
       showError("Status do agendamento é obrigatório.");
       return;
@@ -34,7 +35,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     
     mutation.mutate({
       id: appointment.id,
-      cliente_nome: values.cliente_nome,
+      cliente_id: values.cliente_id,
       responsavel_id: values.responsavel_id,
       data_hora: values.data_hora,
       status: values.status,
@@ -44,7 +45,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
   // Preparar valores iniciais
   const appointmentDate = new Date(appointment.data_hora);
   const initialValues = {
-    cliente_nome: appointment.cliente_nome,
+    cliente_id: appointment.cliente_id || "", // Usando cliente_id
     responsavel_id: appointment.responsavel_id || "",
     date: appointmentDate,
     time: format(appointmentDate, "HH:mm"),

@@ -31,7 +31,7 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
   const deleteMutation = useMutation({
     mutationFn: deleteAppointment,
     onSuccess: () => {
-      showSuccess(`Agendamento para ${appointment.cliente_nome} excluído com sucesso.`);
+      showSuccess(`Agendamento para ${appointment.clientes?.nome || 'Cliente'} excluído com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
     onError: (error) => {
@@ -40,7 +40,8 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o agendamento de ${appointment.cliente_nome} em ${format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm")}?`)) {
+    const clientName = appointment.clientes?.nome || 'este cliente';
+    if (window.confirm(`Tem certeza que deseja excluir o agendamento de ${clientName} em ${format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm")}?`)) {
       deleteMutation.mutate(appointment.id);
     }
   };
@@ -145,7 +146,7 @@ const Appointments = () => {
                 <TableBody>
                   {appointments.map((appointment) => (
                     <TableRow key={appointment.id}>
-                      <TableCell className="font-medium">{appointment.cliente_nome}</TableCell>
+                      <TableCell className="font-medium">{appointment.clientes?.nome || "Cliente Removido"}</TableCell>
                       <TableCell>
                         {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>
