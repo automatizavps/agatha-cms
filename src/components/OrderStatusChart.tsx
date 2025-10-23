@@ -46,7 +46,7 @@ const OrderStatusChart: React.FC = () => {
             margin={{
               top: 5,
               right: 10, 
-              left: -30, // Ajustado para -30
+              left: -40, // Ajustado para -40
               bottom: 0, 
             }}
           >
