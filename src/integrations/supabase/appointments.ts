@@ -1,11 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 
+export interface AppointmentItem {
+  id: string;
+  produto_id: string;
+  quantidade: number;
+  preco_unitario: number;
+  // Relacionamento com o produto para obter o nome e tipo
+  produtos: {
+    nome: string;
+    tipo: 'produto' | 'servico';
+  } | null;
+}
+
 export interface Appointment {
   id: string;
   empresa_id: string;
-  cliente_id: string | null; // Agora usamos o ID do cliente
-  servico_id: string | null; // Novo campo
+  cliente_id: string | null;
   responsavel_id: string | null;
   data_hora: string; // ISO string
   status: 'pendente' | 'confirmado' | 'cancelado' | 'concluido';
@@ -15,28 +26,28 @@ export interface Appointment {
   responsavel: {
     nome_completo: string;
   } | null;
-  clientes: { // Novo relacionamento para obter o nome do cliente
+  clientes: {
     nome: string;
   } | null;
-  servicos: { // Novo relacionamento para obter o nome do serviço
-    nome: string;
-  } | null;
+  // Novo relacionamento para itens
+  agendamento_itens: AppointmentItem[];
 }
 
+// --- Fetch Geral ---
+
 const fetchAppointments = async (): Promise<Appointment[]> => {
-  // Buscamos agendamentos, o nome do responsável, o nome do cliente e o nome do serviço
+  // Buscamos agendamentos, o nome do responsável e o nome do cliente
   const { data, error } = await supabase
     .from("agendamentos")
     .select(`
       id,
       cliente_id,
-      servico_id,
       data_hora,
       status,
       responsavel_id,
+      created_at,
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
-      clientes (nome),
-      servicos:produtos!agendamentos_servico_id_fkey (nome)
+      clientes (nome)
     `)
     .order("data_hora", { ascending: true });
 
@@ -55,14 +66,53 @@ export const useAppointments = () => {
   });
 };
 
-interface CreateAppointmentParams {
-  cliente_id: string;
-  servico_id: string; // Novo campo
-  responsavel_id: string;
-  data_hora: Date;
+// --- Fetch Appointment Items ---
+
+const fetchAppointmentItems = async (appointmentId: string): Promise<AppointmentItem[]> => {
+  const { data, error } = await supabase
+    .from("agendamento_itens")
+    .select(`
+      id,
+      produto_id,
+      quantidade,
+      preco_unitario,
+      produtos (nome, tipo)
+    `)
+    .eq('agendamento_id', appointmentId);
+
+  if (error) {
+    console.error("Error fetching appointment items:", error);
+    throw new Error("Failed to fetch appointment items");
+  }
+
+  return data as AppointmentItem[];
+};
+
+export const useAppointmentItems = (appointmentId: string) => {
+  return useQuery<AppointmentItem[], Error>({
+    queryKey: ["appointmentItems", appointmentId],
+    queryFn: () => fetchAppointmentItems(appointmentId),
+    enabled: !!appointmentId,
+  });
+};
+
+
+// --- Create ---
+
+interface ItemToCreate {
+  produto_id: string;
+  quantidade: number;
+  preco_unitario: number;
 }
 
-export const createAppointment = async ({ cliente_id, servico_id, responsavel_id, data_hora }: CreateAppointmentParams) => {
+interface CreateAppointmentParams {
+  cliente_id: string;
+  responsavel_id: string;
+  data_hora: Date;
+  items: ItemToCreate[]; // Novo campo
+}
+
+export const createAppointment = async ({ cliente_id, responsavel_id, data_hora, items }: CreateAppointmentParams) => {
   // 1. Obter o ID da empresa do usuário logado
   const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
 
@@ -81,44 +131,64 @@ export const createAppointment = async ({ cliente_id, servico_id, responsavel_id
     throw new Error("Usuário não autenticado.");
   }
 
-  // 3. Inserir o agendamento
-  const { data, error } = await supabase
+  // 3. Inserir o agendamento principal
+  const { data: appointmentData, error: appointmentError } = await supabase
     .from("agendamentos")
     .insert({
       empresa_id: empresa_id,
       cliente_id: cliente_id,
-      servico_id: servico_id, // Incluindo servico_id
       responsavel_id: responsavel_id,
       data_hora: data_hora.toISOString(),
       created_by: created_by,
       status: 'pendente', // Padrão
     })
-    .select()
+    .select("id")
     .single();
 
-  if (error) {
-    console.error("Error creating appointment:", error);
-    throw new Error(error.message);
+  if (appointmentError || !appointmentData) {
+    console.error("Error creating appointment:", appointmentError);
+    throw new Error(appointmentError?.message || "Falha ao criar agendamento principal.");
+  }
+  
+  const agendamento_id = appointmentData.id;
+
+  // 4. Inserir os itens do agendamento
+  const itemsPayload = items.map(item => ({
+    agendamento_id: agendamento_id,
+    produto_id: item.produto_id,
+    quantidade: item.quantidade,
+    preco_unitario: item.preco_unitario,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("agendamento_itens")
+    .insert(itemsPayload);
+
+  if (itemsError) {
+    console.error("Error inserting appointment items:", itemsError);
+    // Se a inserção dos itens falhar, idealmente deveríamos reverter o agendamento principal.
+    throw new Error("Agendamento criado, mas falha ao adicionar itens: " + itemsError.message);
   }
 
-  return data;
+  return appointmentData;
 };
+
+// --- Update ---
 
 interface UpdateAppointmentParams {
   id: string;
   cliente_id: string;
-  servico_id: string; // Novo campo
   responsavel_id: string;
   data_hora: Date;
   status: Appointment['status'];
+  // Itens não são atualizados via este endpoint, apenas o status e dados principais
 }
 
-export const updateAppointment = async ({ id, cliente_id, servico_id, responsavel_id, data_hora, status }: UpdateAppointmentParams) => {
+export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_hora, status }: UpdateAppointmentParams) => {
   const { data, error } = await supabase
     .from("agendamentos")
     .update({
       cliente_id: cliente_id,
-      servico_id: servico_id, // Incluindo servico_id
       responsavel_id: responsavel_id,
       data_hora: data_hora.toISOString(),
       status: status,
@@ -136,6 +206,7 @@ export const updateAppointment = async ({ id, cliente_id, servico_id, responsave
 };
 
 export const deleteAppointment = async (id: string) => {
+  // A exclusão em cascata cuidará dos itens do agendamento
   const { error } = await supabase
     .from("agendamentos")
     .delete()

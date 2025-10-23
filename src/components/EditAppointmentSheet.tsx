@@ -1,10 +1,10 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import AppointmentForm from "./AppointmentForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateAppointment, Appointment } from "@/integrations/supabase/appointments";
+import { updateAppointment, Appointment, useAppointmentItems } from "@/integrations/supabase/appointments";
 import { showSuccess, showError } from "@/utils/toast";
 import { format } from "date-fns";
-import { OrderStatus } from "@/integrations/supabase/orders";
+import { Loader2 } from "lucide-react";
 
 interface EditAppointmentSheetProps {
   appointment: Appointment;
@@ -14,6 +14,7 @@ interface EditAppointmentSheetProps {
 
 const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
+  const { data: appointmentItems, isLoading: isLoadingItems } = useAppointmentItems(appointment.id);
 
   const mutation = useMutation({
     mutationFn: updateAppointment,
@@ -27,7 +28,8 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     },
   });
 
-  const handleSubmit = (values: { cliente_id: string; servico_id: string; responsavel_id: string; data_hora: Date; status?: Appointment['status'] }) => {
+  // A edição de agendamentos só permite alterar o status e dados principais neste componente
+  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: any[]; status?: Appointment['status'] }) => {
     if (!values.status) {
       showError("Status do agendamento é obrigatório.");
       return;
@@ -36,7 +38,6 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     mutation.mutate({
       id: appointment.id,
       cliente_id: values.cliente_id,
-      servico_id: values.servico_id,
       responsavel_id: values.responsavel_id,
       data_hora: values.data_hora,
       status: values.status,
@@ -47,12 +48,32 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
   const appointmentDate = new Date(appointment.data_hora);
   const initialValues = {
     cliente_id: appointment.cliente_id || "",
-    servico_id: appointment.servico_id || "", // Incluindo servico_id
     responsavel_id: appointment.responsavel_id || "",
     date: appointmentDate,
     time: format(appointmentDate, "HH:mm"),
     status: appointment.status,
+    // Mapeamos os itens carregados para o formato esperado pelo AppointmentForm
+    items: appointmentItems?.map(item => ({
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      preco_unitario: item.preco_unitario,
+    })) || [],
   };
+  
+  if (isLoadingItems) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
+        <SheetContent className="sm:max-w-md flex flex-col">
+          <SheetHeader>
+            <SheetTitle>Carregando Agendamento...</SheetTitle>
+          </SheetHeader>
+          <div className="py-4 flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
