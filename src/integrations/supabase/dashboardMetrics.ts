@@ -100,6 +100,30 @@ const fetchProductCount = async (companyId: string | undefined): Promise<number>
 };
 
 /**
+ * Busca a contagem total de clientes cadastrados.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
+ */
+const fetchClientCount = async (companyId: string | undefined): Promise<number> => {
+  let query = supabase
+    .from("clientes")
+    .select("id", { count: 'exact', head: true });
+    
+  if (companyId) {
+    query = query.eq("empresa_id", companyId);
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    console.error("Error fetching client count:", error);
+    throw new Error("Failed to fetch client count");
+  }
+
+  return count || 0;
+};
+
+
+/**
  * Busca os 10 itens mais vendidos (produtos e serviços) para a empresa.
  * NOTA: A função RPC 'get_top_selling_items' exige um company_id_input. 
  * Se companyId for undefined, não podemos chamar a RPC.
@@ -140,6 +164,14 @@ export const useProductCount = (companyId: string | undefined) => {
   return useQuery<number, Error>({
     queryKey: ["productCount", companyId],
     queryFn: () => fetchProductCount(companyId),
+    enabled: true,
+  });
+};
+
+export const useClientCount = (companyId: string | undefined) => {
+  return useQuery<number, Error>({
+    queryKey: ["clientCount", companyId],
+    queryFn: () => fetchClientCount(companyId),
     enabled: true,
   });
 };

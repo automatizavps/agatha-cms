@@ -62,6 +62,8 @@ const resources = {
       "weekly_revenue_overview": "Pedidos entregues esta semana",
       "total_products": "Total de Produtos",
       "total_products_overview": "Produtos cadastrados na empresa",
+      "total_clients": "Total de Clientes", // NOVO
+      "total_clients_overview": "Clientes cadastrados na empresa", // NOVO
       "latest_products_title": "Últimos Produtos Cadastrados", // NOVO
       "top_selling_items_title": "Top 10 Produtos Mais Vendidos (Unidades)", // NOVO
       "top_selling_services_title": "Top 10 Serviços Mais Realizados", // NOVO

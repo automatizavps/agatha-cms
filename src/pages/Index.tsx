@@ -5,7 +5,7 @@ import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMet
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
 import { useTranslation } from "react-i18next";
-import { useRevenueMetrics, useProductCount } from "@/integrations/supabase/dashboardMetrics";
+import { useRevenueMetrics, useProductCount, useClientCount } from "@/integrations/supabase/dashboardMetrics";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -35,10 +35,11 @@ const Index = () => {
   
   const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
+  const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); // NOVO HOOK
   
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
-  const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter;
+  const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -87,7 +88,7 @@ const Index = () => {
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           
           {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
           <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
@@ -125,7 +126,19 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 4: Total de Agendamentos */}
+          {/* Card 4: Total de Clientes (NOVO) */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(clientCount || 0)}
+              <p className="text-xs text-muted-foreground">{t('total_clients_overview')}</p>
+            </CardContent>
+          </Card>
+          
+          {/* Card 5: Total de Agendamentos */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
@@ -137,7 +150,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 5: Agendamentos Pendentes */}
+          {/* Card 6: Agendamentos Pendentes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
