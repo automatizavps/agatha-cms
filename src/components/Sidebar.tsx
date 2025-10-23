@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 
@@ -35,8 +35,8 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   
-  // Perfis permitidos para Gerenciamento de Usuários: 1 (Super Admin) e 2 (Admin)
-  const canManageUsers = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+  // Perfis permitidos para Gerenciamento de Usuários e Clientes: 1 (Super Admin) e 2 (Admin)
+  const canManage = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
 
   return (
     <div className="flex h-full flex-col border-r bg-sidebar p-4 shadow-lg">
@@ -58,13 +58,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
           onClick={onNavigate}
         />
         
-        {canManageUsers && (
-          <NavItem
-            to="/users"
-            icon={<Users className="h-5 w-5" />}
-            label="Users"
-            onClick={onNavigate}
-          />
+        {canManage && (
+          <>
+            <NavItem
+              to="/clients"
+              icon={<Briefcase className="h-5 w-5" />}
+              label="Clientes"
+              onClick={onNavigate}
+            />
+            <NavItem
+              to="/users"
+              icon={<Users className="h-5 w-5" />}
+              label="Users"
+              onClick={onNavigate}
+            />
+          </>
         )}
         
         <NavItem
