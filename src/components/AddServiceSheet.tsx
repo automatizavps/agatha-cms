@@ -5,21 +5,21 @@ import { PlusCircle } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProduct, ProductType } from "@/integrations/supabase/products";
 import { showSuccess, showError } from "@/utils/toast";
-import ProductOnlyForm from "./ProductOnlyForm";
+import ServiceOnlyForm from "./ServiceOnlyForm";
 
-const AddProductSheet = () => {
+const AddServiceSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: createProduct,
     onSuccess: (data) => {
-      showSuccess(`Produto ${data.nome} cadastrado com sucesso!`);
-      queryClient.invalidateQueries({ queryKey: ["products_only"] }); // Invalida a query específica
+      showSuccess(`Serviço ${data.nome} cadastrado com sucesso!`);
+      queryClient.invalidateQueries({ queryKey: ["services_only"] }); // Invalida a query específica
       setIsOpen(false);
     },
     onError: (error) => {
-      showError("Falha ao cadastrar produto: " + error.message);
+      showError("Falha ao cadastrar serviço: " + error.message);
     },
   });
 
@@ -34,23 +34,23 @@ const AddProductSheet = () => {
     categoria: string | null;
     empresa_id?: string;
   }) => {
-    // Garantimos que o tipo é 'produto'
-    mutation.mutate({ ...values, tipo: 'produto' });
+    // Garantimos que o tipo é 'servico'
+    mutation.mutate({ ...values, tipo: 'servico' });
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Novo Produto
+          <PlusCircle className="mr-2 h-4 w-4" /> Novo Serviço
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>Cadastrar Novo Produto</SheetTitle>
+          <SheetTitle>Cadastrar Novo Serviço</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
-          <ProductOnlyForm 
+          <ServiceOnlyForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 
             isEditing={false}
@@ -61,4 +61,4 @@ const AddProductSheet = () => {
   );
 };
 
-export default AddProductSheet;
+export default AddServiceSheet;

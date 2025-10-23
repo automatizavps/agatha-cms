@@ -2,26 +2,26 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProduct, Product, ProductType } from "@/integrations/supabase/products";
 import { showSuccess, showError } from "@/utils/toast";
-import ProductOnlyForm from "./ProductOnlyForm";
+import ServiceOnlyForm from "./ServiceOnlyForm";
 
-interface EditProductSheetProps {
-  product: Product;
+interface EditServiceSheetProps {
+  service: Product;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, onOpenChange }) => {
+const EditServiceSheet: React.FC<EditServiceSheetProps> = ({ service, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: updateProduct,
     onSuccess: (data) => {
-      showSuccess(`Produto ${data.nome} atualizado com sucesso.`);
-      queryClient.invalidateQueries({ queryKey: ["products_only"] }); // Invalida a query específica
+      showSuccess(`Serviço ${data.nome} atualizado com sucesso.`);
+      queryClient.invalidateQueries({ queryKey: ["services_only"] }); // Invalida a query específica
       onOpenChange(false);
     },
     onError: (error) => {
-      showError("Falha ao atualizar produto: " + error.message);
+      showError("Falha ao atualizar serviço: " + error.message);
     },
   });
 
@@ -37,14 +37,14 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
     empresa_id?: string;
   }) => {
     mutation.mutate({
-      id: product.id,
+      id: service.id,
       nome: values.nome,
       preco: values.preco,
-      tipo: 'produto', // Garante que o tipo não mude
-      tempo_servico: null, // Garante que o tempo de serviço seja null
-      estoque_total: values.estoque_total,
+      tipo: 'servico', // Garante que o tipo não mude
+      tempo_servico: values.tempo_servico,
+      estoque_total: null, // Garante que o estoque seja null
       fotos: values.fotos,
-      marca: values.marca,
+      marca: null, // Garante que a marca seja null
       categoria: values.categoria,
       empresa_id: values.empresa_id,
     });
@@ -52,23 +52,22 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
 
   // Valores iniciais para o formulário de edição
   const initialValues = {
-    nome: product.nome,
-    preco: product.preco,
-    estoque_total: product.estoque_total,
-    fotos: product.fotos,
-    marca: product.marca,
-    categoria: product.categoria,
-    empresa_id: product.empresa_id,
+    nome: service.nome,
+    preco: service.preco,
+    tempo_servico: service.tempo_servico,
+    fotos: service.fotos,
+    categoria: service.categoria,
+    empresa_id: service.empresa_id,
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md flex flex-col">
         <SheetHeader>
-          <SheetTitle>Editar Produto: {product.nome}</SheetTitle>
+          <SheetTitle>Editar Serviço: {service.nome}</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
-          <ProductOnlyForm 
+          <ServiceOnlyForm 
             onSubmit={handleSubmit} 
             isSubmitting={mutation.isPending} 
             defaultValues={initialValues}
@@ -80,4 +79,4 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
   );
 };
 
-export default EditProductSheet;
+export default EditServiceSheet;

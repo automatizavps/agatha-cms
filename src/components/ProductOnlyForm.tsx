@@ -12,45 +12,41 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { Product, ProductType } from "@/integrations/supabase/products";
+import { Product } from "@/integrations/supabase/products";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MultiImageUpload from "./MultiImageUpload";
 import { useState } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 
-// Definimos o esquema base
-const baseFormSchema = z.object({
+// Definimos o esquema para PRODUTO
+const formSchema = z.object({
   nome: z.string().min(2, {
     message: "O nome deve ter pelo menos 2 caracteres.",
   }),
   preco: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "O preço deve ser um número positivo.",
   }),
-  tipo: z.enum(['produto', 'servico'], {
-    required_error: "O tipo é obrigatório.",
-  }),
-  estoque_total: z.string().optional().nullable(), // Apenas para produto
-  tempo_servico: z.string().optional().nullable(), // Apenas para serviço (em minutos)
+  estoque_total: z.string().refine(val => val === "" || (val && !isNaN(parseInt(val)) && parseInt(val) >= 0), {
+    message: "O estoque deve ser um número inteiro positivo.",
+  }).optional().nullable(),
   
-  // Novos campos
   marca: z.string().optional().nullable(),
   categoria: z.string().optional().nullable(),
   
-  // empresa_id é opcional por padrão, mas pode ser tornado obrigatório na criação para Super Admin
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional(), 
 });
 
-type ProductFormValues = z.infer<typeof baseFormSchema>;
+type ProductFormValues = z.infer<typeof formSchema>;
 
-interface ProductFormProps {
+interface ProductOnlyFormProps {
   onSubmit: (values: { 
     nome: string; 
     preco: number; 
-    tipo: ProductType; 
-    tempo_servico: number | null; 
+    tipo: 'produto'; 
+    tempo_servico: null; 
     estoque_total: number | null;
     fotos: string[] | null;
     marca: string | null;
@@ -62,39 +58,35 @@ interface ProductFormProps {
   isEditing?: boolean;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
+const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: currentProfile, isLoading: isLoadingCurrentProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   const isSuperAdmin = currentProfile?.perfil_id === 1;
-  const isCheckingPermissions = isLoadingCurrentProfile || isLoadingCompanies;
+  const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
   
   const [photos, setPhotos] = useState<string[] | null>(defaultValues?.fotos || null);
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
-  const formSchema = isSuperAdmin && !isEditing
-    ? baseFormSchema.extend({
+  const finalFormSchema = isSuperAdmin && !isEditing
+    ? formSchema.extend({
         empresa_id: z.string().uuid({
           message: "Selecione uma empresa válida.",
         }).min(1, { message: "A empresa é obrigatória para o Super Admin." }),
       })
-    : baseFormSchema;
+    : formSchema;
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(finalFormSchema),
     defaultValues: {
       nome: defaultValues?.nome || "",
       preco: defaultValues?.preco ? String(defaultValues.preco) : "",
-      tipo: defaultValues?.tipo || 'produto',
       estoque_total: defaultValues?.estoque_total ? String(defaultValues.estoque_total) : "",
-      tempo_servico: defaultValues?.tempo_servico ? String(defaultValues.tempo_servico) : "",
       marca: defaultValues?.marca || "",
       categoria: defaultValues?.categoria || "",
       empresa_id: defaultValues?.empresa_id || "", 
     },
   });
-  
-  const selectedType = form.watch("tipo");
   
   // Determina se o campo empresa deve ser exibido
   const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
@@ -109,18 +101,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
   const handleSubmit = (values: ProductFormValues) => {
     const preco = parseFloat(values.preco);
     
-    let tempo_servico: number | null = null;
-    let estoque_total: number | null = null;
+    const estoque_total = values.estoque_total ? parseInt(values.estoque_total) : null;
     
-    if (values.tipo === 'servico') {
-      tempo_servico = values.tempo_servico ? parseInt(values.tempo_servico) : null;
-    } else {
-      estoque_total = values.estoque_total ? parseInt(values.estoque_total) : null;
-    }
-    
-    // Se for Super Admin, passamos o ID da empresa (seja na criação ou edição).
-    // Se não for Super Admin, passamos undefined, e a função updateProduct/createProduct usará o RPC/RLS.
-    // Na edição, se não for Super Admin, o empresa_id não é enviado, pois a função updateProduct não precisa dele (RLS garante que só pode atualizar na própria empresa).
+    // Se for Super Admin, passamos o ID da empresa.
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     // Normaliza campos vazios para null
@@ -130,8 +113,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
     onSubmit({
       nome: values.nome,
       preco: preco,
-      tipo: values.tipo as ProductType,
-      tempo_servico: tempo_servico,
+      tipo: 'produto',
+      tempo_servico: null, // Sempre null para produtos
       estoque_total: estoque_total,
       fotos: photos,
       marca: marca,
@@ -192,34 +175,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
         
         <FormField
           control={form.control}
-          name="tipo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="produto">Produto</SelectItem>
-                  <SelectItem value="servico">Serviço</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
           name="nome"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome</FormLabel>
+              <FormLabel>Nome do Produto</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do item" {...field} disabled={isSubmitting} />
+                <Input placeholder="Nome do produto" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -246,7 +207,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
           )}
         />
         
-        {/* Categoria (Visível para ambos) */}
+        {/* Categoria */}
         <FormField
           control={form.control}
           name="categoria"
@@ -255,7 +216,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
               <FormLabel>Categoria</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder={selectedType === 'servico' ? "Ex: Corte de Cabelo" : "Ex: Shampoo"} 
+                  placeholder="Ex: Shampoo, Maquiagem" 
                   {...field} 
                   disabled={isSubmitting}
                   value={field.value || ""}
@@ -266,74 +227,47 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
           )}
         />
         
-        {selectedType === 'produto' && (
-          <>
-            {/* Marca (Apenas para Produto) */}
-            <FormField
-              control={form.control}
-              name="marca"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Marca</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Ex: L'Oréal" 
-                      {...field} 
-                      disabled={isSubmitting}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Estoque Total (Apenas para Produto) */}
-            <FormField
-              control={form.control}
-              name="estoque_total"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estoque Total</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Quantidade em estoque" 
-                      {...field} 
-                      disabled={isSubmitting}
-                      type="number"
-                      step="1"
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
+        {/* Marca */}
+        <FormField
+          control={form.control}
+          name="marca"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Marca</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Ex: L'Oréal" 
+                  {...field} 
+                  disabled={isSubmitting}
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
-        {selectedType === 'servico' && (
-          <FormField
-            control={form.control}
-            name="tempo_servico"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tempo de Serviço (minutos)</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Ex: 60" 
-                    {...field} 
-                    disabled={isSubmitting}
-                    type="number"
-                    step="1"
-                    value={field.value || ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Estoque Total */}
+        <FormField
+          control={form.control}
+          name="estoque_total"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Estoque Total</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Quantidade em estoque" 
+                  {...field} 
+                  disabled={isSubmitting}
+                  type="number"
+                  step="1"
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <MultiImageUpload 
           currentUrls={photos}
@@ -347,7 +281,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
           ) : isEditing ? (
             "Salvar Alterações"
           ) : (
-            "Cadastrar Item"
+            "Cadastrar Produto"
           )}
         </Button>
       </form>
@@ -355,4 +289,4 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, isSubmitting, defau
   );
 };
 
-export default ProductForm;
+export default ProductOnlyForm;

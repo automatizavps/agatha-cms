@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -36,8 +36,8 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   
-  // Perfis permitidos para Gerenciamento de Usuários e Produtos: 1 (Super Admin) e 2 (Admin)
-  const canManageUsersAndProducts = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+  // Perfis permitidos para Gerenciamento de Usuários, Produtos e Serviços: 1 (Super Admin) e 2 (Admin)
+  const canManageInventory = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
   
   // Perfis permitidos para Gerenciamento de Clientes: 1, 2 e 3
   const canManageClients = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2 || profile.perfil_id === 3);
@@ -82,12 +82,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
           />
         )}
 
-        {canManageUsersAndProducts && (
+        {canManageInventory && (
           <>
             <NavItem
               to="/products"
               icon={<Package className="h-5 w-5" />}
-              label="Produtos/Serviços"
+              label="Produtos"
+              onClick={onNavigate}
+            />
+            <NavItem
+              to="/services"
+              icon={<Clock className="h-5 w-5" />}
+              label="Serviços"
               onClick={onNavigate}
             />
             <NavItem

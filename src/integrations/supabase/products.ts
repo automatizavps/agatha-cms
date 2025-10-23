@@ -21,9 +21,9 @@ export interface Product {
   categoria: string | null;
 }
 
-// --- Fetch ---
+// --- Fetch Geral (mantido para compatibilidade, mas não será usado nas novas páginas) ---
 
-const fetchProducts = async (): Promise<Product[]> => {
+const fetchAllProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
     .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria")
@@ -40,9 +40,58 @@ const fetchProducts = async (): Promise<Product[]> => {
 export const useProducts = () => {
   return useQuery<Product[], Error>({
     queryKey: ["products"],
-    queryFn: fetchProducts,
+    queryFn: fetchAllProducts,
   });
 };
+
+// --- Fetch Específico para Produtos (tipo='produto') ---
+
+const fetchProductsOnly = async (): Promise<Product[]> => {
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria")
+    .eq('tipo', 'produto')
+    .order("nome", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching products:", error);
+    throw new Error("Failed to fetch products");
+  }
+
+  return data as Product[];
+};
+
+export const useProductsOnly = () => {
+  return useQuery<Product[], Error>({
+    queryKey: ["products_only"],
+    queryFn: fetchProductsOnly,
+  });
+};
+
+// --- Fetch Específico para Serviços (tipo='servico') ---
+
+const fetchServicesOnly = async (): Promise<Product[]> => {
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria")
+    .eq('tipo', 'servico')
+    .order("nome", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching services:", error);
+    throw new Error("Failed to fetch services");
+  }
+
+  return data as Product[];
+};
+
+export const useServicesOnly = () => {
+  return useQuery<Product[], Error>({
+    queryKey: ["services_only"],
+    queryFn: fetchServicesOnly,
+  });
+};
+
 
 // --- Create ---
 

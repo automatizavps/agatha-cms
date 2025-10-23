@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, DollarSign, Package, Clock, Image as ImageIcon, Tag, Factory } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Package, Factory, Image as ImageIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditProductSheet from "./EditProductSheet";
 import { Badge } from "@/components/ui/badge";
 
-interface ProductTableProps {
+interface ProductOnlyTableProps {
   products: Product[];
 }
 
@@ -38,16 +38,16 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
     onSuccess: () => {
-      showSuccess(`Item ${product.nome} excluído com sucesso.`);
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      showSuccess(`Produto ${product.nome} excluído com sucesso.`);
+      queryClient.invalidateQueries({ queryKey: ["products_only"] });
     },
     onError: (error) => {
-      showError("Falha ao excluir item: " + error.message);
+      showError("Falha ao excluir produto: " + error.message);
     },
   });
 
   const handleDelete = () => {
-    if (window.confirm(`Tem certeza que deseja excluir o item ${product.nome}?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir o produto ${product.nome}?`)) {
       deleteMutation.mutate(product.id);
     }
   };
@@ -79,7 +79,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
 };
 
 
-const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
+const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
 
@@ -101,38 +101,6 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
       currency: 'BRL',
     }).format(value);
   };
-  
-  const renderTypeBadge = (type: Product['tipo']) => {
-    const classes = "capitalize";
-    if (type === 'servico') {
-      return <Badge variant="secondary" className={classes}>Serviço</Badge>;
-    }
-    return <Badge className={classes}>Produto</Badge>;
-  };
-  
-  const renderDetail = (product: Product) => {
-    if (product.tipo === 'servico') {
-      return (
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          {product.tempo_servico ? `${product.tempo_servico} min` : 'N/A'}
-        </div>
-      );
-    }
-    
-    return (
-      <div className="flex flex-col space-y-1">
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Package className="h-3 w-3" />
-          {product.estoque_total !== null ? `Estoque: ${product.estoque_total}` : 'N/A'}
-        </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Factory className="h-3 w-3" />
-          {product.marca || 'Sem Marca'}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <>
@@ -140,10 +108,10 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead>Tipo</TableHead>
+              <TableHead>Produto</TableHead>
               <TableHead className="hidden sm:table-cell">Categoria</TableHead>
-              <TableHead className="hidden md:table-cell">Detalhe / Marca</TableHead>
+              <TableHead className="hidden md:table-cell">Marca</TableHead>
+              <TableHead className="text-right">Estoque</TableHead>
               <TableHead className="text-right">Preço</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -161,17 +129,19 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
                     {product.nome}
                   </div>
                 </TableCell>
-                <TableCell>
-                  {renderTypeBadge(product.tipo)}
+                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                  {product.categoria || 'N/A'}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Tag className="h-3 w-3" />
-                    {product.categoria || 'N/A'}
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Factory className="h-3 w-3" />
+                    {product.marca || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {renderDetail(product)}
+                <TableCell className="text-right font-semibold">
+                  <Badge variant={product.estoque_total && product.estoque_total > 0 ? 'default' : 'destructive'}>
+                    {product.estoque_total !== null ? product.estoque_total : 'N/A'}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right font-semibold">
                   {formatCurrency(product.preco)}
@@ -196,4 +166,4 @@ const ProductTable: React.FC<ProductTableProps> = ({ products }) => {
   );
 };
 
-export default ProductTable;
+export default ProductOnlyTable;

@@ -1,31 +1,31 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Package } from "lucide-react";
-import { useProductsOnly } from "@/integrations/supabase/products";
+import { Loader2, RefreshCw, Clock } from "lucide-react";
+import { useServicesOnly } from "@/integrations/supabase/products";
 import { showError } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
-import AddProductSheet from "@/components/AddProductSheet";
-import ProductOnlyTable from "@/components/ProductOnlyTable";
+import AddServiceSheet from "@/components/AddServiceSheet";
+import ServiceOnlyTable from "@/components/ServiceOnlyTable";
 
-const ProductsContent = () => {
-  const { data: products, isLoading, isError, error, refetch, isRefetching } = useProductsOnly();
+const ServicesContent = () => {
+  const { data: services, isLoading, isError, error, refetch, isRefetching } = useServicesOnly();
 
   if (isError && error) {
-    showError("Erro ao carregar produtos: " + error.message);
+    showError("Erro ao carregar serviços: " + error.message);
   }
 
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
-        <AddProductSheet />
+        <h1 className="text-3xl font-bold tracking-tight">Gestão de Serviços</h1>
+        <AddServiceSheet />
       </div>
       
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" /> Lista de Produtos
+            <Clock className="h-5 w-5" /> Lista de Serviços
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -36,7 +36,7 @@ const ProductsContent = () => {
           ) : isError ? (
             <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
               <p className="text-destructive">
-                Não foi possível carregar os dados dos produtos.
+                Não foi possível carregar os dados dos serviços.
               </p>
               <Button onClick={() => refetch()} disabled={isRefetching}>
                 {isRefetching ? (
@@ -47,11 +47,11 @@ const ProductsContent = () => {
                 Tentar Novamente
               </Button>
             </div>
-          ) : products && products.length > 0 ? (
-            <ProductOnlyTable products={products} />
+          ) : services && services.length > 0 ? (
+            <ServiceOnlyTable services={services} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              Nenhum produto cadastrado.
+              Nenhum serviço cadastrado.
             </div>
           )}
         </CardContent>
@@ -60,11 +60,11 @@ const ProductsContent = () => {
   );
 };
 
-const Products = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar produtos
+const Services = () => (
+  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar serviços
   <PermissionGuard allowedProfileIds={[1, 2]}>
-    <ProductsContent />
+    <ServicesContent />
   </PermissionGuard>
 );
 
-export default Products;
+export default Services;
