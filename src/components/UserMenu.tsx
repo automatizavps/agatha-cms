@@ -17,16 +17,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom"; // Importando Link
 
 export function UserMenu() {
-  const { user } = useSession();
+  const { user, session } = useSession();
   const { data: profile, isLoading: isProfileLoading } = useCurrentUserProfile();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      showError("Falha ao fazer logout: " + error.message);
-    } else {
-      showSuccess("Logout realizado com sucesso.");
+    // Só tenta o signOut se houver uma sessão ativa.
+    // Se não houver sessão, o AuthStateChange em src/integrations/supabase/auth.tsx
+    // já deve ter redirecionado, mas tentamos garantir.
+    if (session) {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        // Se o erro for "Auth session missing", podemos ignorar e ainda mostrar sucesso/redirecionar.
+        // Caso contrário, mostramos o erro.
+        if (!error.message.includes("Auth session missing")) {
+          showError("Falha ao fazer logout: " + error.message);
+          return;
+        }
+      }
     }
+    
+    // Se o signOut for bem-sucedido ou se o erro for ignorado (session missing),
+    // mostramos sucesso. O SessionContextProvider cuidará do redirecionamento.
+    showSuccess("Logout realizado com sucesso.");
   };
 
   const userEmail = user?.email || "Usuário";
