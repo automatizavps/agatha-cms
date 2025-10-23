@@ -6,17 +6,18 @@ interface ChartData {
   fill: string;
 }
 
+// Cores ajustadas para melhor contraste no tema escuro
 const statusColors: Record<Appointment['status'], string> = {
-  pendente: '#facc15', // yellow-500
-  confirmado: '#10b981', // green-500
-  cancelado: '#ef4444', // red-500
-  concluido: '#3b82f6', // blue-500
+  pendente: '#fde047', // yellow-300
+  confirmado: '#4ade80', // green-400
+  cancelado: '#f87171', // red-400
+  concluido: '#60a5fa', // blue-400
 };
 
 export const useAppointmentChartData = () => {
   const { data: appointments, isLoading, isError, error } = useAppointments();
 
-  const chartData: ChartData[] = [];
+  const metrics: ChartData[] = [];
 
   if (appointments) {
     const statusCounts = appointments.reduce((acc, appointment) => {
@@ -24,7 +25,7 @@ export const useAppointmentChartData = () => {
       return acc;
     }, {} as Record<Appointment['status'], number>);
 
-    chartData.push(
+    metrics.push(
       ...Object.entries(statusCounts).map(([status, count]) => ({
         name: status.charAt(0).toUpperCase() + status.slice(1),
         count: count,
@@ -34,7 +35,7 @@ export const useAppointmentChartData = () => {
   }
 
   return {
-    chartData,
+    chartData: metrics,
     isLoading,
     isError,
     error,
