@@ -8,7 +8,6 @@ import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import BreadcrumbNavigation from "./BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import { NotificationBell } from "./NotificationBell"; // Importando NotificationBell
 
@@ -52,7 +51,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <h1 className="text-lg font-semibold">{t('app_name')}</h1>
             <div className="flex items-center gap-2">
               <NotificationBell /> {/* Adicionado aqui */}
-              <LanguageSwitcher />
               <ThemeToggle />
               <UserMenu />
             </div>
@@ -103,7 +101,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <BreadcrumbNavigation />
           </div>
           <NotificationBell /> {/* Adicionado aqui */}
-          <LanguageSwitcher />
           <ThemeToggle />
           <UserMenu />
         </header>
