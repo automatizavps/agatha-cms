@@ -1,2 +1,2 @@
 # Agatha CMS
-by Karel with Dyad
+by Karel with love
