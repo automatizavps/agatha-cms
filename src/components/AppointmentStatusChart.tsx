@@ -10,26 +10,36 @@ const AppointmentStatusChart = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <Card className="h-80">
+        <CardHeader>
+          <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center h-full">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
     );
   }
 
   if (isError || chartData.length === 0) {
     return (
-      <div className="text-center p-4 text-muted-foreground h-96 flex items-center justify-center">
-        {isError ? t("chart_error") : t("chart_no_data")}
-      </div>
+      <Card className="h-80">
+        <CardHeader>
+          <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center p-4 text-muted-foreground h-full flex items-center justify-center">
+          {isError ? t("chart_error") : t("chart_no_data")}
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className="h-80">
       <CardHeader>
         <CardTitle>{t('chart_title_appointment_status')}</CardTitle>
       </CardHeader>
-      <CardContent className="h-96">
+      <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}

@@ -25,13 +25,13 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
 
   if (isLoading) {
     return (
-      <Card className="col-span-12 lg:col-span-8">
+      <Card className="h-80">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex justify-center items-center h-96">
+        <CardContent className="flex justify-center items-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
       </Card>
@@ -40,13 +40,13 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
 
   if (isError || formattedData.length === 0) {
     return (
-      <Card className="col-span-12 lg:col-span-8">
+      <Card className="h-80">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center p-4 text-muted-foreground h-96 flex items-center justify-center">
+        <CardContent className="text-center p-4 text-muted-foreground h-full flex items-center justify-center">
           {isError ? t("chart_error") : t("chart_no_data_today")}
         </CardContent>
       </Card>
@@ -54,13 +54,13 @@ const DailyServiceByHourChart: React.FC<DailyServiceByHourChartProps> = ({ compa
   }
 
   return (
-    <Card className="col-span-12 lg:col-span-8">
+    <Card className="h-80">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
           <Clock className="h-5 w-5" /> {t('chart_title_daily_services')}
         </CardTitle>
       </CardHeader>
-      <CardContent className="h-96 p-0">
+      <CardContent className="h-[calc(100%-4rem)] p-0">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={formattedData}
