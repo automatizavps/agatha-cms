@@ -52,18 +52,18 @@ const TeamGoalsCard: React.FC<TeamGoalsCardProps> = ({ team }) => {
             {/* Meta de Valor */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                {/* Reduzindo o tamanho da fonte do label */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {/* Reduzindo o tamanho da fonte do label para text-xs */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <DollarSign className="h-4 w-4" />
                   {t('team_meta_value')}
                 </div>
-                {/* Reduzindo o tamanho da fonte do valor e garantindo que fique em uma linha */}
-                <span className="text-base font-bold text-primary whitespace-nowrap">
+                {/* Reduzindo o tamanho da fonte do valor para text-sm */}
+                <span className="text-sm font-bold text-primary whitespace-nowrap">
                   {formatCurrency(valueProgress)} / {formatCurrency(team.meta_mensal_valor)}
                 </span>
               </div>
               <Progress value={valuePercentage} className="h-2" />
-              <p className="text-sm font-medium text-right text-muted-foreground">
+              <p className="text-xs font-medium text-right text-muted-foreground">
                 {valuePercentage.toFixed(0)}% {t('achieved')}
               </p>
             </div>
@@ -73,18 +73,18 @@ const TeamGoalsCard: React.FC<TeamGoalsCardProps> = ({ team }) => {
             {/* Meta de Quantidade */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                {/* Reduzindo o tamanho da fonte do label */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {/* Reduzindo o tamanho da fonte do label para text-xs */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Users className="h-4 w-4" />
                   {t('team_meta_quantity')}
                 </div>
-                {/* Reduzindo o tamanho da fonte do valor e garantindo que fique em uma linha */}
-                <span className="text-base font-bold whitespace-nowrap">
+                {/* Reduzindo o tamanho da fonte do valor para text-sm */}
+                <span className="text-sm font-bold whitespace-nowrap">
                   {quantityProgress} / {team.meta_mensal_quantidade} {t('units')}
                 </span>
               </div>
               <Progress value={quantityPercentage} className="h-2" />
-              <p className="text-sm font-medium text-right text-muted-foreground">
+              <p className="text-xs font-medium text-right text-muted-foreground">
                 {quantityPercentage.toFixed(0)}% {t('achieved')}
               </p>
             </div>
