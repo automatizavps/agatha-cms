@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   return (
     <div 
       className={cn(
-        "flex h-full flex-col border-r bg-sidebar p-4 shadow-lg transition-all duration-300",
+        "flex h-full flex-col border-r bg-sidebar px-4 py-0 shadow-lg transition-all duration-300",
         isCollapsed ? "w-[70px]" : "w-full"
       )}
     >
@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         </h1>
         {isCollapsed && <Home className="h-6 w-6 text-sidebar-primary" />}
       </div>
-      <nav className="grid gap-2 text-sm font-medium">
+      <nav className="grid gap-2 text-sm font-medium overflow-y-auto pb-4">
         
         {/* Categoria: Geral */}
         {!isCollapsed && (
