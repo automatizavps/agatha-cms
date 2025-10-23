@@ -18,23 +18,26 @@ export interface TopSellingItem {
 
 /**
  * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
- * nos últimos 24h e 7 dias.
+ * na data atual e na semana atual.
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
 const fetchRevenueMetrics = async (companyId: string | undefined): Promise<RevenueMetrics> => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(today.getDate() - 7);
+  // Define o início do dia de hoje (00:00:00)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  
+  // Define o início da semana (Domingo, 00:00:00)
+  const dayOfWeek = todayStart.getDay(); // 0 = Domingo, 6 = Sábado
+  const weekStart = new Date(todayStart);
+  weekStart.setDate(todayStart.getDate() - dayOfWeek);
 
-  // 1. Faturamento Diário (últimas 24h)
+
+  // 1. Faturamento Diário (Hoje)
   let dailyQuery = supabase
     .from("pedidos")
     .select("valor_total")
     .eq("status", "entregue")
-    .gte("created_at", yesterday.toISOString());
+    .gte("created_at", todayStart.toISOString());
     
   if (companyId) {
     dailyQuery = dailyQuery.eq("empresa_id", companyId);
@@ -49,12 +52,12 @@ const fetchRevenueMetrics = async (companyId: string | undefined): Promise<Reven
   
   const daily_revenue = dailyData.reduce((sum, order) => sum + order.valor_total, 0);
 
-  // 2. Faturamento Semanal (últimos 7 dias)
+  // 2. Faturamento Semanal (Esta Semana)
   let weeklyQuery = supabase
     .from("pedidos")
     .select("valor_total")
     .eq("status", "entregue")
-    .gte("created_at", sevenDaysAgo.toISOString());
+    .gte("created_at", weekStart.toISOString());
     
   if (companyId) {
     weeklyQuery = weeklyQuery.eq("empresa_id", companyId);
@@ -123,10 +126,12 @@ const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]
 // --- Hooks de Uso ---
 
 export const useRevenueMetrics = (companyId: string | undefined) => {
+  // Adiciona a data atual na query key para garantir que o cache seja atualizado diariamente
+  const currentDate = new Date().toISOString().slice(0, 10); 
+  
   return useQuery<RevenueMetrics, Error>({
-    queryKey: ["revenueMetrics", companyId],
+    queryKey: ["revenueMetrics", companyId, currentDate],
     queryFn: () => fetchRevenueMetrics(companyId),
-    // Sempre habilitado se não estiver carregando o filtro
     enabled: true, 
   });
 };
@@ -143,7 +148,6 @@ export const useTopSellingItems = (companyId: string | undefined) => {
   return useQuery<TopSellingItem[], Error>({
     queryKey: ["topSellingItems", companyId],
     queryFn: () => fetchTopSellingItems(companyId!),
-    // Habilitado APENAS se houver um companyId (a RPC exige)
     enabled: !!companyId,
   });
 };

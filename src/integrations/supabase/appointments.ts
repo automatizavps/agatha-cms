@@ -39,7 +39,7 @@ export interface Appointment {
 
 // --- Fetch Geral ---
 
-const fetchAppointments = async (companyId?: string): Promise<Appointment[]> => {
+const fetchAppointments = async (companyId?: string, dateFilter?: 'today'): Promise<Appointment[]> => {
   let query = supabase
     .from("agendamentos")
     .select(`
@@ -55,9 +55,22 @@ const fetchAppointments = async (companyId?: string): Promise<Appointment[]> => 
       empresas (nome)
     `);
     
-  // Se companyId for fornecido, filtramos. Se for undefined (Todas as Empresas), não filtramos.
+  // 1. Filtrar por Empresa
   if (companyId) {
     query = query.eq('empresa_id', companyId);
+  }
+  
+  // 2. Filtrar por Data (se 'today' for especificado)
+  if (dateFilter === 'today') {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(todayStart.getDate() + 1);
+    
+    // Filtra agendamentos que ocorrem entre 00:00:00 de hoje e 00:00:00 de amanhã
+    query = query
+      .gte('data_hora', todayStart.toISOString())
+      .lt('data_hora', tomorrowStart.toISOString());
   }
 
   const { data, error } = await query.order("data_hora", { ascending: true });
@@ -70,10 +83,10 @@ const fetchAppointments = async (companyId?: string): Promise<Appointment[]> => 
   return data as Appointment[];
 };
 
-export const useAppointments = (companyId?: string) => {
+export const useAppointments = (companyId?: string, dateFilter?: 'today') => {
   return useQuery<Appointment[], Error>({
-    queryKey: ["appointments", companyId],
-    queryFn: () => fetchAppointments(companyId),
+    queryKey: ["appointments", companyId, dateFilter],
+    queryFn: () => fetchAppointments(companyId, dateFilter),
   });
 };
 

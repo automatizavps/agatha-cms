@@ -99,7 +99,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">{t('daily_revenue_overview')}</p>
+              <p className="text-xs text-muted-foreground">Pedidos entregues hoje</p>
             </CardContent>
           </Card>
           
@@ -111,7 +111,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(revenueMetrics?.weekly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">{t('weekly_revenue_overview')}</p>
+              <p className="text-xs text-muted-foreground">Pedidos entregues esta semana</p>
             </CardContent>
           </Card>
           
@@ -135,7 +135,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(metrics.totalAppointments)}
-              <p className="text-xs text-muted-foreground">{t('appointments_overview')}</p>
+              <p className="text-xs text-muted-foreground">Agendamentos para hoje</p>
             </CardContent>
           </Card>
           
@@ -147,7 +147,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(metrics.pendingAppointments)}
-              <p className="text-xs text-muted-foreground">{t('pending_status')}</p>
+              <p className="text-xs text-muted-foreground">Pendentes para hoje</p>
             </CardContent>
           </Card>
         </div>

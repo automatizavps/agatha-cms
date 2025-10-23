@@ -1,5 +1,4 @@
 import { useAppointments, Appointment } from "./appointments";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando o hook de filtro
 
 interface AppointmentMetrics {
   totalAppointments: number;
@@ -8,8 +7,8 @@ interface AppointmentMetrics {
 }
 
 export const useAppointmentMetrics = (companyId?: string) => {
-  // Passamos companyId para useAppointments, que agora lida com o filtro opcional
-  const { data: appointments, isLoading, isError, error } = useAppointments(companyId);
+  // Passamos companyId e o filtro 'today' para useAppointments
+  const { data: appointments, isLoading, isError, error } = useAppointments(companyId, 'today');
 
   const metrics: AppointmentMetrics = {
     totalAppointments: 0,

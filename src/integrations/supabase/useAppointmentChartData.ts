@@ -17,8 +17,8 @@ const statusColors: Record<Appointment['status'], string> = {
 
 export const useAppointmentChartData = () => {
   const { filteredCompanyId } = useDashboardFilter();
-  // Passamos filteredCompanyId para useAppointments
-  const { data: appointments, isLoading, isError, error } = useAppointments(filteredCompanyId);
+  // Passamos filteredCompanyId e o filtro 'today' para useAppointments
+  const { data: appointments, isLoading, isError, error } = useAppointments(filteredCompanyId, 'today');
 
   const metrics: ChartData[] = [];
 
