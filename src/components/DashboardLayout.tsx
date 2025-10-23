@@ -10,7 +10,6 @@ import BreadcrumbNavigation from "./BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { NotificationBell } from "./NotificationBell"; // Importando NotificationBell
-import LanguageSelector from "./LanguageSelector"; // Importando LanguageSelector
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -51,8 +50,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="w-full flex items-center justify-between">
             <h1 className="text-lg font-semibold">{t('app_name')}</h1>
             <div className="flex items-center gap-2">
-              <LanguageSelector /> {/* Adicionado aqui */}
-              <NotificationBell />
+              <NotificationBell /> {/* Adicionado aqui */}
               <ThemeToggle />
               <UserMenu />
             </div>
@@ -102,8 +100,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex-1">
             <BreadcrumbNavigation />
           </div>
-          <LanguageSelector /> {/* Adicionado aqui */}
-          <NotificationBell />
+          <NotificationBell /> {/* Adicionado aqui */}
           <ThemeToggle />
           <UserMenu />
         </header>
