@@ -36,8 +36,11 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   
-  // Perfis permitidos para Gerenciamento de Usuários, Clientes e Produtos: 1 (Super Admin) e 2 (Admin)
-  const canManage = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+  // Perfis permitidos para Gerenciamento de Usuários e Produtos: 1 (Super Admin) e 2 (Admin)
+  const canManageUsersAndProducts = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+  
+  // Perfis permitidos para Gerenciamento de Clientes: 1, 2 e 3
+  const canManageClients = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2 || profile.perfil_id === 3);
 
   return (
     <div className="flex h-full flex-col border-r bg-sidebar p-4 shadow-lg">
@@ -67,21 +70,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
           onClick={onNavigate}
         />
 
-        {canManage && (
+        {canManageClients && (
+          <NavItem
+            to="/clients"
+            icon={<Briefcase className="h-5 w-5" />}
+            label="Clientes"
+            onClick={onNavigate}
+          />
+        )}
+
+        {canManageUsersAndProducts && (
           <>
-            <Separator className="my-2 bg-sidebar-border" />
-            {/* Categoria: Gestão */}
-            <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">Gestão</div>
             <NavItem
               to="/products"
               icon={<Package className="h-5 w-5" />}
               label="Produtos/Serviços"
-              onClick={onNavigate}
-            />
-            <NavItem
-              to="/clients"
-              icon={<Briefcase className="h-5 w-5" />}
-              label="Clientes"
               onClick={onNavigate}
             />
             <NavItem
