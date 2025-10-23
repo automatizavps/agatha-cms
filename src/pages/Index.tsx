@@ -53,9 +53,9 @@ const Index = () => {
       return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
     }
     if (isCurrency) {
-      return <div className="text-2xl font-bold">{formatCurrency(value as number)}</div>;
+      return <div className="text-xl font-bold">{formatCurrency(value as number)}</div>;
     }
-    return <div className="text-2xl font-bold">{value}</div>;
+    return <div className="text-xl font-bold">{value}</div>;
   };
 
   return (
