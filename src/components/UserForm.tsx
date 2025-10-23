@@ -81,6 +81,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
                   placeholder="email@exemplo.com" 
                   {...field} 
                   disabled={isEditing || isSubmitting} // Desabilita email na edição
+                  value={field.value || ""} // Garante que o valor seja sempre uma string
                 />
               </FormControl>
               <FormMessage />

@@ -73,6 +73,11 @@ serve(async (req) => {
       headers: corsHeaders,
     });
   }
+  
+  // Garantir que o redirectTo seja um URL completo e seguro (usando a URL base + /login)
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const redirectUrl = `${supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl}/auth/v1/verify?redirect_to=/login`;
+
 
   // 3. Convidar o usuário usando o Service Role Key
   const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
@@ -82,7 +87,7 @@ serve(async (req) => {
         full_name: full_name,
         perfil_id: perfil_id, // Passamos o perfil_id para o raw_user_meta_data
       },
-      redirectTo: Deno.env.get("SUPABASE_URL"), // Opcional: Redirecionar após o aceite
+      redirectTo: redirectUrl, // Usando o URL de redirecionamento corrigido
     }
   );
 
@@ -93,31 +98,6 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  // 4. Atualizar o perfil do usuário recém-criado (se o trigger não for suficiente)
-  // O trigger handle_new_user só insere o perfil, mas não usa o perfil_id passado no invite.
-  // Precisamos garantir que o perfil_id seja definido corretamente.
-  
-  // O trigger handle_new_user precisa ser ajustado para ler o perfil_id do raw_user_meta_data.
-  // Vamos assumir que o trigger será ajustado para ler 'perfil_id' do raw_user_meta_data.
-  
-  // Se o trigger handle_new_user for:
-  /*
-  CREATE OR REPLACE FUNCTION public.handle_new_user()
-  ...
-  BEGIN
-    INSERT INTO public.usuarios (id, nome_completo, perfil_id)
-    VALUES (
-      new.id, 
-      new.raw_user_meta_data ->> 'full_name', 
-      (new.raw_user_meta_data ->> 'perfil_id')::int -- Lendo o perfil_id
-    );
-    RETURN new;
-  END;
-  */
-  
-  // Como o trigger existente só usa o perfil padrão (3), precisamos ajustá-lo.
-  // Vou ajustar o trigger no passo 4c.
 
   return new Response(JSON.stringify({ message: "User invited successfully", user: inviteData.user }), {
     status: 200,
