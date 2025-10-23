@@ -1,9 +1,18 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
+import { useUsers } from "@/integrations/supabase/users";
+import UserTable from "@/components/UserTable";
+import { showError } from "@/utils/toast";
 
 const Users = () => {
+  const { data: users, isLoading, isError, error } = useUsers();
+
+  if (isError) {
+    showError("Erro ao carregar usuários: " + error.message);
+  }
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
@@ -18,11 +27,21 @@ const Users = () => {
           <CardTitle>User List</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">User data table will be displayed here.</p>
-          {/* Placeholder for user table */}
-          <div className="h-64 w-full rounded-lg border border-dashed flex items-center justify-center text-muted-foreground mt-4">
-            Table of Users
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : isError ? (
+            <div className="text-center text-destructive p-4 border border-destructive rounded-md">
+              Não foi possível carregar os dados dos usuários.
+            </div>
+          ) : users && users.length > 0 ? (
+            <UserTable users={users} />
+          ) : (
+            <div className="text-center p-4 text-muted-foreground">
+              Nenhum usuário encontrado para esta empresa.
+            </div>
+          )}
         </CardContent>
       </Card>
     </DashboardLayout>
