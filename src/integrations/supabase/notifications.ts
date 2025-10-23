@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { useSession } from "./auth";
 
@@ -79,9 +79,10 @@ interface CreateNotificationParams {
   titulo: string;
   mensagem?: string;
   link?: string;
+  queryClient: QueryClient; // Adicionando QueryClient
 }
 
-export const createNotification = async ({ user_id, empresa_id, titulo, mensagem, link }: CreateNotificationParams) => {
+export const createNotification = async ({ user_id, empresa_id, titulo, mensagem, link, queryClient }: CreateNotificationParams) => {
   const { error } = await supabase
     .from("notificacoes")
     .insert({
@@ -99,6 +100,5 @@ export const createNotification = async ({ user_id, empresa_id, titulo, mensagem
   }
   
   // Invalida a query de notificações para atualizar o sino
-  const queryClient = new useQueryClient();
   queryClient.invalidateQueries({ queryKey: ["notifications", user_id] });
 };

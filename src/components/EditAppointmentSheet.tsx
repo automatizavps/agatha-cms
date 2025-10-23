@@ -41,6 +41,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
       responsavel_id: values.responsavel_id,
       data_hora: values.data_hora,
       status: values.status,
+      queryClient: queryClient, // Passando o queryClient
     });
   };
 

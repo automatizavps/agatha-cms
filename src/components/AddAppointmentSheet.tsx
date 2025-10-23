@@ -25,8 +25,8 @@ const AddAppointmentSheet = () => {
     },
   });
 
-  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date }) => {
-    mutation.mutate(values);
+  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: any[] }) => {
+    mutation.mutate({ ...values, queryClient });
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { createNotification } from "./notifications"; // Importando
 
@@ -111,9 +111,10 @@ interface CreateAppointmentParams {
   responsavel_id: string;
   data_hora: Date;
   items: ItemToCreate[]; // Novo campo
+  queryClient: QueryClient; // Adicionando QueryClient
 }
 
-export const createAppointment = async ({ cliente_id, responsavel_id, data_hora, items }: CreateAppointmentParams) => {
+export const createAppointment = async ({ cliente_id, responsavel_id, data_hora, items, queryClient }: CreateAppointmentParams) => {
   // 1. Obter o ID da empresa do usuário logado
   const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
 
@@ -179,6 +180,7 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora,
       titulo: "Novo Agendamento Criado",
       mensagem: `Agendamento criado para ${data_hora.toLocaleDateString('pt-BR')} às ${data_hora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`,
       link: "/appointments",
+      queryClient: queryClient,
     });
   }
 
@@ -194,10 +196,11 @@ interface UpdateAppointmentParams {
   responsavel_id: string;
   data_hora: Date;
   status: Appointment['status'];
+  queryClient: QueryClient; // Adicionando QueryClient
   // Itens não são atualizados via este endpoint, apenas o status e dados principais
 }
 
-export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_hora, status }: UpdateAppointmentParams) => {
+export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_hora, status, queryClient }: UpdateAppointmentParams) => {
   const { data, error } = await supabase
     .from("agendamentos")
     .update({
@@ -224,12 +227,12 @@ export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_h
       titulo: "Status do Agendamento Atualizado",
       mensagem: `O agendamento foi alterado para o status: ${status}.`,
       link: "/appointments",
+      queryClient: queryClient,
     });
   }
   
   // 3. Invalida a query de métricas diárias se o status for 'concluido'
   if (status === 'concluido') {
-    const queryClient = new useQueryClient();
     const currentDate = new Date().toISOString().slice(0, 10);
     // Invalida a query que alimenta o gráfico de serviços por hora
     queryClient.invalidateQueries({ queryKey: ["dailyServiceByHour", data.empresa_id, currentDate] });
