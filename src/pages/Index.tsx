@@ -63,7 +63,7 @@ const Index = () => {
       <div className="flex flex-col gap-6">
         <h1 className="text-3xl font-bold tracking-tight">{t('dashboard_title')}</h1>
         
-        {/* Filtro de Empresa (Apenas Super Admin) - Removida a restrição de largura em telas pequenas/médias */}
+        {/* Filtro de Empresa (Apenas Super Admin) */}
         {isSuperAdmin && (
           <div className="w-full md:w-64">
             <Select 
@@ -163,42 +163,7 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Gráficos de Agendamentos */}
-        <div className="grid gap-6 grid-cols-12">
-          {/* Gráfico de Serviços por Hora (Linha) */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-8">
-            <DailyServiceByHourChart />
-          </div>
-          
-          {/* Gráfico de Status de Agendamentos (Barra) */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-4">
-            <AppointmentStatusChart />
-          </div>
-        </div>
-        
-        {/* Seção 2.1: Gráficos de Pedidos */}
-        <div className="grid gap-6 grid-cols-12">
-          {/* Gráfico de Pedidos Entregues por Hora (Linha) */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-8">
-            <DailyOrderByHourChart />
-          </div>
-          
-          {/* Gráfico de Status dos Pedidos (Barra) */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-4">
-            <OrderStatusChart />
-          </div>
-        </div>
-        
-        {/* Seção 4: Últimos Produtos Cadastrados (Carousel) */}
-        <LatestProductsCarousel companyId={filteredCompanyId} />
-        
-        {/* Seção 5: Top 10 Produtos e Serviços Mais Vendidos */}
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-          <TopSellingItemsCard companyId={filteredCompanyId} />
-          <TopSellingServicesCard companyId={filteredCompanyId} />
-        </div>
-        
-        {/* Seção 3: Metas das Equipes (MOVIDA PARA CÁ) */}
+        {/* Seção 2: Metas das Equipes (NOVA POSIÇÃO) */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Target className="h-6 w-6 text-muted-foreground" />
@@ -222,6 +187,41 @@ const Index = () => {
               ))}
             </div>
           )}
+        </div>
+        
+        {/* Seção 3: Gráficos de Agendamentos */}
+        <div className="grid gap-6 grid-cols-12">
+          {/* Gráfico de Serviços por Hora (Linha) */}
+          <div className="col-span-12 md:col-span-6 lg:col-span-8">
+            <DailyServiceByHourChart />
+          </div>
+          
+          {/* Gráfico de Status de Agendamentos (Barra) */}
+          <div className="col-span-12 md:col-span-6 lg:col-span-4">
+            <AppointmentStatusChart />
+          </div>
+        </div>
+        
+        {/* Seção 4: Gráficos de Pedidos */}
+        <div className="grid gap-6 grid-cols-12">
+          {/* Gráfico de Pedidos Entregues por Hora (Linha) */}
+          <div className="col-span-12 md:col-span-6 lg:col-span-8">
+            <DailyOrderByHourChart />
+          </div>
+          
+          {/* Gráfico de Status dos Pedidos (Barra) */}
+          <div className="col-span-12 md:col-span-6 lg:col-span-4">
+            <OrderStatusChart />
+          </div>
+        </div>
+        
+        {/* Seção 5: Últimos Produtos Cadastrados (Carousel) */}
+        <LatestProductsCarousel companyId={filteredCompanyId} />
+        
+        {/* Seção 6: Top 10 Produtos e Serviços Mais Vendidos */}
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+          <TopSellingItemsCard companyId={filteredCompanyId} />
+          <TopSellingServicesCard companyId={filteredCompanyId} />
         </div>
         
       </div>
