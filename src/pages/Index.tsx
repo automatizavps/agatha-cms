@@ -1,7 +1,7 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building } from "lucide-react";
+import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered } from "lucide-react";
 import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMetrics";
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { cn } from "@/lib/utils"; // Importando cn
 import LatestProductsCarousel from "@/components/LatestProductsCarousel"; // Importando o novo componente
+import TopSellingItemsCard from "@/components/TopSellingItemsCard"; // Importando o novo componente
 
 const Index = () => {
   const { t } = useTranslation();
@@ -152,29 +153,38 @@ const Index = () => {
         {/* Seção 2: Últimos Produtos Cadastrados (Carousel) */}
         <LatestProductsCarousel />
         
-        {/* Seção 3: Metas das Equipes */}
-        <h2 className="text-2xl font-bold tracking-tight pt-4 flex items-center gap-2">
-          <Target className="h-6 w-6 text-muted-foreground" />
-          {t('team_goals_section_title')}
-        </h2>
-        
-        {isLoadingTeams ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        {/* Seção 3: Top 10 Produtos Mais Vendidos e Metas das Equipes */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          
+          {/* Top 10 Produtos Mais Vendidos (Ocupa 2/3 no desktop) */}
+          <TopSellingItemsCard companyId={filteredCompanyId} />
+          
+          {/* Metas das Equipes (Ocupa 1/3 no desktop) */}
+          <div className="lg:col-span-1 flex flex-col gap-4">
+            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Target className="h-6 w-6 text-muted-foreground" />
+              {t('team_goals_section_title')}
+            </h2>
+            
+            {isLoadingTeams ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : isTeamsError || !teams || teams.length === 0 ? (
+              <Card>
+                <CardContent className="p-4 text-muted-foreground">
+                  {t('no_teams_found')}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {teams.map((team) => (
+                  <TeamGoalsCard key={team.id} team={team} />
+                ))}
+              </div>
+            )}
           </div>
-        ) : isTeamsError || !teams || teams.length === 0 ? (
-          <Card>
-            <CardContent className="p-4 text-muted-foreground">
-              {t('no_teams_found')}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {teams.map((team) => (
-              <TeamGoalsCard key={team.id} team={team} />
-            ))}
-          </div>
-        )}
+        </div>
         
         <div className="mt-4">
           <MadeWithDyad />

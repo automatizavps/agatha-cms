@@ -9,6 +9,12 @@ interface RevenueMetrics {
   weekly_revenue: number;
 }
 
+export interface TopSellingItem {
+  produto_id: string;
+  nome_produto: string;
+  total_vendido: number;
+}
+
 /**
  * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
  * nos últimos 24h e 7 dias.
@@ -74,6 +80,25 @@ const fetchProductCount = async (companyId: string): Promise<number> => {
   return count || 0;
 };
 
+/**
+ * Busca os 10 itens mais vendidos (produtos e serviços) para a empresa.
+ * @param companyId O ID da empresa a ser filtrada.
+ */
+const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]> => {
+  const { data, error } = await supabase.rpc('get_top_selling_items', { company_id_input: companyId });
+
+  if (error) {
+    console.error("Error fetching top selling items:", error);
+    throw new Error("Failed to fetch top selling items: " + error.message);
+  }
+  
+  // Converte total_vendido para número
+  return data.map(item => ({
+    ...item,
+    total_vendido: parseInt(item.total_vendido) || 0,
+  })) as TopSellingItem[];
+};
+
 
 // --- Hooks de Uso ---
 
@@ -114,6 +139,14 @@ export const useProductCount = (companyId: string | undefined) => {
   return useQuery<number, Error>({
     queryKey: ["productCount", companyId],
     queryFn: () => fetchProductCount(companyId!),
+    enabled: !!companyId,
+  });
+};
+
+export const useTopSellingItems = (companyId: string | undefined) => {
+  return useQuery<TopSellingItem[], Error>({
+    queryKey: ["topSellingItems", companyId],
+    queryFn: () => fetchTopSellingItems(companyId!),
     enabled: !!companyId,
   });
 };
