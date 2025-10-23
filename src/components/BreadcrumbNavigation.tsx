@@ -16,7 +16,8 @@ const routeNameMap: Record<string, string> = {
   "/analytics": "Analytics",
   "/users": "Gestão de Usuários",
   "/clients": "Gestão de Clientes",
-  "/products": "Produtos/Serviços", // Novo mapeamento
+  "/products": "Produtos/Serviços",
+  "/companies": "Gestão de Empresas", // Novo mapeamento
   "/settings": "Configurações",
   "/appointments": "Agendamentos",
 };

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -41,6 +41,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   
   // Perfis permitidos para Gerenciamento de Clientes: 1, 2 e 3
   const canManageClients = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2 || profile.perfil_id === 3);
+
+  // Perfil permitido para Gerenciamento de Empresas: 1 (Super Admin)
+  const isSuperAdmin = !isLoading && profile && profile.perfil_id === 1;
 
   return (
     <div className="flex h-full flex-col border-r bg-sidebar p-4 shadow-lg">
@@ -94,6 +97,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
               onClick={onNavigate}
             />
           </>
+        )}
+        
+        {isSuperAdmin && (
+          <NavItem
+            to="/companies"
+            icon={<Building className="h-5 w-5" />}
+            label="Empresas"
+            onClick={onNavigate}
+          />
         )}
         
         <Separator className="my-2 bg-sidebar-border" />
