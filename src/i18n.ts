@@ -19,6 +19,7 @@ const resources = {
       "edit": "Editar",
       "delete": "Excluir",
       "confirm_delete": "Tem certeza que deseja excluir?",
+      "achieved": "atingido", // NOVO
       
       // Navegação
       "nav_home": "Home",
@@ -175,6 +176,7 @@ const resources = {
       "edit": "Edit",
       "delete": "Delete",
       "confirm_delete": "Are you sure you want to delete?",
+      "achieved": "achieved", // NOVO
 
       // Navigation
       "nav_home": "Home",
@@ -331,6 +333,7 @@ const resources = {
       "edit": "Editar",
       "delete": "Eliminar",
       "confirm_delete": "¿Está seguro que desea eliminar?",
+      "achieved": "alcanzado", // NOVO
 
       // Navegación
       "nav_home": "Inicio",
@@ -487,6 +490,7 @@ const resources = {
       "edit": "Modifier",
       "delete": "Supprimer",
       "confirm_delete": "Êtes-vous sûr de vouloir supprimer?",
+      "achieved": "atteint", // NOVO
 
       // Navigation
       "nav_home": "Accueil",
@@ -643,6 +647,7 @@ const resources = {
       "edit": "Modifica",
       "delete": "Elimina",
       "confirm_delete": "Sei sicuro di voler eliminare?",
+      "achieved": "raggiunto", // NOVO
 
       // Navigazione
       "nav_home": "Home",
@@ -799,6 +804,7 @@ const resources = {
       "edit": "Bearbeiten",
       "delete": "Löschen",
       "confirm_delete": "Sind Sie sicher, dass Sie löschen möchten?",
+      "achieved": "erreicht", // NOVO
 
       // Navegação
       "nav_home": "Startseite",
@@ -955,6 +961,7 @@ const resources = {
       "edit": "編集",
       "delete": "削除",
       "confirm_delete": "本当に削除しますか？",
+      "achieved": "達成", // NOVO
 
       // Navegação
       "nav_home": "ホーム",
