@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import React from "react"; // Importando React
+import React from "react";
 
 interface NavItemProps {
   to: string;
@@ -21,14 +21,15 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick, isSubItem = false }) => {
   
   const renderIcon = (isActive: boolean) => {
+    // Cor do ícone: Branco quando ativo, Roxo quando inativo
     const iconColorClass = isActive 
-      ? "text-sidebar-primary-foreground" // Branco/Claro quando ativo
-      : "text-sidebar-primary"; // Roxo quando inativo (para destaque visual)
+      ? "text-sidebar-primary-foreground" // Branco
+      : "text-sidebar-primary"; // Roxo
       
     const iconClasses = cn(
       "h-5 w-5 flex-shrink-0", 
       iconColorClass,
-      isCollapsed ? "mr-0" : "mr-0" // Remove margem para o ícone herdar o espaçamento do flex
+      isCollapsed ? "mr-0" : "mr-0"
     );
     
     // Clona o elemento para injetar as classes de cor
@@ -173,7 +174,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                 )}
               >
                 <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
-                  <Package className="h-5 w-5 text-sidebar-primary" /> {/* Ícone do Trigger sempre roxo */}
+                  {/* Ícone do Trigger deve ser roxo, pois não é um item de rota */}
+                  <Package className="h-5 w-5 text-sidebar-primary" /> 
                   {!isCollapsed && t('nav_products_services')}
                 </div>
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
