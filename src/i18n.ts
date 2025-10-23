@@ -62,6 +62,7 @@ const resources = {
       "weekly_revenue_overview": "Pedidos entregues nos últimos 7 dias",
       "total_products": "Total de Produtos",
       "total_products_overview": "Produtos cadastrados na empresa",
+      "latest_products_title": "Últimos Produtos Cadastrados", // NOVO
       
       // Páginas
       "page_title_analytics": "Analytics",
@@ -261,6 +262,7 @@ const resources = {
       "weekly_revenue_overview": "Orders delivered in the last 7 days",
       "total_products": "Total Products",
       "total_products_overview": "Products registered in the company",
+      "latest_products_title": "Latest Registered Products", // NOVO
 
       // Pages
       "page_title_analytics": "Analytics",

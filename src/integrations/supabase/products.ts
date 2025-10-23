@@ -97,6 +97,31 @@ export const useServicesOnly = () => {
   });
 };
 
+// --- Fetch Latest Products Only (tipo='produto') ---
+
+const fetchLatestProductsOnly = async (): Promise<Product[]> => {
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
+    .eq('tipo', 'produto')
+    .order("created_at", { ascending: false }) // Order by creation date descending
+    .limit(10); // Limit to 10
+
+  if (error) {
+    console.error("Error fetching latest products:", error);
+    throw new Error("Failed to fetch latest products");
+  }
+
+  return data as Product[];
+};
+
+export const useLatestProductsOnly = () => {
+  return useQuery<Product[], Error>({
+    queryKey: ["latest_products_only"],
+    queryFn: fetchLatestProductsOnly,
+  });
+};
+
 
 // --- Create ---
 

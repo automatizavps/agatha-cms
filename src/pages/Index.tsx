@@ -12,6 +12,7 @@ import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { cn } from "@/lib/utils"; // Importando cn
+import LatestProductsCarousel from "@/components/LatestProductsCarousel"; // Importando o novo componente
 
 const Index = () => {
   const { t } = useTranslation();
@@ -148,7 +149,10 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Metas das Equipes */}
+        {/* Seção 2: Últimos Produtos Cadastrados (Carousel) */}
+        <LatestProductsCarousel />
+        
+        {/* Seção 3: Metas das Equipes */}
         <h2 className="text-2xl font-bold tracking-tight pt-4 flex items-center gap-2">
           <Target className="h-6 w-6 text-muted-foreground" />
           {t('team_goals_section_title')}
