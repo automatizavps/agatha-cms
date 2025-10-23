@@ -7,11 +7,13 @@ interface NavItemProps {
   to: string;
   icon: React.ReactNode;
   label: string;
+  onClick?: () => void; // Adiciona prop onClick
 }
 
-const NavItem: React.FC<NavItemProps> = ({ to, icon, label }) => (
+const NavItem: React.FC<NavItemProps> = ({ to, icon, label, onClick }) => (
   <NavLink
     to={to}
+    onClick={onClick} // Chama onClick ao navegar
     className={({ isActive }) =>
       cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -26,7 +28,11 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label }) => (
   </NavLink>
 );
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onNavigate?: () => void; // Nova prop para fechar o menu no mobile
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   
   // Perfis permitidos para Gerenciamento de Usuários: 1 (Super Admin) e 2 (Admin)
@@ -38,11 +44,12 @@ const Sidebar: React.FC = () => {
         <h1 className="text-xl font-bold text-sidebar-primary">App Dashboard</h1>
       </div>
       <nav className="grid gap-2 text-sm font-medium">
-        <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" />
+        <NavItem to="/" icon={<Home className="h-5 w-5" />} label="Home" onClick={onNavigate} />
         <NavItem
           to="/analytics"
           icon={<BarChart3 className="h-5 w-5" />}
           label="Analytics"
+          onClick={onNavigate}
         />
         
         {canManageUsers && (
@@ -50,6 +57,7 @@ const Sidebar: React.FC = () => {
             to="/users"
             icon={<Users className="h-5 w-5" />}
             label="Users"
+            onClick={onNavigate}
           />
         )}
         
@@ -57,6 +65,7 @@ const Sidebar: React.FC = () => {
           to="/settings"
           icon={<Settings className="h-5 w-5" />}
           label="Settings"
+          onClick={onNavigate}
         />
       </nav>
     </div>
