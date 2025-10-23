@@ -24,7 +24,7 @@ import { useProductsOnly, useServicesOnly, Product } from "@/integrations/supaba
 import { OrderStatus } from "@/integrations/supabase/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -55,7 +55,6 @@ interface ItemToCreate {
 interface OrderFormProps {
   onSubmit: (values: { cliente_id: string; valor_total: number; items: ItemToCreate[]; status?: OrderStatus }) => void;
   isSubmitting: boolean;
-  // defaultValues não será usado para edição complexa de itens, apenas para cliente/status
   defaultValues?: Partial<OrderFormValues>; 
   isEditing?: boolean;
 }
@@ -84,6 +83,17 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     control: form.control,
     name: "items",
   });
+  
+  // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
+  useEffect(() => {
+    if (defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
+      form.reset({
+        ...form.getValues(),
+        items: defaultValues.items,
+      });
+    }
+  }, [defaultValues?.items, fields.length, form]);
+
 
   const calculateTotal = form.watch("items").reduce((sum, item) => {
     return sum + (item.quantidade * item.preco_unitario);
@@ -101,6 +111,13 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       form.setValue(`items.${index}.produto_id`, productId);
     }
   };
+  
+  // Função auxiliar para obter o nome do item
+  const getItemName = (productId: string) => {
+    const item = allItems.find(i => i.id === productId);
+    return item ? `${item.nome} (${item.tipo === 'produto' ? 'Produto' : 'Serviço'})` : 'Item Desconhecido';
+  };
+
 
   const handleSubmit = (values: OrderFormValues) => {
     onSubmit({
@@ -193,24 +210,34 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                   render={({ field: itemField }) => (
                     <FormItem>
                       <FormLabel>Produto/Serviço</FormLabel>
-                      <Select 
-                        onValueChange={(val) => handleProductChange(index, val)} 
-                        value={itemField.value} 
-                        disabled={isLoadingProducts || isLoadingServices || isSubmitting || isEditing}
-                      >
+                      {isEditing ? (
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={allItems.length === 0 ? "Carregando itens..." : "Selecione o item"} />
-                          </SelectTrigger>
+                          <Input 
+                            value={getItemName(itemField.value)} 
+                            disabled 
+                            className="bg-muted/50"
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {allItems.map((item) => (
-                            <SelectItem key={item.id} value={item.id}>
-                              {item.nome} ({item.tipo === 'produto' ? 'Produto' : 'Serviço'})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      ) : (
+                        <Select 
+                          onValueChange={(val) => handleProductChange(index, val)} 
+                          value={itemField.value} 
+                          disabled={isLoadingProducts || isLoadingServices || isSubmitting || isEditing}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={allItems.length === 0 ? "Carregando itens..." : "Selecione o item"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {allItems.map((item) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.nome} ({item.tipo === 'produto' ? 'Produto' : 'Serviço'})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

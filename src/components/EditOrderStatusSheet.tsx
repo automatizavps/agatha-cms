@@ -1,8 +1,9 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import OrderForm from "./OrderForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateOrderStatus, Order, OrderStatus } from "@/integrations/supabase/orders";
+import { updateOrderStatus, Order, OrderStatus, useOrderItems } from "@/integrations/supabase/orders";
 import { showSuccess, showError } from "@/utils/toast";
+import { Loader2 } from "lucide-react";
 
 interface EditOrderStatusSheetProps {
   order: Order;
@@ -12,6 +13,7 @@ interface EditOrderStatusSheetProps {
 
 const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
+  const { data: orderItems, isLoading: isLoadingItems } = useOrderItems(order.id);
 
   const mutation = useMutation({
     mutationFn: updateOrderStatus,
@@ -38,12 +40,32 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
     });
   };
 
-  // Valores iniciais para o formulário (apenas cliente e status são relevantes aqui)
+  // Valores iniciais para o formulário (incluindo os itens carregados)
   const initialValues = {
     cliente_id: order.cliente_id,
     status: order.status,
-    items: [], // Não carregamos itens para edição de status
+    // Mapeamos os itens carregados para o formato esperado pelo OrderForm
+    items: orderItems?.map(item => ({
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      preco_unitario: item.preco_unitario,
+    })) || [],
   };
+  
+  if (isLoadingItems) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
+        <SheetContent className="sm:max-w-lg flex flex-col">
+          <SheetHeader>
+            <SheetTitle>Carregando Pedido...</SheetTitle>
+          </SheetHeader>
+          <div className="py-4 flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
