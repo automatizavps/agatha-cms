@@ -34,11 +34,11 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
 
   if (isLoading) {
     return (
-      <Card className="h-80">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle>{t('chart_title_daily_services')}</CardTitle>
         </CardHeader>
-        <CardContent className="h-full flex items-center justify-center">
+        <CardContent className="flex justify-center items-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
       </Card>
@@ -47,7 +47,7 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
 
   if (isError || !data || data.length === 0 || data.every(d => d.count === 0)) {
     return (
-      <Card className="h-80">
+      <Card className="h-64">
         <CardHeader>
           <CardTitle>{t('chart_title_daily_services')}</CardTitle>
         </CardHeader>
@@ -61,7 +61,7 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
   const formattedData: DailyServiceCount[] = data;
 
   return (
-    <Card className="h-80">
+    <Card className="h-64">
       <CardHeader>
         <CardTitle>{t('chart_title_daily_services')}</CardTitle>
       </CardHeader>
@@ -70,9 +70,9 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
           <LineChart
             data={formattedData}
             margin={{
-              top: 10,
-              right: 10,
-              left: -10,
+              top: 5, // Reduzido
+              right: 5, // Reduzido
+              left: -15, // Ajustado para compensar
               bottom: 0,
             }}
           >
@@ -80,14 +80,14 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
             <XAxis
               dataKey="hour"
               stroke="hsl(var(--foreground))"
-              fontSize={12}
+              fontSize={10} // Reduzido
               tickLine={false}
               axisLine={false}
               tickFormatter={formatHour}
             />
             <YAxis
               stroke="hsl(var(--foreground))"
-              fontSize={12}
+              fontSize={10} // Reduzido
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${value}`}
@@ -100,8 +100,8 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
               name={t('services_completed')}
               stroke="hsl(var(--primary))"
               strokeWidth={2}
-              dot={{ r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ r: 3 }} // Reduzido
+              activeDot={{ r: 5 }} // Reduzido
             />
           </LineChart>
         </ResponsiveContainer>

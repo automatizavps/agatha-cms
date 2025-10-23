@@ -155,13 +155,11 @@ const Index = () => {
         {/* Seção 2: Gráficos de Serviços (Novo) */}
         <div className="grid gap-6 grid-cols-12">
           {/* Gráfico de Serviços por Hora (Linha) */}
-          {/* Reduzindo a altura para h-80 (320px) em telas grandes */}
           <div className="col-span-12 lg:col-span-8">
             <DailyServiceByHourChart companyId={filteredCompanyId} />
           </div>
           
           {/* Gráfico de Status de Agendamentos (Barra) - Ocupa o espaço restante */}
-          {/* Reduzindo a altura para h-80 (320px) em telas grandes */}
           <div className="col-span-12 lg:col-span-4">
             <AppointmentStatusChart />
           </div>
