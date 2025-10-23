@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import React from "react"; // Importando React
 
 interface NavItemProps {
   to: string;
@@ -18,6 +19,27 @@ interface NavItemProps {
 }
 
 const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick, isSubItem = false }) => {
+  
+  const renderIcon = (isActive: boolean) => {
+    const iconColorClass = isActive 
+      ? "text-sidebar-primary-foreground" // Branco/Claro quando ativo
+      : "text-sidebar-primary"; // Roxo quando inativo (para destaque visual)
+      
+    const iconClasses = cn(
+      "h-5 w-5 flex-shrink-0", 
+      iconColorClass,
+      isCollapsed ? "mr-0" : "mr-0" // Remove margem para o ícone herdar o espaçamento do flex
+    );
+    
+    // Clona o elemento para injetar as classes de cor
+    if (React.isValidElement(icon)) {
+      return React.cloneElement(icon as React.ReactElement, { 
+        className: cn(icon.props.className, iconClasses) 
+      });
+    }
+    return <span className={iconClasses}>{icon}</span>;
+  };
+  
   const content = (
     <NavLink
       to={to}
@@ -29,8 +51,8 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
         cn(
           "flex items-center rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           isActive
-            ? "bg-sidebar-primary text-sidebar-primary-foreground"
-            : "text-sidebar-foreground",
+            ? "bg-sidebar-primary text-sidebar-primary-foreground" // Ativo: Fundo roxo, texto branco
+            : "text-sidebar-foreground", // Inativo: Texto cinza (para o label)
           // Estilos para estado colapsado: pl-6 pr-2 para centralização visual
           isCollapsed ? "justify-start w-full pl-6 pr-2 gap-0" : "px-3 gap-3",
           // Estilos para sub-item
@@ -38,8 +60,12 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
         )
       }
     >
-      {icon}
-      {!isCollapsed && label}
+      {({ isActive }) => (
+        <>
+          {renderIcon(isActive)}
+          {!isCollapsed && label}
+        </>
+      )}
     </NavLink>
   );
 
@@ -143,11 +169,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
               <CollapsibleTrigger 
                 className={cn(
                   "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isCollapsed ? "justify-start pl-6 pr-2" : "px-3" // Aplicando pl-6 pr-2 aqui também
+                  isCollapsed ? "justify-start pl-6 pr-2" : "px-3"
                 )}
               >
                 <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
-                  <Package className="h-5 w-5" />
+                  <Package className="h-5 w-5 text-sidebar-primary" /> {/* Ícone do Trigger sempre roxo */}
                   {!isCollapsed && t('nav_products_services')}
                 </div>
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
