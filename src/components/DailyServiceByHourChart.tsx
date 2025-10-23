@@ -72,7 +72,7 @@ export default function DailyServiceByHourChart({ companyId }: DailyServiceByHou
             margin={{
               top: 5,
               right: 5,
-              left: 0, // Alterado de -15 para 0
+              left: -15,
               bottom: 0,
             }}
           >
