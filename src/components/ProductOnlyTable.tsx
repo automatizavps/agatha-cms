@@ -25,8 +25,9 @@ import { Badge } from "@/components/ui/badge";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 
-interface ProductOnlyTableProps {
+interface ProductTableProps {
   products: Product[];
+  onEdit?: (product: Product) => void; // Adicionando prop opcional
 }
 
 interface ProductActionsProps {
@@ -82,7 +83,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
 };
 
 
-const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
+const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEditProp }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
@@ -91,8 +92,14 @@ const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
   const isSuperAdmin = profile?.perfil_id === 1;
 
   const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setIsEditSheetOpen(true);
+    if (onEditProp) {
+      // Se a prop onEdit foi fornecida (vindo da página Products.tsx), usamos ela
+      onEditProp(product);
+    } else {
+      // Caso contrário, usamos o estado interno (se este componente for usado sozinho)
+      setEditingProduct(product);
+      setIsEditSheetOpen(true);
+    }
   };
 
   const handleCloseEditSheet = (open: boolean) => {
@@ -171,7 +178,8 @@ const ProductOnlyTable: React.FC<ProductOnlyTableProps> = ({ products }) => {
         </Table>
       </div>
       
-      {editingProduct && (
+      {/* Renderiza o sheet de edição apenas se não houver a prop onEdit (ou seja, se estiver usando o estado interno) */}
+      {!onEditProp && editingProduct && (
         <EditProductSheet 
           product={editingProduct} 
           isOpen={isEditSheetOpen} 

@@ -1,20 +1,22 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Package, Search, Tag, Factory, Building, AlertTriangle } from "lucide-react";
-import { useProductsOnly } from "@/integrations/supabase/products";
+import { useProductsOnly, Product } from "@/integrations/supabase/products";
 import { showError } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import AddProductSheet from "@/components/AddProductSheet";
 import ProductOnlyTable from "@/components/ProductOnlyTable";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Importando Alert
-import { cn } from "@/lib/utils"; // Importando cn para combinar classes
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { useSearchParams, useNavigate } from "react-router-dom"; // Importando hooks de rota
+import EditProductSheet from "@/components/EditProductSheet"; // Importando o componente de edição
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -28,9 +30,47 @@ const ProductsContent = () => {
   const [brandFilter, setBrandFilter] = useState<string | 'all'>('all');
   const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
   const { t } = useTranslation();
-
+  
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
   const isSuperAdmin = profile?.perfil_id === 1;
   const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  
+  // Estado para edição automática
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+
+  // Efeito para verificar o parâmetro 'editId' na URL
+  useEffect(() => {
+    const editId = searchParams.get('editId');
+    if (editId && products) {
+      const productToEdit = products.find(p => p.id === editId);
+      if (productToEdit) {
+        setEditingProduct(productToEdit);
+        setIsEditSheetOpen(true);
+      } else if (!isLoading) {
+        // Se o produto não for encontrado, remove o parâmetro da URL
+        navigate('/products', { replace: true });
+      }
+    }
+  }, [searchParams, products, isLoading, navigate]);
+  
+  // Função para lidar com a edição vinda da tabela
+  const handleEditFromTable = (product: Product) => {
+    setEditingProduct(product);
+    setIsEditSheetOpen(true);
+  };
+  
+  const handleCloseEditSheet = (open: boolean) => {
+    setIsEditSheetOpen(open);
+    if (!open) {
+      setEditingProduct(null);
+      // Limpa o parâmetro de busca da URL ao fechar
+      navigate('/products', { replace: true });
+    }
+  };
+
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -252,7 +292,7 @@ const ProductsContent = () => {
               </Button>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <ProductOnlyTable products={filteredProducts} />
+            <ProductOnlyTable products={filteredProducts} onEdit={handleEditFromTable} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {t('no_products_found')}
@@ -260,6 +300,14 @@ const ProductsContent = () => {
           )}
         </CardContent>
       </Card>
+      
+      {editingProduct && (
+        <EditProductSheet 
+          product={editingProduct} 
+          isOpen={isEditSheetOpen} 
+          onOpenChange={handleCloseEditSheet} 
+        />
+      )}
     </DashboardLayout>
   );
 };

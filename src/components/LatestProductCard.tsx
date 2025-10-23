@@ -47,8 +47,8 @@ const LatestProductCard: React.FC<LatestProductCardProps> = ({ product }) => {
         </div>
       </CardContent>
       <CardFooter className="p-3 pt-0">
-        {/* Link para a página de produtos */}
-        <Link to="/products" className="w-full">
+        {/* Link para a página de produtos, passando o ID para abrir a edição */}
+        <Link to={`/products?editId=${product.id}`} className="w-full">
           <Button variant="secondary" size="sm" className="w-full">
             <Pencil className="h-4 w-4 mr-2" />
             {t('edit')}
