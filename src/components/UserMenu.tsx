@@ -8,13 +8,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from "@/utils/toast";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserMenu() {
   const { user } = useSession();
+  const { data: profile, isLoading: isProfileLoading } = useCurrentUserProfile();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -26,27 +29,39 @@ export function UserMenu() {
   };
 
   const userEmail = user?.email || "Usuário";
-  const initials = userEmail.slice(0, 2).toUpperCase();
+  const userName = profile?.nome_completo || userEmail;
+  const userRole = profile?.perfis?.nome || "Carregando...";
+  const initials = userName.slice(0, 2).toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            {/* AvatarImage can be added here if user profile includes avatar_url */}
-            <AvatarFallback>{initials}</AvatarFallback>
+            {isProfileLoading ? (
+              <Skeleton className="h-full w-full rounded-full" />
+            ) : (
+              <>
+                <AvatarImage src={profile?.avatar_url || undefined} alt={userName} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </>
+            )}
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{userEmail}</p>
+            <p className="text-sm font-medium leading-none">{userName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user?.email}
+              {userEmail}
             </p>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-xs text-muted-foreground">
+          Perfil: {isProfileLoading ? "..." : userRole}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
