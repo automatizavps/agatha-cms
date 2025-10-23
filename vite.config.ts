@@ -11,6 +11,18 @@ export default defineConfig(() => ({
       host: 'localhost', // Garante que o HMR funcione corretamente em ambientes de contêiner
     }
   },
+  
+  // ==========================================================
+  // ADICIONE ESTA SEÇÃO PARA PERMITIR O HOST DE PREVIEW
+  // ==========================================================
+  preview: {
+    allowedHosts: [
+      'site-landing3.b9c03f.easypanel.host'
+      // Se houverem outros, adicione-os aqui
+    ]
+  },
+  // ==========================================================
+  
   plugins: [dyadComponentTagger(), react()],
   resolve: {
     alias: {
