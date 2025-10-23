@@ -152,15 +152,23 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
-  // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
+  // Efeito para sincronizar defaultValues (especialmente items e empresa_id)
   useEffect(() => {
-    if (defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
-      form.reset({
-        ...form.getValues(),
-        items: defaultValues.items,
-      });
+    if (isEditing && defaultValues) {
+      // Se os itens foram carregados (indicando que os dados do agendamento estão prontos)
+      if (defaultValues.items && defaultValues.items.length > 0) {
+        form.reset({
+          cliente_id: defaultValues.cliente_id || "",
+          responsavel_id: defaultValues.responsavel_id || "",
+          date: defaultValues.date,
+          time: defaultValues.time || "09:00",
+          status: defaultValues.status || 'pendente',
+          items: defaultValues.items,
+          empresa_id: defaultValues.empresa_id || "",
+        });
+      }
     }
-  }, [defaultValues?.items, fields.length, form]);
+  }, [defaultValues, isEditing, form]);
 
 
   const handleAddItem = () => {
@@ -209,7 +217,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   const isCompanyFieldEditable = isSuperAdmin && !isSubmitting && !isEditing;
   
   // Encontra o nome da empresa para exibição desabilitada
-  const companyName = companies?.find(c => c.id === defaultValues?.empresa_id)?.nome;
+  const companyName = companies?.find(c => c.id === (isEditing ? defaultValues?.empresa_id : form.watch('empresa_id')) )?.nome;
   
   if (isCheckingPermissions) {
     return (
@@ -249,7 +257,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                 ) : (
                   <FormControl>
                     <Input 
-                      value={companyName || defaultValues?.empresa_id || t("company_not_found")} 
+                      value={companyName || t("company_not_found")} 
                       disabled 
                       className="bg-muted/50"
                     />
