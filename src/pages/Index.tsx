@@ -11,6 +11,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { cn } from "@/lib/utils"; // Importando cn
 
 const Index = () => {
   const { t } = useTranslation();
@@ -86,11 +87,11 @@ const Index = () => {
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           
-          {/* Card 1: Faturamento Diário */}
-          <Card>
+          {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
+          <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
