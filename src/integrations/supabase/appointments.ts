@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { createNotification } from "./notifications"; // Importando
 
@@ -226,6 +226,15 @@ export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_h
       link: "/appointments",
     });
   }
+  
+  // 3. Invalida a query de métricas diárias se o status for 'concluido'
+  if (status === 'concluido') {
+    const queryClient = new useQueryClient();
+    const currentDate = new Date().toISOString().slice(0, 10);
+    // Invalida a query que alimenta o gráfico de serviços por hora
+    queryClient.invalidateQueries({ queryKey: ["dailyServiceByHour", data.empresa_id, currentDate] });
+  }
+
 
   return data;
 };
