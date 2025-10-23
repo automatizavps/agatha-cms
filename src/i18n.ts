@@ -205,6 +205,12 @@ const resources = {
       "notifications_marked_read": "Todas as notificações marcadas como lidas.",
       "mark_all_read": "Marcar todas como lidas",
       "no_notifications_found": "Nenhuma notificação recente.",
+      
+      // Senha (Password) - NOVO
+      "change_password": "Mudar Senha",
+      "new_password": "Nova Senha",
+      "confirm_new_password": "Confirmar Nova Senha",
+      "update_password_button": "Atualizar Senha",
     },
   },
   en: {
@@ -409,6 +415,12 @@ const resources = {
       "notifications_marked_read": "All notifications marked as read.",
       "mark_all_read": "Mark all as read",
       "no_notifications_found": "No recent notifications.",
+      
+      // Senha (Password) - NOVO
+      "change_password": "Change Password",
+      "new_password": "New Password",
+      "confirm_new_password": "Confirm New Password",
+      "update_password_button": "Update Password",
     },
   },
 };

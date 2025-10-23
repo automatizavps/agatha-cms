@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useTranslation } from "react-i18next";
+import ChangePasswordDialog from "./ChangePasswordDialog"; // Importando o novo componente
 
 // Esquema de validação para os campos editáveis
 const profileSchema = z.object({
@@ -236,6 +237,12 @@ const UserProfileSettings = () => {
             </Button>
           </form>
         </Form>
+        
+        {/* Botão de Mudança de Senha */}
+        <div className="pt-4 border-t">
+          <ChangePasswordDialog />
+        </div>
+        
       </CardContent>
     </Card>
   );
