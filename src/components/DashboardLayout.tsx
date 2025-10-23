@@ -40,7 +40,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </SheetContent>
           </Sheet>
           <div className="w-full flex items-center justify-between">
-            <h1 className="text-lg font-semibold">App Dashboard</h1>
+            <h1 className="text-lg font-semibold">AGATHA IA</h1>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <UserMenu />

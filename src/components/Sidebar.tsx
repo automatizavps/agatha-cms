@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
     >
       <div className={cn("flex items-center p-4 border-b mb-4", isCollapsed ? "justify-center" : "justify-start")}>
         <h1 className={cn("text-xl font-bold text-sidebar-primary overflow-hidden transition-opacity duration-300", isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto")}>
-          App Dashboard
+          AGATHA IA
         </h1>
         {isCollapsed && <Home className="h-6 w-6 text-sidebar-primary" />}
       </div>
