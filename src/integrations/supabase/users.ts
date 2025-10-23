@@ -32,3 +32,26 @@ export const useUsers = () => {
     queryFn: fetchUsers,
   });
 };
+
+interface InviteUserParams {
+  email: string;
+  full_name: string;
+  perfil_id: number;
+}
+
+export const inviteUser = async ({ email, full_name, perfil_id }: InviteUserParams) => {
+  const { data, error } = await supabase.functions.invoke("invite-user", {
+    body: { email, full_name, perfil_id },
+  });
+
+  if (error) {
+    console.error("Error inviting user:", error);
+    throw new Error(error.message);
+  }
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
+};

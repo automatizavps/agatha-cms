@@ -1,15 +1,16 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useUsers } from "@/integrations/supabase/users";
 import UserTable from "@/components/UserTable";
 import { showError } from "@/utils/toast";
+import AddUserSheet from "@/components/AddUserSheet";
 
 const Users = () => {
   const { data: users, isLoading, isError, error } = useUsers();
 
-  if (isError) {
+  if (isError && error) {
+    // Note: We only show the toast if there is an actual error object
     showError("Erro ao carregar usuários: " + error.message);
   }
 
@@ -17,9 +18,7 @@ const Users = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New User
-        </Button>
+        <AddUserSheet />
       </div>
       
       <Card className="mt-4">
