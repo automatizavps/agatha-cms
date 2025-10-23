@@ -1,103 +1,111 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Loader2, RefreshCw, Tag, Search, Building } from "lucide-react";
 import { useCategories } from "@/integrations/supabase/categories";
-import { Loader2, Tag, Search } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
+import { showError } from "@/utils/toast";
+import { PermissionGuard } from "@/hooks/use-permission";
+import { Button } from "@/components/ui/button";
+import CategoryTable from "@/components/CategoryTable";
+import AddCategorySheet from "@/components/AddCategorySheet";
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
 
-const Categories = () => {
-  const { t } = useTranslation();
-  const { filteredCompanyId } = useDashboardFilter();
-  const { data: categories, isLoading, refetch } = useCategories(filteredCompanyId);
+const CategoriesContent = () => {
+  const { data: categories, isLoading, isError, error, refetch, isRefetching } = useCategories();
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation();
 
+  if (isError && error) {
+    showError(t("error_loading_data") + ": " + error.message);
+  }
+  
   const filteredCategories = useMemo(() => {
     if (!categories) return [];
     if (!searchTerm) return categories;
 
     const lowerCaseSearch = searchTerm.toLowerCase();
-    return categories.filter(category =>
+    return categories.filter(category => 
       category.nome.toLowerCase().includes(lowerCaseSearch)
     );
   }, [categories, searchTerm]);
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Tag className="h-7 w-7" />
-          {t('nav_categories')}
-        </h1>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-semibold">{t('category_list')}</CardTitle>
-            <div className="flex items-center space-x-2">
-              {/* Botão de recarregar removido */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_categories')}</h1>
+        <AddCategorySheet />
+      </div>
+      
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5" /> {t('category_list_title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center mb-4">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t('category_search_placeholder')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+                disabled={isLoading && !isRefetching}
+              />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4 flex justify-between items-center">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder={t('search_categories')}
-                  className="pl-9"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button asChild>
-                <Link to="/products/categories/new">{t('add_new_category')}</Link>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => refetch()} 
+              disabled={isRefetching}
+              className="ml-2"
+            >
+              {isRefetching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {isLoading && !isRefetching ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : isError ? (
+            <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
+              <p className="text-destructive">
+                {t('error_loading_data')}
+              </p>
+              <Button onClick={() => refetch()} disabled={isRefetching}>
+                {isRefetching ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                {t('try_again')}
               </Button>
             </div>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('name')}</TableHead>
-                      <TableHead className="text-right">{t('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCategories.length > 0 ? (
-                      filteredCategories.map((category) => (
-                        <TableRow key={category.id}>
-                          <TableCell className="font-medium">{category.nome}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link to={`/products/categories/${category.id}`}>{t('edit')}</Link>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
-                          {t('no_categories_found')}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          ) : filteredCategories.length > 0 ? (
+            <CategoryTable categories={filteredCategories} />
+          ) : (
+            <div className="text-center p-4 text-muted-foreground">
+              {searchTerm ? t('no_data_found') : t('no_categories_found')}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </DashboardLayout>
   );
 };
+
+const Categories = () => (
+  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar categorias
+  <PermissionGuard allowedProfileIds={[1, 2]}>
+    <CategoriesContent />
+  </PermissionGuard>
+);
 
 export default Categories;

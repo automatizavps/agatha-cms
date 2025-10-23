@@ -1,113 +1,253 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAppointments, Appointment, deleteAppointment, useAppointmentItems } from "@/integrations/supabase/appointments";
+import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building } from "lucide-react";
+import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAppointments } from "@/integrations/supabase/appointments";
-import { CalendarCheck, Loader2, Search } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import { Input } from "@/components/ui/input";
-import { useState, useMemo } from "react";
-import { AppointmentStatusBadge } from "@/components/AppointmentStatusBadge";
-import { Link } from "react-router-dom";
+import { ptBR } from "date-fns/locale";
+import AddAppointmentSheet from "@/components/AddAppointmentSheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import EditAppointmentSheet from "@/components/EditAppointmentSheet";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importado
+
+interface AppointmentActionsProps {
+  appointment: Appointment;
+  onEdit: (appointment: Appointment) => void;
+}
+
+const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, onEdit }) => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAppointment,
+    onSuccess: () => {
+      showSuccess(`Agendamento para ${appointment.clientes?.nome || 'Cliente'} excluído com sucesso.`);
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+    onError: (error) => {
+      showError(t("error_loading_data") + ": " + error.message);
+    },
+  });
+
+  const handleDelete = () => {
+    const clientName = appointment.clientes?.nome || 'este cliente';
+    if (window.confirm(t('confirm_delete'))) {
+      deleteMutation.mutate(appointment.id);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">{t('actions')}</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => onEdit(appointment)}>
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          onClick={handleDelete} 
+          disabled={deleteMutation.isPending}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+// Componente auxiliar para carregar e exibir o item principal
+const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointmentId }) => {
+  const { data: items, isLoading } = useAppointmentItems(appointmentId);
+  const { t } = useTranslation();
+  
+  if (isLoading) {
+    return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+  }
+  
+  if (!items || items.length === 0) {
+    return <span className="text-muted-foreground">N/A</span>;
+  }
+  
+  const firstItem = items[0];
+  const itemName = firstItem.produtos?.nome || t('no_data_found');
+  
+  const tooltipContent = (
+    <div className="space-y-1 text-sm">
+      <p className="font-semibold mb-1">{t('nav_appointments')} {t('nav_products')}:</p>
+      {items.map((item, index) => (
+        <div key={index} className="flex justify-between gap-4">
+          <span className="truncate max-w-[150px]">{item.produtos?.nome || t('no_data_found')}</span>
+          <span className="text-muted-foreground">x{item.quantidade}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <div className="flex flex-col items-start cursor-default">
+          <span className="font-medium">{itemName}</span>
+          {items.length > 1 && (
+            <Badge variant="secondary" className="mt-1 text-xs">
+              + {items.length - 1} {items.length === 2 ? t('nav_products') : t('nav_products')}
+            </Badge>
+          )}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        {tooltipContent}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 
 const Appointments = () => {
+  const { data: appointments, isLoading, isError, error } = useAppointments();
+  const { data: profile } = useCurrentUserProfile();
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { t } = useTranslation();
-  const { data: appointments, isLoading, refetch } = useAppointments();
-  const [searchTerm, setSearchTerm] = useState("");
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
 
-  const filteredAppointments = useMemo(() => {
-    if (!appointments) return [];
-    if (!searchTerm) return appointments;
+  if (isError && error) {
+    showError(t("error_loading_data") + ": " + error.message);
+  }
+  
+  const handleEdit = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setIsEditSheetOpen(true);
+  };
 
-    const lowerCaseSearch = searchTerm.toLowerCase();
-    return appointments.filter(appointment =>
-      appointment.cliente_nome?.toLowerCase().includes(lowerCaseSearch) ||
-      appointment.responsavel_nome?.toLowerCase().includes(lowerCaseSearch) ||
-      appointment.id.toLowerCase().includes(lowerCaseSearch)
-    );
-  }, [appointments, searchTerm]);
+  const handleCloseEditSheet = (open: boolean) => {
+    setIsEditSheetOpen(open);
+    if (!open) {
+      setEditingAppointment(null);
+    }
+  };
+
+  const getStatusBadge = (status: Appointment['status']) => {
+    const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
+    switch (status) {
+      case 'confirmado':
+        return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
+      case 'cancelado':
+        return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`;
+      case 'concluido':
+        return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`;
+      case 'pendente':
+      default:
+        return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
+    }
+  };
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <CalendarCheck className="h-7 w-7" />
-          {t('nav_appointments')}
-        </h1>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-semibold">{t('appointment_list')}</CardTitle>
-            <div className="flex items-center space-x-2">
-              {/* Botão de recarregar removido */}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4 flex justify-between items-center">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder={t('search_appointments')}
-                  className="pl-9"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button asChild>
-                <Link to="/appointments/new">{t('schedule_new_appointment')}</Link>
-              </Button>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('appointment_id')}</TableHead>
-                      <TableHead>{t('client')}</TableHead>
-                      <TableHead>{t('responsible')}</TableHead>
-                      <TableHead>{t('date_time')}</TableHead>
-                      <TableHead>{t('status')}</TableHead>
-                      <TableHead className="text-right">{t('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAppointments.length > 0 ? (
-                      filteredAppointments.map((appointment) => (
-                        <TableRow key={appointment.id}>
-                          <TableCell className="font-medium">{appointment.id.substring(0, 8)}...</TableCell>
-                          <TableCell>{appointment.cliente_nome || t('unknown_client')}</TableCell>
-                          <TableCell>{appointment.responsavel_nome || t('unassigned')}</TableCell>
-                          <TableCell>{format(new Date(appointment.data_hora), 'dd/MM/yyyy HH:mm')}</TableCell>
-                          <TableCell>
-                            <AppointmentStatusBadge status={appointment.status} />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link to={`/appointments/${appointment.id}`}>{t('view')}</Link>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          {t('no_appointments_found')}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_appointments')}</h1>
+        <AddAppointmentSheet />
       </div>
+      
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarCheck className="h-5 w-5" /> {t('nav_appointments')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : isError ? (
+            <div className="text-center text-destructive p-4 border border-destructive rounded-md">
+              {t('error_loading_data')}
+            </div>
+          ) : appointments && appointments.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('order_table_header_client')}</TableHead>
+                    {isSuperAdmin && <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>}
+                    <TableHead>{t('nav_products')}</TableHead>
+                    <TableHead>{t('order_table_header_date')}</TableHead>
+                    <TableHead>{t('responsible')}</TableHead>
+                    <TableHead>{t('order_table_header_status')}</TableHead>
+                    <TableHead className="text-right">{t('actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {appointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
+                      {isSuperAdmin && (
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Building className="h-3 w-3" />
+                            {appointment.empresas?.nome || 'N/A'}
+                          </div>
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <AppointmentItemDisplay appointmentId={appointment.id} />
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
+                      <TableCell>
+                        <span className={getStatusBadge(appointment.status)}>
+                          {appointment.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <AppointmentActions appointment={appointment} onEdit={handleEdit} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center p-4 text-muted-foreground">
+              {t('no_data_found')}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      {editingAppointment && (
+        <EditAppointmentSheet 
+          appointment={editingAppointment} 
+          isOpen={isEditSheetOpen} 
+          onOpenChange={handleCloseEditSheet} 
+        />
+      )}
     </DashboardLayout>
   );
 };
