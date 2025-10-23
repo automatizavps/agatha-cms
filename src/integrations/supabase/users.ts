@@ -15,14 +15,7 @@ export interface UserProfile {
 const fetchUsers = async (): Promise<UserProfile[]> => {
   const { data, error } = await supabase
     .from("usuarios")
-    .select(\`
-      id,
-      nome_completo,
-      perfil_id,
-      empresa_id,
-      avatar_url,
-      perfis (nome)
-    \`)
+    .select("id, nome_completo, perfil_id, empresa_id, avatar_url, perfis (nome)")
     .order("nome_completo", { ascending: true });
 
   if (error) {
