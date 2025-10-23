@@ -20,7 +20,7 @@ const fetchCompanies = async (): Promise<Company[]> => {
     .order("nome", { ascending: true });
 
   if (error) {
-    console.error("Error fetching companies:", error;
+    console.error("Error fetching companies:", error); // <-- Correção aqui
     throw new Error("Failed to fetch companies");
   }
 
