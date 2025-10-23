@@ -25,11 +25,14 @@ const EditCompanySheet: React.FC<EditCompanySheetProps> = ({ company, isOpen, on
     },
   });
 
-  const handleSubmit = (values: { nome: string; cnpj: string | null }) => {
+  const handleSubmit = (values: { nome: string; cnpj: string | null; telefone: string | null; endereco_completo: string | null; email: string | null }) => {
     mutation.mutate({
       id: company.id,
       nome: values.nome,
       cnpj: values.cnpj,
+      telefone: values.telefone,
+      endereco_completo: values.endereco_completo,
+      email: values.email,
     });
   };
 
@@ -37,6 +40,9 @@ const EditCompanySheet: React.FC<EditCompanySheetProps> = ({ company, isOpen, on
   const initialValues = {
     nome: company.nome,
     cnpj: company.cnpj,
+    telefone: company.telefone,
+    endereco_completo: company.endereco_completo,
+    email: company.email,
   };
 
   return (

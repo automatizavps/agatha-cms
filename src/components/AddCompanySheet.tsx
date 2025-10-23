@@ -23,8 +23,7 @@ const AddCompanySheet = () => {
     },
   });
 
-  const handleSubmit = (values: { nome: string; cnpj: string | null }) => {
-    // O dono_id é obtido automaticamente na função createCompany (Super Admin logado)
+  const handleSubmit = (values: { nome: string; cnpj: string | null; telefone: string | null; endereco_completo: string | null; email: string | null }) => {
     mutation.mutate(values);
   };
 

@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building, Mail, Phone } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,9 +103,9 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead className="hidden lg:table-cell">Email</TableHead>
+              <TableHead className="hidden md:table-cell">Telefone</TableHead>
               <TableHead className="hidden sm:table-cell">CNPJ</TableHead>
-              <TableHead className="hidden md:table-cell">Dono ID</TableHead>
-              <TableHead className="hidden lg:table-cell">Criada em</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -116,11 +116,13 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
                   <Building className="h-4 w-4 text-muted-foreground" />
                   {company.nome}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell">{company.cnpj || 'N/A'}</TableCell>
-                <TableCell className="hidden md:table-cell text-xs font-mono">{company.dono_id || 'N/A'}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                  {format(new Date(company.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                  {company.email || 'N/A'}
                 </TableCell>
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  {company.telefone || 'N/A'}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">{company.cnpj || 'N/A'}</TableCell>
                 <TableCell className="text-right">
                   <CompanyActions company={company} onEdit={handleEdit} />
                 </TableCell>

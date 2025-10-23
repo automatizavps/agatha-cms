@@ -6,6 +6,9 @@ export interface Company {
   nome: string;
   cnpj: string | null;
   dono_id: string | null;
+  telefone: string | null;
+  endereco_completo: string | null;
+  email: string | null;
   created_at: string;
 }
 
@@ -16,11 +19,11 @@ const fetchCompanies = async (): Promise<Company[]> => {
   // Para o Super Admin (ID 1), a política 'Super Admin pode gerenciar todas as empresas' permite SELECT *.
   const { data, error } = await supabase
     .from("empresas")
-    .select("id, nome, cnpj, dono_id, created_at")
+    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at")
     .order("nome", { ascending: true });
 
   if (error) {
-    console.error("Error fetching companies:", error); // <-- Correção aqui
+    console.error("Error fetching companies:", error);
     throw new Error("Failed to fetch companies");
   }
 
@@ -39,9 +42,12 @@ export const useCompanies = () => {
 interface CreateCompanyParams {
   nome: string;
   cnpj: string | null;
+  telefone: string | null;
+  endereco_completo: string | null;
+  email: string | null;
 }
 
-export const createCompany = async ({ nome, cnpj }: CreateCompanyParams) => {
+export const createCompany = async ({ nome, cnpj, telefone, endereco_completo, email }: CreateCompanyParams) => {
   // Vamos usar o ID do usuário logado como dono_id, e o trigger handle_new_empresa
   // irá configurar o perfil desse usuário como Admin (2) e associá-lo à empresa.
   
@@ -59,6 +65,9 @@ export const createCompany = async ({ nome, cnpj }: CreateCompanyParams) => {
       nome: nome,
       cnpj: cnpj,
       dono_id: dono_id, // O trigger 'on_empresa_created' usará este ID
+      telefone: telefone,
+      endereco_completo: endereco_completo,
+      email: email,
     })
     .select()
     .single();
@@ -77,14 +86,20 @@ interface UpdateCompanyParams {
   id: string;
   nome: string;
   cnpj: string | null;
+  telefone: string | null;
+  endereco_completo: string | null;
+  email: string | null;
 }
 
-export const updateCompany = async ({ id, nome, cnpj }: UpdateCompanyParams) => {
+export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_completo, email }: UpdateCompanyParams) => {
   const { data, error } = await supabase
     .from("empresas")
     .update({
       nome: nome,
       cnpj: cnpj,
+      telefone: telefone,
+      endereco_completo: endereco_completo,
+      email: email,
     })
     .eq("id", id)
     .select()
