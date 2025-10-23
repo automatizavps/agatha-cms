@@ -103,7 +103,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
             <TableRow>
               <TableHead className="w-[50px]">Avatar</TableHead>
               <TableHead>Nome</TableHead>
-              <TableHead className="hidden xl:table-cell">Empresa</TableHead> {/* Nova Coluna */}
+              <TableHead className="hidden xl:table-cell">Empresa</TableHead>
               <TableHead className="hidden lg:table-cell">Telefone</TableHead>
               <TableHead className="hidden xl:table-cell">Endereço</TableHead>
               <TableHead>Perfil</TableHead>
