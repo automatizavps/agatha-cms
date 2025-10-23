@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Trash2, Package, DollarSign } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, DollarSign, Building } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,6 +25,9 @@ import { OrderStatus } from "@/integrations/supabase/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import React, { useMemo, useEffect } from "react";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { useTranslation } from "react-i18next";
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -34,7 +37,8 @@ const itemSchema = z.object({
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
 });
 
-const formSchema = z.object({
+// Definimos o esquema base
+const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
   }),
@@ -42,9 +46,12 @@ const formSchema = z.object({
   status: z.enum(statusOptions, {
     required_error: "O status é obrigatório.",
   }).optional(),
+  empresa_id: z.string().uuid({
+    message: "Selecione uma empresa válida.",
+  }).or(z.literal("")).optional(),
 });
 
-type OrderFormValues = z.infer<typeof formSchema>;
+type OrderFormValues = z.infer<typeof baseFormSchema>;
 
 interface ItemToCreate {
   produto_id: string;
@@ -53,22 +60,31 @@ interface ItemToCreate {
 }
 
 interface OrderFormProps {
-  onSubmit: (values: { cliente_id: string; valor_total: number; items: ItemToCreate[]; status?: OrderStatus }) => void;
+  onSubmit: (values: { cliente_id: string; valor_total: number; items: ItemToCreate[]; status?: OrderStatus; empresa_id?: string }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<OrderFormValues>; 
   isEditing?: boolean;
 }
 
 const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { data: clients, isLoading: isLoadingClients } = useClients();
   const { data: products, isLoading: isLoadingProducts } = useProductsOnly();
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
+  const { t } = useTranslation();
   
-  const allItems = useMemo(() => {
-    if (isLoadingProducts || isLoadingServices) return [];
-    // Combinamos produtos e serviços
-    return [...(products || []), ...(services || [])];
-  }, [products, services, isLoadingProducts, isLoadingServices]);
+  const isSuperAdmin = profile?.perfil_id === 1;
+  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+
+  // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
+  const formSchema = isSuperAdmin && !isEditing
+    ? baseFormSchema.extend({
+        empresa_id: z.string().uuid({
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
+      })
+    : baseFormSchema;
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(formSchema),
@@ -76,6 +92,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       cliente_id: defaultValues?.cliente_id || "",
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
+      empresa_id: defaultValues?.empresa_id || "",
     },
   });
   
@@ -84,15 +101,40 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     name: "items",
   });
   
+  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
+  // Se estiver editando, usamos o valor inicial da empresa, que é fixo.
+  const selectedCompanyId = isEditing 
+    ? defaultValues?.empresa_id 
+    : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
+    
+  const isCompanySelected = !!selectedCompanyId;
+  
+  // Filtra Clientes e Itens com base na empresa selecionada
+  const filteredClients = useMemo(() => {
+    if (!clients || !isCompanySelected) return [];
+    return clients.filter(client => client.empresa_id === selectedCompanyId);
+  }, [clients, selectedCompanyId, isCompanySelected]);
+
+  const allItems = useMemo(() => {
+    if (!isCompanySelected) return [];
+    // Filtramos os itens que pertencem à empresa selecionada
+    const all = [...(services || []), ...(products || [])];
+    return all
+      .filter(item => item.empresa_id === selectedCompanyId)
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [services, products, selectedCompanyId, isCompanySelected]);
+  
+  const isLoadingItems = isLoadingServices || isLoadingProducts;
+
   // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
   useEffect(() => {
-    if (defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
+    if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
       form.reset({
         ...form.getValues(),
         items: defaultValues.items,
       });
     }
-  }, [defaultValues?.items, fields.length, form]);
+  }, [defaultValues?.items, fields.length, form, isEditing]);
 
 
   const calculateTotal = form.watch("items").reduce((sum, item) => {
@@ -115,11 +157,13 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   // Função auxiliar para obter o nome do item
   const getItemName = (productId: string) => {
     const item = allItems.find(i => i.id === productId);
-    return item ? `${item.nome} (${item.tipo === 'produto' ? 'Produto' : 'Serviço'})` : 'Item Desconhecido';
+    return item ? `${item.nome} (${item.tipo === 'produto' ? t('nav_products') : t('nav_services')})` : t('unknown_item');
   };
 
 
   const handleSubmit = (values: OrderFormValues) => {
+    const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
+    
     onSubmit({
       cliente_id: values.cliente_id,
       valor_total: calculateTotal,
@@ -129,28 +173,97 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         preco_unitario: item.preco_unitario,
       })),
       status: values.status,
+      empresa_id: empresa_id,
     });
   };
+  
+  // Determina se o campo empresa deve ser editável (apenas Super Admin na CRIAÇÃO)
+  const isCompanyFieldEditable = isSuperAdmin && !isSubmitting && !isEditing;
+  
+  // Encontra o nome da empresa para exibição desabilitada
+  const companyIdToDisplay = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
+  const companyName = companies?.find(c => c.id === companyIdToDisplay)?.nome;
+  
+  // Determina se o campo empresa deve ser exibido (Super Admin ou se estiver editando)
+  const shouldShowCompanyField = isSuperAdmin || isEditing;
+  
+  // Determina se o aviso deve ser exibido (Apenas Super Admin E empresa não selecionada)
+  const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
+
+  if (isCheckingPermissions) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
+        {/* Campo Empresa (Apenas Super Admin ou Edição) */}
+        {shouldShowCompanyField && (
+          <FormField
+            control={form.control}
+            name="empresa_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('user_table_header_company')}</FormLabel>
+                {isCompanyFieldEditable ? (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting || isEditing}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies?.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <FormControl>
+                    <Input 
+                      // Exibe o nome da empresa ou 'N/A' se não for encontrado
+                      value={companyName || t("company_not_found")} 
+                      disabled 
+                      className="bg-muted/50"
+                    />
+                  </FormControl>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
+        {/* Aviso se a empresa não estiver selecionada (Apenas Super Admin na CRIAÇÃO) */}
+        {shouldShowWarning && (
+          <div className="p-3 bg-yellow-100/50 dark:bg-yellow-900/20 border border-yellow-400/50 rounded-md text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            {t('select_company_to_load_data')}
+          </div>
+        )}
+
         {/* Cliente */}
         <FormField
           control={form.control}
           name="cliente_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cliente</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingClients || isSubmitting || isEditing}>
+              <FormLabel>{t('order_table_header_client')}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingClients || isSubmitting || isEditing || !isCompanySelected}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingClients ? "Carregando clientes..." : "Selecione o cliente"} />
+                    <SelectValue placeholder={isLoadingClients ? t("loading_clients") : t("select_client")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {clients?.map((client) => (
+                  {filteredClients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.nome} ({client.email || client.telefone || 'N/A'})
                     </SelectItem>
@@ -169,11 +282,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status do Pedido</FormLabel>
+                <FormLabel>{t('order_table_header_status')}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
+                      <SelectValue placeholder={t("select_status")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -193,15 +306,15 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         {/* Itens do Pedido */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-semibold">Itens do Pedido</CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddItem} disabled={isSubmitting || isEditing}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
+            <CardTitle className="text-lg font-semibold">{t('order_list_title')}</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={handleAddItem} disabled={isSubmitting || isEditing || !isCompanySelected}>
+              <PlusCircle className="mr-2 h-4 w-4" /> {t('add_item')}
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
               <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
-                <h4 className="text-sm font-medium text-muted-foreground">Item #{index + 1}</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
                 
                 {/* Produto/Serviço */}
                 <FormField
@@ -209,7 +322,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                   name={`items.${index}.produto_id`}
                   render={({ field: itemField }) => (
                     <FormItem>
-                      <FormLabel>Produto/Serviço</FormLabel>
+                      <FormLabel>{t('service_product')}</FormLabel>
                       {isEditing ? (
                         <FormControl>
                           <Input 
@@ -222,17 +335,17 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                         <Select 
                           onValueChange={(val) => handleProductChange(index, val)} 
                           value={itemField.value} 
-                          disabled={isLoadingProducts || isLoadingServices || isSubmitting || isEditing}
+                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={allItems.length === 0 ? "Carregando itens..." : "Selecione o item"} />
+                              <SelectValue placeholder={allItems.length === 0 ? t("loading_items") : t("select_item")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {allItems.map((item) => (
                               <SelectItem key={item.id} value={item.id}>
-                                {item.nome} ({item.tipo === 'produto' ? 'Produto' : 'Serviço'})
+                                {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -250,7 +363,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                     name={`items.${index}.quantidade`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Quantidade</FormLabel>
+                        <FormLabel>{t('quantity')}</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -272,7 +385,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                     name={`items.${index}.preco_unitario`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preço Unitário (R$)</FormLabel>
+                        <FormLabel>{t('unit_price')} (R$)</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -306,14 +419,14 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             
             {fields.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
-                Adicione produtos ou serviços ao pedido.
+                {t('add_services_or_products')}
               </p>
             )}
             
             <Separator />
             
             <div className="flex justify-between items-center pt-2">
-              <span className="text-lg font-semibold">Valor Total:</span>
+              <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
               <span className="text-2xl font-bold text-primary flex items-center gap-1">
                 <DollarSign className="h-5 w-5" />
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
@@ -324,19 +437,19 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            "Atualizar Status do Pedido"
+            t('update_password_button')
           ) : (
-            "Criar Pedido"
+            t('create_order')
           )}
         </Button>
         
         {isEditing && (
           <p className="text-sm text-muted-foreground text-center">
-            A edição de itens não é permitida após a criação do pedido.
+            {t('item_editing_not_allowed')}
           </p>
         )}
       </form>

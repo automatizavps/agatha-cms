@@ -109,18 +109,30 @@ interface CreateOrderParams {
   cliente_id: string;
   valor_total: number;
   items: ItemToCreate[];
+  empresa_id?: string; // NOVO: Opcional para Super Admin
 }
 
-export const createOrder = async ({ cliente_id, valor_total, items }: CreateOrderParams) => {
-  // 1. Obter o ID da empresa do usuário logado
-  const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+export const createOrder = async ({ cliente_id, valor_total, items, empresa_id: provided_empresa_id }: CreateOrderParams) => {
+  let empresa_id: string;
 
-  if (companyError || !companyData) {
-    console.error("Error fetching user company ID:", companyError);
-    throw new Error("Não foi possível determinar a empresa do usuário.");
+  if (provided_empresa_id) {
+    // Se o ID da empresa foi fornecido (Super Admin), usamos ele.
+    empresa_id = provided_empresa_id;
+  } else {
+    // 1. Obter o ID da empresa do usuário logado (para Admin/Funcionário)
+    const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+
+    if (companyError || !companyData) {
+      console.error("Error fetching user company ID:", companyError);
+      throw new Error("Não foi possível determinar a empresa do usuário.");
+    }
+    empresa_id = companyData;
   }
   
-  const empresa_id = companyData;
+  if (!empresa_id) {
+     throw new Error("ID da empresa é obrigatório para criar um pedido.");
+  }
+
 
   // 2. Inserir o pedido principal
   const { data: orderData, error: orderError } = await supabase
@@ -169,6 +181,7 @@ export const createOrder = async ({ cliente_id, valor_total, items }: CreateOrde
       titulo: "Novo Pedido Criado",
       mensagem: `Pedido #${pedido_id.slice(0, 8)} no valor de R$ ${valor_total.toFixed(2)} foi criado.`,
       link: "/orders", // Link para a página de pedidos
+      queryClient: queryClient, // Adicionado queryClient
     });
   }
 
@@ -205,6 +218,7 @@ export const updateOrderStatus = async ({ id, status }: UpdateOrderStatusParams)
       titulo: "Status do Pedido Atualizado",
       mensagem: `O status do Pedido #${id.slice(0, 8)} foi alterado para ${status.replace('_', ' ')}.`,
       link: "/orders",
+      queryClient: queryClient,
     });
   }
 
