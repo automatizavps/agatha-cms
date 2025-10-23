@@ -5,8 +5,11 @@ import path from "path";
 
 export default defineConfig(() => ({
   server: {
-    host: "::",
+    host: true, // Permite que o servidor escute em todas as interfaces de rede
     port: 8080,
+    hmr: {
+      host: 'localhost', // Garante que o HMR funcione corretamente em ambientes de contêiner
+    }
   },
   plugins: [dyadComponentTagger(), react()],
   resolve: {
