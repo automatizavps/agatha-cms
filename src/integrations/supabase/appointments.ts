@@ -112,18 +112,24 @@ interface CreateAppointmentParams {
   data_hora: Date;
   items: ItemToCreate[]; // Novo campo
   queryClient: QueryClient; // Adicionando QueryClient
+  empresa_id?: string; // NOVO: Opcional para Super Admin
 }
 
-export const createAppointment = async ({ cliente_id, responsavel_id, data_hora, items, queryClient }: CreateAppointmentParams) => {
-  // 1. Obter o ID da empresa do usuário logado
-  const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+export const createAppointment = async ({ cliente_id, responsavel_id, data_hora, items, queryClient, empresa_id: provided_empresa_id }: CreateAppointmentParams) => {
+  let empresa_id: string;
 
-  if (companyError || !companyData) {
-    console.error("Error fetching user company ID:", companyError);
-    throw new Error("Não foi possível determinar a empresa do usuário.");
+  if (provided_empresa_id) {
+    empresa_id = provided_empresa_id;
+  } else {
+    // 1. Obter o ID da empresa do usuário logado (para Admin/Funcionário)
+    const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+
+    if (companyError || !companyData) {
+      console.error("Error fetching user company ID:", companyError);
+      throw new Error("Não foi possível determinar a empresa do usuário.");
+    }
+    empresa_id = companyData;
   }
-  
-  const empresa_id = companyData;
   
   // 2. Obter o ID do usuário logado (created_by)
   const { data: { user } } = await supabase.auth.getUser();

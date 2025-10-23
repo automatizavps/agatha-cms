@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, CalendarIcon, Check, ChevronsUpDown, PlusCircle, Trash2 } from "lucide-react";
+import { Loader2, CalendarIcon, Check, ChevronsUpDown, PlusCircle, Trash2, Building } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -32,6 +32,9 @@ import React, { useMemo, useEffect } from "react";
 import { useServicesOnly, useProductsOnly } from "@/integrations/supabase/products";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { useTranslation } from "react-i18next";
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -41,7 +44,8 @@ const itemSchema = z.object({
   preco_unitario: z.coerce.number().min(0, { message: "Preço deve ser positivo." }),
 });
 
-const formSchema = z.object({
+// Definimos o esquema base
+const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
   }),
@@ -58,9 +62,14 @@ const formSchema = z.object({
     required_error: "O status é obrigatório.",
   }).optional(),
   items: z.array(itemSchema).min(1, { message: "O agendamento deve ter pelo menos um serviço/produto." }),
+  
+  // Campo Empresa (opcional no base)
+  empresa_id: z.string().uuid({
+    message: "Selecione uma empresa válida.",
+  }).or(z.literal("")).optional(),
 });
 
-type AppointmentFormValues = z.infer<typeof formSchema>;
+type AppointmentFormValues = z.infer<typeof baseFormSchema>;
 
 interface ItemToCreate {
   produto_id: string;
@@ -69,23 +78,32 @@ interface ItemToCreate {
 }
 
 interface AppointmentFormProps {
-  onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: ItemToCreate[]; status?: Appointment['status'] }) => void;
+  onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: ItemToCreate[]; status?: Appointment['status']; empresa_id?: string }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<AppointmentFormValues & { items: ItemToCreate[] }>;
   isEditing?: boolean;
 }
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { data: users, isLoading: isLoadingUsers } = useUsers();
   const { data: clients, isLoading: isLoadingClients } = useClients();
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
   const { data: products, isLoading: isLoadingProducts } = useProductsOnly();
-
-  const allItems = useMemo(() => {
-    return [...(services || []), ...(products || [])].sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [services, products]);
+  const { t } = useTranslation();
   
-  const isLoadingItems = isLoadingServices || isLoadingProducts;
+  const isSuperAdmin = profile?.perfil_id === 1;
+  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+
+  // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
+  const formSchema = isSuperAdmin && !isEditing
+    ? baseFormSchema.extend({
+        empresa_id: z.string().uuid({
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
+      })
+    : baseFormSchema;
 
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(formSchema),
@@ -96,6 +114,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       time: defaultValues?.time || "09:00",
       status: defaultValues?.status || 'pendente',
       items: defaultValues?.items || [],
+      empresa_id: defaultValues?.empresa_id || "",
     },
   });
   
@@ -104,6 +123,35 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     name: "items",
   });
   
+  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
+  const selectedCompanyId = isSuperAdmin 
+    ? form.watch('empresa_id') 
+    : profile?.empresa_id;
+    
+  const isCompanySelected = !!selectedCompanyId;
+
+  // Filtra Clientes, Usuários e Itens com base na empresa selecionada
+  const filteredClients = useMemo(() => {
+    if (!clients || !isCompanySelected) return [];
+    return clients.filter(client => client.empresa_id === selectedCompanyId);
+  }, [clients, selectedCompanyId, isCompanySelected]);
+  
+  const filteredUsers = useMemo(() => {
+    if (!users || !isCompanySelected) return [];
+    return users.filter(user => user.empresa_id === selectedCompanyId);
+  }, [users, selectedCompanyId, isCompanySelected]);
+
+  const allItems = useMemo(() => {
+    if (!isCompanySelected) return [];
+    // Filtramos os itens que pertencem à empresa selecionada
+    const all = [...(services || []), ...(products || [])];
+    return all
+      .filter(item => item.empresa_id === selectedCompanyId)
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [services, products, selectedCompanyId, isCompanySelected]);
+  
+  const isLoadingItems = isLoadingServices || isLoadingProducts;
+
   // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
   useEffect(() => {
     if (defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
@@ -131,7 +179,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   // Função auxiliar para obter o nome do item
   const getItemName = (productId: string) => {
     const item = allItems.find(i => i.id === productId);
-    return item ? `${item.nome} (${item.tipo === 'produto' ? 'Produto' : 'Serviço'})` : 'Item Desconhecido';
+    return item ? `${item.nome} (${item.tipo === 'produto' ? t('nav_products') : t('nav_services')})` : t('unknown_item');
   };
 
 
@@ -140,6 +188,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     
     const data_hora = new Date(values.date);
     data_hora.setHours(hours, minutes, 0, 0);
+    
+    const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
 
     onSubmit({
       cliente_id: values.cliente_id,
@@ -151,14 +201,57 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         preco_unitario: item.preco_unitario,
       })),
       status: values.status,
+      empresa_id: empresa_id,
     });
   };
   
-  const allClients = clients || [];
+  if (isCheckingPermissions) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        
+        {/* Campo Empresa (Apenas Super Admin) */}
+        {isSuperAdmin && (
+          <FormField
+            control={form.control}
+            name="empresa_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('user_table_header_company')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting || isEditing}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
+        {/* Aviso se a empresa não estiver selecionada */}
+        {!isCompanySelected && isSuperAdmin && (
+          <div className="p-3 bg-yellow-100/50 dark:bg-yellow-900/20 border border-yellow-400/50 rounded-md text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            {t('select_company_to_load_data')}
+          </div>
+        )}
         
         {/* Cliente */}
         <FormField
@@ -166,7 +259,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           name="cliente_id"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Cliente</FormLabel>
+              <FormLabel>{t('order_table_header_client')}</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -177,23 +270,23 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         "w-full justify-between",
                         !field.value && "text-muted-foreground"
                       )}
-                      disabled={isLoadingClients || isSubmitting || isEditing}
+                      disabled={isLoadingClients || isSubmitting || isEditing || !isCompanySelected}
                     >
                       {field.value
-                        ? allClients.find(
+                        ? filteredClients.find(
                             (client) => client.id === field.value
                           )?.nome
-                        : isLoadingClients ? "Carregando clientes..." : "Selecione o cliente"}
+                        : isLoadingClients ? t("loading_clients") : t("select_client")}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                   <Command>
-                    <CommandInput placeholder="Buscar cliente..." />
-                    <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                    <CommandInput placeholder={t('search_client')} />
+                    <CommandEmpty>{t('no_clients_found')}</CommandEmpty>
                     <CommandGroup>
-                      {allClients.map((client) => (
+                      {filteredClients.map((client) => (
                         <CommandItem
                           value={client.nome}
                           key={client.id}
@@ -227,15 +320,15 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           name="responsavel_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Responsável</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingUsers || isSubmitting}>
+              <FormLabel>{t('responsible')}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingUsers || isSubmitting || !isCompanySelected}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingUsers ? "Carregando usuários..." : "Selecione o responsável"} />
+                    <SelectValue placeholder={isLoadingUsers ? t("loading_users") : t("select_responsible")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {users?.map((user) => (
+                  {filteredUsers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.nome_completo} ({user.perfis?.nome})
                     </SelectItem>
@@ -254,7 +347,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             name="date"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Data</FormLabel>
+                <FormLabel>{t('order_table_header_date')}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -267,7 +360,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         disabled={isSubmitting}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                        {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>{t('select_date')}</span>}
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
@@ -292,7 +385,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             name="time"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Hora (HH:mm)</FormLabel>
+                <FormLabel>{t('time')} (HH:mm)</FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="Ex: 14:30" 
@@ -310,15 +403,15 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         {/* Itens do Agendamento */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-semibold">Serviços/Produtos</CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddItem} disabled={isSubmitting || isEditing}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
+            <CardTitle className="text-lg font-semibold">{t('nav_products_services')}</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={handleAddItem} disabled={isSubmitting || isEditing || !isCompanySelected}>
+              <PlusCircle className="mr-2 h-4 w-4" /> {t('add_item')}
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
               <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
-                <h4 className="text-sm font-medium text-muted-foreground">Item #{index + 1}</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
                 
                 {/* Produto/Serviço */}
                 <FormField
@@ -326,7 +419,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                   name={`items.${index}.produto_id`}
                   render={({ field: itemField }) => (
                     <FormItem>
-                      <FormLabel>Serviço/Produto</FormLabel>
+                      <FormLabel>{t('service_product')}</FormLabel>
                       {isEditing ? (
                         <FormControl>
                           <Input 
@@ -339,17 +432,17 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         <Select 
                           onValueChange={(val) => handleProductChange(index, val)} 
                           value={itemField.value} 
-                          disabled={isLoadingItems || isSubmitting}
+                          disabled={isLoadingItems || isSubmitting || !isCompanySelected}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={allItems.length === 0 ? "Carregando itens..." : "Selecione o item"} />
+                              <SelectValue placeholder={allItems.length === 0 ? t("loading_items") : t("select_item")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {allItems.map((item) => (
                               <SelectItem key={item.id} value={item.id}>
-                                {item.nome} ({item.tipo === 'servico' ? 'Serviço' : 'Produto'})
+                                {item.nome} ({item.tipo === 'servico' ? t('nav_services') : t('nav_products')})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -367,7 +460,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                     name={`items.${index}.quantidade`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Quantidade</FormLabel>
+                        <FormLabel>{t('quantity')}</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -389,7 +482,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                     name={`items.${index}.preco_unitario`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preço Unitário (R$)</FormLabel>
+                        <FormLabel>{t('unit_price')} (R$)</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -423,7 +516,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             
             {fields.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
-                Adicione serviços ou produtos ao agendamento.
+                {t('add_services_or_products')}
               </p>
             )}
             
@@ -437,11 +530,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel>{t('order_table_header_status')}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
+                      <SelectValue placeholder={t('select_status')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -458,19 +551,19 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           />
         )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            "Salvar Alterações"
+            t('save_changes')
           ) : (
-            "Agendar"
+            t('schedule')
           )}
         </Button>
         
         {isEditing && (
           <p className="text-sm text-muted-foreground text-center">
-            A edição de itens não é permitida após a criação do agendamento.
+            {t('item_editing_not_allowed')}
           </p>
         )}
       </form>
