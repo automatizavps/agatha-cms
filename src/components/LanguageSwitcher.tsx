@@ -42,6 +42,9 @@ export function LanguageSwitcher() {
         <DropdownMenuItem onClick={() => changeLanguage('de')}>
           Deutsch
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => changeLanguage('ja')}>
+          日本語 (Japanese)
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
