@@ -63,7 +63,7 @@ const Index = () => {
       <div className="flex flex-col gap-6">
         <h1 className="text-3xl font-bold tracking-tight">{t('dashboard_title')}</h1>
         
-        {/* Filtro de Empresa (Apenas Super Admin) */}
+        {/* Filtro de Empresa (Apenas Super Admin) - Removida a restrição de largura em telas pequenas/médias */}
         {isSuperAdmin && (
           <div className="w-full md:w-64">
             <Select 
