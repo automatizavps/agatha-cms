@@ -32,12 +32,26 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
   }
   
   // Mapeamos os dados, definindo o email como 'N/A' na lista
-  return data.map(user => ({
-    ...user,
-    email: 'N/A', // O email real será buscado no EditUserSheet
-    // Mapeia o nome do perfil customizado para a estrutura 'perfis'
-    perfis: user.perfil_customizado_id ? user.perfis : { nome: user.empresa_id ? 'Admin/Funcionário' : 'Super Admin' },
-  })) as UserProfile[];
+  return data.map(user => {
+    let profileName = user.perfis?.nome;
+    
+    // Se não houver perfil customizado, determinamos o perfil global
+    if (!user.perfil_customizado_id) {
+      if (user.empresa_id === null) {
+        profileName = 'Super Admin';
+      } else {
+        // Se tem empresa_id mas não tem perfil customizado, é o Admin da empresa (perfil 2)
+        profileName = 'Admin'; 
+      }
+    }
+    
+    return {
+      ...user,
+      email: 'N/A', // O email real será buscado no EditUserSheet
+      // Mapeia o nome do perfil
+      perfis: { nome: profileName || 'N/A' },
+    };
+  }) as UserProfile[];
 };
 
 export const useUsers = () => {
@@ -59,6 +73,9 @@ interface InviteUserParams {
 export const inviteUser = async ({ email, full_name, perfil_id, telefone, endereco_completo, empresa_id }: InviteUserParams) => {
   const { data, error } = await supabase.functions.invoke("invite-user", {
     body: { email, full_name, perfil_id, telefone, endereco_completo, empresa_id },
+    headers: {
+      // O token de sessão é adicionado automaticamente pelo cliente Supabase
+    },
   });
 
   if (error) {
@@ -85,6 +102,9 @@ interface UpdateUserParams {
 export const updateUser = async ({ userIdToUpdate, full_name, perfil_id, telefone, endereco_completo, empresa_id }: UpdateUserParams) => {
   const { data, error } = await supabase.functions.invoke("update-user", {
     body: { userIdToUpdate, full_name, perfil_id, telefone, endereco_completo, empresa_id },
+    headers: {
+      // O token de sessão é adicionado automaticamente pelo cliente Supabase
+    },
   });
 
   if (error) {
@@ -102,6 +122,9 @@ export const updateUser = async ({ userIdToUpdate, full_name, perfil_id, telefon
 export const deleteUser = async (userIdToDelete: string) => {
   const { data, error } = await supabase.functions.invoke("delete-user", {
     body: { userIdToDelete },
+    headers: {
+      // O token de sessão é adicionado automaticamente pelo cliente Supabase
+    },
   });
 
   if (error) {
