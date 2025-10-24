@@ -38,12 +38,13 @@ const Index = () => {
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
   const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); // NOVO HOOK
   
+  // useTeams agora só é habilitado se filteredCompanyId existir
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
   const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount;
   
-  // Verifica se as métricas de receita estão desabilitadas (Super Admin em 'all')
-  const isRevenueDisabled = isSuperAdmin && selectedCompanyId === 'all';
+  // Verifica se as métricas de receita/equipe estão desabilitadas (Super Admin em 'all')
+  const isMetricsDisabled = isSuperAdmin && selectedCompanyId === 'all';
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -53,10 +54,10 @@ const Index = () => {
   };
 
   const renderMetricValue = (value: number | string, isCurrency: boolean = false) => {
-    if (isLoading && !isRevenueDisabled) {
+    if (isLoading && !isMetricsDisabled) {
       return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
     }
-    if (isRevenueDisabled) {
+    if (isMetricsDisabled) {
       return <div className="text-sm text-muted-foreground">{t("select_company_for_metrics")}</div>;
     }
     if (isCurrency) {
@@ -184,31 +185,33 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Metas das Equipes (NOVA POSIÇÃO) */}
-        <div className="flex flex-col gap-4">
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Target className="h-6 w-6 text-muted-foreground" />
-            {t('team_goals_section_title')}
-          </h2>
-          
-          {isLoadingTeams ? (
-            <div className="flex justify-center items-center h-40">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : isTeamsError || !teams || teams.length === 0 ? (
-            <Card>
-              <CardContent className="p-4 text-muted-foreground">
-                {t('no_teams_found')}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {teams.map((team) => (
-                <TeamGoalsCard key={team.id} team={team} />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Seção 2: Metas das Equipes */}
+        {filteredCompanyId && (
+          <div className="flex flex-col gap-4">
+            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Target className="h-6 w-6 text-muted-foreground" />
+              {t('team_goals_section_title')}
+            </h2>
+            
+            {isLoadingTeams ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : isTeamsError || !teams || teams.length === 0 ? (
+              <Card>
+                <CardContent className="p-4 text-muted-foreground">
+                  {t('no_teams_found')}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {teams.map((team) => (
+                  <TeamGoalsCard key={team.id} team={team} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Seção 3: Gráficos de Agendamentos */}
         <div className="grid gap-6 grid-cols-12">
