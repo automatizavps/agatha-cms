@@ -14,6 +14,7 @@ export interface Category {
 // --- Fetch ---
 
 const fetchCategories = async (companyId?: string): Promise<Category[]> => {
+  // console.log("Fetching categories with companyId:", companyId); // Adicionado log de debug
   let query = supabase
     .from("categorias")
     .select("id, empresa_id, nome, created_at, empresas (nome)"); // Incluindo o nome da empresa
