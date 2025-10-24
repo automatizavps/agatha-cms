@@ -20,7 +20,8 @@ const FloatingBulkActions: React.FC<FloatingBulkActionsProps> = ({ selectedCount
   return (
     <div 
       className={cn(
-        "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30",
+        // Alterado de 'bottom-4' para 'top-16' para posicionar abaixo do header fixo (h-16)
+        "fixed top-16 left-1/2 transform -translate-x-1/2 z-30",
         "bg-card border border-destructive/50 shadow-2xl rounded-lg p-3 transition-all duration-300",
         "flex items-center gap-4"
       )}
