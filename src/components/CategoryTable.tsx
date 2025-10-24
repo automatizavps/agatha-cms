@@ -24,6 +24,7 @@ import EditCategorySheet from "./EditCategorySheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useCanWrite } from "@/hooks/use-module-permission";
 
 interface CategoryTableProps {
   categories: Category[];
@@ -32,12 +33,13 @@ interface CategoryTableProps {
 interface CategoryActionsProps {
   category: Category;
   onEdit: (category: Category) => void;
+  canWrite: boolean;
 }
 
 type SortKey = 'nome' | 'empresa_id';
 type SortDirection = 'asc' | 'desc';
 
-const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit }) => {
+const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -53,6 +55,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit }) =
   });
 
   const handleDelete = () => {
+    if (!canWrite) return;
     if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(category.id);
     }
@@ -68,17 +71,24 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit }) =
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onEdit(category)}>
-          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleDelete} 
-          disabled={deleteMutation.isPending}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-        </DropdownMenuItem>
+        
+        {canWrite && (
+          <DropdownMenuItem onClick={() => onEdit(category)}>
+            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+          </DropdownMenuItem>
+        )}
+        
+        {canWrite && <DropdownMenuSeparator />}
+        
+        {canWrite && (
+          <DropdownMenuItem 
+            onClick={handleDelete} 
+            disabled={deleteMutation.isPending}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -119,7 +129,8 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.is_super_admin; // Usando a flag correta
+  const isSuperAdmin = profile?.is_super_admin;
+  const canWriteCategories = useCanWrite('categories');
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
@@ -155,7 +166,6 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
           bValue = b.nome;
           break;
         case 'empresa_id':
-          // Agora compara pelo nome da empresa
           aValue = a.empresas?.nome || '';
           bValue = b.empresas?.nome || '';
           break;
@@ -215,12 +225,12 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Building className="h-3 w-3" />
-                      {category.empresas?.nome || 'N/A'} {/* Exibe o nome da empresa */}
+                      {category.empresas?.nome || 'N/A'}
                     </div>
                   </TableCell>
                 )}
                 <TableCell className="text-right">
-                  <CategoryActions category={category} onEdit={handleEdit} />
+                  <CategoryActions category={category} onEdit={handleEdit} canWrite={canWriteCategories} />
                 </TableCell>
               </TableRow>
             ))}

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Tag, Search, Building } from "lucide-react";
 import { useCategories } from "@/integrations/supabase/categories";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission"; // Removido, mas mantido para referência
+import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import CategoryTable from "@/components/CategoryTable";
 import AddCategorySheet from "@/components/AddCategorySheet";
@@ -11,9 +11,9 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando hook de filtro
-import { useCompanies } from "@/integrations/supabase/companies"; // Importando hook de empresas
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const CategoriesContent = () => {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ const CategoriesContent = () => {
   const canReadCategories = useCanRead('categories');
   const canWriteCategories = useCanWrite('categories');
   
-  // Se não puder ler, retorna null (o PermissionGuard externo foi removido)
+  // Se não puder ler, retorna null
   if (!canReadCategories) {
     return null;
   }
@@ -47,7 +47,8 @@ const CategoriesContent = () => {
 
     const lowerCaseSearch = searchTerm.toLowerCase();
     return categories.filter(category => 
-      category.nome.toLowerCase().includes(lowerCaseSearch)
+      category.nome.toLowerCase().includes(lowerCaseSearch) ||
+      (category.empresas?.nome && category.empresas.nome.toLowerCase().includes(lowerCaseSearch))
     );
   }, [categories, searchTerm]);
 
@@ -67,7 +68,7 @@ const CategoriesContent = () => {
         <CardContent>
           <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
             
-            {/* Filtro de Empresa (Apenas para Super Admin) - POSICIONADO PRIMEIRO */}
+            {/* Filtro de Empresa (Apenas para Super Admin) */}
             {isSuperAdmin && (
               <div className="w-full md:w-48">
                 <Select 
@@ -91,7 +92,7 @@ const CategoriesContent = () => {
               </div>
             )}
             
-            {/* Campo de Busca Textual - AGORA É O SEGUNDO ELEMENTO (flex-1) */}
+            {/* Campo de Busca Textual */}
             <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -150,8 +151,7 @@ const CategoriesContent = () => {
 };
 
 const Categories = () => (
-  // O PermissionGuard agora apenas verifica se o usuário está logado e tem perfil/empresa.
-  // A permissão de leitura específica do módulo é verificada dentro do CategoriesContent.
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
   <PermissionGuard allowedProfileIds={[1, 3]}>
     <CategoriesContent />
   </PermissionGuard>
