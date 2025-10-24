@@ -9,6 +9,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription, // <-- IMPORTADO AQUI
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2, Building, Tag, ShieldCheck } from "lucide-react";
