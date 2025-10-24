@@ -22,7 +22,7 @@ import {
 import { useProfiles } from "@/integrations/supabase/profiles";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
-import { useCustomProfiles } from "@/integrations/supabase/customProfiles"; // Importando perfis customizados
+import { useCustomProfiles } from "@/integrations/supabase/customProfiles";
 import { useMemo } from "react";
 
 // Definimos o esquema base
@@ -76,11 +76,17 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
       email: z.string().optional(),
     });
   } else if (isSuperAdmin) {
+    // Na criação, Super Admin deve selecionar a empresa
     finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: "Selecione uma empresa válida.",
         }).min(1, { message: "A empresa é obrigatória para o Super Admin ao convidar." }),
       });
+  } else {
+    // Se não for Super Admin, ele não pode usar este formulário para convidar,
+    // pois não há perfis globais 2 e 3 disponíveis.
+    // O botão de adicionar usuário deve ser ocultado para Admin/Funcionário.
+    return <p className="text-destructive">Apenas Super Admin pode convidar novos usuários.</p>;
   }
 
 
@@ -97,7 +103,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   });
   
   // Observa o ID da empresa selecionada (apenas relevante para Super Admin na criação)
-  const selectedCompanyId = isSuperAdmin && !isEditing ? form.watch('empresa_id') : undefined;
+  const selectedCompanyId = isSuperAdmin && !isEditing ? form.watch('empresa_id') : defaultValues?.empresa_id;
   
   // Carrega perfis customizados filtrados pela empresa selecionada
   const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(selectedCompanyId);
@@ -110,41 +116,32 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     let combined = [...globalProfiles];
     
-    // Se for Super Admin e uma empresa estiver selecionada, adicionamos os perfis customizados
-    if (isSuperAdmin && selectedCompanyId && customProfiles) {
-      // Mapeamos perfis customizados para o formato Profile (id: string, nome: string)
+    // Adicionamos perfis customizados se uma empresa estiver selecionada
+    if (selectedCompanyId && customProfiles) {
       const mappedCustomProfiles = customProfiles.map(p => ({
+        // Usamos o ID do perfil customizado (UUID) como ID
         id: p.id,
         nome: `${p.nome} (Custom)`,
         descricao: `Perfil customizado da empresa ${p.empresas?.nome || ''}`,
       }));
       
-      // Adicionamos os perfis customizados. Usamos o ID do perfil customizado (UUID)
-      // e não o perfil_id (1, 2, 3)
       combined.push(...mappedCustomProfiles as any);
     }
     
-    // Se não for Super Admin, ou se estiver editando, mostramos apenas os perfis globais
-    // (A lógica de edição de perfil customizado para Admin/Funcionário é mais complexa e será tratada separadamente)
-    if (!isSuperAdmin && !isEditing) {
-        // Admin/Funcionário só pode convidar Funcionários (ID 3)
-        return combined.filter(p => p.id === 3);
-    }
+    // Filtra perfis globais 2 e 3, mantendo apenas o Super Admin (ID 1)
+    const filteredGlobalProfiles = combined.filter(p => p.id === 1 || typeof p.id === 'string');
     
-    // Na edição, se o perfil atual for customizado, garantimos que ele apareça na lista
-    if (isEditing && defaultValues?.perfil_id && isNaN(Number(defaultValues.perfil_id))) {
-        const existingCustomProfile = customProfiles?.find(p => p.id === defaultValues.perfil_id);
-        if (existingCustomProfile && !combined.some(p => p.id === existingCustomProfile.id)) {
-             combined.push({
-                id: existingCustomProfile.id,
-                nome: `${existingCustomProfile.nome} (Custom)`,
-                descricao: `Perfil customizado da empresa ${existingCustomProfile.empresas?.nome || ''}`,
-             } as any);
+    // Na edição, se o perfil atual for um dos perfis globais 2 ou 3 (que não estão mais na lista),
+    // precisamos garantir que ele apareça para que o formulário não quebre.
+    if (isEditing && defaultValues?.perfil_id && !isNaN(Number(defaultValues.perfil_id)) && Number(defaultValues.perfil_id) !== 1) {
+        const existingGlobalProfile = globalProfiles.find(p => p.id === Number(defaultValues.perfil_id));
+        if (existingGlobalProfile && !filteredGlobalProfiles.some(p => p.id === existingGlobalProfile.id)) {
+             filteredGlobalProfiles.push(existingGlobalProfile as any);
         }
     }
     
-    return combined;
-  }, [globalProfiles, customProfiles, isSuperAdmin, selectedCompanyId, isEditing, defaultValues?.perfil_id]);
+    return filteredGlobalProfiles;
+  }, [globalProfiles, customProfiles, selectedCompanyId, isEditing, defaultValues?.perfil_id]);
 
 
   const handleSubmit = (values: UserFormValues) => {
@@ -157,6 +154,10 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
       empresa_id = values.empresa_id || null;
+    } else {
+      // Se não for Super Admin, o convite não deveria ser possível, mas se for edição,
+      // o empresa_id é o do usuário logado (que não é usado na mutação de edição, mas é bom ter).
+      empresa_id = currentProfile?.empresa_id || null;
     }
 
     onSubmit({

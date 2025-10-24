@@ -11,6 +11,7 @@ const fetchProfiles = async (): Promise<Profile[]> => {
   const { data, error } = await supabase
     .from("perfis")
     .select("id, nome, descricao")
+    .in("id", [1]) // Apenas Super Admin (ID 1)
     .order("id", { ascending: true });
 
   if (error) {

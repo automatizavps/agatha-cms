@@ -43,22 +43,23 @@ serve(async (req) => {
   
   const inviterUserId = userResponse.user.id;
 
-  // Check if the user is an Admin (Perfil ID 2 - Administrador, ou 1 - Super Admin)
+  // Check if the user is a Super Admin (Perfil ID 1)
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
     .select("perfil_id, empresa_id")
     .eq("id", inviterUserId)
     .single();
 
-  if (profileError || !profileData || (profileData.perfil_id !== 1 && profileData.perfil_id !== 2)) {
-    return new Response("Forbidden: User does not have administrative privileges", {
+  if (profileError || !profileData || profileData.perfil_id !== 1) {
+    // Apenas Super Admin pode convidar agora
+    return new Response("Forbidden: Only Super Admin can invite new users", {
       status: 403,
       headers: corsHeaders,
     });
   }
   
   const isSuperAdmin = profileData.perfil_id === 1;
-  const inviterCompanyId = profileData.empresa_id;
+  // const inviterCompanyId = profileData.empresa_id; // Não é mais usado, Super Admin define a empresa
 
 
   // 2. Processar o corpo da requisição
@@ -78,34 +79,27 @@ serve(async (req) => {
     });
   }
   
-  // Determinar a empresa alvo
-  let final_empresa_id = null;
+  // Determinar a empresa alvo (obrigatório para Super Admin)
+  let final_empresa_id = target_empresa_id || null;
   
-  if (isSuperAdmin) {
-    // Para Super Admin, target_empresa_id deve ser fornecido e ser um UUID válido (não nulo ou string vazia)
-    // target_empresa_id pode ser null se o campo estiver vazio no frontend (UserForm envia null para "")
-    if (!target_empresa_id || (typeof target_empresa_id === 'string' && target_empresa_id.length === 0)) { 
-      return new Response(JSON.stringify({ error: "A empresa é obrigatória para o Super Admin ao convidar." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    final_empresa_id = target_empresa_id;
-  } else {
-    // Admin/Funcionário só pode convidar para sua própria empresa
-    final_empresa_id = inviterCompanyId;
-  }
-
   if (!final_empresa_id) {
-    return new Response(JSON.stringify({ error: "Não foi possível determinar a empresa do usuário logado." }), {
+    return new Response(JSON.stringify({ error: "A empresa é obrigatória para o Super Admin ao convidar." }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
+  // O perfil_id pode ser um INTEGER (1) ou um UUID (customizado)
+  let meta_perfil_id: string | number = perfil_id;
+  
+  // Se for um número, converte para INTEGER
+  if (!isNaN(Number(perfil_id)) && Number(perfil_id) === 1) {
+      meta_perfil_id = 1;
+  }
+  // Se for um UUID, mantém como string (UUID)
+  
   // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
-  // O Supabase adiciona o hash #access_token=...
-  const redirectUrl = `https://site-landing3.b9c03f.easypanel.host/login`;
+  const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
 
 
   // 3. Convidar o usuário usando o Service Role Key
@@ -114,9 +108,9 @@ serve(async (req) => {
     {
       data: {
         full_name: full_name,
-        perfil_id: perfil_id,
-        telefone: telefone, // Passando para raw_user_meta_data
-        endereco_completo: endereco_completo, // Passando para raw_user_meta_data
+        perfil_id: meta_perfil_id, // Passa o ID (INTEGER ou UUID)
+        telefone: telefone,
+        endereco_completo: endereco_completo,
       },
       redirectTo: redirectUrl,
     }
@@ -130,13 +124,7 @@ serve(async (req) => {
     });
   }
   
-  // 4. Atualizar a empresa_id diretamente na tabela usuarios (o trigger handle_new_user já inseriu o registro)
-  // Isso é necessário porque o trigger só insere o que está no raw_user_meta_data, mas não a empresa_id.
-  // O trigger handle_new_empresa só funciona quando uma empresa é criada.
-  // Para convites, precisamos garantir que a empresa_id seja definida.
-  
-  // O usuário convidado ainda não tem um ID no auth.users até que ele clique no link.
-  // No entanto, o inviteUserByEmail retorna o ID do usuário pendente.
+  // 4. Atualizar a empresa_id diretamente na tabela usuarios
   const invitedUserId = inviteData.user?.id;
 
   if (invitedUserId) {
@@ -147,7 +135,6 @@ serve(async (req) => {
 
     if (updateCompanyError) {
       console.error("Supabase Update Company ID Error:", updateCompanyError);
-      // Isso é um erro sério, mas o convite foi enviado.
     }
   }
 

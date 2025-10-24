@@ -7,11 +7,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { inviteUser } from "@/integrations/supabase/users";
 import { showSuccess, showError } from "@/utils/toast";
 import { useTranslation } from "react-i18next";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
 
 const AddUserSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const { data: currentProfile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  
+  const isSuperAdmin = currentProfile?.perfil_id === 1;
+  
+  if (isLoadingProfile || !isSuperAdmin) {
+    // Apenas Super Admin pode convidar novos usuários
+    return null;
+  }
 
   const mutation = useMutation({
     mutationFn: inviteUser,
@@ -36,7 +45,8 @@ const AddUserSheet = () => {
     mutation.mutate({
       email: values.email,
       full_name: values.full_name,
-      perfil_id: parseInt(values.perfil_id),
+      // perfil_id é passado como string (UUID ou '1')
+      perfil_id: values.perfil_id, 
       telefone: values.telefone,
       endereco_completo: values.endereco_completo,
       empresa_id: values.empresa_id || undefined,

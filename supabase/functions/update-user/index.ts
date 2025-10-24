@@ -76,10 +76,27 @@ serve(async (req) => {
     });
   }
   
+  // Determinar se o perfil_id é um UUID (customizado) ou INTEGER (global)
+  const isCustomProfile = typeof perfil_id === 'string' && perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+  
+  let global_perfil_id: number;
+  let custom_perfil_id: string | null = null;
+  
+  if (isCustomProfile) {
+    custom_perfil_id = perfil_id;
+    // Se for customizado, definimos o perfil global como 3 (Funcionário) para RLS
+    global_perfil_id = 3; 
+  } else {
+    // Se for global (deve ser 1), usamos o valor fornecido
+    global_perfil_id = Number(perfil_id);
+    custom_perfil_id = null;
+  }
+  
   // Construir o objeto de atualização
   const updatePayload: Record<string, any> = {
     nome_completo: full_name, 
-    perfil_id: perfil_id,
+    perfil_id: global_perfil_id, // Atualiza o perfil global (1, 2 ou 3)
+    perfil_customizado_id: custom_perfil_id, // Atualiza o perfil customizado (UUID ou NULL)
     telefone: telefone,
     endereco_completo: endereco_completo,
   };
@@ -109,7 +126,7 @@ serve(async (req) => {
     {
       user_metadata: {
         full_name: full_name,
-        perfil_id: perfil_id,
+        perfil_id: perfil_id, // Passamos o ID original (UUID ou INTEGER)
         telefone: telefone,
         endereco_completo: endereco_completo,
       }
