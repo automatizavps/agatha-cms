@@ -62,6 +62,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
   });
 
   const handleSubmit = (values: CategoryFormValues) => {
+    // Se for Super Admin e o valor for uma string vazia, ele falhará na validação Zod.
+    // Se passar na validação (ou não for SA), usamos o valor.
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     onSubmit({
@@ -97,6 +99,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    {/* Adicionando opção vazia para forçar a seleção */}
+                    <SelectItem value="">{t("select_company")}</SelectItem> 
                     {companies?.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.nome}
