@@ -246,6 +246,20 @@ export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrder
       queryClient: queryClient,
     });
   }
+  
+  // 3. Invalida queries de estoque e produtos se o status for 'cancelado'
+  if (status === 'cancelado') {
+    // Invalida queries de produtos (para atualizar o estoque_total)
+    queryClient.invalidateQueries({ queryKey: ["products_only"] });
+    queryClient.invalidateQueries({ queryKey: ["latest_products_only"] });
+    queryClient.invalidateQueries({ queryKey: ["productCount"] });
+  }
+  
+  // 4. Invalida queries de métricas diárias se o status for 'entregue' (ou 'cancelado' se for re-entregue)
+  const currentDate = new Date().toISOString().slice(0, 10);
+  queryClient.invalidateQueries({ queryKey: ["dailyOrderCountByHour", data.empresa_id, currentDate] });
+  queryClient.invalidateQueries({ queryKey: ["revenueMetrics"] });
+
 
   return data;
 };
