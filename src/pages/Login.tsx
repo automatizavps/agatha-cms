@@ -120,6 +120,21 @@ function Login() {
                   button_label: t('send_magic_link'),
                   loading_button_label: t('sending_magic_link'),
                 },
+                // Adicionando traduções para mensagens de alerta
+                success: {
+                  email_sent: t('auth_success_email_sent'),
+                  confirmation_text: t('auth_success_confirmation_text'),
+                  no_session: t('auth_success_no_session'),
+                  password_reset: t('auth_success_password_reset'),
+                  update_user: t('auth_success_update_user'),
+                },
+                error: {
+                  email_not_found: t('auth_error_email_not_found'),
+                  invalid_email: t('auth_error_invalid_email'),
+                  invalid_password: t('auth_error_invalid_password'),
+                  user_already_exists: t('auth_error_user_already_exists'),
+                  default: t('auth_error_default'),
+                }
               },
             }}
           />

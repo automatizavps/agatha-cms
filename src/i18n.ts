@@ -335,6 +335,18 @@ const resources = {
       "send_magic_link": "Enviar link mágico",
       "sending_magic_link": "Enviando link...",
       
+      // Mensagens de Alerta do Auth UI (NOVO)
+      "auth_success_email_sent": "Verifique seu email para o link de redefinição de senha.",
+      "auth_success_confirmation_text": "Verifique seu email para o link de confirmação.",
+      "auth_success_no_session": "Sessão iniciada com sucesso.",
+      "auth_success_password_reset": "Sua senha foi redefinida com sucesso.",
+      "auth_success_update_user": "Usuário atualizado com sucesso.",
+      "auth_error_email_not_found": "Email não encontrado.",
+      "auth_error_invalid_email": "Email inválido.",
+      "auth_error_invalid_password": "Senha inválida.",
+      "auth_error_user_already_exists": "Usuário já existe.",
+      "auth_error_default": "Ocorreu um erro. Tente novamente.",
+      
       // NOVO: Histórico de Vendas do Produto
       "sales_history_title": "Histórico de Vendas: {{name}}",
       "sales_history_subtitle": "Detalhes e histórico de vendas/serviços realizados para este {{type}}.",
