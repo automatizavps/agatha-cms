@@ -97,6 +97,10 @@ const resources = {
       "user_table_header_phone": "Telefone",
       "user_table_header_address": "Endereço",
       "user_table_header_profile": "Perfil",
+      "edit_user": "Editar Usuário",
+      "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.",
+      "loading_user_data": "Carregando Dados do Usuário...",
+      "loading_user_data_description": "Aguarde enquanto carregamos as informações do usuário.",
       
       "page_title_companies": "Gestão de Empresas",
       "company_list_title": "Lista de Empresas",

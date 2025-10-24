@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import UserForm from "./UserForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUser, UserProfile } from "@/integrations/supabase/users";
 import { showSuccess, showError } from "@/utils/toast";
 import { useUserEmail } from "@/integrations/supabase/useUserEmail"; // Importando o novo hook
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next"; // Importando useTranslation
 
 interface EditUserSheetProps {
   user: UserProfile;
@@ -15,6 +16,7 @@ interface EditUserSheetProps {
 
 const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   
   // Busca o email real do usuário que está sendo editado
   const { data: userEmail, isLoading: isLoadingEmail } = useUserEmail(user.id);
@@ -65,7 +67,10 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
         <SheetContent className="sm:max-w-lg flex flex-col">
           <SheetHeader>
-            <SheetTitle>Carregando Dados do Usuário...</SheetTitle>
+            <SheetTitle>{t('loading_user_data')}</SheetTitle>
+            <SheetDescription className="sr-only">
+              {t('loading_user_data_description')}
+            </SheetDescription>
           </SheetHeader>
           <div className="py-4 flex-1 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -79,7 +84,10 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
-          <SheetTitle>Editar Usuário: {user.nome_completo}</SheetTitle>
+          <SheetTitle>{t('edit_user')}: {user.nome_completo}</SheetTitle>
+          <SheetDescription className="sr-only">
+            {t('edit_user_description')}
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <UserForm 
