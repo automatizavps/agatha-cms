@@ -44,8 +44,7 @@ export function UserMenu() {
     if (logoutSuccessful) {
       showSuccess("Logout realizado com sucesso.");
       // Força o redirecionamento para /login, garantindo que o router reaja.
-      // O SessionContextProvider também fará isso, mas esta é uma garantia extra.
-      navigate('/login');
+      navigate('/login', { replace: true }); // Adicionado replace: true
     }
   };
 
