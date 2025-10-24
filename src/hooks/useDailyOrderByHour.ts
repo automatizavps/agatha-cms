@@ -19,7 +19,7 @@ const fetchDailyOrderCountByHour = async (companyId: string): Promise<TimeSeries
   }
 
   return data.map(item => ({
-    hour: item.hour,
+    time_unit: item.hour,
     count: Number(item.count),
   }));
 };
@@ -65,21 +65,25 @@ const fetchOrderCountByDay = async (companyId: string, startDate: Date, endDate:
 export const useOrderTimeSeries = (startDate?: Date, endDate?: Date) => {
   const { filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   
-  const isPeriodFilterActive = !!startDate && !!endDate;
+  // Verifica se o filtro está ativo E se é um intervalo de mais de um dia
+  const isSingleDay = !!startDate && !!endDate && startDate.toDateString() === endDate.toDateString();
+  const isPeriodFilterActive = !!startDate && !!endDate && !isSingleDay;
   
   // A chave da query depende do modo (hora ou período)
   const queryKey = isPeriodFilterActive 
     ? ['orderTimeSeries', filteredCompanyId, startDate.toISOString(), endDate.toISOString()]
-    : ['dailyOrderCountByHour', filteredCompanyId, new Date().toISOString().slice(0, 10)];
+    : ['dailyOrderCountByHour', filteredCompanyId, isSingleDay ? startDate.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)];
 
   const isEnabled = !!filteredCompanyId && !isLoadingFilter;
 
   return useQuery<TimeSeriesCount[], Error>({
     queryKey: queryKey,
     queryFn: () => {
+      // Se for um período de mais de um dia, usamos a agregação por dia
       if (isPeriodFilterActive) {
         return fetchOrderCountByDay(filteredCompanyId!, startDate, endDate);
       }
+      // Se for um único dia (selecionado ou hoje), usamos a RPC por hora
       return fetchDailyOrderCountByHour(filteredCompanyId!);
     },
     enabled: isEnabled,

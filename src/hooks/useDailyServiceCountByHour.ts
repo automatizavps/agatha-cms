@@ -65,21 +65,25 @@ const fetchServiceCountByDay = async (companyId: string, startDate: Date, endDat
 export const useServiceTimeSeries = (startDate?: Date, endDate?: Date) => {
   const { filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   
-  const isPeriodFilterActive = !!startDate && !!endDate;
+  // Verifica se o filtro está ativo E se é um intervalo de mais de um dia
+  const isSingleDay = !!startDate && !!endDate && startDate.toDateString() === endDate.toDateString();
+  const isPeriodFilterActive = !!startDate && !!endDate && !isSingleDay;
   
   // A chave da query depende do modo (hora ou período)
   const queryKey = isPeriodFilterActive 
     ? ['serviceTimeSeries', filteredCompanyId, startDate.toISOString(), endDate.toISOString()]
-    : ['dailyServiceCountByHour', filteredCompanyId, new Date().toISOString().slice(0, 10)];
+    : ['dailyServiceCountByHour', filteredCompanyId, isSingleDay ? startDate.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)];
 
   const isEnabled = !!filteredCompanyId && !isLoadingFilter;
 
   return useQuery<TimeSeriesCount[], Error>({
     queryKey: queryKey,
     queryFn: () => {
+      // Se for um período de mais de um dia, usamos a agregação por dia
       if (isPeriodFilterActive) {
         return fetchServiceCountByDay(filteredCompanyId!, startDate, endDate);
       }
+      // Se for um único dia (selecionado ou hoje), usamos a RPC por hora
       return fetchDailyServiceCountByHour(filteredCompanyId!);
     },
     enabled: isEnabled,

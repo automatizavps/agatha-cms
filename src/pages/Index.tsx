@@ -42,14 +42,11 @@ const Index = () => {
     isLoadingFilter 
   } = useDashboardFilter();
   
-  // Agora usamos apenas 'selectedDate' para o filtro de dia
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  // Usamos startDate e endDate para o filtro de período
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
-  
-  // Calculamos startDate e endDate com base em selectedDate
-  const startDate = selectedDate;
-  const endDate = selectedDate;
   
   // Passando o filtro de data para as métricas
   const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId, startDate, endDate);
@@ -81,12 +78,15 @@ const Index = () => {
   };
   
   // Verifica se há um filtro de data ativo
-  const isDateFilterActive = !!selectedDate;
+  const isDateFilterActive = !!startDate && !!endDate;
   
   // Texto para o filtro de data
-  const dateFilterText = selectedDate 
-    ? format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })
-    : t('select_date'); // Usando 'select_date' para indicar que é uma única data
+  const dateFilterText = startDate && endDate 
+    ? (startDate.toDateString() === endDate.toDateString() 
+        ? format(startDate, 'dd/MM/yyyy', { locale: ptBR }) // Se for o mesmo dia, mostra apenas a data
+        : `${format(startDate, 'dd/MM/yyyy', { locale: ptBR })} - ${format(endDate, 'dd/MM/yyyy', { locale: ptBR })}`
+      )
+    : t('select_date_range');
 
   return (
     <DashboardLayout>
@@ -120,14 +120,14 @@ const Index = () => {
             </div>
           )}
           
-          {/* Filtro de Período (Agora Single Date) */}
+          {/* Filtro de Período (Agora Range, mas com lógica de Single Day no hook) */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
                 className={cn(
                   "w-full md:w-64 justify-start text-left font-normal",
-                  !selectedDate && "text-muted-foreground"
+                  (!startDate || !endDate) && "text-muted-foreground"
                 )}
                 disabled={isLoading}
               >
@@ -137,19 +137,20 @@ const Index = () => {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
-                mode="single" // Alterado para modo single
-                selected={selectedDate}
-                onSelect={(date) => {
-                  // Ao selecionar uma data, definimos o estado
-                  setSelectedDate(date);
+                mode="range" // Mantido como range para flexibilidade
+                selected={{ from: startDate, to: endDate }}
+                onSelect={(range) => {
+                  setStartDate(range?.from);
+                  setEndDate(range?.to);
                 }}
+                numberOfMonths={2}
                 locale={ptBR}
               />
               <div className="p-2 border-t">
                 <Button 
                   variant="ghost" 
                   className="w-full" 
-                  onClick={() => { setSelectedDate(undefined); }}
+                  onClick={() => { setStartDate(undefined); setEndDate(undefined); }}
                 >
                   {t('clear_filter')}
                 </Button>
