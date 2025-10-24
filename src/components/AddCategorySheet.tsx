@@ -21,7 +21,9 @@ const AddCategorySheet = () => {
       setIsOpen(false);
     },
     onError: (error) => {
-      showError(t("error_loading_data") + ": " + error.message);
+      // Garante que a mensagem de erro seja extraída corretamente
+      const errorMessage = error instanceof Error ? error.message : t("error_loading_data");
+      showError(errorMessage);
     },
   });
 
