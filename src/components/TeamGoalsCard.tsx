@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Team } from '@/types/supabase'; // Importando o tipo centralizado
+import { Team } from '@/integrations/supabase/teams';
 import { DollarSign, Target, Users, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from 'react-i18next';

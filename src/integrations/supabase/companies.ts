@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 
-export interface SupabaseCompany { // Renomeado para SupabaseCompany
+export interface Company {
   id: string;
   nome: string;
   cnpj: string | null;
@@ -14,7 +14,7 @@ export interface SupabaseCompany { // Renomeado para SupabaseCompany
 
 // --- Fetch ---
 
-const fetchCompanies = async (): Promise<SupabaseCompany[]> => {
+const fetchCompanies = async (): Promise<Company[]> => {
   // A política RLS existente só permite que Admins/Funcionários vejam a própria empresa.
   // Para o Super Admin (ID 1), a política 'Super Admin pode gerenciar todas as empresas' permite SELECT *.
   const { data, error } = await supabase
@@ -27,11 +27,11 @@ const fetchCompanies = async (): Promise<SupabaseCompany[]> => {
     throw new Error("Failed to fetch companies");
   }
 
-  return data as SupabaseCompany[];
+  return data as Company[];
 };
 
 export const useCompanies = () => {
-  return useQuery<SupabaseCompany[], Error>({
+  return useQuery<Company[], Error>({
     queryKey: ["companies"],
     queryFn: fetchCompanies,
   });
