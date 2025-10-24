@@ -185,69 +185,73 @@ const Notifications = () => {
             <>
               <NotificationTable notifications={filteredNotifications} />
               
-              {/* Componente de Paginação - Ajustado para alinhar à direita */}
+              {/* Componente de Paginação - Ajustado para alinhar à direita e manter elementos juntos */}
               {totalPages > 1 && (
                 <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
                   
-                  {/* Informação da Página */}
-                  <span className="text-sm text-muted-foreground">
-                    {t('page_info', { 
-                      current: currentPage, 
-                      total: totalPages, 
-                      start: (currentPage - 1) * pageSize + 1,
-                      end: Math.min(currentPage * pageSize, totalCount),
-                      count: totalCount
-                    })}
-                  </span>
-                  
-                  {/* Controles de Paginação */}
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1 || isRefetching}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                      </PaginationItem>
-                      
-                      {/* Exibição simplificada de páginas */}
-                      <PaginationItem className="flex items-center">
-                        <Input 
-                          type="number"
-                          value={currentPage}
-                          onChange={(e) => {
-                            const page = parseInt(e.target.value);
-                            if (!isNaN(page) && page >= 1 && page <= totalPages) {
-                              setCurrentPage(page);
-                            }
-                          }}
-                          onBlur={() => {
-                            // Garante que o valor seja válido ao sair do foco
-                            if (currentPage < 1) setCurrentPage(1);
-                            if (currentPage > totalPages) setCurrentPage(totalPages);
-                          }}
-                          className="w-16 text-center h-9"
-                          disabled={isRefetching}
-                        />
-                        <span className="text-sm text-muted-foreground mx-2">/ {totalPages}</span>
-                      </PaginationItem>
+                  {/* Agrupando Informação da Página e Controles */}
+                  <div className="flex items-center gap-4">
+                    
+                    {/* Informação da Página */}
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      {t('page_info', { 
+                        current: currentPage, 
+                        total: totalPages, 
+                        start: (currentPage - 1) * pageSize + 1,
+                        end: Math.min(currentPage * pageSize, totalCount),
+                        count: totalCount
+                      })}
+                    </span>
+                    
+                    {/* Controles de Paginação */}
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1 || isRefetching}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                        </PaginationItem>
+                        
+                        {/* Exibição simplificada de páginas */}
+                        <PaginationItem className="flex items-center">
+                          <Input 
+                            type="number"
+                            value={currentPage}
+                            onChange={(e) => {
+                              const page = parseInt(e.target.value);
+                              if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                                setCurrentPage(page);
+                              }
+                            }}
+                            onBlur={() => {
+                              // Garante que o valor seja válido ao sair do foco
+                              if (currentPage < 1) setCurrentPage(1);
+                              if (currentPage > totalPages) setCurrentPage(totalPages);
+                            }}
+                            className="w-16 text-center h-9"
+                            disabled={isRefetching}
+                          />
+                          <span className="text-sm text-muted-foreground mx-2">/ {totalPages}</span>
+                        </PaginationItem>
 
-                      <PaginationItem>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === totalPages || isRefetching}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                        <PaginationItem>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || isRefetching}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
                 </div>
               )}
             </>
