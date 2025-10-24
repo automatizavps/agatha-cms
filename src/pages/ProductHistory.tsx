@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Package, Tag, Factory, DollarSign, Clock, Building, TrendingUp, User } from "lucide-react";
+import { Loader2, Package, Tag, Factory, DollarSign, Clock, Building, TrendingUp, User, ListOrdered } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
 import { useProductById, ProductType } from "@/integrations/supabase/products";
