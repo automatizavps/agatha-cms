@@ -10,11 +10,16 @@ export interface Category {
 
 // --- Fetch ---
 
-const fetchCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
+const fetchCategories = async (companyId?: string): Promise<Category[]> => {
+  let query = supabase
     .from("categorias")
-    .select("id, empresa_id, nome, created_at")
-    .order("nome", { ascending: true });
+    .select("id, empresa_id, nome, created_at");
+    
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query.order("nome", { ascending: true });
 
   if (error) {
     console.error("Error fetching categories:", error);
@@ -24,10 +29,10 @@ const fetchCategories = async (): Promise<Category[]> => {
   return data as Category[];
 };
 
-export const useCategories = () => {
+export const useCategories = (companyId?: string) => {
   return useQuery<Category[], Error>({
-    queryKey: ["categories"],
-    queryFn: fetchCategories,
+    queryKey: ["categories", companyId],
+    queryFn: () => fetchCategories(companyId),
   });
 };
 

@@ -30,7 +30,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando hook de filtro
+import { useCompanies } from "@/integrations/supabase/companies"; // Importando hook de empresas
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -205,7 +207,9 @@ const AppointmentsContent = () => {
   // --- Selection State ---
   const [selectedAppointmentIds, setSelectedAppointmentIds] = useState<Set<string>>(new Set());
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  // Dashboard Filter Hook
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   // Permissões baseadas no perfil customizado
   const canReadAppointments = useCanRead('appointments');
@@ -213,13 +217,15 @@ const AppointmentsContent = () => {
 
   // Fetch data using filters
   const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(
-    isSuperAdmin ? undefined : profile?.empresa_id, // Company filter is handled by RLS/hook, but we pass undefined for SA to fetch all
+    filteredCompanyId, // Passa o ID filtrado
     {
       startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
       endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
       status: statusFilter,
     }
   );
+
+  const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -377,6 +383,30 @@ const AppointmentsContent = () => {
           {/* --- Filter UI --- */}
           <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
             
+            {/* Filtro de Empresa (Apenas para Super Admin) */}
+            {isSuperAdmin && (
+              <div className="w-full md:w-48">
+                <Select 
+                  onValueChange={setSelectedCompanyId} 
+                  value={selectedCompanyId} 
+                  disabled={isLoadingCompanies || isChecking}
+                >
+                  <SelectTrigger className="w-full">
+                    <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder={t('filter_all_companies')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             {/* Filtro de Data */}
             <Popover>
               <PopoverTrigger asChild>
@@ -434,7 +464,7 @@ const AppointmentsContent = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
-                disabled={isLoading}
+                disabled={isChecking}
               />
             </div>
             
@@ -479,7 +509,7 @@ const AppointmentsContent = () => {
             </div>
           )}
           
-          {isLoading && !isRefetching ? (
+          {isChecking && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>

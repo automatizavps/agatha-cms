@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, ShoppingCart, Search, Trash2, CalendarIcon } from "lucide-react";
+import { Loader2, RefreshCw, ShoppingCart, Search, Trash2, CalendarIcon, Building } from "lucide-react";
 import { useOrders, deleteOrders } from "@/integrations/supabase/orders";
 import { showError, showSuccess } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
@@ -16,7 +16,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando hook de filtro
+import { useCompanies } from "@/integrations/supabase/companies"; // Importando hook de empresas
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
 
 const OrdersContent = () => {
   // --- Filter States ---
@@ -26,6 +29,10 @@ const OrdersContent = () => {
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  
+  // Dashboard Filter Hook
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   // Permissões baseadas no perfil customizado
   const canReadOrders = useCanRead('orders');
@@ -37,12 +44,14 @@ const OrdersContent = () => {
   
   // Fetch data using filters
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders(
-    undefined, // companyId é undefined, RLS filtra
+    filteredCompanyId, // Passa o ID filtrado (undefined se for 'all' para SA, ou o ID fixo para Admin/Func)
     {
       startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
       endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
     }
   );
+
+  const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -103,6 +112,30 @@ const OrdersContent = () => {
         <CardContent>
           <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
             
+            {/* Filtro de Empresa (Apenas para Super Admin) */}
+            {isSuperAdmin && (
+              <div className="w-full md:w-48">
+                <Select 
+                  onValueChange={setSelectedCompanyId} 
+                  value={selectedCompanyId} 
+                  disabled={isLoadingCompanies || isChecking}
+                >
+                  <SelectTrigger className="w-full">
+                    <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder={t('filter_all_companies')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             {/* Filtro de Data (Período) */}
             <Popover>
               <PopoverTrigger asChild>
@@ -144,7 +177,7 @@ const OrdersContent = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
-                disabled={isLoading && !isRefetching}
+                disabled={isChecking}
               />
             </div>
             
@@ -189,7 +222,7 @@ const OrdersContent = () => {
             </div>
           )}
 
-          {isLoading && !isRefetching ? (
+          {isChecking && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
