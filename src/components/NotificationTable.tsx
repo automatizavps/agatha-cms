@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // IMPORTAÇÃO CORRIGIDA
 
 interface NotificationTableProps {
   notifications: Notification[];
