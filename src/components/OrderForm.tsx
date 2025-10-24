@@ -78,35 +78,10 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const isSuperAdmin = profile?.is_super_admin; // Usando a flag correta
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
-  // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
-  const formSchema = isSuperAdmin && !isEditing
-    ? baseFormSchema.extend({
-        empresa_id: z.string().uuid({
-          message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
-      })
-    : baseFormSchema;
-
-  const form = useForm<OrderFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      cliente_id: defaultValues?.cliente_id || "",
-      items: defaultValues?.items || [],
-      status: defaultValues?.status || 'pendente_entrega',
-      empresa_id: defaultValues?.empresa_id || "",
-    },
-  });
-  
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "items",
-  });
-  
   // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
-  // Se estiver editando, usamos o valor inicial da empresa, que é fixo.
-  const selectedCompanyId = isEditing 
-    ? defaultValues?.empresa_id 
-    : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
+  const companyIdFromDefault = defaultValues?.empresa_id;
+  const companyIdFromWatch = isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id;
+  const selectedCompanyId = isEditing ? companyIdFromDefault : companyIdFromWatch;
     
   const isCompanySelected = !!selectedCompanyId;
   
@@ -127,6 +102,65 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
+  // --- ZOD SCHEMA COM VALIDAÇÃO DE ESTOQUE NO NÍVEL DO ARRAY ---
+  
+  // Função auxiliar para obter o produto pelo ID
+  const getProductById = (id: string): Product | undefined => {
+    return allItems.find(i => i.id === id);
+  };
+
+  const finalFormSchema = useMemo(() => {
+    let schema = baseFormSchema;
+    
+    if (isSuperAdmin && !isEditing) {
+      schema = schema.extend({
+        empresa_id: z.string().uuid({
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
+      });
+    }
+    
+    // Adiciona validação de estoque no nível do array de items
+    return schema.extend({
+      items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." })
+        .refine((items) => {
+          // Esta validação só é executada se a empresa estiver selecionada e os itens estiverem carregados
+          if (!isCompanySelected || isLoadingItems) return true; 
+          
+          for (const item of items) {
+            const product = getProductById(item.produto_id);
+            
+            if (product && product.tipo === 'produto' && product.estoque_total !== null && product.estoque_total !== undefined) {
+              if (item.quantidade > product.estoque_total) {
+                // Se a validação falhar, retornamos false. A mensagem de erro será tratada no nível do campo.
+                return false; 
+              }
+            }
+          }
+          return true;
+        }, {
+          // Esta mensagem de erro genérica será substituída pela mensagem específica do campo
+          message: "Erro de estoque em um ou mais produtos.",
+          path: ['items'], // Define o caminho do erro para o array
+        }),
+    });
+  }, [isSuperAdmin, isEditing, isCompanySelected, isLoadingItems, t]);
+
+  const form = useForm<OrderFormValues>({
+    resolver: zodResolver(finalFormSchema),
+    defaultValues: {
+      cliente_id: defaultValues?.cliente_id || "",
+      items: defaultValues?.items || [],
+      status: defaultValues?.status || 'pendente_entrega',
+      empresa_id: defaultValues?.empresa_id || "",
+    },
+  });
+  
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+  
   // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
@@ -152,8 +186,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       // Atualiza o preço unitário automaticamente ao selecionar o produto/serviço
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
-      // Dispara a validação da quantidade
+      // Dispara a validação da quantidade e do item
       form.trigger(`items.${index}.quantidade`);
+      form.trigger(`items`);
     }
   };
   
@@ -163,9 +198,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     return item ? `${item.nome} (${item.tipo === 'produto' ? t('nav_products') : t('nav_services')})` : t('unknown_item');
   };
   
-  // Função de validação de estoque
+  // Função de validação de estoque (usada apenas para exibir a mensagem no campo)
   const validateStock = (item: ItemToCreate) => {
-    const product = allItems.find(p => p.id === item.produto_id);
+    const product = getProductById(item.produto_id);
     
     if (!product) {
       return t('select_item');
@@ -408,8 +443,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                             {...field} 
                             onChange={(e) => {
                               field.onChange(e.target.value);
-                              // Dispara a validação ao mudar a quantidade
+                              // Dispara a validação ao mudar a quantidade e o array
                               form.trigger(`items.${index}.quantidade`);
+                              form.trigger(`items`);
                             }}
                             disabled={isSubmitting || isEditing}
                           />
@@ -417,8 +453,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                         <FormMessage />
                       </FormItem>
                     )}
-                    // Adiciona a validação de estoque aqui
-                    rules={{ validate: (value) => validateStock({ ...form.getValues().items[index], quantidade: Number(value) }) }}
+                    // A validação de estoque é mantida aqui para exibir a mensagem específica do campo
+                    rules={{ validate: validateStock }}
                   />
                   
                   {/* Preço Unitário */}
@@ -475,6 +511,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
               </span>
             </div>
             
+            {/* Mensagem de erro do array (para validação de estoque global) */}
             <FormMessage>{form.formState.errors.items?.message}</FormMessage>
           </CardContent>
         </Card>
