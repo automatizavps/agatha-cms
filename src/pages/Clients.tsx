@@ -9,7 +9,6 @@ import ClientTable from "@/components/ClientTable";
 import AddClientSheet from "@/components/AddClientSheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
@@ -18,20 +17,24 @@ import { cn } from "@/lib/utils";
 import ExportButton from "@/components/ExportButton";
 import { format } from "date-fns";
 import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
 
 const ClientsContent = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
-  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const queryClient = useQueryClient();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
   const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
+  
+  // Usando o filtro global do dashboard
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
 
-  const isSuperAdmin = profile?.perfil_id === 1;
-  const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  // O perfil do usuário logado é obtido dentro do useDashboardFilter, mas precisamos do isSuperAdmin aqui
+  // O isSuperAdmin do useDashboardFilter é a fonte de verdade.
+  
+  const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
   // Permissões baseadas no perfil customizado
   const canReadClients = useCanRead('clients');
@@ -50,8 +53,8 @@ const ClientsContent = () => {
     let filtered = clients;
 
     // 1. Filtragem por Empresa (se Super Admin e filtro ativo)
-    if (isSuperAdmin && companyFilterId !== 'all') {
-      filtered = filtered.filter(client => client.empresa_id === companyFilterId);
+    if (isSuperAdmin && selectedCompanyId !== 'all') {
+      filtered = filtered.filter(client => client.empresa_id === selectedCompanyId);
     }
     
     // 2. Filtragem por Termo de Busca
@@ -66,7 +69,7 @@ const ClientsContent = () => {
     }
 
     return filtered;
-  }, [clients, searchTerm, companyFilterId, isSuperAdmin]);
+  }, [clients, searchTerm, selectedCompanyId, isSuperAdmin]);
   
   // Mapeamento de dados para exportação
   const exportData = useMemo(() => {
@@ -127,8 +130,8 @@ const ClientsContent = () => {
             {isSuperAdmin && (
               <div className="w-full md:w-48">
                 <Select 
-                  onValueChange={setCompanyFilterId} 
-                  value={companyFilterId} 
+                  onValueChange={setSelectedCompanyId} 
+                  value={selectedCompanyId} 
                   disabled={isLoadingCompanies || isChecking}
                 >
                   <SelectTrigger className="w-full">
