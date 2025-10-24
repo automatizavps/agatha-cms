@@ -76,21 +76,28 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({ currentUrls = [], o
   const handleRemove = useCallback(async (urlToRemove: string) => {
     if (!userId) return;
     
-    // 1. Remover do Supabase Storage
+    // 1. Remover do Supabase Storage (assíncrono, mas não bloqueia o UI)
     const pathMatch = urlToRemove.match(/product_images\/(.*)/);
     if (pathMatch && pathMatch[1]) {
       const pathToDelete = pathMatch[1];
       
       // Não precisamos de setUploading aqui, pois a remoção é rápida e não bloqueia o formulário principal
-      await supabase.storage
+      // Usamos .then() para não bloquear o fluxo principal de atualização do estado
+      supabase.storage
         .from(bucketName)
-        .remove([pathToDelete]);
+        .remove([pathToDelete])
+        .then(({ error }) => {
+          if (error) {
+            console.error("Storage removal warning:", error);
+            // Não mostramos erro crítico, pois a remoção do link é mais importante
+          }
+        });
     }
     
-    // 2. Remover da lista local
+    // 2. Remover da lista local e notificar o pai (síncrono)
     const updatedUrls = currentUrls?.filter(url => url !== urlToRemove) || null;
     onUrlsChange(updatedUrls);
-    showSuccess("Imagem removida.");
+    showSuccess("Imagem removida. Clique em 'Salvar Alterações' para finalizar.");
     
   }, [userId, currentUrls, onUrlsChange]);
 
