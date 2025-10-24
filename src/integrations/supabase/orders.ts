@@ -36,9 +36,9 @@ export interface Order {
 
 // --- Fetch ---
 
-const fetchOrders = async (companyId?: string, startDate?: Date, endDate?: Date): Promise<Order[]> => {
+const fetchOrders = async (): Promise<Order[]> => {
   // Buscamos pedidos e o nome/email do cliente
-  let query = supabase
+  const { data, error } = await supabase
     .from("pedidos")
     .select(`
       id,
@@ -48,25 +48,8 @@ const fetchOrders = async (companyId?: string, startDate?: Date, endDate?: Date)
       status,
       created_at,
       clientes (nome, email)
-    `);
-    
-  // 1. Filtrar por Empresa
-  if (companyId) {
-    query = query.eq('empresa_id', companyId);
-  }
-  
-  // 2. Filtrar por Data (created_at)
-  if (startDate) {
-    query = query.gte('created_at', startDate.toISOString());
-  }
-  if (endDate) {
-    // Adiciona 1 dia ao endDate para incluir o dia inteiro
-    const end = new Date(endDate);
-    end.setDate(end.getDate() + 1);
-    query = query.lt('created_at', end.toISOString());
-  }
-
-  const { data, error } = await query.order("created_at", { ascending: false });
+    `)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching orders:", error);
@@ -76,13 +59,10 @@ const fetchOrders = async (companyId?: string, startDate?: Date, endDate?: Date)
   return data as Order[];
 };
 
-export const useOrders = (companyId?: string, startDate?: Date, endDate?: Date) => {
-  // A query key agora inclui as datas para re-fetch quando o filtro muda
-  const dateKey = startDate?.toISOString() + endDate?.toISOString();
-  
+export const useOrders = () => {
   return useQuery<Order[], Error>({
-    queryKey: ["orders", companyId, dateKey],
-    queryFn: () => fetchOrders(companyId, startDate, endDate),
+    queryKey: ["orders"],
+    queryFn: fetchOrders,
   });
 };
 
@@ -243,14 +223,6 @@ export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrder
       queryClient: queryClient,
     });
   }
-  
-  // 3. Invalida a query de métricas diárias se o status for 'entregue'
-  if (status === 'entregue') {
-    const currentDate = new Date().toISOString().slice(0, 10);
-    // Invalida a query que alimenta o gráfico de pedidos por hora
-    queryClient.invalidateQueries({ queryKey: ["dailyOrderCountByHour", data.empresa_id, currentDate] });
-  }
-
 
   return data;
 };

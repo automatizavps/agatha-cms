@@ -5,8 +5,9 @@ import { useCurrentUserProfile } from "./user-profile";
 // --- Funções de Fetch ---
 
 interface RevenueMetrics {
-  total_revenue: number; // Total de receita no período
-  total_orders: number;  // Total de pedidos no período
+  daily_revenue: number;
+  weekly_revenue: number;
+  monthly_revenue: number; // NOVO: Faturamento Mensal
 }
 
 export interface TopSellingItem {
@@ -17,44 +18,86 @@ export interface TopSellingItem {
 }
 
 /**
- * Busca o faturamento total de pedidos 'entregues' e a contagem de pedidos
- * para a empresa e período especificados.
+ * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
+ * na data atual, na semana atual e no mês atual.
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
- * @param startDate Data de início do filtro (opcional).
- * @param endDate Data de fim do filtro (opcional).
  */
-const fetchRevenueMetrics = async (companyId: string | undefined, startDate?: Date, endDate?: Date): Promise<RevenueMetrics> => {
-  let query = supabase
+const fetchRevenueMetrics = async (companyId: string | undefined): Promise<RevenueMetrics> => {
+  // Define o início do dia de hoje (00:00:00)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  
+  // Define o início da semana (Domingo, 00:00:00)
+  const dayOfWeek = todayStart.getDay(); // 0 = Domingo, 6 = Sábado
+  const weekStart = new Date(todayStart);
+  weekStart.setDate(todayStart.getDate() - dayOfWeek);
+  
+  // Define o início do mês (Dia 1, 00:00:00)
+  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+
+
+  // 1. Faturamento Diário (Hoje)
+  let dailyQuery = supabase
     .from("pedidos")
     .select("valor_total")
-    .eq("status", "entregue");
+    .eq("status", "entregue")
+    .gte("created_at", todayStart.toISOString());
     
   if (companyId) {
-    query = query.eq("empresa_id", companyId);
+    dailyQuery = dailyQuery.eq("empresa_id", companyId);
+  }
+
+  const { data: dailyData, error: dailyError } = await dailyQuery;
+
+  if (dailyError) {
+    console.error("Error fetching daily revenue:", dailyError);
+    throw new Error("Failed to fetch daily revenue");
   }
   
-  // Filtragem por data
-  if (startDate) {
-    query = query.gte("created_at", startDate.toISOString());
-  }
-  if (endDate) {
-    // Adiciona 1 dia ao endDate para incluir o dia inteiro
-    const end = new Date(endDate);
-    end.setDate(end.getDate() + 1);
-    query = query.lt("created_at", end.toISOString());
+  const daily_revenue = dailyData.reduce((sum, order) => sum + order.valor_total, 0);
+
+  // 2. Faturamento Semanal (Esta Semana)
+  let weeklyQuery = supabase
+    .from("pedidos")
+    .select("valor_total")
+    .eq("status", "entregue")
+    .gte("created_at", weekStart.toISOString());
+    
+  if (companyId) {
+    weeklyQuery = weeklyQuery.eq("empresa_id", companyId);
   }
 
-  const { data: ordersData, error: ordersError } = await query;
+  const { data: weeklyData, error: weeklyError } = await weeklyQuery;
 
-  if (ordersError) {
-    console.error("Error fetching revenue metrics:", ordersError);
-    throw new Error("Failed to fetch revenue metrics");
+  if (weeklyError) {
+    console.error("Error fetching weekly revenue:", weeklyError);
+    throw new Error("Failed to fetch weekly revenue");
   }
   
-  const total_revenue = ordersData.reduce((sum, order) => sum + order.valor_total, 0);
-  const total_orders = ordersData.length;
+  const weekly_revenue = weeklyData.reduce((sum, order) => sum + order.valor_total, 0);
+  
+  // 3. Faturamento Mensal (Este Mês)
+  let monthlyQuery = supabase
+    .from("pedidos")
+    .select("valor_total")
+    .eq("status", "entregue")
+    .gte("created_at", monthStart.toISOString());
+    
+  if (companyId) {
+    monthlyQuery = monthlyQuery.eq("empresa_id", companyId);
+  }
 
-  return { total_revenue, total_orders };
+  const { data: monthlyData, error: monthlyError } = await monthlyQuery;
+
+  if (monthlyError) {
+    console.error("Error fetching monthly revenue:", monthlyError);
+    throw new Error("Failed to fetch monthly revenue");
+  }
+  
+  const monthly_revenue = monthlyData.reduce((sum, order) => sum + order.valor_total, 0);
+
+
+  return { daily_revenue, weekly_revenue, monthly_revenue };
 };
 
 /**
@@ -108,7 +151,10 @@ const fetchClientCount = async (companyId: string | undefined): Promise<number> 
 /**
  * Busca os 10 itens mais vendidos (produtos e serviços) para a empresa.
  * NOTA: A função RPC 'get_top_selling_items' exige um company_id_input. 
- * @param companyId O ID da empresa a ser filtrada (obrigatório).
+ * Se companyId for undefined, não podemos chamar a RPC.
+ * Para 'Todas as Empresas', esta métrica será desabilitada, pois a lógica de agregação
+ * de vendas de pedidos e agendamentos é complexa demais para ser feita no cliente.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
 const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]> => {
   const { data, error } = await supabase.rpc('get_top_selling_items', { company_id_input: companyId });
@@ -128,13 +174,13 @@ const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]
 
 // --- Hooks de Uso ---
 
-export const useRevenueMetrics = (companyId: string | undefined, startDate?: Date, endDate?: Date) => {
-  // A query key agora inclui as datas para re-fetch quando o filtro muda
-  const dateKey = startDate?.toISOString() + endDate?.toISOString();
+export const useRevenueMetrics = (companyId: string | undefined) => {
+  // Adiciona a data atual na query key para garantir que o cache seja atualizado diariamente
+  const currentDate = new Date().toISOString().slice(0, 10); 
   
   return useQuery<RevenueMetrics, Error>({
-    queryKey: ["revenueMetrics", companyId, dateKey],
-    queryFn: () => fetchRevenueMetrics(companyId, startDate, endDate),
+    queryKey: ["revenueMetrics", companyId, currentDate],
+    queryFn: () => fetchRevenueMetrics(companyId),
     enabled: true, 
   });
 };

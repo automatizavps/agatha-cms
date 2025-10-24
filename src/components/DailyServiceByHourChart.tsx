@@ -2,43 +2,21 @@
 
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useServiceTimeSeries, TimeSeriesCount } from "@/hooks/useDailyServiceCountByHour";
+import { useDailyServiceCountByHour, DailyServiceCount } from "@/hooks/useDailyServiceCountByHour";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
-interface DailyServiceByHourChartProps {
-  startDate?: Date;
-  endDate?: Date;
-}
-
-// Função auxiliar para formatar o rótulo do eixo X (hora ou dia)
-const formatTimeUnit = (tick: number | string, isPeriod: boolean) => {
-  if (isPeriod) {
-    // Se for período, formata a data (YYYY-MM-DD) para DD/MM
-    try {
-      return format(new Date(tick), 'dd/MM', { locale: ptBR });
-    } catch {
-      return String(tick);
-    }
-  }
-  // Se for hoje, formata a hora
+// Função auxiliar para formatar o rótulo do eixo X (hora)
+const formatHour = (tick: number) => {
   return `${tick}h`;
 };
 
 // Função auxiliar para formatar o tooltip
-const CustomTooltip = ({ active, payload, label, t, isPeriod }: any) => {
+const CustomTooltip = ({ active, payload, label, t }: any) => {
   if (active && payload && payload.length) {
-    // O label é o valor de dataKey (time_unit)
-    const title = isPeriod 
-      ? format(new Date(label), 'dd/MM/yyyy', { locale: ptBR })
-      : formatTimeUnit(label, false);
-      
     return (
       <div className="p-2 bg-card border rounded-md shadow-md text-sm">
-        <p className="font-bold">{title}</p>
+        <p className="font-bold">{formatHour(label)}</p>
         <p className="text-sm text-primary">{`${t('services_completed')}: ${payload[0].value}`}</p>
       </div>
     );
@@ -46,40 +24,18 @@ const CustomTooltip = ({ active, payload, label, t, isPeriod }: any) => {
   return null;
 };
 
-export default function DailyServiceByHourChart({ startDate, endDate }: DailyServiceByHourChartProps) {
+export default function DailyServiceByHourChart() {
   const { t } = useTranslation();
-  // Usando o novo hook
-  const { data, isLoading, isError } = useServiceTimeSeries(startDate, endDate);
-  const { filteredCompanyId, isSuperAdmin } = useDashboardFilter();
-  
-  const isPeriodFilterActive = !!startDate && !!endDate;
-  
-  const chartTitle = isPeriodFilterActive 
-    ? t('services_completed') + ` (${t('total_appointments_period')})`
-    : t('chart_title_daily_services');
+  const { data, isLoading, isError } = useDailyServiceCountByHour();
 
   if (isLoading) {
     return (
       <Card className="h-64">
         <CardHeader>
-          <CardTitle className="text-lg">{chartTitle}</CardTitle>
+          <CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center items-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Se for Super Admin e estiver em 'Todas as Empresas', desabilitamos o gráfico (RPC exige ID)
-  if (isSuperAdmin && !filteredCompanyId) {
-    return (
-      <Card className="h-64">
-        <CardHeader>
-          <CardTitle className="text-lg">{chartTitle}</CardTitle>
-        </CardHeader>
-        <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-          {t("select_company_for_metrics")}
         </CardContent>
       </Card>
     );
@@ -89,21 +45,21 @@ export default function DailyServiceByHourChart({ startDate, endDate }: DailySer
     return (
       <Card className="h-64">
         <CardHeader>
-          <CardTitle className="text-lg">{chartTitle}</CardTitle>
+          <CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle>
         </CardHeader>
         <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-          {isError ? t("chart_error") : t("chart_no_data")}
+          {isError ? t("chart_error") : t("chart_no_data_today")}
         </CardContent>
       </Card>
     );
   }
 
-  const formattedData: TimeSeriesCount[] = data;
+  const formattedData: DailyServiceCount[] = data;
 
   return (
     <Card className="h-64">
       <CardHeader>
-        <CardTitle className="text-lg">{chartTitle}</CardTitle>
+        <CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle>
       </CardHeader>
       <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
@@ -112,20 +68,18 @@ export default function DailyServiceByHourChart({ startDate, endDate }: DailySer
             margin={{
               top: 5,
               right: 0,
-              left: -40,
+              left: -40, // Ajustado de -50 para -40
               bottom: 0,
             }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
-              dataKey="time_unit"
+              dataKey="hour"
               stroke="hsl(var(--foreground))"
               fontSize={10}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(tick) => formatTimeUnit(tick, isPeriodFilterActive)}
-              // Garante que o eixo X seja tratado como categoria (para strings de data)
-              type="category" 
+              tickFormatter={formatHour}
             />
             <YAxis
               stroke="hsl(var(--foreground))"
@@ -135,7 +89,7 @@ export default function DailyServiceByHourChart({ startDate, endDate }: DailySer
               tickFormatter={(value) => `${value}`}
               allowDecimals={false}
             />
-            <Tooltip content={<CustomTooltip t={t} isPeriod={isPeriodFilterActive} />} />
+            <Tooltip content={<CustomTooltip t={t} />} />
             <Line
               type="monotone"
               dataKey="count"

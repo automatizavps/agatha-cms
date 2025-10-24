@@ -23,7 +23,6 @@ const resources = {
       "units": "unidades",
       "none": "Nenhum", // NOVO
       "minutes": "minutos", // NOVO
-      "clear_filter": "Limpar Filtro", // NOVO
       
       // Navegação
       "nav_home": "Home",
@@ -72,19 +71,6 @@ const resources = {
       "top_selling_services_title": "Top 10 Serviços Mais Realizados", // NOVO
       "total_sold": "Total Vendido", // NOVO
       "total_realized": "Total Realizado", // NOVO
-      
-      // Métricas de Período (NOVO)
-      "total_orders": "Total de Pedidos",
-      "total_revenue_period": "Total de receita no período",
-      "total_revenue_all_time": "Total de receita (todos os tempos)",
-      "total_orders_period": "Total de pedidos no período",
-      "total_orders_all_time": "Total de pedidos (todos os tempos)",
-      "total_appointments_period": "Total de agendamentos no período",
-      "total_appointments_all_time": "Total de agendamentos (todos os tempos)",
-      "pending_appointments_period": "Pendentes no período",
-      "pending_appointments_all_time": "Pendentes (todos os tempos)",
-      "dashboard_date_filter_warning": "Atenção: Gráficos de 'Por Hora' e 'Status (Hoje)' estão desabilitados quando o filtro de data está ativo.",
-      "chart_disabled_by_date_filter": "Gráfico desabilitado: Use o filtro de data para métricas de período ou limpe o filtro para ver dados de 'Hoje'.",
       
       // Páginas
       "page_title_analytics": "Analytics",

@@ -14,7 +14,7 @@ const statusColors: Record<Order['status'], string> = {
   cancelado: '#f87171', // red-400
 };
 
-// Função auxiliar para filtrar pedidos pela data de hoje (mantida para uso interno se não houver filtro externo)
+// Função auxiliar para filtrar pedidos pela data de hoje
 const filterOrdersByToday = (orders: Order[]): Order[] => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -26,20 +26,18 @@ const filterOrdersByToday = (orders: Order[]): Order[] => {
 };
 
 
-export const useOrderStatusChartData = (startDate?: Date, endDate?: Date) => {
+export const useOrderStatusChartData = () => {
   const { filteredCompanyId } = useDashboardFilter();
-  
-  // Se houver filtro de data, passamos as datas. Caso contrário, passamos undefined para buscar todos os dados (que serão filtrados por 'hoje' abaixo).
-  const { data: orders, isLoading, isError, error } = useOrders(filteredCompanyId, startDate, endDate);
+  // Usamos useOrders, que já lida com o filtro de empresa (ou todas)
+  const { data: orders, isLoading, isError, error } = useOrders(filteredCompanyId);
 
   const metrics: ChartData[] = [];
 
   if (orders) {
-    // Se houver filtro de data, usamos todos os pedidos retornados.
-    // Se NÃO houver filtro de data, filtramos apenas os pedidos criados hoje.
-    const ordersToProcess = startDate || endDate ? orders : filterOrdersByToday(orders);
+    // Filtramos apenas os pedidos criados hoje
+    const todayOrders = filterOrdersByToday(orders);
     
-    const statusCounts = ordersToProcess.reduce((acc, order) => {
+    const statusCounts = todayOrders.reduce((acc, order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {} as Record<Order['status'], number>);
