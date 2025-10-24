@@ -11,13 +11,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Função auxiliar para retornar erro JSON
+  const returnError = (message: string, status: number) => {
+    return new Response(JSON.stringify({ error: message }), {
+      status: status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  };
+
   // 1. Autenticação (Verificar se o usuário é um administrador)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return new Response("Unauthorized: Missing Authorization header", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
   const supabaseAdmin = createClient(
@@ -35,10 +40,7 @@ serve(async (req) => {
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
-    return new Response("Unauthorized: Invalid token", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Invalid token", 401);
   }
   
   const inviterUserId = userResponse.user.id;
@@ -52,41 +54,28 @@ serve(async (req) => {
 
   if (profileError || !profileData || profileData.perfil_id !== 1) {
     // Apenas Super Admin pode convidar agora
-    return new Response("Forbidden: Only Super Admin can invite new users", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: Only Super Admin can invite new users", 403);
   }
   
-  const isSuperAdmin = profileData.perfil_id === 1;
-  // const inviterCompanyId = profileData.empresa_id; // Não é mais usado, Super Admin define a empresa
-
-
   // 2. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
   } catch (e) {
-    return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
+    return returnError("Invalid JSON body", 400);
   }
 
   const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id } = data;
 
   if (!email || !full_name || !perfil_id) {
-    return new Response("Missing required fields: email, full_name, or perfil_id", {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return returnError("Missing required fields: email, full_name, or perfil_id", 400);
   }
   
   // Determinar a empresa alvo (obrigatório para Super Admin)
   let final_empresa_id = target_empresa_id || null;
   
   if (!final_empresa_id) {
-    return new Response(JSON.stringify({ error: "A empresa é obrigatória para o Super Admin ao convidar." }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError("A empresa é obrigatória para o Super Admin ao convidar.", 400);
   }
 
   // O perfil_id pode ser um INTEGER (1) ou um UUID (customizado)
@@ -122,10 +111,7 @@ serve(async (req) => {
 
   if (inviteError) {
     console.error("Supabase Invite Error:", inviteError);
-    return new Response(JSON.stringify({ error: inviteError.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError(inviteError.message, 400);
   }
   
   // 4. Atualizar a empresa_id diretamente na tabela usuarios

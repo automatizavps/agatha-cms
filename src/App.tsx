@@ -87,10 +87,8 @@ const ProtectedContentWrapper: React.FC<{ children: React.ReactNode }> = ({ chil
         onPasswordChanged={handlePasswordChanged} 
       />
       
-      {/* Renderiza o conteúdo normal, mas desabilitado se o modal estiver aberto */}
-      <div style={{ pointerEvents: showForceChange ? 'none' : 'auto' }}>
-        {children}
-      </div>
+      {/* Renderiza o conteúdo normal. O Dialog do Radix lida com o bloqueio de foco. */}
+      {children}
     </>
   );
 };

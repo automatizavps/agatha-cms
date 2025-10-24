@@ -87,9 +87,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
         }).min(1, { message: "A empresa é obrigatória para o Super Admin ao convidar." }),
       });
   } else {
-    // Se não for Super Admin, ele não pode usar este formulário para convidar,
-    // pois não há perfis globais 2 e 3 disponíveis.
-    // O botão de adicionar usuário deve ser ocultado para Admin/Funcionário.
+    // Se não for Super Admin, o convite não deveria ser possível, mas se for edição,
+    // o empresa_id é o do usuário logado (que não é usado na mutação de edição, mas é bom ter).
     return <p className="text-destructive">Apenas Super Admin pode convidar novos usuários.</p>;
   }
 
@@ -99,7 +98,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     defaultValues: {
       full_name: defaultValues?.full_name || "",
       email: defaultValues?.email || "", 
-      perfil_id: defaultValues?.perfil_id || "",
+      // Garante que perfil_id seja sempre uma string
+      perfil_id: String(defaultValues?.perfil_id || ""),
       telefone: defaultValues?.telefone || "",
       endereco_completo: defaultValues?.endereco_completo || "",
       empresa_id: defaultValues?.empresa_id || "",
