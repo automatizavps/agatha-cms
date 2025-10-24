@@ -7,10 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
   // Função auxiliar para retornar erro JSON
   const returnError = (message: string, status: number) => {
     return new Response(JSON.stringify({ error: message }), {
@@ -18,6 +14,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   };
+  
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   // 1. Autenticação: Obter o token do usuário logado
   const authHeader = req.headers.get("Authorization");

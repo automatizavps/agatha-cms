@@ -7,17 +7,17 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  // Função auxiliar para retornar erro JSON
+  // Função auxiliar para retornar erro JSON com CORS
   const returnError = (message: string, status: number) => {
     return new Response(JSON.stringify({ error: message }), {
       status: status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   };
+  
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   // 1. Autenticação: Obter o token do usuário logado
   const authHeader = req.headers.get("Authorization");
@@ -27,7 +27,7 @@ serve(async (req) => {
     return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
-  // 2. Inicializar cliente Admin (Service Role Key) para decodificar o token e buscar dados
+  // 2. Inicializar cliente Admin (Service Role Key)
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,

@@ -7,10 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
   // Função auxiliar para retornar erro JSON
   const returnError = (message: string, status: number) => {
     return new Response(JSON.stringify({ error: message }), {
@@ -18,34 +14,18 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   };
+  
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-  // 1. Autenticação (Validar o token do usuário logado)
+  // 1. Autenticação: Obter o token do usuário logado
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.replace("Bearer ", "");
 
   if (!token) {
     return returnError("Unauthorized: Missing Authorization header", 401);
   }
-
-  // Inicializar cliente Supabase com o token do usuário para validação
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    {
-      global: {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    }
-  );
-  
-  // Obter o usuário logado (validação do token)
-  const { data: { user: adminUser }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !adminUser) {
-    return returnError("Unauthorized: Invalid token or session expired", 401);
-  }
-  
-  const inviterUserId = adminUser.id;
 
   // 2. Inicializar cliente Admin (Service Role Key)
   const supabaseAdmin = createClient(
@@ -58,6 +38,15 @@ serve(async (req) => {
       },
     },
   );
+  
+  // Decodificar o token para obter o ID do usuário logado
+  const { data: { user: adminUser }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
+
+  if (userError || !adminUser) {
+    return returnError("Unauthorized: Invalid token or session expired", 401);
+  }
+  
+  const inviterUserId = adminUser.id;
 
   // Check if the user is Super Admin
   const { data: profileData, error: profileError } = await supabaseAdmin
