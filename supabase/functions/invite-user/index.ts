@@ -45,7 +45,7 @@ serve(async (req) => {
   
   const inviterUserId = userResponse.user.id;
 
-  // Check if the user is the new type of Super Admin
+  // Check if the user is Super Admin
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
     .select(`
@@ -60,13 +60,19 @@ serve(async (req) => {
     return returnError("Forbidden: User profile not found", 403);
   }
   
+  // Check 1: Antigo Super Admin (sem empresa e sem perfil customizado)
+  const isOldSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
+  
+  // Check 2: Novo Super Admin (com empresa E perfil customizado 'Super Admin')
   const isNewSuperAdmin = 
     profileData.empresa_id !== null && 
     profileData.perfil_customizado_id !== null && 
     profileData.perfis_customizados?.nome === 'Super Admin';
+    
+  const isSuperAdmin = isOldSuperAdmin || isNewSuperAdmin;
 
-  if (!isNewSuperAdmin) {
-    return returnError("Forbidden: Only Super Admin (with custom profile 'Super Admin' and associated company) can invite new users", 403);
+  if (!isSuperAdmin) {
+    return returnError("Forbidden: Only Super Admin can invite new users", 403);
   }
   
   // 3. Processar o corpo da requisição
