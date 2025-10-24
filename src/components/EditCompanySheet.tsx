@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import CompanyForm from "./CompanyForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateCompany, Company } from "@/integrations/supabase/companies";
@@ -50,6 +50,9 @@ const EditCompanySheet: React.FC<EditCompanySheetProps> = ({ company, isOpen, on
       <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Empresa: {company.nome}</SheetTitle>
+          <SheetDescription className="sr-only">
+            Formulário para editar os detalhes da empresa.
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <CompanyForm 
