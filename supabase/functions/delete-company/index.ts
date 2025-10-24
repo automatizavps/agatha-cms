@@ -46,17 +46,29 @@ serve(async (req) => {
   
   const adminUserId = userResponse.user.id;
 
-  // Check if the user is a Super Admin (perfil_customizado_id is NULL AND empresa_id is NULL)
+  // Check if the user is a Super Admin (using the new definition)
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("empresa_id, perfil_customizado_id")
+    .select(`
+      empresa_id, 
+      perfil_customizado_id,
+      perfis_customizados (nome)
+    `)
     .eq("id", adminUserId)
     .single();
 
-  const isSuperAdmin = profileData?.perfil_customizado_id === null && profileData?.empresa_id === null;
+  if (profileError || !profileData) {
+    return returnError("Forbidden: User profile not found", 403);
+  }
+  
+  // NOVO CHECK: Super Admin é um usuário com empresa_id IS NOT NULL E perfil_customizado.nome = 'Super Admin'
+  const isSuperAdmin = 
+    profileData.empresa_id !== null && 
+    profileData.perfil_customizado_id !== null && 
+    profileData.perfis_customizados?.nome === 'Super Admin';
 
-  if (profileError || !isSuperAdmin) {
-    return returnError("Forbidden: Only Super Admin can delete companies", 403);
+  if (!isSuperAdmin) {
+    return returnError("Forbidden: Only Super Admin (with custom profile 'Super Admin' and associated company) can delete companies", 403);
   }
 
   // 3. Processar o corpo da requisição
