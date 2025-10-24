@@ -20,7 +20,7 @@ const CategoriesContent = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Fetch data using filteredCompanyId
+  // Fetch data using filteredCompanyId. Se filteredCompanyId for undefined (SA em 'all'), busca todas.
   const { data: categories, isLoading, isError, error, refetch, isRefetching } = useCategories(filteredCompanyId);
   
   const [searchTerm, setSearchTerm] = useState("");
