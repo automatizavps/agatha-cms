@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany, updateCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,8 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditCompanySheet from "./EditCompanySheet";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { Badge } from "@/components/ui/badge"; // IMPORTAÇÃO CORRIGIDA
 
 interface CompanyTableProps {
   companies: Company[];
