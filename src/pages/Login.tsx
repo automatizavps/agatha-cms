@@ -50,9 +50,7 @@ function Login() {
             </h2>
           </div>
           
-          <h3 className="text-xl font-semibold text-center text-foreground">
-            {t('login_welcome', { defaultValue: 'Bem-vindo de volta!' })}
-          </h3>
+          {/* O h3 foi removido daqui */}
 
           <Auth
             supabaseClient={supabase}
