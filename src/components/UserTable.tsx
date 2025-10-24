@@ -24,6 +24,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditUserSheet from "./EditUserSheet";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil atual
 
 interface UserTableProps {
   users: UserProfile[];
@@ -32,12 +33,13 @@ interface UserTableProps {
 interface UserActionsProps {
   user: UserProfile;
   onEdit: (user: UserProfile) => void;
+  isSuperAdmin: boolean; // NOVO: Flag para Super Admin
 }
 
 type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil';
 type SortDirection = 'asc' | 'desc';
 
-const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
+const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, isSuperAdmin }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -53,10 +55,23 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
   });
 
   const handleDelete = () => {
+    // Prevenção de auto-exclusão no frontend
+    if (isSuperAdmin && user.perfis?.nome === 'Super Admin' && window.confirm("ATENÇÃO: Você está prestes a excluir o único Super Admin. Esta ação é irreversível. Deseja continuar?")) {
+        deleteMutation.mutate(user.id);
+        return;
+    }
+    
     if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(user.id);
     }
   };
+
+  // Não permite que o Super Admin logado exclua a si mesmo
+  const { data: currentProfile } = useCurrentUserProfile();
+  const isCurrentUser = currentProfile?.id === user.id;
+  
+  // A exclusão é permitida apenas para Super Admin E se não for o próprio usuário
+  const canDelete = isSuperAdmin && !isCurrentUser;
 
   return (
     <DropdownMenu>
@@ -71,14 +86,19 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
         <DropdownMenuItem onClick={() => onEdit(user)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleDelete} 
-          disabled={deleteMutation.isPending}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-        </DropdownMenuItem>
+        
+        {canDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={handleDelete} 
+              disabled={deleteMutation.isPending}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -117,6 +137,9 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
   const [sortKey, setSortKey] = useState<SortKey>('nome_completo');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
+  const { data: currentProfile } = useCurrentUserProfile(); // Obtém o perfil logado
+  
+  const isSuperAdmin = currentProfile?.is_super_admin || false; // Flag de Super Admin
 
   const handleEdit = (user: UserProfile) => {
     setEditingUser(user);
@@ -284,7 +307,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 </TableCell>
                 <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
                 <TableCell className="text-right">
-                  <UserActions user={user} onEdit={handleEdit} />
+                  <UserActions user={user} onEdit={handleEdit} isSuperAdmin={isSuperAdmin} />
                 </TableCell>
               </TableRow>
             ))}
