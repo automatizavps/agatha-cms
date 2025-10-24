@@ -80,7 +80,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       
       {/* Conteúdo Principal */}
       <div 
-        className="flex flex-col flex-1 transition-all duration-300"
+        // Removendo flex-1 para evitar contexto de empilhamento
+        className="flex flex-col transition-all duration-300"
         style={{ marginLeft: isCollapsed ? sidebarWidthMd : sidebarWidth }}
       >
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
