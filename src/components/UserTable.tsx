@@ -252,7 +252,8 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Building className="h-3 w-3" />
-                    {user.empresa?.nome || 'N/A'}
+                    {/* Exibe o nome da empresa, ou 'Global' se for Super Admin sem empresa, ou 'N/A' */}
+                    {user.empresa?.nome || (user.perfil_id === 1 && !user.empresa_id ? 'Global' : 'N/A')}
                   </div>
                 </TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
