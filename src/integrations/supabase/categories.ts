@@ -98,6 +98,7 @@ export const createCategory = async ({ nome, empresa_id: provided_empresa_id }: 
      throw new Error("ID da empresa é obrigatório para criar uma categoria.");
   }
 
+  // 2. Inserir a categoria
   const { data, error } = await supabase
     .from("categorias")
     .insert({
@@ -109,6 +110,12 @@ export const createCategory = async ({ nome, empresa_id: provided_empresa_id }: 
 
   if (error) {
     console.error("Error creating category:", error);
+    
+    // Tratamento específico para violação de unicidade (código 23505)
+    if (error.code === '23505') {
+      throw new Error("Já existe uma categoria com este nome nesta empresa.");
+    }
+    
     throw new Error(error.message);
   }
 
@@ -132,6 +139,12 @@ export const updateCategory = async ({ id, nome }: UpdateCategoryParams) => {
 
   if (error) {
     console.error("Error updating category:", error);
+    
+    // Tratamento específico para violação de unicidade (código 23505)
+    if (error.code === '23505') {
+      throw new Error("Já existe uma categoria com este nome nesta empresa.");
+    }
+    
     throw new Error(error.message);
   }
 
