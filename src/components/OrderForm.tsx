@@ -74,7 +74,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  const isSuperAdmin = profile?.is_super_admin; // Usando a flag correta
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
@@ -211,7 +211,16 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
                 {isCompanyFieldEditable ? (
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting || isEditing}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Limpa campos dependentes ao mudar a empresa
+                      form.setValue('cliente_id', '');
+                      form.setValue('items', []);
+                    }} 
+                    value={field.value} 
+                    disabled={isLoadingCompanies || isSubmitting || isEditing}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
