@@ -247,8 +247,8 @@ export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrder
     });
   }
   
-  // 3. Invalida queries de estoque e produtos se o status for 'cancelado'
-  if (status === 'cancelado') {
+  // 3. Invalida queries de estoque e produtos se o status for 'cancelado' OU se for reativado
+  if (status === 'cancelado' || status === 'entregue' || status === 'pendente_entrega') {
     // Invalida queries de produtos (para atualizar o estoque_total)
     queryClient.invalidateQueries({ queryKey: ["products_only"] });
     queryClient.invalidateQueries({ queryKey: ["latest_products_only"] });
