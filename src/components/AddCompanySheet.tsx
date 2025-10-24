@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import CompanyForm from "./CompanyForm";
@@ -39,6 +39,9 @@ const AddCompanySheet = () => {
       <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('add_new_company')}</SheetTitle>
+          <SheetDescription>
+            {t('company_form_description', { defaultValue: 'Preencha os detalhes para cadastrar uma nova empresa.' })}
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <CompanyForm 

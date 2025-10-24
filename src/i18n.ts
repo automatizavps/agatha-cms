@@ -112,6 +112,7 @@ const resources = {
       "company_list_title": "Lista de Empresas",
       "add_new_company": "Nova Empresa",
       "no_companies_found": "Nenhuma empresa cadastrada.",
+      "company_form_description": "Preencha os detalhes para cadastrar uma nova empresa.", // NOVO
       
       "page_title_clients": "Gestão de Clientes",
       "client_list_title": "Lista de Clientes",
