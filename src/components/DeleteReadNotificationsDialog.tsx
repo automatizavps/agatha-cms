@@ -70,7 +70,7 @@ const DeleteReadNotificationsDialog: React.FC<DeleteReadNotificationsDialogProps
               mutation.mutate();
             }}
             disabled={mutation.isPending}
-            className="bg-destructive hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90 text-white" // Adicionado text-white
           >
             {mutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
