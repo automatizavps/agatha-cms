@@ -257,7 +257,7 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
           <TableBody>
             {sortedServices.map((service) => (
               <TableRow key={service.id}>
-                <TableCell className="font-medium">
+                <TableCell className="font-medium align-middle">
                   <div className="flex items-center gap-2">
                     {service.fotos && service.fotos.length > 0 ? (
                       <img src={service.fotos[0]} alt={service.nome} className="h-8 w-8 object-cover rounded-md" />
@@ -268,26 +268,26 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
                   </div>
                 </TableCell>
                 {isSuperAdmin && (
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground align-middle">
                     <div className="flex items-center gap-1">
                       <Building className="h-3 w-3" />
                       {service.empresa?.nome || 'N/A'}
                     </div>
                   </TableCell>
                 )}
-                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground align-middle">
                   {service.categoria || 'N/A'}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-sm text-muted-foreground align-middle">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {service.tempo_servico ? `${service.tempo_servico} min` : 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-semibold">
+                <TableCell className="text-right font-semibold align-middle">
                   {formatCurrency(service.preco)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right align-middle">
                   <ServiceActions service={service} onEdit={handleEdit} />
                 </TableCell>
               </TableRow>

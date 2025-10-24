@@ -329,28 +329,28 @@ const AppointmentsContent = () => {
                 <TableBody>
                   {sortedAppointments.map((appointment) => (
                     <TableRow key={appointment.id}>
-                      <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
+                      <TableCell className="font-medium align-middle">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
                       {isSuperAdmin && (
-                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground align-middle">
                           <div className="flex items-center gap-1">
                             <Building className="h-3 w-3" />
                             {appointment.empresas?.nome || 'N/A'}
                           </div>
                         </TableCell>
                       )}
-                      <TableCell>
+                      <TableCell className="align-middle">
                         <AppointmentItemDisplay appointmentId={appointment.id} />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-middle">
                         {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>
-                      <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
-                      <TableCell className="text-center align-middle"> {/* Adicionado align-middle */}
+                      <TableCell className="align-middle">{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
+                      <TableCell className="text-center align-middle">
                         <span className={getStatusBadge(appointment.status)}>
                           {appointment.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right align-middle">
                         <AppointmentActions appointment={appointment} onEdit={handleEdit} />
                       </TableCell>
                     </TableRow>
