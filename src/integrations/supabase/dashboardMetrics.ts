@@ -20,11 +20,20 @@ export interface TopSellingItem {
 /**
  * Busca o faturamento total (pedidos + agendamentos) para a empresa especificada
  * na data atual, na semana atual e no mês atual, usando uma função RPC.
- * @param companyId O ID da empresa a ser filtrada.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
-const fetchRevenueMetrics = async (companyId: string): Promise<RevenueMetrics> => {
-  // Usamos a função RPC criada no banco de dados
-  const { data, error } = await supabase.rpc('get_total_revenue_metrics', { company_id_input: companyId });
+const fetchRevenueMetrics = async (companyId: string | undefined): Promise<RevenueMetrics> => {
+  let rpcName = 'get_total_revenue_metrics';
+  let rpcArgs: Record<string, any> = {};
+  
+  if (companyId) {
+    rpcArgs = { company_id_input: companyId };
+  } else {
+    // Se companyId for undefined, usamos a versão ALL
+    rpcName = 'get_total_revenue_metrics_all';
+  }
+  
+  const { data, error } = await supabase.rpc(rpcName, rpcArgs);
 
   if (error) {
     console.error("Error fetching revenue metrics:", error);
@@ -95,14 +104,20 @@ const fetchClientCount = async (companyId: string | undefined): Promise<number> 
 
 /**
  * Busca os 10 itens mais vendidos (produtos e serviços) para a empresa.
- * NOTA: A função RPC 'get_top_selling_items' exige um company_id_input. 
- * Se companyId for undefined, não podemos chamar a RPC.
- * Para 'Todas as Empresas', esta métrica será desabilitada, pois a lógica de agregação
- * de vendas de pedidos e agendamentos é complexa demais para ser feita no cliente.
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
-const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]> => {
-  const { data, error } = await supabase.rpc('get_top_selling_items', { company_id_input: companyId });
+const fetchTopSellingItems = async (companyId: string | undefined): Promise<TopSellingItem[]> => {
+  let rpcName = 'get_top_selling_items';
+  let rpcArgs: Record<string, any> = {};
+  
+  if (companyId) {
+    rpcArgs = { company_id_input: companyId };
+  } else {
+    // Se companyId for undefined, usamos a versão ALL
+    rpcName = 'get_top_selling_items_all';
+  }
+  
+  const { data, error } = await supabase.rpc(rpcName, rpcArgs);
 
   if (error) {
     console.error("Error fetching top selling items:", error);
@@ -125,9 +140,9 @@ export const useRevenueMetrics = (companyId: string | undefined) => {
   
   return useQuery<RevenueMetrics, Error>({
     queryKey: ["revenueMetrics", companyId, currentDate],
-    queryFn: () => fetchRevenueMetrics(companyId!),
-    // Habilitado apenas se houver um companyId (a RPC exige)
-    enabled: !!companyId, 
+    queryFn: () => fetchRevenueMetrics(companyId),
+    // Habilitado sempre, pois a função agora lida com companyId opcional
+    enabled: true, 
   });
 };
 
@@ -150,8 +165,8 @@ export const useClientCount = (companyId: string | undefined) => {
 export const useTopSellingItems = (companyId: string | undefined) => {
   return useQuery<TopSellingItem[], Error>({
     queryKey: ["topSellingItems", companyId],
-    queryFn: () => fetchTopSellingItems(companyId!),
-    enabled: !!companyId,
+    queryFn: () => fetchTopSellingItems(companyId),
+    enabled: true,
   });
 };
 

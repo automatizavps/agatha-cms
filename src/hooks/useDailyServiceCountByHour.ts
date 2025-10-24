@@ -7,10 +7,18 @@ export type DailyServiceCount = {
   count: number;
 };
 
-const fetchDailyServiceCountByHour = async (companyId: string): Promise<DailyServiceCount[]> => {
-  const { data, error } = await supabase.rpc('get_daily_service_count_by_hour', {
-    company_id_input: companyId,
-  });
+const fetchDailyServiceCountByHour = async (companyId: string | undefined): Promise<DailyServiceCount[]> => {
+  let rpcName = 'get_daily_service_count_by_hour';
+  let rpcArgs: Record<string, any> = {};
+  
+  if (companyId) {
+    rpcArgs = { company_id_input: companyId };
+  } else {
+    // Se companyId for undefined, usamos a versão ALL
+    rpcName = 'get_daily_service_count_by_hour_all';
+  }
+  
+  const { data, error } = await supabase.rpc(rpcName, rpcArgs);
 
   if (error) {
     // Logar o erro para debug, mas lançar para o useQuery
@@ -32,11 +40,11 @@ export const useDailyServiceCountByHour = () => {
   // Use a data atual como parte da chave para garantir que os dados sejam atualizados diariamente
   const currentDate = new Date().toISOString().slice(0, 10); 
 
-  const isEnabled = !!filteredCompanyId && !isLoadingFilter;
+  const isEnabled = !isLoadingFilter;
 
   return useQuery<DailyServiceCount[], Error>({
     queryKey: ['dailyServiceCountByHour', filteredCompanyId, currentDate],
-    queryFn: () => fetchDailyServiceCountByHour(filteredCompanyId!),
+    queryFn: () => fetchDailyServiceCountByHour(filteredCompanyId),
     enabled: isEnabled,
   });
 };

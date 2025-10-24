@@ -31,19 +31,21 @@ const Index = () => {
   
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
+  // Agora, useAppointmentMetrics também aceita undefined
   const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
   
-  // useRevenueMetrics agora só é habilitado se filteredCompanyId existir
+  // useRevenueMetrics agora aceita undefined
   const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
-  const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); // NOVO HOOK
+  const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); 
   
+  // useTeams agora aceita undefined
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
   const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount;
   
-  // Verifica se as métricas de receita/equipe estão desabilitadas (Super Admin em 'all')
-  const isMetricsDisabled = isSuperAdmin && selectedCompanyId === 'all';
+  // A métrica de equipes é desabilitada se for 'Todas as Empresas' (pois a RPC de progresso exige ID)
+  const isTeamsDisabled = isSuperAdmin && selectedCompanyId === 'all';
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -53,12 +55,10 @@ const Index = () => {
   };
 
   const renderMetricValue = (value: number | string, isCurrency: boolean = false) => {
-    if (isLoading && !isMetricsDisabled) {
+    if (isLoading) {
       return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
     }
-    if (isMetricsDisabled) {
-      return <div className="text-sm text-muted-foreground">{t("select_company_for_metrics")}</div>;
-    }
+    // Não precisamos mais verificar isMetricsDisabled aqui, pois os hooks agora lidam com a agregação.
     if (isCurrency) {
       return <div className="text-xl font-bold">{formatCurrency(value as number)}</div>;
     }
@@ -77,7 +77,7 @@ const Index = () => {
             <Select 
               onValueChange={setSelectedCompanyId} 
               value={selectedCompanyId} 
-              disabled={isLoadingCompanies || isLoading}
+              disabled={isLoadingCompanies || isLoadingFilter}
             >
               <SelectTrigger className="w-full">
                 <Building className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -192,7 +192,8 @@ const Index = () => {
         </div>
         
         {/* Seção 2: Metas das Equipes */}
-        {filteredCompanyId && (
+        {/* Exibe metas apenas se uma empresa específica estiver selecionada */}
+        {!isTeamsDisabled && filteredCompanyId && (
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <Target className="h-6 w-6 text-muted-foreground" />
@@ -216,6 +217,21 @@ const Index = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Placeholder para Metas de Equipe quando 'Todas as Empresas' está selecionado */}
+        {isTeamsDisabled && (
+          <div className="flex flex-col gap-4">
+            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Target className="h-6 w-6 text-muted-foreground" />
+              {t('team_goals_section_title')}
+            </h2>
+            <Card>
+              <CardContent className="p-4 text-muted-foreground">
+                {t("select_company_for_metrics")}
+              </CardContent>
+            </Card>
           </div>
         )}
         
