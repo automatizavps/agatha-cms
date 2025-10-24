@@ -303,7 +303,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value} 
-                disabled={isLoadingProfiles || isSubmitting || (isSuperAdmin && !selectedCompanyId)}
+                // O campo é editável se for Super Admin OU se não estiver submetendo
+                disabled={isSubmitting || (isSuperAdmin && !selectedCompanyId)}
               >
                 <FormControl>
                   <SelectTrigger>
