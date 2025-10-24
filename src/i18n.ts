@@ -252,6 +252,9 @@ const resources = {
       "new_password": "Nova Senha",
       "confirm_new_password": "Confirmar Nova Senha",
       "update_password_button": "Atualizar Senha",
+      "reset_password": "Redefinir Senha",
+      "reset_password_title": "Redefinir Senha do Usuário",
+      "reset_password_description": "Defina uma nova senha para {{name}}. O usuário poderá alterá-la posteriormente.",
       
       // Gráfico de Serviços por Hora (NOVO)
       "chart_title_daily_services": "Serviços Concluídos por Hora (Hoje)",

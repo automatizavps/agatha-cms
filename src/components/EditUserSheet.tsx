@@ -4,9 +4,11 @@ import UserForm from "./UserForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUser, UserProfile } from "@/integrations/supabase/users";
 import { showSuccess, showError } from "@/utils/toast";
-import { useUserEmail } from "@/integrations/supabase/useUserEmail"; // Importando o novo hook
-import { Loader2 } from "lucide-react";
-import { useTranslation } from "react-i18next"; // Importando useTranslation
+import { useUserEmail } from "@/integrations/supabase/useUserEmail";
+import { Loader2, Key } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil atual
+import ResetPasswordDialog from "./ResetPasswordDialog"; // Importando o novo componente
 
 interface EditUserSheetProps {
   user: UserProfile;
@@ -17,6 +19,11 @@ interface EditUserSheetProps {
 const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  // Perfil do usuário logado
+  const { data: currentProfile } = useCurrentUserProfile();
+  const isSuperAdmin = currentProfile?.perfil_id === 1;
+  const isEditingSelf = currentProfile?.id === user.id;
   
   // Busca o email real do usuário que está sendo editado
   const { data: userEmail, isLoading: isLoadingEmail } = useUserEmail(user.id);
@@ -96,6 +103,20 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
             defaultValues={initialValues}
             isEditing={true}
           />
+          
+          {/* Opção de Redefinir Senha (Apenas Super Admin e não editando a si mesmo) */}
+          {isSuperAdmin && !isEditingSelf && (
+            <div className="pt-6 border-t mt-6">
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Key className="h-5 w-5 text-muted-foreground" />
+                {t('reset_password_title')}
+              </h3>
+              <ResetPasswordDialog 
+                userIdToUpdate={user.id} 
+                userName={user.nome_completo} 
+              />
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
