@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMemo, useState } from "react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
+import FloatingBulkActions from "@/components/FloatingBulkActions"; // Importando o novo componente
 
 const PAGE_SIZES = [20, 50, 100];
 
@@ -26,11 +27,11 @@ const Notifications = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   
-  // NOVO: Estado para seleção de linhas
+  // Estado para seleção de linhas
   const [selectedNotificationIds, setSelectedNotificationIds] = useState<Set<string>>(new Set());
 
   // Filtro de Empresa (Super Admin)
-  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   // Fetch de Notificações - Passando o companyId para o servidor se for Super Admin e houver filtro
@@ -62,7 +63,7 @@ const Notifications = () => {
     }
   });
   
-  // NOVO: Mutação para exclusão em massa
+  // Mutação para exclusão em massa
   const bulkDeleteMutation = useMutation({
     mutationFn: deleteNotifications,
     onSuccess: () => {
@@ -113,22 +114,6 @@ const Notifications = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{t('page_title_notifications')}</h1>
         <div className="flex gap-2">
-          {/* Botão de Exclusão em Massa */}
-          {selectedNotificationIds.size > 0 && (
-            <Button 
-              variant="destructive" 
-              onClick={handleBulkDelete}
-              disabled={bulkDeleteMutation.isPending}
-            >
-              {bulkDeleteMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
-              )}
-              {t('delete')} ({selectedNotificationIds.size})
-            </Button>
-          )}
-          
           {/* Botão Marcar Todas como Lidas */}
           <Button 
             variant="outline" 
@@ -308,6 +293,13 @@ const Notifications = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Componente Flutuante de Ações em Massa */}
+      <FloatingBulkActions 
+        selectedCount={selectedNotificationIds.size}
+        onDelete={handleBulkDelete}
+        isDeleting={bulkDeleteMutation.isPending}
+      />
     </DashboardLayout>
   );
 };

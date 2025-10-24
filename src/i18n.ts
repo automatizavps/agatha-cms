@@ -26,6 +26,7 @@ const resources = {
       "rows_per_page": "Linhas por página", // NOVO
       "page_info": "Exibindo {{start}}-{{end}} de {{count}}", // NOVO
       "pagination_disabled_filter": "Paginação desabilitada ao filtrar por empresa.", // NOVO
+      "selected_items_count": "{{count}} item(ns) selecionado(s)", // NOVO
 
       // Navegação
       "nav_home": "Home",
@@ -230,6 +231,7 @@ const resources = {
       "notifications_deleted_success": "{{count}} notificação(ões) excluída(s) com sucesso.", // NOVO
       "confirm_delete_single": "Tem certeza que deseja excluir esta notificação?", // NOVO
       "confirm_delete_bulk": "Tem certeza que deseja excluir {{count}} notificações?", // NOVO
+      "selected_items_count": "{{count}} item(ns) selecionado(s)", // NOVO
       
       // Senha (Password) - NOVO
       "change_password": "Mudar Senha",
