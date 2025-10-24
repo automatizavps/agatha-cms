@@ -54,7 +54,7 @@ const resources = {
       "dashboard_title": "Visão Geral do Dashboard",
       "total_appointments": "Total de Agendamentos",
       "confirmed_appointments": "Confirmados",
-      "pending_appointments": "Pendentes",
+      "pending_appointments": "Agendamentos Pendentes",
       "appointments_overview": "Visão geral de todos os agendamentos",
       "confirmed_status": "Agendamentos com status 'confirmado'",
       "pending_status": "Aguardando confirmação",
