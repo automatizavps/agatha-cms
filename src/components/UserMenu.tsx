@@ -1,4 +1,4 @@
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -50,6 +50,7 @@ export function UserMenu() {
   const userEmail = user?.email || "Usuário";
   const userName = profile?.nome_completo || userEmail;
   const userRole = profile?.perfis?.nome || "Carregando...";
+  const companyName = profile?.empresas?.nome; // Novo: Nome da empresa
   const initials = userName.slice(0, 2).toUpperCase();
 
   return (
@@ -78,9 +79,20 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        
+        {/* Exibe o Perfil */}
         <DropdownMenuItem className="text-xs text-muted-foreground">
           Perfil: {isProfileLoading ? "..." : userRole}
         </DropdownMenuItem>
+        
+        {/* Exibe a Empresa (se não for Super Admin ou se houver nome de empresa) */}
+        {companyName && (
+          <DropdownMenuItem className="text-xs text-muted-foreground flex items-center gap-2">
+            <Building className="h-3 w-3" />
+            Empresa: {isProfileLoading ? "..." : companyName}
+          </DropdownMenuItem>
+        )}
+        
         <DropdownMenuSeparator />
         
         <DropdownMenuItem asChild className="cursor-pointer">

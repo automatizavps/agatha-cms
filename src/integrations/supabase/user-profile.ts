@@ -20,6 +20,9 @@ export interface CurrentUserProfile {
   perfis: {
     nome: string;
   } | null;
+  empresas: { // NOVO: Nome da empresa
+    nome: string;
+  } | null;
   permissions: PermissionMap; // NOVO: Mapa de permissões
   is_super_admin: boolean; // NOVO: Flag para Super Admin
 }
@@ -52,10 +55,10 @@ const fetchPermissions = async (customProfileId: string): Promise<PermissionMap>
 
 
 const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfile | null> => {
-  // 1. Buscar dados básicos do usuário (sem perfil_id)
+  // 1. Buscar dados básicos do usuário (incluindo nome da empresa)
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active)")
+    .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active, nome)") // Adicionado 'nome' da empresa
     .eq("id", userId)
     .limit(1); 
 
@@ -69,6 +72,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   if (!userProfile) return null;
   
   const is_company_active = userProfile.empresas ? userProfile.empresas.is_active : true;
+  const companyName = userProfile.empresas?.nome || null; // Extrai o nome da empresa
   
   let permissions: PermissionMap = {};
   let is_super_admin = false;
@@ -118,7 +122,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
     is_super_admin: is_super_admin,
     permissions: permissions,
     perfis: { nome: profileName }, // Simula a estrutura perfis (nome)
-    empresas: undefined, 
+    empresas: companyName ? { nome: companyName } : null, // Adiciona o nome da empresa
   } as CurrentUserProfile;
 };
 
