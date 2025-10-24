@@ -7,7 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Company, deleteCompany } from "@/integrations/supabase/companies";
+import { SupabaseCompany, deleteCompany } from "@/integrations/supabase/companies"; // Importando o tipo renomeado
+import { Company } from "@/types/supabase"; // Importando o tipo centralizado
 import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,

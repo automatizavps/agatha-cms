@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { Company } from "@/integrations/supabase/companies";
+import { Company } from "@/types/supabase"; // Importando o tipo centralizado
 
 const formSchema = z.object({
   nome: z.string().min(2, {

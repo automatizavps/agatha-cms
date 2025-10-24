@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import TeamForm from "./TeamForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateTeam, Team, useTeamMembers, updateTeamMembers } from "@/integrations/supabase/teams";
+import { updateTeam, useTeamMembers, updateTeamMembers } from "@/integrations/supabase/teams";
+import { Team } from "@/types/supabase"; // Importando o tipo centralizado
 import { showSuccess, showError } from "@/utils/toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

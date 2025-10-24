@@ -7,7 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserProfile, deleteUser } from "@/integrations/supabase/users";
+import { SupabaseUserProfile, deleteUser } from "@/integrations/supabase/users"; // Importando o tipo renomeado
+import { UserProfile } from "@/types/supabase"; // Importando o tipo centralizado
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {

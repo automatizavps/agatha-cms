@@ -7,7 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Team, deleteTeam, useTeamMembers } from "@/integrations/supabase/teams";
+import { SupabaseTeam, deleteTeam, useTeamMembers } from "@/integrations/supabase/teams"; // Importando o tipo renomeado
+import { Team } from "@/types/supabase"; // Importando o tipo centralizado
 import { MoreHorizontal, Trash2, Pencil, Users, DollarSign, Target, Building, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,

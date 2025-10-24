@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 
-export interface UserProfile {
+export interface SupabaseUserProfile { // Renomeado para SupabaseUserProfile
   id: string;
   nome_completo: string;
   perfil_id: number;
@@ -18,7 +18,7 @@ export interface UserProfile {
   } | null;
 }
 
-const fetchUsers = async (): Promise<UserProfile[]> => {
+const fetchUsers = async (): Promise<SupabaseUserProfile[]> => {
   // Query simplificada para evitar falha de RLS ao tentar acessar auth.users
   const { data, error } = await supabase
     .from("usuarios")
@@ -34,11 +34,11 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
   return data.map(user => ({
     ...user,
     email: 'N/A', // O email real será buscado no EditUserSheet
-  })) as UserProfile[];
+  })) as SupabaseUserProfile[];
 };
 
 export const useUsers = () => {
-  return useQuery<UserProfile[], Error>({
+  return useQuery<SupabaseUserProfile[], Error>({
     queryKey: ["users"],
     queryFn: fetchUsers,
   });

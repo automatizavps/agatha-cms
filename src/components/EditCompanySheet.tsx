@@ -1,7 +1,8 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import CompanyForm from "./CompanyForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateCompany, Company } from "@/integrations/supabase/companies";
+import { updateCompany } from "@/integrations/supabase/companies";
+import { Company } from "@/types/supabase"; // Importando o tipo centralizado
 import { showSuccess, showError } from "@/utils/toast";
 
 interface EditCompanySheetProps {

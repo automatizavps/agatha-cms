@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "./client";
 
-export interface Team {
+export interface SupabaseTeam { // Renomeado para SupabaseTeam
   id: string;
   empresa_id: string;
   nome: string;
@@ -28,7 +28,7 @@ export interface TeamMember {
 
 // --- Fetch Teams ---
 
-const fetchTeams = async (companyId?: string): Promise<Team[]> => {
+const fetchTeams = async (companyId?: string): Promise<SupabaseTeam[]> => {
   let query = supabase
     .from("equipes")
     .select(`
@@ -53,11 +53,11 @@ const fetchTeams = async (companyId?: string): Promise<Team[]> => {
     throw new Error("Failed to fetch teams");
   }
 
-  return data as Team[];
+  return data as SupabaseTeam[];
 };
 
 export const useTeams = (companyId?: string) => {
-  return useQuery<Team[], Error>({
+  return useQuery<SupabaseTeam[], Error>({
     queryKey: ["teams", companyId],
     queryFn: () => fetchTeams(companyId),
   });

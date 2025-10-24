@@ -12,9 +12,7 @@ import { BarChart } from '@/components/BarChart';
 import { DataTable } from '@/components/DataTable';
 import { columns as topSellingColumns } from '@/components/TopSellingColumns';
 import { TeamProgressCard } from '@/components/TeamProgressCard';
-import { Company } from '@/types/company';
-import { UserProfile } from '@/types/user';
-import { Team } from '@/types/team';
+import { Company, UserProfile, Team } from '@/types/supabase'; // <-- Importação corrigida
 
 // Tipos de dados para as estatísticas
 interface Stats {

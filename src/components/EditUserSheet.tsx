@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import UserForm from "./UserForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateUser, UserProfile } from "@/integrations/supabase/users";
+import { updateUser } from "@/integrations/supabase/users";
+import { UserProfile } from "@/types/supabase"; // Importando o tipo centralizado
 import { showSuccess, showError } from "@/utils/toast";
 import { useUserEmail } from "@/integrations/supabase/useUserEmail"; // Importando o novo hook
 import { Loader2 } from "lucide-react";

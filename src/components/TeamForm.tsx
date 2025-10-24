@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2, Check, ChevronsUpDown } from "lucide-react";
-import { Team } from "@/integrations/supabase/teams";
+import { Team } from "@/types/supabase"; // Importando o tipo centralizado
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
