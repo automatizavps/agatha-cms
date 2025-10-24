@@ -38,7 +38,7 @@ const itemSchema = z.object({
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
 });
 
-// Definimos o esquema base
+// Definimos o esquema base (sem validação de estoque no nível do array)
 const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
@@ -79,17 +79,31 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
-  // --- 1. Determinar o ID da empresa para o primeiro render (para inicializar o form) ---
-  const initialCompanyId = isEditing ? defaultValues?.empresa_id : profile?.empresa_id;
+  // --- 1. Definir o Resolvedor Final Estável ---
+  const finalFormSchema = useMemo(() => {
+    let schema = baseFormSchema;
+    
+    if (isSuperAdmin && !isEditing) {
+      // Apenas Super Admin na criação precisa validar a seleção da empresa
+      schema = schema.extend({
+        empresa_id: z.string().uuid({
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
+      });
+    }
+    
+    // Removemos a validação de estoque do nível do array aqui para evitar loops de dependência
+    return schema;
+  }, [isSuperAdmin, isEditing, t]);
 
-  // --- 2. Inicializar o Formulário (com o resolvedor base, que será atualizado no useMemo) ---
+  // --- 2. Inicializar o Formulário ---
   const form = useForm<OrderFormValues>({
-    resolver: zodResolver(baseFormSchema), 
+    resolver: zodResolver(finalFormSchema), 
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
-      empresa_id: defaultValues?.empresa_id || (isSuperAdmin ? "" : initialCompanyId) || "",
+      empresa_id: defaultValues?.empresa_id || (isSuperAdmin ? "" : profile?.empresa_id) || "",
     },
   });
   
@@ -126,60 +140,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     return allItems.find(i => i.id === id);
   };
 
-  // --- 4. ZOD SCHEMA FINAL COM VALIDAÇÃO DE ESTOQUE (Atualiza o resolvedor) ---
-  
-  const finalFormSchema = useMemo(() => {
-    let schema = baseFormSchema;
-    
-    if (isSuperAdmin && !isEditing) {
-      schema = schema.extend({
-        empresa_id: z.string().uuid({
-          message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
-      });
-    }
-    
-    // Adiciona validação de estoque no nível do array de items
-    return schema.extend({
-      items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." })
-        .refine((items) => {
-          if (!isCompanySelected || isLoadingItems) return true; 
-          
-          for (const item of items) {
-            const product = getProductById(item.produto_id);
-            
-            if (product && product.tipo === 'produto' && product.estoque_total !== null && product.estoque_total !== undefined) {
-              if (item.quantidade > product.estoque_total) {
-                return false; 
-              }
-            }
-          }
-          return true;
-        }, {
-          message: "Erro de estoque em um ou mais produtos.",
-          path: ['items'],
-        }),
-    });
-  }, [isSuperAdmin, isEditing, isCompanySelected, isLoadingItems, getProductById, t]);
-  
-  // Atualiza o resolvedor do formulário dinamicamente (usando o resolvedor final)
-  useEffect(() => {
-    // Nota: Embora setResolver não exista, o useForm aceita a atualização do resolvedor
-    // se ele for passado como uma prop no useForm. Como estamos usando o useMemo,
-    // a mudança de `finalFormSchema` fará com que o componente remonte o useForm,
-    // mas como o useForm já foi chamado, precisamos de uma forma de forçar a validação
-    // com o novo schema. A maneira mais segura é usar o `trigger` após a montagem.
-    // Para evitar o erro de `setResolver`, vamos remover a linha problemática e confiar
-    // que o RHF lida com a atualização do schema via re-renderização do componente.
-    // No entanto, para garantir que a validação de estoque seja aplicada,
-    // vamos usar o `form.trigger` no useEffect.
-    
-    // Se o schema mudar (o que acontece quando a empresa é selecionada), forçamos a validação.
-    if (isCompanySelected) {
-      form.trigger('items');
-    }
-  }, [finalFormSchema, form, isCompanySelected]);
-  
   // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
@@ -241,8 +201,28 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     return true;
   };
 
+  // Validação de estoque no submit (global)
+  const validateGlobalStock = (items: ItemToCreate[]) => {
+    for (const item of items) {
+      const validationResult = validateStock(item);
+      if (validationResult !== true) {
+        // Se houver erro de estoque, retorna a mensagem de erro
+        return validationResult;
+      }
+    }
+    return true;
+  };
+
 
   const handleSubmit = (values: OrderFormValues) => {
+    // 1. Validação de estoque global antes de enviar
+    const stockError = validateGlobalStock(values.items);
+    if (stockError !== true) {
+      form.setError('items', { type: 'manual', message: stockError });
+      showError(stockError);
+      return;
+    }
+    
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     onSubmit({
