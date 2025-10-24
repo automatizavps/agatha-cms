@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfiles } from "@/integrations/supabase/profiles";
+// import { useProfiles } from "@/integrations/supabase/profiles"; // REMOVIDO
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useCustomProfiles } from "@/integrations/supabase/customProfiles";
@@ -34,7 +34,7 @@ const baseFormSchema = z.object({
   email: z.string().email({
     message: "Insira um email válido.",
   }),
-  perfil_id: z.string().min(1, {
+  perfil_id: z.string().min(1, { // Agora é o UUID ou '1'
     message: "Selecione um perfil.",
   }),
   telefone: z.string().optional().nullable(),
@@ -61,11 +61,11 @@ interface UserFormProps {
 }
 
 const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
-  const { data: globalProfiles, isLoading: isLoadingGlobalProfiles } = useProfiles();
+  // const { data: globalProfiles, isLoading: isLoadingGlobalProfiles } = useProfiles(); // REMOVIDO
   const { data: currentProfile, isLoading: isLoadingCurrentProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  const isSuperAdmin = currentProfile?.perfil_id === 1;
+  const isSuperAdmin = currentProfile?.is_super_admin; // Usando a nova flag
   const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: 
@@ -98,7 +98,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     defaultValues: {
       full_name: defaultValues?.full_name || "",
       email: defaultValues?.email || "", 
-      // Garante que perfil_id seja sempre uma string
+      // Garante que perfil_id seja sempre uma string (UUID ou '1')
       perfil_id: String(defaultValues?.perfil_id || ""),
       telefone: defaultValues?.telefone || "",
       endereco_completo: defaultValues?.endereco_completo || "",
@@ -112,14 +112,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   // Carrega perfis customizados filtrados pela empresa selecionada
   const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(selectedCompanyId || undefined);
   
-  const isLoadingProfiles = isLoadingGlobalProfiles || isLoadingCustomProfiles;
+  const isLoadingProfiles = isLoadingCustomProfiles;
 
   // Combina perfis globais (apenas Super Admin) e customizados
   const allProfiles = useMemo(() => {
-    if (!globalProfiles) return [];
+    let combined: { id: string | number; nome: string; }[] = [];
     
-    // 1. Incluir apenas o Super Admin (ID 1)
-    let combined = globalProfiles.filter(p => p.id === 1);
+    // 1. Incluir Super Admin (ID '1')
+    if (isSuperAdmin || (isEditing && defaultValues?.perfil_id === '1')) {
+      combined.push({ id: '1', nome: 'Super Admin' });
+    }
     
     // 2. Adicionar perfis customizados se uma empresa estiver selecionada
     if (selectedCompanyId && customProfiles) {
@@ -127,23 +129,28 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
         // Usamos o ID do perfil customizado (UUID) como ID
         id: p.id,
         nome: `${p.nome} (Custom)`,
-        descricao: `Perfil customizado da empresa ${p.empresas?.nome || ''}`,
       }));
       
-      combined.push(...mappedCustomProfiles as any);
+      combined.push(...mappedCustomProfiles);
     }
     
-    // 3. Na edição, se o perfil atual for um dos perfis globais 2 ou 3 (que não estão mais na lista),
-    // precisamos garantir que ele apareça para que o formulário não quebre.
-    if (isEditing && defaultValues?.perfil_id && !isNaN(Number(defaultValues.perfil_id)) && Number(defaultValues.perfil_id) !== 1) {
-        const existingGlobalProfile = globalProfiles.find(p => p.id === Number(defaultValues.perfil_id));
-        if (existingGlobalProfile && !combined.some(p => p.id === existingGlobalProfile.id)) {
-             combined.push(existingGlobalProfile as any);
+    // 3. Na edição, se o perfil atual for um perfil customizado que não está na lista (ex: empresa inativa),
+    // precisamos garantir que ele apareça.
+    if (isEditing && defaultValues?.perfil_id && defaultValues.perfil_id !== '1' && !customProfiles?.some(p => p.id === defaultValues.perfil_id)) {
+        // Se o perfil customizado não foi carregado, tentamos obter o nome do perfil customizado
+        // do próprio objeto defaultValues (que vem do useUsers, mas não tem o nome completo do perfil customizado)
+        // Como o useUsers foi atualizado para mapear o nome do perfil customizado para `perfis.nome`,
+        // podemos tentar reconstruir a opção.
+        const currentProfileName = defaultValues.perfis?.nome || 'Perfil Desconhecido';
+        
+        // Adicionamos o perfil atual se ele for um UUID e não estiver na lista
+        if (defaultValues.perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+             combined.push({ id: defaultValues.perfil_id, nome: `${currentProfileName} (Custom)` });
         }
     }
     
     return combined;
-  }, [globalProfiles, customProfiles, selectedCompanyId, isEditing, defaultValues?.perfil_id]);
+  }, [customProfiles, selectedCompanyId, isSuperAdmin, isEditing, defaultValues]);
 
 
   const handleSubmit = (values: UserFormValues) => {
@@ -165,7 +172,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     onSubmit({
       full_name: values.full_name,
       email: values.email,
-      perfil_id: values.perfil_id,
+      perfil_id: values.perfil_id, // Passa o UUID ou '1'
       telefone: telefone,
       endereco_completo: endereco_completo,
       empresa_id: empresa_id,

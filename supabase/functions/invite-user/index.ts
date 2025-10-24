@@ -36,7 +36,7 @@ serve(async (req) => {
     },
   );
 
-  // Get user claims to check profile/role
+  // Get user claims
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
@@ -45,14 +45,16 @@ serve(async (req) => {
   
   const inviterUserId = userResponse.user.id;
 
-  // Check if the user is a Super Admin (Perfil ID 1)
+  // Check if the user is a Super Admin (perfil_customizado_id is NULL AND empresa_id is NULL)
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("perfil_id, empresa_id")
+    .select("empresa_id, perfil_customizado_id")
     .eq("id", inviterUserId)
     .single();
 
-  if (profileError || !profileData || profileData.perfil_id !== 1) {
+  const isSuperAdmin = profileData?.perfil_customizado_id === null && profileData?.empresa_id === null;
+
+  if (profileError || !isSuperAdmin) {
     // Apenas Super Admin pode convidar agora
     return returnError("Forbidden: Only Super Admin can invite new users", 403);
   }
@@ -74,18 +76,12 @@ serve(async (req) => {
   // Determinar a empresa alvo (obrigatório para Super Admin)
   let final_empresa_id = target_empresa_id || null;
   
-  if (!final_empresa_id) {
-    return returnError("A empresa é obrigatória para o Super Admin ao convidar.", 400);
+  if (!final_empresa_id && perfil_id !== '1') {
+    return returnError("A empresa é obrigatória para o Super Admin ao convidar, a menos que o perfil seja Super Admin.", 400);
   }
 
-  // O perfil_id pode ser um INTEGER (1) ou um UUID (customizado)
-  let meta_perfil_id: string | number = perfil_id;
-  
-  // Se for um número, converte para INTEGER
-  if (!isNaN(Number(perfil_id)) && Number(perfil_id) === 1) {
-      meta_perfil_id = 1;
-  }
-  // Se for um UUID, mantém como string (UUID)
+  // O perfil_id pode ser um UUID (customizado) ou '1' (Super Admin)
+  let meta_perfil_id: string = perfil_id;
   
   // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
   const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
@@ -105,7 +101,7 @@ serve(async (req) => {
     {
       data: {
         full_name: full_name,
-        perfil_id: meta_perfil_id, // Passa o ID (INTEGER ou UUID)
+        perfil_id: meta_perfil_id, // Passa o ID (UUID ou '1')
         telefone: telefone,
         endereco_completo: endereco_completo,
       },
@@ -126,7 +122,7 @@ serve(async (req) => {
   // 4. Atualizar a empresa_id diretamente na tabela usuarios
   const invitedUserId = inviteData.user?.id;
 
-  if (invitedUserId) {
+  if (invitedUserId && final_empresa_id) {
     const { error: updateCompanyError } = await supabaseAdmin
       .from("usuarios")
       .update({ empresa_id: final_empresa_id })

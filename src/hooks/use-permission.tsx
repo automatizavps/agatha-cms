@@ -4,20 +4,18 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 /**
- * Hook para verificar se o usuário logado possui um dos perfis globais permitidos.
- * Se não tiver, redireciona para a página inicial.
- * @param allowedProfileIds Array de IDs de perfil globais permitidos (e.g., [1] para Super Admin).
+ * Hook para verificar se o usuário logado possui permissão de acesso à página.
+ * Acesso é concedido se for Super Admin OU se tiver um perfil customizado.
+ * @param allowedProfileIds (Ignorado, mantido para compatibilidade de assinatura)
  */
 export const usePermission = (allowedProfileIds: number[]) => {
   const { data: profile, isLoading: isProfileLoading } = useCurrentUserProfile();
   const navigate = useNavigate();
 
-  // Se o perfil for 1 (Super Admin), ele sempre tem permissão.
-  const isSuperAdmin = profile?.perfil_id === 1;
-  
-  // Verifica se o perfil global do usuário está na lista de permitidos
-  const hasPermission = isSuperAdmin || (profile && allowedProfileIds.includes(profile.perfil_id));
   const isChecking = isProfileLoading;
+  
+  // Acesso é permitido se for Super Admin OU se tiver um perfil customizado
+  const hasPermission = profile?.is_super_admin || !!profile?.perfil_customizado_id;
 
   useEffect(() => {
     if (!isChecking && !hasPermission) {
@@ -31,6 +29,7 @@ export const usePermission = (allowedProfileIds: number[]) => {
 
 // Componente de wrapper para proteger o conteúdo da página
 export const PermissionGuard: React.FC<{ allowedProfileIds: number[]; children: React.ReactNode }> = ({ allowedProfileIds, children }) => {
+  // Nota: allowedProfileIds é ignorado, pois a permissão é baseada em is_super_admin ou perfil_customizado_id
   const { hasPermission, isChecking } = usePermission(allowedProfileIds);
 
   if (isChecking) {

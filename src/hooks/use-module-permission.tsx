@@ -13,19 +13,17 @@ export const useModulePermission = (moduleName: string): AccessType => {
     return 'sem_acesso';
   }
   
-  // 1. Super Admin (perfil_id 1) tem acesso total (já definido no useCurrentUserProfile)
-  if (profile.perfil_id === 1) {
+  // 1. Super Admin tem acesso total
+  if (profile.is_super_admin) {
     return 'escrita';
   }
   
-  // 2. Usuários com perfil customizado (perfil_id 3)
+  // 2. Usuários com perfil customizado
   if (profile.perfil_customizado_id) {
     return profile.permissions[moduleName] || 'sem_acesso';
   }
   
-  // 3. Outros (ex: Admin/Funcionário sem perfil customizado)
-  // Como removemos os perfis 2 e 3 da seleção, qualquer usuário que não seja SA
-  // e não tenha perfil customizado deve ter 'sem_acesso' por padrão.
+  // 3. Outros (usuários sem perfil customizado e não SA)
   return 'sem_acesso';
 };
 

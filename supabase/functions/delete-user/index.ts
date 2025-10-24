@@ -31,7 +31,7 @@ serve(async (req) => {
     },
   );
 
-  // Get user claims to check profile/role
+  // Get user claims
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
@@ -43,14 +43,25 @@ serve(async (req) => {
   
   const adminUserId = userResponse.user.id;
 
-  // Check if the user is an Admin (Perfil ID 2 - Administrador, ou 1 - Super Admin)
+  // Check if the user is Super Admin OR belongs to a company (Admin/Manager role is assumed by frontend)
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("perfil_id")
+    .select("empresa_id, perfil_customizado_id")
     .eq("id", adminUserId)
     .single();
 
-  if (profileError || !profileData || (profileData.perfil_id !== 1 && profileData.perfil_id !== 2)) {
+  if (profileError || !profileData) {
+    return new Response("Forbidden: User profile not found", {
+      status: 403,
+      headers: corsHeaders,
+    });
+  }
+  
+  // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL
+  const isSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
+  const isCompanyUser = profileData.empresa_id !== null;
+
+  if (!isSuperAdmin && !isCompanyUser) {
     return new Response("Forbidden: User does not have administrative privileges", {
       status: 403,
       headers: corsHeaders,
@@ -81,6 +92,23 @@ serve(async (req) => {
       headers: corsHeaders,
     });
   }
+  
+  // Additional check: Non-SA users can only delete users in their own company
+  if (isCompanyUser && !isSuperAdmin) {
+      const { data: targetUserData, error: targetUserError } = await supabaseAdmin
+        .from("usuarios")
+        .select("empresa_id")
+        .eq("id", userIdToDelete)
+        .single();
+        
+      if (targetUserError || targetUserData.empresa_id !== profileData.empresa_id) {
+          return new Response("Forbidden: Cannot delete user outside your company", {
+              status: 403,
+              headers: corsHeaders,
+          });
+      }
+  }
+
 
   // 3. Excluir o usuário usando o Service Role Key
   const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userIdToDelete);

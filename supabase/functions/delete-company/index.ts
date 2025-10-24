@@ -46,14 +46,16 @@ serve(async (req) => {
   
   const adminUserId = userResponse.user.id;
 
-  // Check if the user is a Super Admin (Perfil ID 1)
+  // Check if the user is a Super Admin (perfil_customizado_id is NULL AND empresa_id is NULL)
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("perfil_id")
+    .select("empresa_id, perfil_customizado_id")
     .eq("id", adminUserId)
     .single();
 
-  if (profileError || !profileData || profileData.perfil_id !== 1) {
+  const isSuperAdmin = profileData?.perfil_customizado_id === null && profileData?.empresa_id === null;
+
+  if (profileError || !isSuperAdmin) {
     return returnError("Forbidden: Only Super Admin can delete companies", 403);
   }
 

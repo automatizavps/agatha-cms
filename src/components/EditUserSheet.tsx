@@ -22,8 +22,7 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
   
   // Perfil do usuário logado
   const { data: currentProfile } = useCurrentUserProfile();
-  const isSuperAdmin = currentProfile?.perfil_id === 1;
-  // Removida a verificação isEditingSelf para permitir que o Super Admin redefina a própria senha
+  const isSuperAdmin = currentProfile?.is_super_admin; // Usando a nova flag
   
   // Busca o email real do usuário que está sendo editado
   const { data: userEmail, isLoading: isLoadingEmail } = useUserEmail(user.id);
@@ -43,7 +42,7 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
   const handleSubmit = (values: { 
     full_name: string; 
     email: string; 
-    perfil_id: string; 
+    perfil_id: string; // UUID ou '1'
     telefone: string | null; 
     endereco_completo: string | null;
     empresa_id?: string | null;
@@ -59,14 +58,19 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
     });
   };
 
+  // Determina o ID do perfil a ser usado no formulário
+  // Se perfil_customizado_id for NULL, verifica se é SA (empresa_id NULL). Se for, usa '1'. Caso contrário, usa '' (para forçar seleção).
+  const profileIdForForm = user.perfil_customizado_id || (user.empresa_id === null ? '1' : ''); 
+  
   // Valores iniciais para o formulário de edição
   const initialValues = {
     full_name: user.nome_completo,
     email: userEmail || 'Carregando...', // Usa o email carregado
-    perfil_id: String(user.perfil_id),
+    perfil_id: profileIdForForm,
     telefone: user.telefone,
     endereco_completo: user.endereco_completo,
     empresa_id: user.empresa_id,
+    perfis: user.perfis, // Passa o nome do perfil para o UserForm usar no fallback
   };
   
   if (isLoadingEmail) {

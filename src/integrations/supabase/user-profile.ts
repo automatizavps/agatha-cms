@@ -10,7 +10,7 @@ export interface PermissionMap {
 export interface CurrentUserProfile {
   id: string;
   nome_completo: string;
-  perfil_id: number;
+  // perfil_id (global) removido
   avatar_url: string | null;
   telefone: string | null; // Adicionado
   endereco_completo: string | null; // Adicionado
@@ -21,6 +21,7 @@ export interface CurrentUserProfile {
     nome: string;
   } | null;
   permissions: PermissionMap; // NOVO: Mapa de permissões
+  is_super_admin: boolean; // NOVO: Flag para Super Admin
 }
 
 // Função auxiliar para buscar permissões
@@ -51,9 +52,10 @@ const fetchPermissions = async (customProfileId: string): Promise<PermissionMap>
 
 
 const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfile | null> => {
+  // 1. Buscar dados básicos do usuário (sem perfil_id)
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, perfil_id, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, perfis (nome), empresas (is_active)")
+    .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active)")
     .eq("id", userId)
     .limit(1); 
 
@@ -69,24 +71,48 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   const is_company_active = userProfile.empresas ? userProfile.empresas.is_active : true;
   
   let permissions: PermissionMap = {};
+  let is_super_admin = false;
+  let profileName = "Funcionário"; // Default name
   
-  // Se houver um perfil customizado, buscamos as permissões
-  if (userProfile.perfil_customizado_id) {
-    permissions = await fetchPermissions(userProfile.perfil_customizado_id);
-  } else if (userProfile.perfil_id === 1) {
-    // Se for Super Admin (ID 1), concedemos acesso total a todos os módulos conhecidos
-    // Isso é um fallback seguro para o Super Admin
+  // 2. Verificar se é Super Admin usando a nova RPC
+  const { data: isSaData, error: isSaError } = await supabase.rpc('is_super_admin');
+  if (!isSaError && isSaData !== null) {
+    is_super_admin = isSaData;
+  }
+  
+  // 3. Lógica de Permissões
+  if (is_super_admin) {
+    // Se for Super Admin, concedemos acesso total
+    is_super_admin = true;
+    profileName = "Super Admin";
     permissions = {
       users: 'escrita', clients: 'escrita', products: 'escrita', services: 'escrita', 
       orders: 'escrita', appointments: 'escrita', teams: 'escrita', analytics: 'escrita', 
       companies: 'escrita', notifications: 'escrita', categories: 'escrita',
     };
+  } else if (userProfile.perfil_customizado_id) {
+    // Se tiver um perfil customizado, buscamos as permissões
+    permissions = await fetchPermissions(userProfile.perfil_customizado_id);
+    
+    // 4. Buscar o nome do perfil customizado
+    const { data: customProfileData } = await supabase
+      .from("perfis_customizados")
+      .select("nome")
+      .eq("id", userProfile.perfil_customizado_id)
+      .single();
+      
+    profileName = customProfileData?.nome || "Perfil Customizado";
+  } else {
+    // Usuário sem perfil customizado e não é SA (deve ser um erro de configuração)
+    profileName = "Sem Perfil";
   }
 
   return {
     ...userProfile,
     is_company_active: is_company_active,
+    is_super_admin: is_super_admin,
     permissions: permissions,
+    perfis: { nome: profileName }, // Simula a estrutura perfis (nome)
     empresas: undefined, 
   } as CurrentUserProfile;
 };

@@ -31,7 +31,7 @@ serve(async (req) => {
     },
   );
 
-  // Get user claims to check profile/role
+  // Get user claims
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
@@ -43,21 +43,30 @@ serve(async (req) => {
   
   const adminUserId = userResponse.user.id;
 
-  // Check if the user is an Admin (Perfil ID 2 - Administrador, ou 1 - Super Admin)
+  // Check if the user is Super Admin OR belongs to a company
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("perfil_id")
+    .select("empresa_id, perfil_customizado_id")
     .eq("id", adminUserId)
     .single();
 
-  if (profileError || !profileData || (profileData.perfil_id !== 1 && profileData.perfil_id !== 2)) {
-    return new Response("Forbidden: User does not have administrative privileges", {
+  if (profileError || !profileData) {
+    return new Response("Forbidden: User profile not found", {
       status: 403,
       headers: corsHeaders,
     });
   }
   
-  const isSuperAdmin = profileData.perfil_id === 1;
+  // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL
+  const isSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
+  const isCompanyAdmin = profileData.empresa_id !== null; // Assume que se está na empresa, tem permissão de Admin/Gerente para editar usuários (o frontend controla a permissão real)
+
+  if (!isSuperAdmin && !isCompanyAdmin) {
+    return new Response("Forbidden: User does not have administrative privileges", {
+      status: 403,
+      headers: corsHeaders,
+    });
+  }
 
   // 2. Processar o corpo da requisição
   let data;
@@ -76,30 +85,23 @@ serve(async (req) => {
     });
   }
   
-  // Determinar se o perfil_id é um UUID (customizado) ou INTEGER (global)
+  // Determinar se o perfil_id é um UUID (customizado) ou INTEGER '1' (Super Admin)
   const isCustomProfile = typeof perfil_id === 'string' && perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   
-  let global_perfil_id: number;
   let custom_perfil_id: string | null = null;
   
   if (isCustomProfile) {
     custom_perfil_id = perfil_id;
-    // Se for customizado, definimos o perfil global como 3 (Funcionário) para RLS
-    global_perfil_id = 3; 
-  } else {
-    // Se for global (deve ser 1, 2 ou 3), garantimos que é um número válido
-    const parsedId = Number(perfil_id);
-    if (isNaN(parsedId) || parsedId < 1 || parsedId > 3) {
-        return new Response("Invalid global perfil_id value.", { status: 400, headers: corsHeaders });
-    }
-    global_perfil_id = parsedId;
+  } else if (perfil_id === '1') {
+    // Se for Super Admin, o custom_perfil_id deve ser NULL
     custom_perfil_id = null;
+  } else {
+    return new Response("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", { status: 400, headers: corsHeaders });
   }
   
   // Construir o objeto de atualização
   const updatePayload: Record<string, any> = {
     nome_completo: full_name, 
-    perfil_id: global_perfil_id, // Atualiza o perfil global (1, 2 ou 3)
     perfil_customizado_id: custom_perfil_id, // Atualiza o perfil customizado (UUID ou NULL)
     telefone: telefone,
     endereco_completo: endereco_completo,
@@ -110,7 +112,7 @@ serve(async (req) => {
     // Se empresa_id for null ou string vazia, definimos como null no banco
     updatePayload.empresa_id = empresa_id || null;
   }
-
+  
   // 3. Atualizar o perfil do usuário na tabela 'usuarios'
   const { error: updateError } = await supabaseAdmin
     .from("usuarios")
@@ -131,7 +133,7 @@ serve(async (req) => {
     {
       user_metadata: {
         full_name: full_name,
-        perfil_id: perfil_id, // Passamos o ID original (UUID ou INTEGER)
+        perfil_id: perfil_id, // Passamos o ID original (UUID ou INTEGER '1')
         telefone: telefone,
         endereco_completo: endereco_completo,
       }

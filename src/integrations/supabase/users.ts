@@ -4,12 +4,13 @@ import { supabase } from "./client";
 export interface UserProfile {
   id: string;
   nome_completo: string;
-  perfil_id: number;
+  // perfil_id (global) removido
   empresa_id: string | null;
   avatar_url: string | null;
   telefone: string | null; // Novo campo
   endereco_completo: string | null; // Novo campo
   email: string; // Mantemos o campo, mas será 'N/A' na lista
+  perfil_customizado_id: string | null; // NOVO: ID do perfil customizado (UUID)
   perfis: {
     nome: string;
   } | null;
@@ -22,8 +23,7 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
   // Query simplificada para evitar falha de RLS ao tentar acessar auth.users
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, perfil_id, empresa_id, avatar_url, telefone, endereco_completo, perfis (nome), empresas (nome)")
-    // REMOVIDO: .eq("id", userId) // Esta linha estava incorreta para listar todos os usuários
+    .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, perfis:perfis_customizados (nome), empresas (nome)")
     .order("nome_completo", { ascending: true });
 
   if (error) {
@@ -35,6 +35,8 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
   return data.map(user => ({
     ...user,
     email: 'N/A', // O email real será buscado no EditUserSheet
+    // Mapeia o nome do perfil customizado para a estrutura 'perfis'
+    perfis: user.perfil_customizado_id ? user.perfis : { nome: user.empresa_id ? 'Admin/Funcionário' : 'Super Admin' },
   })) as UserProfile[];
 };
 
@@ -48,7 +50,7 @@ export const useUsers = () => {
 interface InviteUserParams {
   email: string;
   full_name: string;
-  perfil_id: number;
+  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para SA
   telefone: string | null; // Novo campo
   endereco_completo: string | null; // Novo campo
   empresa_id?: string; // Opcional, apenas para Super Admin
@@ -74,7 +76,7 @@ export const inviteUser = async ({ email, full_name, perfil_id, telefone, endere
 interface UpdateUserParams {
   userIdToUpdate: string;
   full_name: string;
-  perfil_id: number;
+  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para SA
   telefone: string | null; // Novo campo
   endereco_completo: string | null; // Novo campo
   empresa_id?: string | null; // Opcional, apenas para Super Admin
