@@ -119,8 +119,10 @@ const Notifications = () => {
         <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{t('page_title_notifications')}</h1>
         <div className="flex gap-2">
           
-          {/* NOVO: Botão Excluir Lidas */}
-          <DeleteReadNotificationsDialog disabled={!hasReadNotifications || isLoading} />
+          {/* NOVO: Botão Excluir Lidas (Oculto no mobile) */}
+          <div className="hidden sm:flex">
+            <DeleteReadNotificationsDialog disabled={!hasReadNotifications || isLoading} />
+          </div>
           
           {/* Botão Marcar Todas como Lidas */}
           <Button 
