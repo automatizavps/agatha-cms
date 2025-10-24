@@ -90,24 +90,44 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
 };
 
 const getStatusBadge = (status: OrderStatus) => {
-  const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
+  const baseClasses = "capitalize px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200";
+  
+  // Estilos customizados baseados na imagem fornecida (Dark Mode Aesthetic)
   switch (status) {
     case 'entregue':
       return (
-        <span className={cn(baseClasses, "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400")}>
+        <span 
+          className={cn(baseClasses, "text-[#90EE90] dark:text-[#90EE90]")} // Verde Claro
+          style={{ 
+            backgroundColor: '#1E4620', // Verde Escuro
+            boxShadow: '0 0 5px rgba(144, 238, 144, 0.5)', // Sombra Verde
+          }}
+        >
           Entregue
         </span>
       );
     case 'cancelado':
       return (
-        <span className={cn(baseClasses, "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400")}>
+        <span 
+          className={cn(baseClasses, "text-[#FFB6C1] dark:text-[#FFB6C1]")} // Rosa Claro
+          style={{ 
+            backgroundColor: '#8B0000', // Vermelho Escuro
+            boxShadow: '0 0 5px rgba(255, 182, 193, 0.5)', // Sombra Vermelha
+          }}
+        >
           Cancelado
         </span>
       );
     case 'pendente_entrega':
     default:
       return (
-        <span className={cn(baseClasses, "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-400")}>
+        <span 
+          className={cn(baseClasses, "text-[#FFD700] dark:text-[#FFD700]")} // Ouro
+          style={{ 
+            backgroundColor: '#8B4513', // Marrom Sela (Saddle Brown)
+            boxShadow: '0 0 5px rgba(255, 215, 0, 0.5)', // Sombra Amarela
+          }}
+        >
           {status.replace('_', ' ')}
         </span>
       );
