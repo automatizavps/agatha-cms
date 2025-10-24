@@ -71,7 +71,7 @@ const Index = () => {
   };
   
   // Verifica se há um filtro de data ativo
-  const isDateFilterActive = !!startDate || !!endDate;
+  const isDateFilterActive = !!startDate && !!endDate;
   
   // Texto para o filtro de data
   const dateFilterText = startDate && endDate 
@@ -259,19 +259,11 @@ const Index = () => {
           )}
         </div>
         
-        {/* Seção 3: Gráficos de Agendamentos (Desabilitados se filtro de data ativo) */}
+        {/* Seção 3: Gráficos de Agendamentos (Série Temporal e Status) */}
         <div className="grid gap-6 grid-cols-12">
           <div className="col-span-12 md:col-span-6 lg:col-span-8">
-            {isDateFilterActive ? (
-              <Card className="h-64">
-                <CardHeader><CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle></CardHeader>
-                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-                  {t('chart_disabled_by_date_filter')}
-                </CardContent>
-              </Card>
-            ) : (
-              <DailyServiceByHourChart />
-            )}
+            {/* Passando os filtros de data para o gráfico de série temporal */}
+            <DailyServiceByHourChart startDate={startDate} endDate={endDate} />
           </div>
           
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
@@ -280,19 +272,11 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Seção 4: Gráficos de Pedidos (Desabilitados se filtro de data ativo) */}
+        {/* Seção 4: Gráficos de Pedidos (Série Temporal e Status) */}
         <div className="grid gap-6 grid-cols-12">
           <div className="col-span-12 md:col-span-6 lg:col-span-8">
-            {isDateFilterActive ? (
-              <Card className="h-64">
-                <CardHeader><CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle></CardHeader>
-                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-                  {t('chart_disabled_by_date_filter')}
-                </CardContent>
-              </Card>
-            ) : (
-              <DailyOrderByHourChart />
-            )}
+            {/* Passando os filtros de data para o gráfico de série temporal */}
+            <DailyOrderByHourChart startDate={startDate} endDate={endDate} />
           </div>
           
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
