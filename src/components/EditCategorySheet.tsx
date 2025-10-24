@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import CategoryForm from "./CategoryForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateCategory, Category } from "@/integrations/supabase/categories";
@@ -44,6 +44,10 @@ const EditCategorySheet: React.FC<EditCategorySheetProps> = ({ category, isOpen,
       <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('edit_category')}: {category.nome}</SheetTitle>
+          {/* Adicionando SheetDescription para acessibilidade */}
+          <SheetDescription className="sr-only">
+            {t('edit_category_description', { defaultValue: 'Formulário para editar o nome da categoria.' })}
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <CategoryForm 
