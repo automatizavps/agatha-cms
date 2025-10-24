@@ -11,11 +11,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, Building } from "lucide-react";
 import { Client } from "@/integrations/supabase/clients";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from "react-i18next"; // Importando tradução
 
 // Definimos o esquema base
 const baseFormSchema = z.object({
@@ -27,9 +28,10 @@ const baseFormSchema = z.object({
   }).or(z.literal("")).nullable(), // Permite string vazia ou null
   telefone: z.string().optional().nullable(),
   endereco_completo: z.string().optional().nullable(),
+  // empresa_id é opcional no base, mas será estendido para ser obrigatório na criação para SA
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
-  }).optional(),
+  }).or(z.literal("")).optional(),
 });
 
 type ClientFormValues = z.infer<typeof baseFormSchema>;
@@ -44,16 +46,18 @@ interface ClientFormProps {
 const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  // Usando a flag correta
+  const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
-  // Ajusta o schema dinamicamente: se for Super Admin, empresa_id é obrigatório
-  const formSchema = isSuperAdmin
+  // Ajusta o schema dinamicamente: se for Super Admin, empresa_id é obrigatório na CRIAÇÃO
+  const formSchema = isSuperAdmin && !isEditing
     ? baseFormSchema.extend({
         empresa_id: z.string().uuid({
-          message: "Selecione uma empresa válida.",
-        }).min(1, { message: "A empresa é obrigatória para o Super Admin." }),
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
       })
     : baseFormSchema;
 
@@ -75,7 +79,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     const endereco_completo = values.endereco_completo ? values.endereco_completo : null;
     
     // Se for Super Admin, envia o empresa_id selecionado. Caso contrário, não envia (será obtido via RPC).
-    const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
+    const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
 
     onSubmit({
       nome: values.nome,
@@ -85,6 +89,13 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       empresa_id: empresa_id,
     });
   };
+  
+  // Determina se o campo empresa deve ser exibido (Super Admin na criação ou edição)
+  const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
+  
+  // Encontra o nome da empresa para exibição desabilitada
+  const companyIdToDisplay = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
+  const companyName = companies?.find(c => c.id === companyIdToDisplay)?.nome;
   
   if (isCheckingPermissions) {
     return (
@@ -98,27 +109,39 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {isSuperAdmin && (
+        {/* Campo Empresa (Visível para SA na criação ou edição) */}
+        {shouldShowCompanyField && (
           <FormField
             control={form.control}
             name="empresa_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Empresa</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                <FormLabel>{t('user_table_header_company')}</FormLabel>
+                {isEditing ? (
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
-                    </SelectTrigger>
+                    <Input 
+                      // Exibe o nome da empresa ou 'N/A' se não for encontrado
+                      value={companyName || t("company_not_found")} 
+                      disabled 
+                      className="bg-muted/50"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                ) : (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies?.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -130,9 +153,9 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           name="nome"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome do Cliente</FormLabel>
+              <FormLabel>{t('product_name')}</FormLabel>
               <FormControl>
-                <Input placeholder="Nome completo do cliente" {...field} disabled={isSubmitting} />
+                <Input placeholder={t('product_name_placeholder')} {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -143,7 +166,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email (Opcional)</FormLabel>
+              <FormLabel>{t('profile_email')} ({t('optional')})</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="email@exemplo.com" 
@@ -161,7 +184,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           name="telefone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Telefone (Opcional)</FormLabel>
+              <FormLabel>{t('user_table_header_phone')} ({t('optional')})</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="(XX) XXXXX-XXXX" 
@@ -179,7 +202,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           name="endereco_completo"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Endereço Completo (Opcional)</FormLabel>
+              <FormLabel>{t('client_table_header_address')} ({t('optional')})</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Rua, Número, Bairro, Cidade, Estado" 
@@ -197,9 +220,9 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            "Salvar Alterações"
+            t('save_changes')
           ) : (
-            "Cadastrar Cliente"
+            t('add_new_client')
           )}
         </Button>
       </form>
