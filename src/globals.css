@@ -5,7 +5,7 @@
 @layer base {
   :root {
     /* Light Theme Defaults */
-    --background: 0 0% 100%;
+    --background: 0 0% 96%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -15,7 +15,8 @@
     --popover-foreground: 222.2 84% 4.9%;
 
     /* Primary: Roxo (Ex: HSL 250 80% 50%) */
-    --primary: 250 61% 64%;
+    /*--primary: 250 80% 50%;  */
+    --primary: 250 61.1% 42.4%;
     --primary-foreground: 210 40% 98%; /* Branco */
 
     --secondary: 210 40% 96.1%;
@@ -40,23 +41,23 @@
     --radius: 0.5rem;
 
     /* Sidebar Light */
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 250 80% 50%; /* Roxo para item ativo e título */
+    --sidebar-primary: 250 61.1% 42.4%; /* Roxo para item ativo e título */
     --sidebar-primary-foreground: 0 0% 98%; /* Branco para texto do item ativo */
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 250 80% 50%;
+    --sidebar-ring: 250 61.1% 42.4%;
   }
 
   .dark {
     /* Dark Theme: Base #262626 (HSL 240 5.9% 10%) */
-    --background: 240 5.9% 10%;
+    --background: 240 7% 8.4%;
     --foreground: 210 40% 98%; /* Branco */
 
     --card: 240 5.9% 10%;
-    --card-foreground: 210 40% 98%;
+    --card-foreground: 210 40% 98%; /* Branco */
 
     --popover: 240 5.9% 10%;
     --popover-foreground: 210 40% 98%;
