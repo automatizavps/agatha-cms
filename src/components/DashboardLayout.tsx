@@ -34,7 +34,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { DashboardFilter } from './DashboardFilter';
+import { DashboardFilter } from './DashboardFilter'; // <-- Importação corrigida
 
 // Definição dos tipos de perfil
 const PERFIL_SUPER_ADMIN = 1;
