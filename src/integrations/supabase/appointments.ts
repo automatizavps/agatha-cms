@@ -293,3 +293,16 @@ export const deleteAppointment = async (id: string) => {
     throw new Error(error.message);
   }
 };
+
+// --- Bulk Delete ---
+export const deleteAppointments = async (appointmentIds: string[]) => {
+  const { error } = await supabase
+    .from("agendamentos")
+    .delete()
+    .in("id", appointmentIds);
+
+  if (error) {
+    console.error("Error deleting appointments:", error);
+    throw new Error(error.message);
+  }
+};

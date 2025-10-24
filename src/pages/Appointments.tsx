@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAppointments, Appointment, deleteAppointment, useAppointmentItems } from "@/integrations/supabase/appointments";
+import { useAppointments, Appointment, deleteAppointment, useAppointmentItems, deleteAppointments } from "@/integrations/supabase/appointments";
 import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown, Search, RefreshCw, CalendarIcon, Filter } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,6 +29,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
+import FloatingBulkActions from "@/components/FloatingBulkActions";
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -182,12 +184,16 @@ const AppointmentsContent = () => {
   const [sortKey, setSortKey] = useState<SortKey>('data_hora');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   
   // --- Filter States ---
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Appointment['status'] | 'all'>('all');
+  
+  // --- Selection State ---
+  const [selectedAppointmentIds, setSelectedAppointmentIds] = useState<Set<string>>(new Set());
   
   const isSuperAdmin = profile?.perfil_id === 1;
 
@@ -289,6 +295,54 @@ const AppointmentsContent = () => {
     
     return sorted;
   }, [filteredAppointments, sortKey, sortDirection]);
+  
+  // Mutação para exclusão em massa
+  const bulkDeleteMutation = useMutation({
+    mutationFn: deleteAppointments,
+    onSuccess: () => {
+      showSuccess(t('appointments_deleted_success', { count: selectedAppointmentIds.size }));
+      setSelectedAppointmentIds(new Set()); // Limpa a seleção
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+    onError: (error) => {
+      showError(t('error_loading_data') + ": " + error.message);
+    },
+  });
+  
+  const handleBulkDelete = () => {
+    if (selectedAppointmentIds.size === 0) return;
+    
+    const count = selectedAppointmentIds.size;
+    const confirmMessage = count === 1 
+      ? t('confirm_delete_single') 
+      : t('confirm_delete_bulk', { count });
+      
+    if (window.confirm(confirmMessage)) {
+      bulkDeleteMutation.mutate(Array.from(selectedAppointmentIds));
+    }
+  };
+  
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(filteredAppointments.map(a => a.id));
+      setSelectedAppointmentIds(allIds);
+    } else {
+      setSelectedAppointmentIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const newSelectedIds = new Set(selectedAppointmentIds);
+    if (checked) {
+      newSelectedIds.add(id);
+    } else {
+      newSelectedIds.delete(id);
+    }
+    setSelectedAppointmentIds(newSelectedIds);
+  };
+  
+  const isAllSelected = filteredAppointments.length > 0 && selectedAppointmentIds.size === filteredAppointments.length;
+  const isIndeterminate = selectedAppointmentIds.size > 0 && selectedAppointmentIds.size < filteredAppointments.length;
 
 
   return (
@@ -399,6 +453,14 @@ const AppointmentsContent = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {/* Checkbox Header */}
+                    <TableHead className="w-[50px] text-center">
+                      <Checkbox
+                        checked={isAllSelected || isIndeterminate}
+                        onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                        aria-label={t('select_all')}
+                      />
+                    </TableHead>
                     <SortableHeader 
                       sortKey="cliente" 
                       currentSortKey={sortKey} 
@@ -449,7 +511,19 @@ const AppointmentsContent = () => {
                 </TableHeader>
                 <TableBody>
                   {sortedAppointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
+                    <TableRow 
+                      key={appointment.id}
+                      className={cn(
+                        selectedAppointmentIds.has(appointment.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30"
+                      )}
+                    >
+                      {/* Checkbox Cell */}
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={selectedAppointmentIds.has(appointment.id)}
+                          onCheckedChange={(checked) => handleSelectRow(appointment.id, !!checked)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
                       {isSuperAdmin && (
                         <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
@@ -494,6 +568,13 @@ const AppointmentsContent = () => {
           onOpenChange={handleCloseEditSheet} 
         />
       )}
+      
+      {/* Componente Flutuante de Ações em Massa */}
+      <FloatingBulkActions 
+        selectedCount={selectedAppointmentIds.size}
+        onDelete={handleBulkDelete}
+        isDeleting={bulkDeleteMutation.isPending}
+      />
     </DashboardLayout>
   );
 };

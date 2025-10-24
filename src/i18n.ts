@@ -152,7 +152,10 @@ const resources = {
       "no_orders_found": "Nenhum pedido cadastrado.",
       "create_order": "Criar Pedido",
       "update_order_button": "Atualizar Pedido",
-      "orders_deleted_success": "{{count}} pedido(s) excluído(s) com sucesso.", // NOVO
+      "orders_deleted_success": "{{count}} pedido(s) excluído(s) com sucesso.",
+      
+      "page_title_appointments": "Gestão de Agendamentos",
+      "appointments_deleted_success": "{{count}} agendamento(s) excluído(s) com sucesso.", // NOVO
       
       "page_title_settings": "Configurações",
       "page_subtitle_settings": "Gerencie as configurações da sua conta e da sua empresa.",
