@@ -143,6 +143,14 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
     if (!users) return [];
     
     const sorted = [...users].sort((a, b) => {
+      // Prioridade 1: Super Admin sempre no topo
+      const isASuperAdmin = a.perfis?.nome === 'Super Admin';
+      const isBSuperAdmin = b.perfis?.nome === 'Super Admin';
+      
+      if (isASuperAdmin && !isBSuperAdmin) return -1;
+      if (!isASuperAdmin && isBSuperAdmin) return 1;
+      
+      // Se ambos são SA ou nenhum é SA, aplica a ordenação normal
       let aValue: any;
       let bValue: any;
       
@@ -239,7 +247,13 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
           </TableHeader>
           <TableBody>
             {sortedUsers.map((user) => (
-              <TableRow key={user.id}>
+              <TableRow 
+                key={user.id}
+                // Adiciona destaque visual para o Super Admin
+                className={cn(
+                  user.perfis?.nome === 'Super Admin' && "bg-primary/10 hover:bg-primary/20 transition-colors"
+                )}
+              >
                 <TableCell>
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.avatar_url || undefined} alt={user.nome_completo} />
