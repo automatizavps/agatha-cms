@@ -57,7 +57,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome: defaultValues?.nome || "",
-      empresa_id: defaultValues?.empresa_id || "",
+      // Garante que o valor inicial seja "" para exibir o placeholder se não houver valor
+      empresa_id: defaultValues?.empresa_id || "", 
     },
   });
 
@@ -99,8 +100,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {/* Adicionando opção vazia para forçar a seleção */}
-                    <SelectItem value="">{t("select_company")}</SelectItem> 
+                    {/* REMOVIDO: SelectItem value="" */}
                     {companies?.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.nome}
