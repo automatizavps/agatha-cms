@@ -163,6 +163,7 @@ export function NotificationBell() {
             </ScrollArea>
             <Separator />
             <div className="p-2">
+              {/* O Link já aponta para /notifications */}
               <Link to="/notifications" className="flex items-center justify-center text-sm text-primary hover:text-primary/80">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 {t('view_all_notifications')}
