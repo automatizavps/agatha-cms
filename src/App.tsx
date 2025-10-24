@@ -17,7 +17,6 @@ import Companies from "./pages/Companies";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import Teams from "./pages/Teams";
-import Categories from "./pages/Categories";
 import Notifications from "./pages/Notifications";
 import ProductHistory from "./pages/ProductHistory";
 import CustomProfiles from "./pages/CustomProfiles";
@@ -50,7 +49,6 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/companies/profiles" element={<CustomProfiles />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/products/categories" element={<Categories />} />
       <Route path="/notifications" element={<Notifications />} />
       
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

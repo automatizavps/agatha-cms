@@ -102,12 +102,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadClients = useCanRead('clients');
   const canReadProducts = useCanRead('products');
   const canReadServices = useCanRead('services');
-  const canReadCategories = useCanRead('categories');
+  // const canReadCategories = useCanRead('categories'); // REMOVIDO
   const canReadUsers = useCanRead('users');
   const canReadTeams = useCanRead('teams');
   const canReadCompanies = useCanRead('companies');
   const canReadNotifications = useCanRead('notifications');
-  const canReadCustomProfiles = useCanRead('custom_profiles'); // NOVO
+  const canReadCustomProfiles = useCanRead('custom_profiles'); 
 
   const isSuperAdmin = profile?.is_super_admin;
 
@@ -120,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const isCompaniesOpen = location.pathname.startsWith('/companies');
   
   // Verifica se o grupo de Produtos/Serviços deve ser exibido
-  const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories;
+  const showProductsServicesGroup = canReadProducts || canReadServices; // canReadCategories REMOVIDO
   
   // Verifica se o grupo de Empresas deve ser exibido
   const showCompaniesGroup = canReadCompanies || canReadCustomProfiles;
@@ -214,7 +214,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
               >
                 <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
                   {/* Ícone do Trigger deve ser roxo, pois não é um item de rota */}
-                  <Package className="h-5 w-5 text-sidebar-primary" /> 
+                  <Package className="h-5 w-5" /> 
                   {!isCollapsed && t('nav_products_services')}
                 </div>
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
@@ -240,15 +240,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                       {...navItemProps}
                     />
                   )}
-                  {canReadCategories && (
-                    <NavItem
-                      to="/products/categories"
-                      icon={<Tag className="h-5 w-5" />}
-                      label={t('nav_categories')}
-                      isSubItem
-                      {...navItemProps}
-                    />
-                  )}
+                  {/* Item de Categoria REMOVIDO */}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -282,7 +274,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
               )}
             >
               <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
-                <Building className="h-5 w-5 text-sidebar-primary" /> 
+                <Building className="h-5 w-5" /> 
                 {!isCollapsed && t('nav_companies')}
               </div>
               {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}

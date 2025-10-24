@@ -27,7 +27,7 @@ const ProductsContent = () => {
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
+  // const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all'); // REMOVIDO
   const [brandFilter, setBrandFilter] = useState<string | 'all'>('all');
   const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
   const { t } = useTranslation();
@@ -85,16 +85,7 @@ const ProductsContent = () => {
     showError(t("error_loading_data") + ": " + error.message);
   }
   
-  // Extrai categorias e marcas únicas
-  const uniqueCategories = useMemo(() => {
-    if (!products) return [];
-    const categories = new Set<string>();
-    products.forEach(p => {
-      if (p.categoria) categories.add(p.categoria);
-    });
-    return Array.from(categories).sort();
-  }, [products]);
-
+  // Extrai marcas únicas
   const uniqueBrands = useMemo(() => {
     if (!products) return [];
     const brands = new Set<string>();
@@ -113,17 +104,12 @@ const ProductsContent = () => {
       filtered = filtered.filter(product => product.empresa_id === companyFilterId);
     }
 
-    // 2. Filtragem por Categoria
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(product => product.categoria === categoryFilter);
-    }
-    
-    // 3. Filtragem por Marca
+    // 2. Filtragem por Marca
     if (brandFilter !== 'all') {
       filtered = filtered.filter(product => product.marca === brandFilter);
     }
 
-    // 4. Filtragem por Termo de Busca
+    // 3. Filtragem por Termo de Busca
     if (searchTerm) {
       const lowerCaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(product => 
@@ -134,7 +120,7 @@ const ProductsContent = () => {
     }
 
     return filtered;
-  }, [products, searchTerm, categoryFilter, brandFilter, companyFilterId, isSuperAdmin]);
+  }, [products, searchTerm, brandFilter, companyFilterId, isSuperAdmin]);
   
   // Produtos com estoque baixo (apenas produtos, excluindo serviços)
   const lowStockProducts = useMemo(() => {
@@ -209,28 +195,6 @@ const ProductsContent = () => {
                 </Select>
               </div>
             )}
-            
-            {/* Filtro de Categoria */}
-            <div className="w-full md:w-48">
-              <Select 
-                onValueChange={setCategoryFilter} 
-                value={categoryFilter} 
-                disabled={isChecking}
-              >
-                <SelectTrigger className="w-full">
-                  <Tag className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder={t('filter_all_categories')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('filter_all_categories')}</SelectItem>
-                  {uniqueCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             
             {/* Filtro de Marca */}
             <div className="w-full md:w-48">

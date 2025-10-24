@@ -48,7 +48,7 @@ const resources = {
       "nav_operational": "Operacional",
       "nav_config": "Configurações",
       "nav_products_services": "Produtos & Serviços",
-      "nav_categories": "Categorias",
+      // "nav_categories": "Categorias", // REMOVIDO
       "nav_notifications": "Notificações",
 
       // Dashboard
@@ -127,7 +127,7 @@ const resources = {
       "product_list_title": "Lista de Produtos",
       "add_new_product": "Novo Produto",
       "product_search_placeholder": "Buscar por nome, categoria ou marca...",
-      "filter_all_categories": "Todas as Categorias",
+      // "filter_all_categories": "Todas as Categorias", // REMOVIDO
       "filter_all_brands": "Todas as Marcas",
       "low_stock_alert_title": "Atenção: Estoque Baixo!",
       "low_stock_alert_description": "Os seguintes produtos estão com estoque abaixo de {{threshold}} unidades:",
@@ -213,21 +213,21 @@ const resources = {
       "search_user": "Buscar usuário...",
       "company_not_found": "Empresa não encontrada",
       
-      // Categorias (Categories)
-      "page_title_categories": "Gestão de Categorias",
-      "category_list_title": "Lista de Categorias",
-      "add_new_category": "Nova Categoria",
-      "no_categories_found": "Nenhuma categoria encontrada.",
-      "category_search_placeholder": "Buscar por nome da categoria...",
-      "category_name": "Nome da Categoria",
-      "category_name_placeholder": "Ex: Shampoos, Cortes de Cabelo",
-      "create_category": "Criar Categoria",
-      "edit_category": "Editar Categoria",
-      "category_created_success": "Categoria {{name}} criada com sucesso!",
-      "category_updated_success": "Categoria {{name}} atualizada com sucesso!",
-      "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
-      "select_category": "Selecione a categoria",
-      "search_category": "Buscar categoria...",
+      // Categorias (REMOVIDO)
+      // "page_title_categories": "Gestão de Categorias",
+      // "category_list_title": "Lista de Categorias",
+      // "add_new_category": "Nova Categoria",
+      // "no_categories_found": "Nenhuma categoria encontrada.",
+      // "category_search_placeholder": "Buscar por nome da categoria...",
+      // "category_name": "Nome da Categoria",
+      // "category_name_placeholder": "Ex: Shampoos, Cortes de Cabelo",
+      // "create_category": "Criar Categoria",
+      // "edit_category": "Editar Categoria",
+      // "category_created_success": "Categoria {{name}} criada com sucesso!",
+      // "category_updated_success": "Categoria {{name}} atualizada com sucesso!",
+      // "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
+      // "select_category": "Selecione a categoria",
+      // "search_category": "Buscar categoria...",
       
       // Notificações (Notifications)
       "page_title_notifications": "Notificações",
