@@ -24,6 +24,13 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 
+// Função auxiliar para obter a data de hoje com a hora zerada
+const getToday = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
 const Index = () => {
   const { t } = useTranslation();
   
@@ -35,9 +42,9 @@ const Index = () => {
     isLoadingFilter 
   } = useDashboardFilter();
   
-  // NOVO: Filtro de Período
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  // Inicializa o filtro de Período com a data de hoje
+  const [startDate, setStartDate] = useState<Date | undefined>(getToday());
+  const [endDate, setEndDate] = useState<Date | undefined>(getToday());
   
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
@@ -70,12 +77,15 @@ const Index = () => {
     return <div className="text-xl font-bold">{value}</div>;
   };
   
-  // Verifica se há um filtro de data ativo
+  // Verifica se há um filtro de data ativo (agora sempre true, a menos que seja limpo)
   const isDateFilterActive = !!startDate && !!endDate;
   
   // Texto para o filtro de data
   const dateFilterText = startDate && endDate 
-    ? `${format(startDate, 'dd/MM/yyyy', { locale: ptBR })} - ${format(endDate, 'dd/MM/yyyy', { locale: ptBR })}`
+    ? (startDate.getTime() === endDate.getTime() 
+        ? format(startDate, 'dd/MM/yyyy', { locale: ptBR }) // Se for o mesmo dia, mostra apenas a data
+        : `${format(startDate, 'dd/MM/yyyy', { locale: ptBR })} - ${format(endDate, 'dd/MM/yyyy', { locale: ptBR })}`
+      )
     : t('select_date_range');
 
   return (
