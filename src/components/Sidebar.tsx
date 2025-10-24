@@ -98,6 +98,16 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
   const { t } = useTranslation();
   const isActive = location.pathname.startsWith(basePath);
   
+  // HOOKS MOVIDOS PARA O TOPO (incondicionalmente)
+  const [isOpen, setIsOpen] = useState(isActive);
+  
+  // Sync internal state with active route when expanded
+  useEffect(() => {
+    if (!isCollapsed) {
+      setIsOpen(isActive);
+    }
+  }, [isActive, isCollapsed]);
+  
   // Helper to render the icon with correct styling
   const renderIcon = (isActive: boolean) => {
     const iconColorClass = isActive 
@@ -179,15 +189,7 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
   }
 
   // Expanded state: Collapsible
-  const [isOpen, setIsOpen] = useState(isActive);
-  
-  // Sync internal state with active route when expanded
-  useEffect(() => {
-    if (!isCollapsed) {
-      setIsOpen(isActive);
-    }
-  }, [isActive, isCollapsed]);
-
+  // O estado isOpen já foi declarado incondicionalmente no topo.
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger 
