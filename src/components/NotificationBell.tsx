@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Bell, Loader2, CheckCheck, X } from 'lucide-react';
+import { Bell, Loader2, CheckCheck, X, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -150,11 +150,20 @@ export function NotificationBell() {
             {t('chart_error')}
           </div>
         ) : filteredNotifications.length > 0 ? (
-          <ScrollArea className="h-[300px]">
-            {filteredNotifications.map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
-            ))}
-          </ScrollArea>
+          <>
+            <ScrollArea className="h-[300px]">
+              {filteredNotifications.map((notification) => (
+                <NotificationItem key={notification.id} notification={notification} />
+              ))}
+            </ScrollArea>
+            <Separator />
+            <div className="p-2">
+              <Link to="/notifications" className="flex items-center justify-center text-sm text-primary hover:text-primary/80">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                {t('view_all_notifications')}
+              </Link>
+            </div>
+          </>
         ) : (
           <div className="p-4 text-center text-muted-foreground">
             {t('no_notifications_found')}

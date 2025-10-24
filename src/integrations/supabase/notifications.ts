@@ -21,7 +21,7 @@ const fetchNotifications = async (userId: string): Promise<Notification[]> => {
     .from("notificacoes")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(20); // Limita a 20 notificações recentes
+    .limit(50); // Aumentado o limite para a página de gestão
 
   if (error) {
     console.error("Error fetching notifications:", error);
@@ -67,6 +67,20 @@ export const markAllNotificationsAsRead = async () => {
 
   if (error) {
     console.error("Error marking all notifications as read:", error);
+    throw new Error(error.message);
+  }
+};
+
+// --- Delete Notification ---
+
+export const deleteNotification = async (notificationId: string) => {
+  const { error } = await supabase
+    .from("notificacoes")
+    .delete()
+    .eq("id", notificationId);
+
+  if (error) {
+    console.error("Error deleting notification:", error);
     throw new Error(error.message);
   }
 };

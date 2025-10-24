@@ -208,9 +208,21 @@ const resources = {
       "search_category": "Buscar categoria...",
       
       // Notificações (Notifications) - NOVO
+      "page_title_notifications": "Notificações",
+      "notification_list_title": "Histórico de Notificações",
       "notifications_marked_read": "Todas as notificações marcadas como lidas.",
       "mark_all_read": "Marcar todas como lidas",
       "no_notifications_found": "Nenhuma notificação recente.",
+      "notification_table_header_status": "Status",
+      "notification_table_header_title": "Título",
+      "notification_table_header_message": "Mensagem",
+      "notification_table_header_time": "Tempo",
+      "read": "Lida",
+      "unread": "Não Lida",
+      "mark_as_read": "Marcar como Lida",
+      "view_details": "Ver Detalhes",
+      "notification_deleted_success": "Notificação excluída.",
+      "view_all_notifications": "Ver todas as notificações",
       
       // Senha (Password) - NOVO
       "change_password": "Mudar Senha",

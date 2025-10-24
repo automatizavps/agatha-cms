@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import Teams from "./pages/Teams";
 import Categories from "./pages/Categories";
+import Notifications from "./pages/Notifications"; // Importando a nova página
 import { SessionContextProvider, ProtectedRoute } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter"; // Importando o novo provider
 
@@ -54,6 +55,7 @@ const App = () => (
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/products/categories" element={<Categories />} />
+                      <Route path="/notifications" element={<Notifications />} /> {/* Nova Rota */}
                       
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
