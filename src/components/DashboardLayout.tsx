@@ -113,8 +113,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <ThemeToggle />
           <UserMenu />
         </header>
-        {/* Adiciona padding no topo para compensar o header fixo (h-16 -> pt-24 para folga) */}
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in pt-24">
+        {/* Adiciona padding no topo para compensar o header fixo (h-16 -> pt-20 para folga) */}
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in pt-20">
           {children}
         </main>
       </div>
