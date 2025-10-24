@@ -114,13 +114,14 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   
   const isLoadingProfiles = isLoadingGlobalProfiles || isLoadingCustomProfiles;
 
-  // Combina perfis globais e customizados
+  // Combina perfis globais (apenas Super Admin) e customizados
   const allProfiles = useMemo(() => {
     if (!globalProfiles) return [];
     
-    let combined = [...globalProfiles];
+    // 1. Incluir apenas o Super Admin (ID 1)
+    let combined = globalProfiles.filter(p => p.id === 1);
     
-    // Adicionamos perfis customizados se uma empresa estiver selecionada
+    // 2. Adicionar perfis customizados se uma empresa estiver selecionada
     if (selectedCompanyId && customProfiles) {
       const mappedCustomProfiles = customProfiles.map(p => ({
         // Usamos o ID do perfil customizado (UUID) como ID
@@ -132,19 +133,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
       combined.push(...mappedCustomProfiles as any);
     }
     
-    // Filtra perfis globais 2 e 3, mantendo apenas o Super Admin (ID 1)
-    const filteredGlobalProfiles = combined.filter(p => p.id === 1 || typeof p.id === 'string');
-    
-    // Na edição, se o perfil atual for um dos perfis globais 2 ou 3 (que não estão mais na lista),
+    // 3. Na edição, se o perfil atual for um dos perfis globais 2 ou 3 (que não estão mais na lista),
     // precisamos garantir que ele apareça para que o formulário não quebre.
     if (isEditing && defaultValues?.perfil_id && !isNaN(Number(defaultValues.perfil_id)) && Number(defaultValues.perfil_id) !== 1) {
         const existingGlobalProfile = globalProfiles.find(p => p.id === Number(defaultValues.perfil_id));
-        if (existingGlobalProfile && !filteredGlobalProfiles.some(p => p.id === existingGlobalProfile.id)) {
-             filteredGlobalProfiles.push(existingGlobalProfile as any);
+        if (existingGlobalProfile && !combined.some(p => p.id === existingGlobalProfile.id)) {
+             combined.push(existingGlobalProfile as any);
         }
     }
     
-    return filteredGlobalProfiles;
+    return combined;
   }, [globalProfiles, customProfiles, selectedCompanyId, isEditing, defaultValues?.perfil_id]);
 
 
