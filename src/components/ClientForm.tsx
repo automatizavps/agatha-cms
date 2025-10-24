@@ -159,9 +159,9 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           name="nome"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('product_name')}</FormLabel>
+              <FormLabel>{t('client_name')}</FormLabel> {/* CORRIGIDO AQUI */}
               <FormControl>
-                <Input placeholder={t('product_name_placeholder')} {...field} disabled={isSubmitting} />
+                <Input placeholder={t('client_name_placeholder')} {...field} disabled={isSubmitting} /> {/* CORRIGIDO AQUI */}
               </FormControl>
               <FormMessage />
             </FormItem>
