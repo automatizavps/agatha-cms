@@ -18,14 +18,14 @@ const AnalyticsContent = () => {
         <p className="text-muted-foreground">{t('page_subtitle_analytics')}</p>
         
         <Tabs defaultValue="orders" className="w-full">
-          {/* Ajustado para flex-nowrap e overflow-x-auto no mobile, e grid-cols-5 no desktop */}
-          <TabsList className="w-full flex flex-nowrap overflow-x-auto md:grid md:grid-cols-5">
-            {/* Adicionando md:flex-1 para que os itens se expandam no desktop */}
-            <TabsTrigger value="orders" className="flex-shrink-0 md:flex-1">{t('nav_orders')}</TabsTrigger>
-            <TabsTrigger value="services" className="flex-shrink-0 md:flex-1">{t('nav_services')}</TabsTrigger>
-            <TabsTrigger value="clients" className="flex-shrink-0 md:flex-1">{t('nav_clients')}</TabsTrigger>
-            <TabsTrigger value="teams" className="flex-shrink-0 md:flex-1">{t('nav_teams')}</TabsTrigger>
-            <TabsTrigger value="companies" className="flex-shrink-0 md:flex-1">{t('nav_companies')}</TabsTrigger>
+          {/* Usando flexbox para layout horizontal fluido em todos os tamanhos */}
+          <TabsList className="w-full flex flex-nowrap overflow-x-auto">
+            {/* Usando flex-1 para que cada item ocupe uma parte igual do espaço disponível */}
+            <TabsTrigger value="orders" className="flex-1">{t('nav_orders')}</TabsTrigger>
+            <TabsTrigger value="services" className="flex-1">{t('nav_services')}</TabsTrigger>
+            <TabsTrigger value="clients" className="flex-1">{t('nav_clients')}</TabsTrigger>
+            <TabsTrigger value="teams" className="flex-1">{t('nav_teams')}</TabsTrigger>
+            <TabsTrigger value="companies" className="flex-1">{t('nav_companies')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="orders">
