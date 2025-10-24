@@ -1,10 +1,8 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { supabase } from '@/integrations/supabase/client'; // Importação corrigida
+import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-
-// Não precisamos mais chamar createClient() aqui, pois já importamos a instância.
 
 function Login() {
   const { t } = useTranslation();
@@ -40,7 +38,8 @@ function Login() {
 
       {/* Container Direito (Formulário de Login) */}
       <div className="w-full md:w-1/2 lg:w-2/5 flex items-center justify-center bg-background p-4">
-        <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg border">
+        {/* Classes bg-card, shadow-lg e border removidas */}
+        <div className="w-full max-w-md p-8 space-y-6 rounded-lg"> 
           
           {/* Logo e Nome do App */}
           <div className="flex items-center justify-center mb-6">
