@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Check, ChevronsUpDown } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, Building } from "lucide-react";
 import { Team } from "@/integrations/supabase/teams";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
@@ -90,6 +90,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
     const meta_mensal_valor = parseFloat(values.meta_mensal_valor);
     const meta_mensal_quantidade = parseInt(values.meta_mensal_quantidade);
     
+    // Se for Super Admin, enviamos o empresa_id. Se não for, enviamos undefined (será resolvido via RPC).
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
 
     onSubmit({
@@ -112,54 +113,78 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
   const allUsers = users || [];
   const selectedMemberIds = form.watch("member_ids") || [];
   
+  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
+  const selectedCompanyId = isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id;
+  const isCompanySelected = !!selectedCompanyId;
+  
   // Filtra usuários que pertencem à empresa selecionada (se Super Admin) ou à empresa do Admin
   const availableUsers = allUsers.filter(user => {
     // Se for Super Admin, filtramos pela empresa selecionada no formulário
-    if (isSuperAdmin && form.watch('empresa_id')) {
-      return user.empresa_id === form.watch('empresa_id');
+    if (isSuperAdmin && selectedCompanyId) {
+      return user.empresa_id === selectedCompanyId;
     }
     // Se não for Super Admin, filtramos pela empresa do usuário logado
     if (!isSuperAdmin && profile?.empresa_id) {
         return user.empresa_id === profile.empresa_id;
     }
-    // Se for Super Admin na edição, ou se não houver empresa selecionada/associada, retorna vazio
+    // Caso contrário, retorna vazio
     return false;
   });
+  
+  // Determina se o campo empresa deve ser exibido (Super Admin ou se estiver editando)
+  const shouldShowCompanyField = isSuperAdmin || isEditing;
+  
+  // Determina se o campo empresa deve ser editável (apenas Super Admin)
+  const isCompanyFieldEditable = isSuperAdmin && !isSubmitting;
+  
+  // Encontra o nome da empresa para exibição desabilitada
+  const companyName = companies?.find(c => c.id === defaultValues?.empresa_id)?.nome;
+
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* Campo Empresa (Apenas Super Admin na Criação) */}
-        {isSuperAdmin && !isEditing && (
+        {/* Campo Empresa (Apenas Super Admin ou Edição) */}
+        {shouldShowCompanyField && (
           <FormField
             control={form.control}
             name="empresa_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
-                <Select 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    // Limpa os membros ao mudar a empresa
-                    form.setValue('member_ids', []);
-                  }} 
-                  value={field.value} 
-                  disabled={isLoadingCompanies || isSubmitting}
-                >
+                {isCompanyFieldEditable ? (
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Limpa os membros ao mudar a empresa
+                      form.setValue('member_ids', []);
+                    }} 
+                    value={field.value} 
+                    disabled={isLoadingCompanies || isSubmitting}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies?.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
-                    </SelectTrigger>
+                    <Input 
+                      value={companyName || t("company_not_found")} 
+                      disabled 
+                      className="bg-muted/50"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -240,11 +265,11 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
                         "w-full justify-between",
                         selectedMemberIds.length === 0 && "text-muted-foreground"
                       )}
-                      disabled={isLoadingUsers || isSubmitting || (isSuperAdmin && !form.watch('empresa_id'))}
+                      disabled={isLoadingUsers || isSubmitting || !isCompanySelected}
                     >
                       {selectedMemberIds.length > 0
                         ? t('members_selected', { count: selectedMemberIds.length })
-                        : (isSuperAdmin && !form.watch('empresa_id'))
+                        : !isCompanySelected
                           ? t('select_company_to_load_data')
                           : t('select_members')}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -292,7 +317,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
         <Button 
           type="submit" 
           className="w-full" 
-          disabled={isSubmitting || (isSuperAdmin && !form.watch('empresa_id') && !isEditing)}
+          disabled={isSubmitting || !isCompanySelected}
         >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -302,6 +327,14 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
             t('create_team')
           )}
         </Button>
+        
+        {/* Aviso se a empresa não estiver selecionada (Apenas Super Admin na CRIAÇÃO) */}
+        {isSuperAdmin && !isEditing && !isCompanySelected && (
+          <div className="p-3 bg-yellow-100/50 dark:bg-yellow-900/20 border border-yellow-400/50 rounded-md text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            {t('select_company_to_load_data')}
+          </div>
+        )}
       </form>
     </Form>
   );
