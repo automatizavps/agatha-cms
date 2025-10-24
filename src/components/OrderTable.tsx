@@ -213,6 +213,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
       currency: 'BRL',
     }).format(value);
   };
+  
+  const calculateTotalQuantity = (order: Order) => {
+    return order.pedido_itens.reduce((sum, item) => sum + item.quantidade, 0);
+  };
 
   const handleEditStatus = (order: Order) => {
     setEditingOrder(order);
@@ -332,7 +336,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               >
                 {t('order_table_header_client')}
               </SortableHeader>
-              {/* NOVO: Coluna de Itens */}
+              {/* Coluna de Itens */}
               <TableHead className="hidden sm:table-cell">
                 {t('nav_products_services')}
               </TableHead>
@@ -345,6 +349,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               >
                 {t('order_table_header_date')}
               </SortableHeader>
+              {/* NOVO: Coluna de Quantidade Total */}
+              <TableHead className="text-right hidden lg:table-cell">
+                {t('quantity')}
+              </TableHead>
               <SortableHeader 
                 sortKey="valor_total" 
                 currentSortKey={sortKey} 
@@ -359,7 +367,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-center" // Adicionando text-center ao cabeçalho
+                className="text-center"
               >
                 {t('order_table_header_status')}
               </SortableHeader>
@@ -387,17 +395,21 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 <TableCell className="font-medium">
                   {order.clientes?.nome || t('no_data_found')}
                 </TableCell>
-                {/* NOVO: Itens do Pedido */}
+                {/* Itens do Pedido */}
                 <TableCell className="hidden sm:table-cell">
                   <OrderItemsDisplay order={order} t={t} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                 </TableCell>
+                {/* NOVO: Quantidade Total */}
+                <TableCell className="text-right hidden lg:table-cell font-medium">
+                  {calculateTotalQuantity(order)}
+                </TableCell>
                 <TableCell className="text-right font-semibold">
                   {formatCurrency(order.valor_total)}
                 </TableCell>
-                <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
+                <TableCell className="text-center">
                   {getStatusBadge(order.status)}
                 </TableCell>
                 <TableCell className="text-right">
