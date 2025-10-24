@@ -10,11 +10,20 @@ import ServiceOnlyTable from "@/components/ServiceOnlyTable";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const ServicesContent = () => {
   const { data: services, isLoading, isError, error, refetch, isRefetching } = useServicesOnly();
   const [searchTerm, setSearchTerm] = useState("");
   const { t } = useTranslation();
+  
+  // Permissões baseadas no perfil customizado
+  const canReadServices = useCanRead('services');
+  const canWriteServices = useCanWrite('services');
+  
+  if (!canReadServices) {
+    return null;
+  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -35,7 +44,7 @@ const ServicesContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_services')}</h1>
-        <AddServiceSheet />
+        {canWriteServices && <AddServiceSheet />}
       </div>
       
       <Card className="mt-4">
@@ -103,8 +112,8 @@ const ServicesContent = () => {
 };
 
 const Services = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar serviços
-  <PermissionGuard allowedProfileIds={[1, 2]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <ServicesContent />
   </PermissionGuard>
 );

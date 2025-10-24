@@ -4,15 +4,19 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 /**
- * Hook para verificar se o usuário logado possui um dos perfis permitidos.
+ * Hook para verificar se o usuário logado possui um dos perfis globais permitidos.
  * Se não tiver, redireciona para a página inicial.
- * @param allowedProfileIds Array de IDs de perfil permitidos (e.g., [1, 2] para Admin/Super Admin).
+ * @param allowedProfileIds Array de IDs de perfil globais permitidos (e.g., [1] para Super Admin).
  */
 export const usePermission = (allowedProfileIds: number[]) => {
   const { data: profile, isLoading: isProfileLoading } = useCurrentUserProfile();
   const navigate = useNavigate();
 
-  const hasPermission = profile && allowedProfileIds.includes(profile.perfil_id);
+  // Se o perfil for 1 (Super Admin), ele sempre tem permissão.
+  const isSuperAdmin = profile?.perfil_id === 1;
+  
+  // Verifica se o perfil global do usuário está na lista de permitidos
+  const hasPermission = isSuperAdmin || (profile && allowedProfileIds.includes(profile.perfil_id));
   const isChecking = isProfileLoading;
 
   useEffect(() => {

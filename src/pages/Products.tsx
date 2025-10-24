@@ -15,8 +15,9 @@ import { useCompanies } from "@/integrations/supabase/companies";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { useSearchParams, useNavigate } from "react-router-dom"; // Importando hooks de rota
-import EditProductSheet from "@/components/EditProductSheet"; // Importando o componente de edição
+import { useSearchParams, useNavigate } from "react-router-dom";
+import EditProductSheet from "@/components/EditProductSheet";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -36,6 +37,14 @@ const ProductsContent = () => {
   
   const isSuperAdmin = profile?.perfil_id === 1;
   const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  
+  // Permissões baseadas no perfil customizado
+  const canReadProducts = useCanRead('products');
+  const canWriteProducts = useCanWrite('products');
+  
+  if (!canReadProducts) {
+    return null;
+  }
   
   // Estado para edição automática
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -141,7 +150,7 @@ const ProductsContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_products')}</h1>
-        <AddProductSheet />
+        {canWriteProducts && <AddProductSheet />}
       </div>
       
       {/* Alerta de Estoque Baixo com estilo customizado */}
@@ -313,8 +322,8 @@ const ProductsContent = () => {
 };
 
 const Products = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar produtos
-  <PermissionGuard allowedProfileIds={[1, 2]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <ProductsContent />
   </PermissionGuard>
 );

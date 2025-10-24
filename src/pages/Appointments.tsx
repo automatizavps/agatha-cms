@@ -30,16 +30,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 interface AppointmentActionsProps {
   appointment: Appointment;
   onEdit: (appointment: Appointment) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'cliente' | 'empresa' | 'data_hora' | 'responsavel' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, onEdit }) => {
+const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -70,17 +72,24 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onEdit(appointment)}>
-          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleDelete} 
-          disabled={deleteMutation.isPending}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-        </DropdownMenuItem>
+        
+        {canWrite && (
+          <DropdownMenuItem onClick={() => onEdit(appointment)}>
+            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+          </DropdownMenuItem>
+        )}
+        
+        {canWrite && <DropdownMenuSeparator />}
+        
+        {canWrite && (
+          <DropdownMenuItem 
+            onClick={handleDelete} 
+            disabled={deleteMutation.isPending}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -197,6 +206,10 @@ const AppointmentsContent = () => {
   const [selectedAppointmentIds, setSelectedAppointmentIds] = useState<Set<string>>(new Set());
   
   const isSuperAdmin = profile?.perfil_id === 1;
+  
+  // Permissões baseadas no perfil customizado
+  const canReadAppointments = useCanRead('appointments');
+  const canWriteAppointments = useCanWrite('appointments');
 
   // Fetch data using filters
   const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(
@@ -350,7 +363,7 @@ const AppointmentsContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_appointments')}</h1>
-        <AddAppointmentSheet />
+        {canWriteAppointments && <AddAppointmentSheet />}
       </div>
       
       <Card className="mt-4">
@@ -442,7 +455,7 @@ const AppointmentsContent = () => {
           </div>
           
           {/* Barra de Ações em Massa (NOVA POSIÇÃO) */}
-          {selectedAppointmentIds.size > 0 && (
+          {canWriteAppointments && selectedAppointmentIds.size > 0 && (
             <div className={cn(
               "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
               "flex items-center justify-between bg-card"
@@ -485,6 +498,7 @@ const AppointmentsContent = () => {
                         checked={isAllSelected || isIndeterminate}
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                         aria-label={t('select_all')}
+                        disabled={!canWriteAppointments}
                       />
                     </TableHead>
                     <SortableHeader 
@@ -548,6 +562,7 @@ const AppointmentsContent = () => {
                         <Checkbox
                           checked={selectedAppointmentIds.has(appointment.id)}
                           onCheckedChange={(checked) => handleSelectRow(appointment.id, !!checked)}
+                          disabled={!canWriteAppointments}
                         />
                       </TableCell>
                       <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
@@ -572,7 +587,7 @@ const AppointmentsContent = () => {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <AppointmentActions appointment={appointment} onEdit={handleEdit} />
+                        <AppointmentActions appointment={appointment} onEdit={handleEdit} canWrite={canWriteAppointments} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -599,8 +614,8 @@ const AppointmentsContent = () => {
 };
 
 const Appointments = () => (
-  // Perfis 1 (Super Admin), 2 (Admin) e 3 (Funcionário) têm permissão para gerenciar agendamentos
-  <PermissionGuard allowedProfileIds={[1, 2, 3]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <AppointmentsContent />
   </PermissionGuard>
 );

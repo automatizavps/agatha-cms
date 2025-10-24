@@ -15,8 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import ExportButton from "@/components/ExportButton"; // Importando ExportButton
-import { format } from "date-fns"; // Importando format
+import ExportButton from "@/components/ExportButton";
+import { format } from "date-fns";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const ClientsContent = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
@@ -31,6 +32,15 @@ const ClientsContent = () => {
 
   const isSuperAdmin = profile?.perfil_id === 1;
   const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  
+  // Permissões baseadas no perfil customizado
+  const canReadClients = useCanRead('clients');
+  const canWriteClients = useCanWrite('clients');
+
+  if (!canReadClients) {
+    // Se não puder ler, redireciona via PermissionGuard (que ainda está no wrapper)
+    return null; 
+  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -102,7 +112,7 @@ const ClientsContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_clients')}</h1>
-        <AddClientSheet />
+        {canWriteClients && <AddClientSheet />}
       </div>
       
       <Card className="mt-4">
@@ -175,7 +185,7 @@ const ClientsContent = () => {
           </div>
           
           {/* Barra de Ações em Massa */}
-          {selectedClientIds.size > 0 && (
+          {canWriteClients && selectedClientIds.size > 0 && (
             <div className={cn(
               "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
               "flex items-center justify-between bg-card"
@@ -235,8 +245,8 @@ const ClientsContent = () => {
 };
 
 const Clients = () => (
-  // Perfis 1 (Super Admin), 2 (Admin) e 3 (Funcionário) têm permissão para gerenciar clientes
-  <PermissionGuard allowedProfileIds={[1, 2, 3]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <ClientsContent />
   </PermissionGuard>
 );

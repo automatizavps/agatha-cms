@@ -10,11 +10,20 @@ import AddTeamSheet from "@/components/AddTeamSheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const TeamsContent = () => {
   const { data: teams, isLoading, isError, error, refetch, isRefetching } = useTeams();
   const [searchTerm, setSearchTerm] = useState("");
   const { t } = useTranslation();
+  
+  // Permissões baseadas no perfil customizado
+  const canReadTeams = useCanRead('teams');
+  const canWriteTeams = useCanWrite('teams');
+  
+  if (!canReadTeams) {
+    return null;
+  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -35,7 +44,7 @@ const TeamsContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_teams')}</h1>
-        <AddTeamSheet />
+        {canWriteTeams && <AddTeamSheet />}
       </div>
       
       <Card className="mt-4">
@@ -103,8 +112,8 @@ const TeamsContent = () => {
 };
 
 const Teams = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar equipes
-  <PermissionGuard allowedProfileIds={[1, 2]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <TeamsContent />
   </PermissionGuard>
 );

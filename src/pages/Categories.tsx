@@ -10,11 +10,20 @@ import AddCategorySheet from "@/components/AddCategorySheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const CategoriesContent = () => {
   const { data: categories, isLoading, isError, error, refetch, isRefetching } = useCategories();
   const [searchTerm, setSearchTerm] = useState("");
   const { t } = useTranslation();
+  
+  // Permissões baseadas no perfil customizado
+  const canReadCategories = useCanRead('categories');
+  const canWriteCategories = useCanWrite('categories');
+  
+  if (!canReadCategories) {
+    return null;
+  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -34,7 +43,7 @@ const CategoriesContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_categories')}</h1>
-        <AddCategorySheet />
+        {canWriteCategories && <AddCategorySheet />}
       </div>
       
       <Card className="mt-4">
@@ -102,8 +111,8 @@ const CategoriesContent = () => {
 };
 
 const Categories = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar categorias
-  <PermissionGuard allowedProfileIds={[1, 2]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <CategoriesContent />
   </PermissionGuard>
 );

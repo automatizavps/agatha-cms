@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import React from "react";
+import { useCanRead } from "@/hooks/use-module-permission"; // Importando useCanRead
 
 interface NavItemProps {
   to: string;
@@ -92,11 +93,22 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   const { t } = useTranslation();
-  const location = useLocation(); // Usando useLocation
+  const location = useLocation();
   
-  const canManageInventory = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
-  const canManageClients = !isLoading && profile && (profile.perfil_id === 1 || profile.perfil_id === 2 || profile.perfil_id === 3);
-  const isSuperAdmin = !isLoading && profile && profile.perfil_id === 1;
+  // Permissões baseadas no novo hook
+  const canReadAnalytics = useCanRead('analytics');
+  const canReadOrders = useCanRead('orders');
+  const canReadAppointments = useCanRead('appointments');
+  const canReadClients = useCanRead('clients');
+  const canReadProducts = useCanRead('products');
+  const canReadServices = useCanRead('services');
+  const canReadCategories = useCanRead('categories');
+  const canReadUsers = useCanRead('users');
+  const canReadTeams = useCanRead('teams');
+  const canReadCompanies = useCanRead('companies');
+  const canReadNotifications = useCanRead('notifications');
+
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   const navItemProps = { isCollapsed, onClick: onNavigate };
   
@@ -105,6 +117,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   
   // Determina se o submenu de Empresas deve estar aberto
   const isCompaniesOpen = location.pathname.startsWith('/companies');
+  
+  // Verifica se o grupo de Produtos/Serviços deve ser exibido
+  const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories;
 
   return (
     <div 
@@ -129,12 +144,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           <div className="text-xs font-semibold text-muted-foreground uppercase mt-2 mb-1 px-3">{t('nav_general')}</div>
         )}
         <NavItem to="/" icon={<Home className="h-5 w-5" />} label={t('nav_home')} {...navItemProps} />
-        <NavItem
-          to="/analytics"
-          icon={<BarChart3 className="h-5 w-5" />}
-          label={t('nav_analytics')}
-          {...navItemProps}
-        />
+        
+        {canReadAnalytics && (
+          <NavItem
+            to="/analytics"
+            icon={<BarChart3 className="h-5 w-5" />}
+            label={t('nav_analytics')}
+            {...navItemProps}
+          />
+        )}
         
         <Separator className={cn("my-2 bg-sidebar-border", isCollapsed && "mx-auto w-1/2")} />
 
@@ -143,15 +161,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_operational')}</div>
         )}
         
-        {/* Adicionando Notificações aqui */}
-        <NavItem
-          to="/notifications"
-          icon={<Bell className="h-5 w-5" />}
-          label={t('page_title_notifications')}
-          {...navItemProps}
-        />
+        {canReadNotifications && (
+          <NavItem
+            to="/notifications"
+            icon={<Bell className="h-5 w-5" />}
+            label={t('page_title_notifications')}
+            {...navItemProps}
+          />
+        )}
         
-        {canManageInventory && (
+        {canReadOrders && (
           <NavItem
             to="/orders"
             icon={<ShoppingCart className="h-5 w-5" />}
@@ -160,14 +179,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
         
-        <NavItem
-          to="/appointments"
-          icon={<Calendar className="h-5 w-5" />}
-          label={t('nav_appointments')}
-          {...navItemProps}
-        />
+        {canReadAppointments && (
+          <NavItem
+            to="/appointments"
+            icon={<Calendar className="h-5 w-5" />}
+            label={t('nav_appointments')}
+            {...navItemProps}
+          />
+        )}
 
-        {canManageClients && (
+        {canReadClients && (
           <NavItem
             to="/clients"
             icon={<Briefcase className="h-5 w-5" />}
@@ -176,7 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
 
-        {canManageInventory && (
+        {showProductsServicesGroup && (
           <>
             {/* Submenu de Produtos/Serviços */}
             <Collapsible defaultOpen={isProductsServicesOpen} disabled={isCollapsed}>
@@ -196,44 +217,55 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
               <CollapsibleContent>
                 {/* Wrapper para aplicar o espaçamento vertical suavemente */}
                 <div className="space-y-1">
-                  <NavItem
-                    to="/products"
-                    icon={<Package className="h-5 w-5" />}
-                    label={t('nav_products')}
-                    isSubItem
-                    {...navItemProps}
-                  />
-                  <NavItem
-                    to="/services"
-                    icon={<Clock className="h-5 w-5" />}
-                    label={t('nav_services')}
-                    isSubItem
-                    {...navItemProps}
-                  />
-                  <NavItem
-                    to="/products/categories"
-                    icon={<Tag className="h-5 w-5" />}
-                    label={t('nav_categories')}
-                    isSubItem
-                    {...navItemProps}
-                  />
+                  {canReadProducts && (
+                    <NavItem
+                      to="/products"
+                      icon={<Package className="h-5 w-5" />}
+                      label={t('nav_products')}
+                      isSubItem
+                      {...navItemProps}
+                    />
+                  )}
+                  {canReadServices && (
+                    <NavItem
+                      to="/services"
+                      icon={<Clock className="h-5 w-5" />}
+                      label={t('nav_services')}
+                      isSubItem
+                      {...navItemProps}
+                    />
+                  )}
+                  {canReadCategories && (
+                    <NavItem
+                      to="/products/categories"
+                      icon={<Tag className="h-5 w-5" />}
+                      label={t('nav_categories')}
+                      isSubItem
+                      {...navItemProps}
+                    />
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
-            
-            <NavItem
-              to="/users"
-              icon={<Users className="h-5 w-5" />}
-              label={t('nav_users')}
-              {...navItemProps}
-            />
-            <NavItem
-              to="/teams"
-              icon={<Target className="h-5 w-5" />}
-              label={t('nav_teams')}
-              {...navItemProps}
-            />
           </>
+        )}
+        
+        {canReadUsers && (
+          <NavItem
+            to="/users"
+            icon={<Users className="h-5 w-5" />}
+            label={t('nav_users')}
+            {...navItemProps}
+          />
+        )}
+        
+        {canReadTeams && (
+          <NavItem
+            to="/teams"
+            icon={<Target className="h-5 w-5" />}
+            label={t('nav_teams')}
+            {...navItemProps}
+          />
         )}
         
         {isSuperAdmin && (
@@ -252,13 +284,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="space-y-1">
-                <NavItem
-                  to="/companies"
-                  icon={<Building className="h-5 w-5" />}
-                  label={t('company_list_title')}
-                  isSubItem
-                  {...navItemProps}
-                />
+                {canReadCompanies && (
+                  <NavItem
+                    to="/companies"
+                    icon={<Building className="h-5 w-5" />}
+                    label={t('company_list_title')}
+                    isSubItem
+                    {...navItemProps}
+                  />
+                )}
                 <NavItem
                   to="/companies/profiles"
                   icon={<UserCheck className="h-5 w-5" />}

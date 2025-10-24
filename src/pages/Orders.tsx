@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const OrdersContent = () => {
   // --- Filter States ---
@@ -25,6 +26,14 @@ const OrdersContent = () => {
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  
+  // Permissões baseadas no perfil customizado
+  const canReadOrders = useCanRead('orders');
+  const canWriteOrders = useCanWrite('orders');
+  
+  if (!canReadOrders) {
+    return null;
+  }
   
   // Fetch data using filters
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders(
@@ -82,7 +91,7 @@ const OrdersContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_orders')}</h1>
-        <AddOrderSheet />
+        {canWriteOrders && <AddOrderSheet />}
       </div>
       
       <Card className="mt-4">
@@ -156,7 +165,7 @@ const OrdersContent = () => {
           </div>
           
           {/* Barra de Ações em Massa (NOVA POSIÇÃO) */}
-          {selectedOrderIds.size > 0 && (
+          {canWriteOrders && selectedOrderIds.size > 0 && (
             <div className={cn(
               "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
               "flex items-center justify-between bg-card"
@@ -216,8 +225,8 @@ const OrdersContent = () => {
 };
 
 const Orders = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para gerenciar pedidos
-  <PermissionGuard allowedProfileIds={[1, 2]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <OrdersContent />
   </PermissionGuard>
 );

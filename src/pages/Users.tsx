@@ -10,11 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useCanRead } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const UsersContent = () => {
   const { data: users, isLoading, isError, error, refetch, isRefetching } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const { t } = useTranslation();
+  
+  // Permissões baseadas no perfil customizado
+  const canReadUsers = useCanRead('users');
+  
+  if (!canReadUsers) {
+    return null;
+  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -101,8 +109,8 @@ const UsersContent = () => {
 };
 
 const Users = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão
-  <PermissionGuard allowedProfileIds={[1, 2]}>
+  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  <PermissionGuard allowedProfileIds={[1, 3]}>
     <UsersContent />
   </PermissionGuard>
 );
