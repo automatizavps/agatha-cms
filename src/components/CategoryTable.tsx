@@ -119,7 +119,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  const isSuperAdmin = profile?.is_super_admin; // Usando a flag correta
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
@@ -155,8 +155,9 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
           bValue = b.nome;
           break;
         case 'empresa_id':
-          aValue = a.empresa_id || '';
-          bValue = b.empresa_id || '';
+          // Agora compara pelo nome da empresa
+          aValue = a.empresas?.nome || '';
+          bValue = b.empresas?.nome || '';
           break;
         default:
           return 0;
@@ -214,7 +215,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Building className="h-3 w-3" />
-                      {category.empresa_id} {/* Não temos o nome da empresa aqui, apenas o ID */}
+                      {category.empresas?.nome || 'N/A'} {/* Exibe o nome da empresa */}
                     </div>
                   </TableCell>
                 )}

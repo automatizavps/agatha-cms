@@ -6,6 +6,9 @@ export interface Category {
   empresa_id: string;
   nome: string;
   created_at: string;
+  empresas: { // NOVO: Adicionando relacionamento com a empresa
+    nome: string;
+  } | null;
 }
 
 // --- Fetch ---
@@ -13,7 +16,7 @@ export interface Category {
 const fetchCategories = async (companyId?: string): Promise<Category[]> => {
   let query = supabase
     .from("categorias")
-    .select("id, empresa_id, nome, created_at");
+    .select("id, empresa_id, nome, created_at, empresas (nome)"); // Incluindo o nome da empresa
     
   if (companyId) {
     query = query.eq('empresa_id', companyId);
