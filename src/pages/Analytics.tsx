@@ -18,13 +18,13 @@ const AnalyticsContent = () => {
         <p className="text-muted-foreground">{t('page_subtitle_analytics')}</p>
         
         <Tabs defaultValue="orders" className="w-full">
-          {/* Ajustando para 5 colunas no desktop, com overflow horizontal no mobile */}
-          <TabsList className="w-full grid grid-cols-2 md:grid-cols-5 overflow-x-auto">
-            <TabsTrigger value="orders">{t('nav_orders')}</TabsTrigger>
-            <TabsTrigger value="services">{t('nav_services')}</TabsTrigger>
-            <TabsTrigger value="clients">{t('nav_clients')}</TabsTrigger>
-            <TabsTrigger value="teams">{t('nav_teams')}</TabsTrigger>
-            <TabsTrigger value="companies">{t('nav_companies')}</TabsTrigger>
+          {/* Ajustado para flex-nowrap e overflow-x-auto no mobile, e grid-cols-5 no desktop */}
+          <TabsList className="w-full flex flex-nowrap overflow-x-auto md:grid md:grid-cols-5">
+            <TabsTrigger value="orders" className="flex-shrink-0">{t('nav_orders')}</TabsTrigger>
+            <TabsTrigger value="services" className="flex-shrink-0">{t('nav_services')}</TabsTrigger>
+            <TabsTrigger value="clients" className="flex-shrink-0">{t('nav_clients')}</TabsTrigger>
+            <TabsTrigger value="teams" className="flex-shrink-0">{t('nav_teams')}</TabsTrigger>
+            <TabsTrigger value="companies" className="flex-shrink-0">{t('nav_companies')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="orders">
