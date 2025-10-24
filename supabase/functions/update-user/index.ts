@@ -103,7 +103,8 @@ serve(async (req) => {
   
   // Apenas Super Admin pode alterar a empresa_id
   if (isSuperAdmin && empresa_id !== undefined) {
-    updatePayload.empresa_id = empresa_id;
+    // Se empresa_id for null ou string vazia, definimos como null no banco
+    updatePayload.empresa_id = empresa_id || null;
   }
 
   // 3. Atualizar o perfil do usuário na tabela 'usuarios'

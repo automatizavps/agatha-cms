@@ -74,6 +74,10 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   if (isEditing) {
     finalFormSchema = finalFormSchema.extend({
       email: z.string().optional(),
+      // Na edição, se for Super Admin, empresa_id é opcional (pode ser null)
+      empresa_id: isSuperAdmin 
+        ? z.string().uuid({ message: "Selecione uma empresa válida." }).or(z.literal("")).optional().nullable()
+        : z.string().optional().nullable(),
     });
   } else if (isSuperAdmin) {
     // Na criação, Super Admin deve selecionar a empresa
@@ -102,11 +106,11 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     },
   });
   
-  // Observa o ID da empresa selecionada (apenas relevante para Super Admin na criação)
-  const selectedCompanyId = isSuperAdmin && !isEditing ? form.watch('empresa_id') : defaultValues?.empresa_id;
+  // Observa o ID da empresa selecionada (relevante para carregar perfis customizados)
+  const selectedCompanyId = isSuperAdmin ? form.watch('empresa_id') : defaultValues?.empresa_id;
   
   // Carrega perfis customizados filtrados pela empresa selecionada
-  const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(selectedCompanyId);
+  const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(selectedCompanyId || undefined);
   
   const isLoadingProfiles = isLoadingGlobalProfiles || isLoadingCustomProfiles;
 
@@ -182,6 +186,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
+        {/* Campo Empresa (Visível para SA na Criação e Edição) */}
         {isSuperAdmin && (
           <FormField
             control={form.control}
@@ -196,7 +201,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
                     form.setValue('perfil_id', ''); 
                   }} 
                   value={field.value || ""} 
-                  disabled={isLoadingCompanies || isSubmitting || isEditing}
+                  disabled={isLoadingCompanies || isSubmitting} // Habilitado na edição para SA
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -298,7 +303,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value} 
-                disabled={isLoadingProfiles || isSubmitting || (isSuperAdmin && !isEditing && !selectedCompanyId)}
+                disabled={isLoadingProfiles || isSubmitting || (isSuperAdmin && !selectedCompanyId)}
               >
                 <FormControl>
                   <SelectTrigger>
