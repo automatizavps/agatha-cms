@@ -62,7 +62,8 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
   const { data: users, isLoading: isLoadingUsers } = useUsers();
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  // CORREÇÃO: Usar a flag is_super_admin do perfil
+  const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies) || isLoadingUsers;
 
   // Ajusta o schema dinamicamente: se for Super Admin, empresa_id é obrigatório na criação
@@ -113,11 +114,16 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
   
   // Filtra usuários que pertencem à empresa selecionada (se Super Admin) ou à empresa do Admin
   const availableUsers = allUsers.filter(user => {
+    // Se for Super Admin, filtramos pela empresa selecionada no formulário
     if (isSuperAdmin && form.watch('empresa_id')) {
       return user.empresa_id === form.watch('empresa_id');
     }
-    // Se não for Super Admin, só mostra usuários da própria empresa (RLS já garante isso, mas filtramos por segurança)
-    return user.empresa_id === profile?.empresa_id;
+    // Se não for Super Admin, filtramos pela empresa do usuário logado
+    if (!isSuperAdmin && profile?.empresa_id) {
+        return user.empresa_id === profile.empresa_id;
+    }
+    // Se for Super Admin na edição, ou se não houver empresa selecionada/associada, retorna vazio
+    return false;
   });
 
   return (
@@ -132,7 +138,15 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                <Select 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    // Limpa os membros ao mudar a empresa
+                    form.setValue('member_ids', []);
+                  }} 
+                  value={field.value} 
+                  disabled={isLoadingCompanies || isSubmitting}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
@@ -226,11 +240,13 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
                         "w-full justify-between",
                         selectedMemberIds.length === 0 && "text-muted-foreground"
                       )}
-                      disabled={isLoadingUsers || isSubmitting}
+                      disabled={isLoadingUsers || isSubmitting || (isSuperAdmin && !form.watch('empresa_id'))}
                     >
                       {selectedMemberIds.length > 0
                         ? t('members_selected', { count: selectedMemberIds.length })
-                        : t('select_members')}
+                        : (isSuperAdmin && !form.watch('empresa_id'))
+                          ? t('select_company_to_load_data')
+                          : t('select_members')}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -273,7 +289,11 @@ const TeamForm: React.FC<TeamFormProps> = ({ onSubmit, isSubmitting, defaultValu
           )}
         />
         
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting || (isSuperAdmin && !form.watch('empresa_id') && !isEditing)}
+        >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
