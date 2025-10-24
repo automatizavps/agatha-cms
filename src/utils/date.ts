@@ -1,7 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-// Corrigindo a importação para garantir que as funções sejam resolvidas corretamente
-import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
+import * as dateFnsTz from 'date-fns-tz';
 
 const TIMEZONE = 'America/Sao_Paulo';
 
@@ -18,7 +17,7 @@ export const formatToSaoPaulo = (isoString: string, formatString: string = 'dd/M
     const dateUtc = parseISO(isoString);
     
     // 2. Converte o objeto Date (que é interpretado como local/UTC) para o fuso horário de São Paulo
-    const dateSaoPaulo = utcToZonedTime(dateUtc, TIMEZONE);
+    const dateSaoPaulo = dateFnsTz.utcToZonedTime(dateUtc, TIMEZONE);
     
     // 3. Formata a data
     return format(dateSaoPaulo, formatString, { locale: ptBR });
@@ -35,5 +34,5 @@ export const formatToSaoPaulo = (isoString: string, formatString: string = 'dd/M
  * @returns Objeto Date em UTC.
  */
 export const convertLocalToUtcSaoPaulo = (date: Date): Date => {
-  return zonedTimeToUtc(date, TIMEZONE);
+  return dateFnsTz.zonedTimeToUtc(date, TIMEZONE);
 };
