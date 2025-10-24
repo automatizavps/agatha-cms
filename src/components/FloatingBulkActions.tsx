@@ -20,8 +20,8 @@ const FloatingBulkActions: React.FC<FloatingBulkActionsProps> = ({ selectedCount
   return (
     <div 
       className={cn(
-        // Alterado z-index para 50 para garantir que esteja acima da maioria dos elementos
-        "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50", 
+        // Usando z-[99] para garantir que esteja acima de tudo
+        "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-[99]", 
         "bg-card border border-destructive/50 shadow-2xl rounded-lg p-3 transition-all duration-300",
         "flex items-center gap-4"
       )}
