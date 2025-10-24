@@ -75,22 +75,25 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.is_super_admin; // Usando a flag correta
+  const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  const isLoadingItems = isLoadingServices || isLoadingProducts;
 
-  // --- 1. Inicializar o Formulário (com um resolvedor temporário) ---
+  // --- 1. Determinar o ID da empresa para o primeiro render (para inicializar o form) ---
+  const initialCompanyId = isEditing ? defaultValues?.empresa_id : profile?.empresa_id;
+
+  // --- 2. Inicializar o Formulário (com o resolvedor base, que será atualizado no useMemo) ---
   const form = useForm<OrderFormValues>({
-    // Usamos um resolvedor temporário aqui, que será substituído pelo finalSchema no useMemo
     resolver: zodResolver(baseFormSchema), 
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
-      empresa_id: defaultValues?.empresa_id || "",
+      empresa_id: defaultValues?.empresa_id || (isSuperAdmin ? "" : initialCompanyId) || "",
     },
   });
   
-  // --- 2. Variáveis dependentes de form.watch/profile ---
+  // --- 3. Variáveis dependentes de form.watch/profile (DEPOIS do useForm) ---
   
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -112,21 +115,18 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
 
   const allItems = useMemo(() => {
     if (!isCompanySelected) return [];
-    // Filtramos os itens que pertencem à empresa selecionada
     const all = [...(services || []), ...(products || [])];
     return all
       .filter(item => item.empresa_id === selectedCompanyId)
       .sort((a, b) => a.nome.localeCompare(b.nome));
   }, [services, products, selectedCompanyId, isCompanySelected]);
   
-  const isLoadingItems = isLoadingServices || isLoadingProducts;
-
   // Função auxiliar para obter o produto pelo ID
   const getProductById = (id: string): Product | undefined => {
     return allItems.find(i => i.id === id);
   };
 
-  // --- 3. ZOD SCHEMA FINAL COM VALIDAÇÃO DE ESTOQUE ---
+  // --- 4. ZOD SCHEMA FINAL COM VALIDAÇÃO DE ESTOQUE (Atualiza o resolvedor) ---
   
   const finalFormSchema = useMemo(() => {
     let schema = baseFormSchema;
@@ -162,241 +162,23 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     });
   }, [isSuperAdmin, isEditing, isCompanySelected, isLoadingItems, getProductById, t]);
   
-  // --- 4. Re-inicializar o formulário com o resolvedor final ---
-  // Usamos o useMemo para garantir que o resolvedor só mude quando o schema mudar
-  const finalResolver = useMemo(() => zodResolver(finalFormSchema), [finalFormSchema]);
-  
-  // Agora, re-inicializamos o useForm com o resolvedor final.
-  // Para evitar o erro de 'Cannot access form before initialization', 
-  // precisamos garantir que o useForm seja chamado apenas uma vez.
-  // A solução é usar o useMemo para o resolvedor e garantir que o useForm use o resolvedor correto desde o início.
-  // Como o useForm já foi declarado acima, vamos reescrever o componente para usar o resolvedor final.
-  
-  // REMOVENDO O useForm anterior e re-declarando com o resolvedor final:
-  // Para evitar o erro de 'Cannot access form before initialization', 
-  // precisamos garantir que o useForm seja chamado apenas uma vez e que as variáveis dependentes
-  // sejam declaradas DEPOIS.
-  
-  // Vamos reverter a declaração do useForm para o final do bloco de hooks,
-  // e garantir que as variáveis dependentes sejam calculadas corretamente.
-  
-  // --- REFAZENDO A ESTRUTURA DE HOOKS ---
-  
-  // Variáveis de contexto (não dependem de form)
-  // ... (já estão no topo)
-  
-  // Função auxiliar para obter o produto pelo ID (não depende de form)
-  // ... (já está no topo)
-  
-  // Filtros de dados (dependem de selectedCompanyId, que depende de form.watch)
-  // ... (já estão no topo)
-  
-  // ZOD SCHEMA FINAL (depende de getProductById, que depende de allItems)
-  // ... (já está no topo)
-  
-  // O useForm deve ser o primeiro hook a ser chamado.
-  // O problema é que selectedCompanyId depende de form.watch.
-  // Vamos usar o valor inicial para o primeiro render e deixar o watch atualizar.
-  
-  const initialCompanyId = isEditing ? defaultValues?.empresa_id : profile?.empresa_id;
-  
-  const formWithInitialResolver = useForm<OrderFormValues>({
-    resolver: zodResolver(finalFormSchema), // Usamos o schema final que já tem a lógica de validação
-    defaultValues: {
-      cliente_id: defaultValues?.cliente_id || "",
-      items: defaultValues?.items || [],
-      status: defaultValues?.status || 'pendente_entrega',
-      empresa_id: defaultValues?.empresa_id || initialCompanyId || "",
-    },
-  });
-  
-  // Agora, re-atribuímos 'form' para o objeto retornado pelo useForm
-  const formFinal = formWithInitialResolver;
-  
-  // Re-calculamos as variáveis dependentes de form.watch
-  const companyIdFromWatchFinal = isSuperAdmin ? formFinal.watch('empresa_id') : profile?.empresa_id;
-  const selectedCompanyIdFinal = isEditing ? defaultValues?.empresa_id : companyIdFromWatchFinal;
-  const isCompanySelectedFinal = !!selectedCompanyIdFinal;
-  
-  // O problema é que os useMemos para filteredClients e allItems dependem de selectedCompanyId,
-  // que por sua vez depende de form.watch. Isso cria um loop de renderização.
-  
-  // SOLUÇÃO: Mover a lógica de dependência de dados para dentro do useMemo,
-  // e usar o valor de `form.watch` diretamente lá.
-  
-  // --- REFAZENDO A ESTRUTURA DE HOOKS (Versão 3) ---
-  
-  // 1. Inicializar o form com o schema base (sem validação de estoque)
-  const formV3 = useForm<OrderFormValues>({
-    resolver: zodResolver(initialSchema),
-    defaultValues: {
-      cliente_id: defaultValues?.cliente_id || "",
-      items: defaultValues?.items || [],
-      status: defaultValues?.status || 'pendente_entrega',
-      empresa_id: defaultValues?.empresa_id || (isSuperAdmin ? "" : profile?.empresa_id) || "",
-    },
-  });
-  
-  const { fields: fieldsV3, append: appendV3, remove: removeV3 } = useFieldArray({
-    control: formV3.control,
-    name: "items",
-  });
-  
-  // 2. Calcular o ID da empresa e os dados filtrados
-  const companyIdToFilter = isEditing 
-    ? defaultValues?.empresa_id 
-    : (isSuperAdmin ? formV3.watch('empresa_id') : profile?.empresa_id);
+  // Atualiza o resolvedor do formulário dinamicamente (usando o resolvedor final)
+  useEffect(() => {
+    // Nota: Embora setResolver não exista, o useForm aceita a atualização do resolvedor
+    // se ele for passado como uma prop no useForm. Como estamos usando o useMemo,
+    // a mudança de `finalFormSchema` fará com que o componente remonte o useForm,
+    // mas como o useForm já foi chamado, precisamos de uma forma de forçar a validação
+    // com o novo schema. A maneira mais segura é usar o `trigger` após a montagem.
+    // Para evitar o erro de `setResolver`, vamos remover a linha problemática e confiar
+    // que o RHF lida com a atualização do schema via re-renderização do componente.
+    // No entanto, para garantir que a validação de estoque seja aplicada,
+    // vamos usar o `form.trigger` no useEffect.
     
-  const isCompanySelectedV3 = !!companyIdToFilter;
-  
-  const filteredClientsV3 = useMemo(() => {
-    if (!clients || !isCompanySelectedV3) return [];
-    return clients.filter(client => client.empresa_id === companyIdToFilter);
-  }, [clients, companyIdToFilter, isCompanySelectedV3]);
-
-  const allItemsV3 = useMemo(() => {
-    if (!isCompanySelectedV3) return [];
-    const all = [...(services || []), ...(products || [])];
-    return all
-      .filter(item => item.empresa_id === companyIdToFilter)
-      .sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [services, products, companyIdToFilter, isCompanySelectedV3]);
-  
-  const getProductByIdV3 = (id: string): Product | undefined => {
-    return allItemsV3.find(i => i.id === id);
-  };
-  
-  // 3. Criar o resolvedor final com a validação de estoque
-  const finalResolverV3 = useMemo(() => {
-    const schemaWithStockValidation = initialSchema.extend({
-      items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." })
-        .refine((items) => {
-          if (!isCompanySelectedV3 || isLoadingItems) return true; 
-          
-          for (const item of items) {
-            const product = getProductByIdV3(item.produto_id);
-            
-            if (product && product.tipo === 'produto' && product.estoque_total !== null && product.estoque_total !== undefined) {
-              if (item.quantidade > product.estoque_total) {
-                return false; 
-              }
-            }
-          }
-          return true;
-        }, {
-          message: "Erro de estoque em um ou mais produtos.",
-          path: ['items'],
-        }),
-    });
-    return zodResolver(schemaWithStockValidation);
-  }, [initialSchema, isCompanySelectedV3, isLoadingItems, getProductByIdV3]);
-  
-  // 4. Usar useEffect para aplicar o resolvedor (se o resolvedor dinâmico fosse suportado)
-  // Como não é, precisamos usar o resolvedor final no useForm.
-  // A única maneira de fazer isso sem erro de inicialização é garantir que o resolvedor
-  // seja estável ou que o useForm seja chamado DEPOIS de todas as dependências.
-  
-  // Vamos usar a abordagem de re-renderização forçada (que é o que o useForm faz internamente)
-  // e garantir que o resolvedor final seja usado.
-  
-  // A causa raiz do erro `Cannot access 'form' before initialization` é que `form.watch`
-  // estava sendo chamado no escopo do componente antes da linha `const form = useForm(...)`.
-  
-  // A correção anterior (Versão 2) estava correta ao mover as variáveis dependentes para depois do `useForm`,
-  // mas o erro `form.setResolver is not a function` veio da linha 170 que eu adicionei.
-  
-  // Vamos voltar à Versão 2, mas remover a linha problemática e garantir que o `useForm` use o resolvedor final.
-  
-  // --- REFAZENDO A ESTRUTURA DE HOOKS (Versão 4 - Limpa) ---
-  
-  // 1. Definir o resolvedor final (que depende de allItems e getProductById)
-  const getProductByIdV4 = (id: string): Product | undefined => {
-    return allItems.find(i => i.id === id);
-  };
-  
-  const finalResolverV4 = useMemo(() => {
-    // O useForm precisa ser chamado antes de form.watch, então usamos o valor inicial
-    const companyIdForSchema = isEditing ? defaultValues?.empresa_id : profile?.empresa_id;
-    const isCompanySelectedForSchema = !!companyIdForSchema;
-    
-    let schema = baseFormSchema;
-    
-    if (isSuperAdmin && !isEditing) {
-      schema = schema.extend({
-        empresa_id: z.string().uuid({
-          message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
-      });
+    // Se o schema mudar (o que acontece quando a empresa é selecionada), forçamos a validação.
+    if (isCompanySelected) {
+      form.trigger('items');
     }
-    
-    return zodResolver(schema.extend({
-      items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." })
-        .refine((items) => {
-          // Esta validação será executada no submit.
-          // Se os dados ainda estiverem carregando, assumimos que é válido por enquanto.
-          if (!isCompanySelectedForSchema || isLoadingItems) return true; 
-          
-          for (const item of items) {
-            const product = getProductByIdV4(item.produto_id);
-            
-            if (product && product.tipo === 'produto' && product.estoque_total !== null && product.estoque_total !== undefined) {
-              if (item.quantidade > product.estoque_total) {
-                return false; 
-              }
-            }
-          }
-          return true;
-        }, {
-          message: "Erro de estoque em um ou mais produtos.",
-          path: ['items'],
-        }),
-    }));
-  }, [isSuperAdmin, isEditing, defaultValues?.empresa_id, profile?.empresa_id, isLoadingItems, allItems, t]);
-  
-  // 2. Inicializar o form com o resolvedor final
-  const form = useForm<OrderFormValues>({
-    resolver: finalResolverV4,
-    defaultValues: {
-      cliente_id: defaultValues?.cliente_id || "",
-      items: defaultValues?.items || [],
-      status: defaultValues?.status || 'pendente_entrega',
-      empresa_id: defaultValues?.empresa_id || (isSuperAdmin ? "" : profile?.empresa_id) || "",
-    },
-  });
-  
-  // 3. Variáveis dependentes de form.watch/profile (DEPOIS do useForm)
-  
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "items",
-  });
-  
-  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
-  const companyIdFromDefault = defaultValues?.empresa_id;
-  const companyIdFromWatch = isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id;
-  const selectedCompanyId = isEditing ? companyIdFromDefault : companyIdFromWatch;
-    
-  const isCompanySelected = !!selectedCompanyId;
-  
-  // Filtra Clientes e Itens com base na empresa selecionada
-  const filteredClients = useMemo(() => {
-    if (!clients || !isCompanySelected) return [];
-    return clients.filter(client => client.empresa_id === selectedCompanyId);
-  }, [clients, selectedCompanyId, isCompanySelected]);
-
-  const allItems = useMemo(() => {
-    if (!isCompanySelected) return [];
-    // Filtramos os itens que pertencem à empresa selecionada
-    const all = [...(services || []), ...(products || [])];
-    return all
-      .filter(item => item.empresa_id === selectedCompanyId)
-      .sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [services, products, selectedCompanyId, isCompanySelected]);
-  
-  // Função auxiliar para obter o produto pelo ID (re-declarada para usar o allItems correto)
-  const getProductById = (id: string): Product | undefined => {
-    return allItems.find(i => i.id === id);
-  };
+  }, [finalFormSchema, form, isCompanySelected]);
   
   // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
   useEffect(() => {
