@@ -16,7 +16,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 const OrdersContent = () => {
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set()); // NOVO ESTADO
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -61,10 +61,6 @@ const OrdersContent = () => {
     if (window.confirm(confirmMessage)) {
       bulkDeleteMutation.mutate(Array.from(selectedOrderIds));
     }
-  };
-  
-  const handleCancelSelection = () => {
-    setSelectedOrderIds(new Set());
   };
 
   return (
@@ -144,7 +140,6 @@ const OrdersContent = () => {
         selectedCount={selectedOrderIds.size}
         onDelete={handleBulkDelete}
         isDeleting={bulkDeleteMutation.isPending}
-        onCancel={handleCancelSelection}
       />
     </DashboardLayout>
   );
