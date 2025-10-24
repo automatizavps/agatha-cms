@@ -28,7 +28,7 @@ const CustomTooltip = ({ active, payload, label, t }: any) => {
 export default function DailyOrderByHourChart() {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useDailyOrderByHour();
-  const { filteredCompanyId } = useDashboardFilter();
+  const { filteredCompanyId, isSuperAdmin } = useDashboardFilter();
 
   if (isLoading) {
     return (
@@ -43,20 +43,9 @@ export default function DailyOrderByHourChart() {
     );
   }
   
-  // Se for Super Admin e estiver em 'Todas as Empresas', desabilitamos o gráfico (RPC exige ID)
-  if (!filteredCompanyId) {
-    return (
-      <Card className="h-64">
-        <CardHeader>
-          <CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle>
-        </CardHeader>
-        <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-          {t("select_company_for_metrics")}
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // Se for Super Admin e estiver em 'Todas as Empresas', mas não houver dados, 
+  // exibimos a mensagem de 'sem dados' em vez de 'selecione uma empresa'.
+  // A verificação `!filteredCompanyId` foi removida, pois o hook agora lida com a agregação.
   if (isError || !data || data.length === 0 || data.every(d => d.count === 0)) {
     return (
       <Card className="h-64">

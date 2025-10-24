@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDailyServiceCountByHour, DailyServiceCount } from "@/hooks/useDailyServiceCountByHour";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
 
 // Função auxiliar para formatar o rótulo do eixo X (hora)
 const formatHour = (tick: number) => {
@@ -27,6 +28,7 @@ const CustomTooltip = ({ active, payload, label, t }: any) => {
 export default function DailyServiceByHourChart() {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useDailyServiceCountByHour();
+  const { filteredCompanyId, isSuperAdmin } = useDashboardFilter(); // Usando useDashboardFilter
 
   if (isLoading) {
     return (
@@ -40,7 +42,8 @@ export default function DailyServiceByHourChart() {
       </Card>
     );
   }
-
+  
+  // A verificação !filteredCompanyId foi removida, pois o hook agora lida com a agregação.
   if (isError || !data || data.length === 0 || data.every(d => d.count === 0)) {
     return (
       <Card className="h-64">
