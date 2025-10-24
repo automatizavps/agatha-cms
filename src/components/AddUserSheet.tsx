@@ -50,7 +50,7 @@ const AddUserSheet = () => {
           <PlusCircle className="mr-2 h-4 w-4" /> {t('add_new_user')}
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md flex flex-col">
+      <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('add_new_user')}</SheetTitle>
           <SheetDescription className="sr-only">

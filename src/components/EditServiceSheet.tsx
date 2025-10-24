@@ -62,7 +62,7 @@ const EditServiceSheet: React.FC<EditServiceSheetProps> = ({ service, isOpen, on
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md flex flex-col">
+      <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Serviço: {service.nome}</SheetTitle>
         </SheetHeader>

@@ -63,7 +63,7 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
   if (isLoadingEmail) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-md flex flex-col">
+        <SheetContent className="sm:max-w-lg flex flex-col">
           <SheetHeader>
             <SheetTitle>Carregando Dados do Usuário...</SheetTitle>
           </SheetHeader>
@@ -77,7 +77,7 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md flex flex-col">
+      <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Usuário: {user.nome_completo}</SheetTitle>
         </SheetHeader>

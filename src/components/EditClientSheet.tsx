@@ -46,7 +46,7 @@ const EditClientSheet: React.FC<EditClientSheetProps> = ({ client, isOpen, onOpe
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md flex flex-col">
+      <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Cliente: {client.nome}</SheetTitle>
         </SheetHeader>

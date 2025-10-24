@@ -63,7 +63,7 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md flex flex-col">
+      <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Produto: {product.nome}</SheetTitle>
         </SheetHeader>
