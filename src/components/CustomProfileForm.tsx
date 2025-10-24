@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Building, Tag } from "lucide-react";
+import { Loader2, Building, Tag, ShieldCheck } from "lucide-react";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ import PermissionSelector from "./PermissionSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useEffect } from "react";
+import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
 
 // Definimos o esquema base
 const baseFormSchema = z.object({
@@ -29,6 +30,8 @@ const baseFormSchema = z.object({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).min(1, { message: "A empresa é obrigatória." }),
+  // Novo campo para controle de acesso total
+  is_full_admin: z.boolean().optional(),
   // Permissões são tratadas fora do esquema principal do RHF, mas precisamos de um campo para o estado
   permissions: z.record(z.string().uuid(), z.enum(['leitura', 'escrita', 'sem_acesso'])).optional(),
 });
@@ -70,39 +73,47 @@ const CustomProfileForm: React.FC<CustomProfileFormProps> = ({ onSubmit, isSubmi
       initialPermissions[p.modulo_id] = p.acesso;
     });
   }
+  
+  // Determina se o perfil inicial já tem acesso total (se todas as permissões forem 'escrita')
+  const isInitiallyFullAdmin = isEditing && modules && modules.length > 0 && 
+    modules.every(mod => defaultProfile?.permissions?.find(p => p.modulo_id === mod.id)?.acesso === 'escrita');
+
 
   const form = useForm<CustomProfileFormValues>({
     resolver: zodResolver(baseFormSchema),
     defaultValues: {
       nome: defaultProfile?.nome || "",
       empresa_id: defaultProfile?.empresa_id || "",
+      is_full_admin: isInitiallyFullAdmin, // Define o estado inicial do checkbox
       permissions: initialPermissions,
     },
   });
   
-  // Observa o estado das permissões
+  // Observa o estado das permissões e do checkbox
   const permissionsState = form.watch('permissions') || initialPermissions;
+  const isFullAdmin = form.watch('is_full_admin');
   
-  // Efeito para inicializar as permissões quando os módulos carregam
+  // Efeito para sincronizar o checkbox com as permissões
   useEffect(() => {
-    if (modules && !isEditing) {
+    if (modules) {
       const newPermissions: PermissionState = {};
       modules.forEach(mod => {
-        newPermissions[mod.id] = 'sem_acesso';
+        newPermissions[mod.id] = isFullAdmin ? 'escrita' : (
+          isEditing && defaultProfile?.permissions?.find(p => p.modulo_id === mod.id)?.acesso || 'sem_acesso'
+        );
       });
-      form.setValue('permissions', newPermissions);
-    } else if (modules && isEditing && defaultProfile?.permissions) {
-       const newPermissions: PermissionState = {};
-       modules.forEach(mod => {
-         const existing = defaultProfile.permissions.find(p => p.modulo_id === mod.id);
-         newPermissions[mod.id] = existing ? existing.acesso : 'sem_acesso';
-       });
-       form.setValue('permissions', newPermissions);
+      // Usamos setValue para atualizar o estado interno, mas sem marcar como 'dirty'
+      // para evitar que o formulário seja considerado alterado apenas pela mudança do checkbox
+      form.setValue('permissions', newPermissions, { shouldDirty: false });
     }
-  }, [modules, isEditing, defaultProfile?.permissions, form]);
+  }, [modules, isFullAdmin, isEditing, defaultProfile?.permissions, form]);
 
 
   const handlePermissionChange = (moduleId: string, access: AccessType) => {
+    // Se o acesso total estiver marcado, desmarcamos ele ao alterar uma permissão individual
+    if (isFullAdmin) {
+      form.setValue('is_full_admin', false, { shouldDirty: true });
+    }
     form.setValue(`permissions.${moduleId}`, access, { shouldDirty: true });
   };
 
@@ -197,6 +208,34 @@ const CustomProfileForm: React.FC<CustomProfileFormProps> = ({ onSubmit, isSubmi
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            
+            {/* Checkbox de Acesso Total */}
+            <FormField
+              control={form.control}
+              name="is_full_admin"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-base flex items-center gap-2 text-primary">
+                      <ShieldCheck className="h-5 w-5" /> {t('grant_full_admin_access')}
+                    </FormLabel>
+                    <FormDescription>
+                      {t('grant_full_admin_access_description')}
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <Separator />
+
             {modules?.map((module) => (
               <div key={module.id} className="grid grid-cols-3 items-center gap-4">
                 <div className="col-span-2">
@@ -207,7 +246,7 @@ const CustomProfileForm: React.FC<CustomProfileFormProps> = ({ onSubmit, isSubmi
                   module={module}
                   currentAccess={permissionsState[module.id] || 'sem_acesso'}
                   onChange={(access) => handlePermissionChange(module.id, access)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isFullAdmin} // Desabilita se for acesso total
                 />
               </div>
             ))}

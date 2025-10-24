@@ -380,6 +380,8 @@ const resources = {
       "profile_updated_success": "Perfil {{name}} atualizado com sucesso!",
       "profile_deleted_success": "Perfil {{name}} excluído com sucesso!",
       "loading_profile_data": "Carregando dados do perfil...",
+      "grant_full_admin_access": "Conceder Acesso Total (Admin)",
+      "grant_full_admin_access_description": "Marque para conceder permissão de Leitura e Gravação em todos os módulos. Isso ignora as configurações individuais abaixo.",
       
       // Permissões
       "access_read": "Leitura",
