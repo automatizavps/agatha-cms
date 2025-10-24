@@ -23,6 +23,8 @@ const resources = {
       "units": "unidades",
       "none": "Nenhum", // NOVO
       "minutes": "minutos", // NOVO
+      "rows_per_page": "Linhas por página", // NOVO
+      "page_info": "Exibindo {{start}}-{{end}} de {{count}}", // NOVO
       
       // Navegação
       "nav_home": "Home",
