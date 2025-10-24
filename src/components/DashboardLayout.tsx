@@ -34,7 +34,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   if (isMobile) {
     return (
       <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="shrink-0 md:hidden">
@@ -82,7 +82,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         className="flex flex-col flex-1 transition-all duration-300"
         style={{ marginLeft: isCollapsed ? sidebarWidthMd : sidebarWidth }}
       >
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-6">
           {/* Botão de Toggle */}
           <Button 
             variant="ghost" 
