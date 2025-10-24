@@ -6,9 +6,12 @@ interface AppointmentMetrics {
   pendingAppointments: number;
 }
 
-export const useAppointmentMetrics = (companyId?: string) => {
-  // Passamos companyId e o filtro 'today' para useAppointments
-  const { data: appointments, isLoading, isError, error } = useAppointments(companyId, 'today');
+export const useAppointmentMetrics = (companyId?: string, startDate?: Date, endDate?: Date) => {
+  // Se houver filtro de data, não usamos o filtro 'today' no useAppointments
+  const dateFilterType = !startDate && !endDate ? 'today' : undefined;
+  
+  // Passamos companyId e o filtro de data
+  const { data: appointments, isLoading, isError, error } = useAppointments(companyId, dateFilterType, startDate, endDate);
 
   const metrics: AppointmentMetrics = {
     totalAppointments: 0,
