@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { Category } from "@/integrations/supabase/categories";
+import { Category, checkCategoryNameUniqueness } from "@/integrations/supabase/categories";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
 
+// Definimos o esquema base
 const baseFormSchema = z.object({
   nome: z.string().min(2, {
     message: "O nome deve ter pelo menos 2 caracteres.",
@@ -32,7 +34,7 @@ type CategoryFormValues = z.infer<typeof baseFormSchema>;
 interface CategoryFormProps {
   onSubmit: (values: { nome: string; empresa_id?: string }) => void;
   isSubmitting: boolean;
-  defaultValues?: Partial<CategoryFormValues>;
+  defaultValues?: Partial<CategoryFormValues & { id?: string }>; // Adicionando ID para edição
   isEditing?: boolean;
 }
 
@@ -42,6 +44,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.is_super_admin;
+  const userCompanyId = profile?.empresa_id;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: se for Super Admin, empresa_id é obrigatório na criação
@@ -57,14 +60,50 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome: defaultValues?.nome || "",
-      // Garante que o valor inicial seja "" para exibir o placeholder se não houver valor
       empresa_id: defaultValues?.empresa_id || "", 
     },
   });
+  
+  // Observa o nome e o ID da empresa para validação assíncrona
+  const nomeWatch = form.watch('nome');
+  const empresaIdWatch = form.watch('empresa_id');
+  
+  // Validação Assíncrona
+  useEffect(() => {
+    if (nomeWatch && (empresaIdWatch || userCompanyId)) {
+      const empresaId = isSuperAdmin ? empresaIdWatch : userCompanyId;
+      
+      // Se o nome for o mesmo que o valor inicial na edição, não precisamos validar
+      if (isEditing && nomeWatch === defaultValues?.nome && empresaId === defaultValues?.empresa_id) {
+        form.clearErrors('nome');
+        return;
+      }
+      
+      const timeout = setTimeout(async () => {
+        if (empresaId) {
+          const isUnique = await checkCategoryNameUniqueness(
+            nomeWatch, 
+            empresaId, 
+            isEditing ? defaultValues?.id : undefined
+          );
+          
+          if (!isUnique) {
+            form.setError('nome', {
+              type: 'manual',
+              message: "Já existe uma categoria com este nome nesta empresa.",
+            });
+          } else {
+            form.clearErrors('nome');
+          }
+        }
+      }, 500); // Debounce de 500ms
+
+      return () => clearTimeout(timeout);
+    }
+  }, [nomeWatch, empresaIdWatch, userCompanyId, isSuperAdmin, isEditing, defaultValues, form]);
+
 
   const handleSubmit = (values: CategoryFormValues) => {
-    // Se for Super Admin e o valor for uma string vazia, ele falhará na validação Zod.
-    // Se passar na validação (ou não for SA), usamos o valor.
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     onSubmit({
@@ -127,7 +166,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
           )}
         />
         
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || !!form.formState.errors.nome}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (

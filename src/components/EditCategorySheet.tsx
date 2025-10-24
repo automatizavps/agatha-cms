@@ -35,6 +35,7 @@ const EditCategorySheet: React.FC<EditCategorySheetProps> = ({ category, isOpen,
   };
 
   const initialValues = {
+    id: category.id, // <-- PASSANDO O ID AQUI
     nome: category.nome,
     empresa_id: category.empresa_id,
   };
