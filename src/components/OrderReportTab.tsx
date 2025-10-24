@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Search, RefreshCw, CalendarIcon, Filter, DollarSign, ShoppingCart } from 'lucide-react';
+import { Loader2, Search, RefreshCw, CalendarIcon, Filter, DollarSign, ShoppingCart, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
@@ -15,13 +15,22 @@ import { Calendar } from '@/components/ui/calendar';
 import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OrderStatus } from '@/integrations/supabase/orders';
+import { useCompanies } from '@/integrations/supabase/companies'; // Importado
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
 const OrderReportTab: React.FC = () => {
   const { t } = useTranslation();
-  const { filteredCompanyId, isLoadingFilter } = useDashboardFilter();
+  const { 
+    filteredCompanyId, 
+    isLoadingFilter, 
+    isSuperAdmin, 
+    selectedCompanyId, 
+    setSelectedCompanyId 
+  } = useDashboardFilter();
   
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies(); // Novo
+
   // Estados de Filtro
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -37,7 +46,7 @@ const OrderReportTab: React.FC = () => {
     }
   );
   
-  const isDataLoading = isLoading || isLoadingFilter;
+  const isDataLoading = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
@@ -119,6 +128,30 @@ const OrderReportTab: React.FC = () => {
         
         {/* Filtros e Ações */}
         <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+          
+          {/* Filtro de Empresa (Apenas para Super Admin) */}
+          {isSuperAdmin && (
+            <div className="w-full md:w-48">
+              <Select 
+                onValueChange={(value) => setSelectedCompanyId(value)} 
+                value={selectedCompanyId} 
+                disabled={isLoadingCompanies || isDataLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder={t('filter_all_companies')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                  {companies?.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           {/* Filtro de Data */}
           <Popover>
