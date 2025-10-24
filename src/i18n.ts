@@ -226,6 +226,10 @@ const resources = {
       "view_details": "Ver Detalhes",
       "notification_deleted_success": "Notificação excluída.",
       "view_all_notifications": "Ver todas as notificações",
+      "select_all": "Selecionar todos", // NOVO
+      "notifications_deleted_success": "{{count}} notificação(ões) excluída(s) com sucesso.", // NOVO
+      "confirm_delete_single": "Tem certeza que deseja excluir esta notificação?", // NOVO
+      "confirm_delete_bulk": "Tem certeza que deseja excluir {{count}} notificações?", // NOVO
       
       // Senha (Password) - NOVO
       "change_password": "Mudar Senha",

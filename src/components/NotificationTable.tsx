@@ -25,10 +25,13 @@ import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // IMPORTAÇÃO CORRIGIDA
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface NotificationTableProps {
   notifications: Notification[];
+  selectedIds: Set<string>;
+  onSelectChange: (newSelectedIds: Set<string>) => void;
 }
 
 interface NotificationActionsProps {
@@ -71,7 +74,7 @@ const NotificationActions: React.FC<NotificationActionsProps> = ({ notification,
   };
   
   const handleDelete = () => {
-    if (window.confirm(t('confirm_delete'))) {
+    if (window.confirm(t('confirm_delete_single'))) {
       deleteMutation.mutate(notification.id);
     }
   };
@@ -141,7 +144,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const NotificationTable: React.FC<NotificationTableProps> = ({ notifications }) => {
+const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, selectedIds, onSelectChange }) => {
   const queryClient = useQueryClient();
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -192,12 +195,42 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications }) 
     return sorted;
   }, [notifications, sortKey, sortDirection]);
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(notifications.map(n => n.id));
+      onSelectChange(allIds);
+    } else {
+      onSelectChange(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const newSelectedIds = new Set(selectedIds);
+    if (checked) {
+      newSelectedIds.add(id);
+    } else {
+      newSelectedIds.delete(id);
+    }
+    onSelectChange(newSelectedIds);
+  };
+  
+  const isAllSelected = notifications.length > 0 && selectedIds.size === notifications.length;
+  const isIndeterminate = selectedIds.size > 0 && selectedIds.size < notifications.length;
+
 
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
+            {/* Checkbox Header */}
+            <TableHead className="w-[50px] text-center">
+              <Checkbox
+                checked={isAllSelected || isIndeterminate}
+                onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                aria-label={t('select_all')}
+              />
+            </TableHead>
             <SortableHeader 
               sortKey="lida" 
               currentSortKey={sortKey} 
@@ -234,9 +267,17 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications }) 
               key={notification.id} 
               className={cn(
                 "transition-colors",
-                !notification.lida ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50"
+                !notification.lida ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50",
+                selectedIds.has(notification.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30" // Highlight selected rows
               )}
             >
+              {/* Checkbox Cell */}
+              <TableCell className="text-center">
+                <Checkbox
+                  checked={selectedIds.has(notification.id)}
+                  onCheckedChange={(checked) => handleSelectRow(notification.id, !!checked)}
+                />
+              </TableCell>
               <TableCell>
                 <span className={cn(
                   "font-medium text-xs",

@@ -90,7 +90,7 @@ export const markAllNotificationsAsRead = async () => {
   }
 };
 
-// --- Delete Notification ---
+// --- Delete Notification (Single) ---
 
 export const deleteNotification = async (notificationId: string) => {
   const { error } = await supabase
@@ -100,6 +100,19 @@ export const deleteNotification = async (notificationId: string) => {
 
   if (error) {
     console.error("Error deleting notification:", error);
+    throw new Error(error.message);
+  }
+};
+
+// --- Bulk Delete Notifications ---
+export const deleteNotifications = async (notificationIds: string[]) => {
+  const { error } = await supabase
+    .from("notificacoes")
+    .delete()
+    .in("id", notificationIds);
+
+  if (error) {
+    console.error("Error deleting notifications:", error);
     throw new Error(error.message);
   }
 };

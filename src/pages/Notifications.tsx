@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Bell, CheckCheck, Building, ChevronLeft, ChevronRight } from "lucide-react";
-import { useNotifications, markAllNotificationsAsRead } from "@/integrations/supabase/notifications";
+import { Loader2, RefreshCw, Bell, CheckCheck, Building, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { useNotifications, markAllNotificationsAsRead, deleteNotifications } from "@/integrations/supabase/notifications";
 import { showError, showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
 import NotificationTable from "@/components/NotificationTable";
@@ -25,6 +25,9 @@ const Notifications = () => {
   // Paginação e Tamanho da Página
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+  
+  // NOVO: Estado para seleção de linhas
+  const [selectedNotificationIds, setSelectedNotificationIds] = useState<Set<string>>(new Set());
 
   // Filtro de Empresa (Super Admin)
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
@@ -58,6 +61,32 @@ const Notifications = () => {
       showError(t('error_loading_data') + ": " + error.message);
     }
   });
+  
+  // NOVO: Mutação para exclusão em massa
+  const bulkDeleteMutation = useMutation({
+    mutationFn: deleteNotifications,
+    onSuccess: () => {
+      showSuccess(t('notifications_deleted_success', { count: selectedNotificationIds.size }));
+      setSelectedNotificationIds(new Set()); // Limpa a seleção
+      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+    },
+    onError: (error) => {
+      showError(t('error_loading_data') + ": " + error.message);
+    },
+  });
+  
+  const handleBulkDelete = () => {
+    if (selectedNotificationIds.size === 0) return;
+    
+    const count = selectedNotificationIds.size;
+    const confirmMessage = count === 1 
+      ? t('confirm_delete_single') 
+      : t('confirm_delete_bulk', { count });
+      
+    if (window.confirm(confirmMessage)) {
+      bulkDeleteMutation.mutate(Array.from(selectedNotificationIds));
+    }
+  };
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -84,6 +113,23 @@ const Notifications = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{t('page_title_notifications')}</h1>
         <div className="flex gap-2">
+          {/* Botão de Exclusão em Massa */}
+          {selectedNotificationIds.size > 0 && (
+            <Button 
+              variant="destructive" 
+              onClick={handleBulkDelete}
+              disabled={bulkDeleteMutation.isPending}
+            >
+              {bulkDeleteMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              {t('delete')} ({selectedNotificationIds.size})
+            </Button>
+          )}
+          
+          {/* Botão Marcar Todas como Lidas */}
           <Button 
             variant="outline" 
             onClick={() => markAllReadMutation.mutate()}
@@ -96,6 +142,8 @@ const Notifications = () => {
             )}
             {t('mark_all_read')}
           </Button>
+          
+          {/* Botão de Recarregar */}
           <Button 
             variant="outline" 
             size="icon" 
@@ -162,25 +210,29 @@ const Notifications = () => {
             </div>
           ) : notificationsToDisplay && notificationsToDisplay.length > 0 ? (
             <>
-              <NotificationTable notifications={notificationsToDisplay} />
+              <NotificationTable 
+                notifications={notificationsToDisplay} 
+                selectedIds={selectedNotificationIds}
+                onSelectChange={setSelectedNotificationIds}
+              />
               
               {/* Componente de Paginação (Reorganizado para uma única linha) */}
               {totalPages > 1 && (
                 <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
                   
-                  {/* Controles de Paginação e Informação da Página */}
+                  {/* Informação da Página (Alinhado à esquerda) */}
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {t('page_info', { 
+                      current: currentPage, 
+                      total: totalPages, 
+                      start: finalStart,
+                      end: finalEnd,
+                      count: totalCount
+                    })}
+                  </span>
+                  
+                  {/* Controles de Paginação e Seletor de Tamanho (Alinhado à direita) */}
                   <div className="flex items-center gap-4">
-                    
-                    {/* Informação da Página */}
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      {t('page_info', { 
-                        current: currentPage, 
-                        total: totalPages, 
-                        start: finalStart,
-                        end: finalEnd,
-                        count: totalCount
-                      })}
-                    </span>
                     
                     {/* Controles de Paginação */}
                     <Pagination>
