@@ -91,14 +91,17 @@ interface SidebarGroupProps {
   children: React.ReactNode;
   onNavigate?: () => void;
   basePath: string; 
+  // NOVO: Rotas adicionais que devem manter o grupo ativo
+  additionalActivePaths?: string[]; 
 }
 
-const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, children, onNavigate, basePath }) => {
+const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, children, onNavigate, basePath, additionalActivePaths = [] }) => {
   const location = useLocation();
   const { t } = useTranslation();
   
-  // Verifica se a rota atual começa com o basePath (usado para determinar se o grupo deve estar aberto)
-  const isRouteActive = location.pathname.startsWith(basePath);
+  // Lógica de ativação aprimorada: verifica basePath OU qualquer rota adicional
+  const isRouteActive = location.pathname.startsWith(basePath) || 
+                       additionalActivePaths.some(path => location.pathname.startsWith(path));
   
   // HOOKS MOVIDOS PARA O TOPO (incondicionalmente)
   const [isOpen, setIsOpen] = useState(isRouteActive);
@@ -203,7 +206,6 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
         className={cn(
           "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           // Remove o destaque de fundo do CollapsibleTrigger, deixando apenas o NavItem fazer isso.
-          // Mantemos o texto foreground padrão.
           "text-sidebar-foreground",
           "px-3"
         )}
@@ -340,6 +342,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             isCollapsed={isCollapsed}
             onNavigate={onNavigate}
             basePath="/products"
+            additionalActivePaths={['/services']} // Adicionando /services
           >
             {canReadProducts && (
               <NavItem
