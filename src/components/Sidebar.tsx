@@ -7,8 +7,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import React from "react";
-import { useCanRead } from "@/hooks/use-module-permission"; // Importando useCanRead
+import React, { useState, useEffect } from "react"; // Importando useState e useEffect
+import { useCanRead } from "@/hooks/use-module-permission";
 
 interface NavItemProps {
   to: string;
@@ -102,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadClients = useCanRead('clients');
   const canReadProducts = useCanRead('products');
   const canReadServices = useCanRead('services');
-  const canReadCategories = useCanRead('categories'); // ADICIONADO
+  const canReadCategories = useCanRead('categories');
   const canReadUsers = useCanRead('users');
   const canReadTeams = useCanRead('teams');
   const canReadCompanies = useCanRead('companies');
@@ -113,14 +113,38 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
 
   const navItemProps = { isCollapsed, onClick: onNavigate };
   
-  // Determina se o submenu de Produtos/Serviços deve estar aberto
-  const isProductsServicesOpen = location.pathname.startsWith('/products') || location.pathname.startsWith('/services');
+  // 1. Estados controlados para os submenus
+  const [isProductsServicesOpen, setIsProductsServicesOpen] = useState(
+    location.pathname.startsWith('/products') || location.pathname.startsWith('/services')
+  );
+  const [isCompaniesOpen, setIsCompaniesOpen] = useState(
+    location.pathname.startsWith('/companies')
+  );
   
-  // Determina se o submenu de Empresas deve estar aberto
-  const isCompaniesOpen = location.pathname.startsWith('/companies');
+  // 2. Efeito para fechar os submenus quando a barra lateral é colapsada
+  useEffect(() => {
+    if (isCollapsed) {
+      setIsProductsServicesOpen(false);
+      setIsCompaniesOpen(false);
+    }
+  }, [isCollapsed]);
   
+  // 3. Efeito para manter o submenu aberto se a rota for ativa (mesmo após navegação interna)
+  useEffect(() => {
+    const isProductsServicesActive = location.pathname.startsWith('/products') || location.pathname.startsWith('/services');
+    const isCompaniesActive = location.pathname.startsWith('/companies');
+    
+    if (isProductsServicesActive && !isCollapsed) {
+      setIsProductsServicesOpen(true);
+    }
+    if (isCompaniesActive && !isCollapsed) {
+      setIsCompaniesOpen(true);
+    }
+  }, [location.pathname, isCollapsed]);
+
+
   // Verifica se o grupo de Produtos/Serviços deve ser exibido
-  const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories; // ADICIONADO canReadCategories
+  const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories;
   
   // Verifica se o grupo de Empresas deve ser exibido
   const showCompaniesGroup = canReadCompanies || canReadCustomProfiles;
@@ -205,7 +229,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         {showProductsServicesGroup && (
           <>
             {/* Submenu de Produtos/Serviços */}
-            <Collapsible defaultOpen={isProductsServicesOpen} disabled={isCollapsed}>
+            <Collapsible open={isProductsServicesOpen} onOpenChange={setIsProductsServicesOpen} disabled={isCollapsed}>
               <CollapsibleTrigger 
                 className={cn(
                   "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -274,7 +298,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
         
         {showCompaniesGroup && (
-          <Collapsible defaultOpen={isCompaniesOpen} disabled={isCollapsed}>
+          <Collapsible open={isCompaniesOpen} onOpenChange={setIsCompaniesOpen} disabled={isCollapsed}>
             <CollapsibleTrigger 
               className={cn(
                 "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
