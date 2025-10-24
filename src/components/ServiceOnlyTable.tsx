@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, Clock, Image as ImageIcon, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Clock, Image as ImageIcon, Building, ArrowUpDown, ArrowUp, ArrowDown, History } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ import EditServiceSheet from "./EditServiceSheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom"; // Importando Link
 
 interface ServiceOnlyTableProps {
   services: Product[];
@@ -68,6 +69,14 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+        
+        {/* NOVO: Ver Histórico */}
+        <DropdownMenuItem asChild>
+          <Link to={`/products/${service.id}`}>
+            <History className="mr-2 h-4 w-4" /> {t('sales_history_table_title')}
+          </Link>
+        </DropdownMenuItem>
+        
         <DropdownMenuItem onClick={() => onEdit(service)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>

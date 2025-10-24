@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Product, deleteProduct } from "@/integrations/supabase/products";
-import { MoreHorizontal, Trash2, Pencil, Factory, Image as ImageIcon, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Factory, Image as ImageIcon, Building, ArrowUpDown, ArrowUp, ArrowDown, History } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom"; // Importando Link
 
 interface ProductTableProps {
   products: Product[];
@@ -70,6 +71,14 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+        
+        {/* NOVO: Ver Histórico */}
+        <DropdownMenuItem asChild>
+          <Link to={`/products/${product.id}`}>
+            <History className="mr-2 h-4 w-4" /> {t('sales_history_table_title')}
+          </Link>
+        </DropdownMenuItem>
+        
         <DropdownMenuItem onClick={() => onEdit(product)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>

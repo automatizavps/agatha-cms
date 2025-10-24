@@ -129,6 +129,31 @@ export const useLatestProductsOnly = (companyId: string | undefined) => {
   });
 };
 
+// --- Fetch Product by ID (NOVO) ---
+
+const fetchProductById = async (productId: string): Promise<Product | null> => {
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
+    .eq('id', productId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching product by ID:", error);
+    throw new Error("Failed to fetch product details");
+  }
+
+  return data as Product;
+};
+
+export const useProductById = (productId: string) => {
+  return useQuery<Product | null, Error>({
+    queryKey: ["productById", productId],
+    queryFn: () => fetchProductById(productId),
+    enabled: !!productId,
+  });
+};
+
 
 // --- Create ---
 

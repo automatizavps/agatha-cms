@@ -285,9 +285,6 @@ const resources = {
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
       "add_new_appointment": "Novo Agendamento",
       
-      // Chave que faltava
-      "page_title_appointments": "Gestão de Agendamentos",
-      
       // Relatórios (Reports) - NOVO
       "select_date_range": "Selecione o intervalo de datas",
       "filter_all_status": "Todos os Status",
@@ -333,6 +330,14 @@ const resources = {
       "magic_link_link": "Entrar com link mágico",
       "send_magic_link": "Enviar link mágico",
       "sending_magic_link": "Enviando link...",
+      
+      // NOVO: Histórico de Vendas do Produto
+      "sales_history_title": "Histórico de Vendas: {{name}}",
+      "sales_history_subtitle": "Detalhes e histórico de vendas/serviços realizados para este {{type}}.",
+      "sales_history_table_title": "Transações Concluídas",
+      "no_sales_history_found": "Nenhuma transação concluída encontrada para este item.",
+      "weekly_sales_history": "Vendas Semanais (Últimos 7 dias)",
+      "type": "Tipo",
     },
   },
 };

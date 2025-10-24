@@ -18,10 +18,11 @@ import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import Teams from "./pages/Teams";
 import Categories from "./pages/Categories";
-import Notifications from "./pages/Notifications"; // Importando a nova página
+import Notifications from "./pages/Notifications";
+import ProductHistory from "./pages/ProductHistory"; // Importando a nova página
 import { SessionContextProvider, ProtectedRoute, PublicRoute } from "@/integrations/supabase/auth";
-import { DashboardFilterProvider } from "@/hooks/useDashboardFilter"; // Importando o novo provider
-import React from "react"; // Importando React
+import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
+import React from "react";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/appointments" element={<Appointments />} />
       <Route path="/clients" element={<Clients />} />
       <Route path="/products" element={<Products />} />
+      <Route path="/products/:productId" element={<ProductHistory />} /> {/* NOVA ROTA */}
       <Route path="/services" element={<Services />} />
       <Route path="/orders" element={<Orders />} />
       <Route path="/teams" element={<Teams />} />
