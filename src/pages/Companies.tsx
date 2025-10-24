@@ -20,7 +20,7 @@ const CompaniesContent = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_companies')}</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{t('page_title_companies')}</h1>
         <AddCompanySheet />
       </div>
       

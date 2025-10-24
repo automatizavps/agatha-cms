@@ -39,7 +39,7 @@ const Profile = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_profile')}</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{t('page_title_profile')}</h1>
         <p className="text-muted-foreground">{t('page_subtitle_profile')}</p>
         
         <Card className="max-w-lg">

@@ -14,7 +14,7 @@ const AnalyticsContent = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_analytics')}</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{t('page_title_analytics')}</h1>
         <p className="text-muted-foreground">{t('page_subtitle_analytics')}</p>
         
         <Tabs defaultValue="orders" className="w-full">
