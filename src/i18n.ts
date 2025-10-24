@@ -72,6 +72,22 @@ const resources = {
       "total_sold": "Total Vendido", // NOVO
       "total_realized": "Total Realizado", // NOVO
       
+      // Métricas Refatoradas
+      "total_orders": "Total de Pedidos",
+      "total_revenue_period": "Faturamento no período",
+      "total_revenue_all_time": "Faturamento total (entregues)",
+      "total_orders_period": "Pedidos entregues no período",
+      "total_orders_all_time": "Pedidos entregues (total)",
+      "total_appointments_period": "Agendamentos no período",
+      "total_appointments_all_time": "Agendamentos (total)",
+      "pending_appointments_period": "Pendentes no período",
+      "pending_appointments_all_time": "Pendentes (total)",
+      
+      // Filtro de Data do Dashboard
+      "clear_filter": "Limpar Filtro",
+      "dashboard_date_filter_warning": "Atenção: Gráficos de 'Por Hora' e 'Status' são limitados aos dados de HOJE e não refletem o filtro de período.",
+      "chart_disabled_by_date_filter": "Gráfico desabilitado: Filtro de período ativo. Este gráfico só exibe dados do dia atual.",
+      
       // Páginas
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Relatórios detalhados e visualizações de dados.",
@@ -254,9 +270,6 @@ const resources = {
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
       "add_new_appointment": "Novo Agendamento", // NOVO
       
-      // Chave que faltava
-      "page_title_appointments": "Gestão de Agendamentos",
-      
       // Relatórios (Reports) - NOVO
       "select_date_range": "Selecione o intervalo de datas",
       "filter_all_status": "Todos os Status",
@@ -266,7 +279,7 @@ const resources = {
       "export_error": "Erro ao exportar dados: ",
       "export_no_data": "Não há dados para exportar.",
       "export_sheet_name": "Relatório",
-      "report_total_revenue": "Faturamento Total (Entregues)",
+      "report_total_revenue": "Faturamento Total",
       "report_total_completed_services": "Total de Serviços Concluídos",
       "appointment_search_placeholder": "Buscar por cliente ou responsável...",
       

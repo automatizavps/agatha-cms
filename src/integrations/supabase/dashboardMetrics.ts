@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { useCurrentUserProfile } from "./user-profile";
+import { Order } from "./orders"; // Importando Order
 
 // --- Funções de Fetch ---
 
 interface RevenueMetrics {
-  daily_revenue: number;
-  weekly_revenue: number;
-  monthly_revenue: number; // NOVO: Faturamento Mensal
+  total_revenue: number;
+  total_orders: number;
 }
 
 export interface TopSellingItem {
@@ -18,86 +18,62 @@ export interface TopSellingItem {
 }
 
 /**
- * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
- * na data atual, na semana atual e no mês atual.
+ * Busca todos os pedidos 'entregues' dentro do período especificado.
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
+ * @param startDate Data de início do filtro.
+ * @param endDate Data de fim do filtro.
  */
-const fetchRevenueMetrics = async (companyId: string | undefined): Promise<RevenueMetrics> => {
-  // Define o início do dia de hoje (00:00:00)
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  
-  // Define o início da semana (Domingo, 00:00:00)
-  const dayOfWeek = todayStart.getDay(); // 0 = Domingo, 6 = Sábado
-  const weekStart = new Date(todayStart);
-  weekStart.setDate(todayStart.getDate() - dayOfWeek);
-  
-  // Define o início do mês (Dia 1, 00:00:00)
-  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
-
-
-  // 1. Faturamento Diário (Hoje)
-  let dailyQuery = supabase
+const fetchOrdersForMetrics = async (companyId: string | undefined, startDate?: Date, endDate?: Date): Promise<Order[]> => {
+  let query = supabase
     .from("pedidos")
-    .select("valor_total")
-    .eq("status", "entregue")
-    .gte("created_at", todayStart.toISOString());
+    .select("id, empresa_id, valor_total, status, created_at")
+    .eq("status", "entregue"); // Apenas pedidos entregues contam como receita
     
   if (companyId) {
-    dailyQuery = dailyQuery.eq("empresa_id", companyId);
-  }
-
-  const { data: dailyData, error: dailyError } = await dailyQuery;
-
-  if (dailyError) {
-    console.error("Error fetching daily revenue:", dailyError);
-    throw new Error("Failed to fetch daily revenue");
+    query = query.eq("empresa_id", companyId);
   }
   
-  const daily_revenue = dailyData.reduce((sum, order) => sum + order.valor_total, 0);
-
-  // 2. Faturamento Semanal (Esta Semana)
-  let weeklyQuery = supabase
-    .from("pedidos")
-    .select("valor_total")
-    .eq("status", "entregue")
-    .gte("created_at", weekStart.toISOString());
-    
-  if (companyId) {
-    weeklyQuery = weeklyQuery.eq("empresa_id", companyId);
+  if (startDate) {
+    query = query.gte('created_at', startDate.toISOString());
+  }
+  if (endDate) {
+    // Adiciona 1 dia ao endDate para incluir o dia inteiro
+    const end = new Date(endDate);
+    end.setDate(end.getDate() + 1);
+    end.setHours(0, 0, 0, 0);
+    query = query.lt('created_at', end.toISOString());
   }
 
-  const { data: weeklyData, error: weeklyError } = await weeklyQuery;
+  const { data, error } = await query;
 
-  if (weeklyError) {
-    console.error("Error fetching weekly revenue:", weeklyError);
-    throw new Error("Failed to fetch weekly revenue");
+  if (error) {
+    console.error("Error fetching orders for metrics:", error);
+    throw new Error("Failed to fetch orders for metrics");
   }
   
-  const weekly_revenue = weeklyData.reduce((sum, order) => sum + order.valor_total, 0);
+  return data as Order[];
+};
+
+
+/**
+ * Hook que calcula o faturamento total e a contagem de pedidos entregues no período.
+ */
+export const useRevenueMetrics = (companyId: string | undefined, startDate?: Date, endDate?: Date) => {
+  // Cria uma chave de cache baseada no período
+  const dateKey = startDate && endDate ? `${startDate.toISOString().slice(0, 10)}_${endDate.toISOString().slice(0, 10)}` : 'all_time';
   
-  // 3. Faturamento Mensal (Este Mês)
-  let monthlyQuery = supabase
-    .from("pedidos")
-    .select("valor_total")
-    .eq("status", "entregue")
-    .gte("created_at", monthStart.toISOString());
-    
-  if (companyId) {
-    monthlyQuery = monthlyQuery.eq("empresa_id", companyId);
-  }
-
-  const { data: monthlyData, error: monthlyError } = await monthlyQuery;
-
-  if (monthlyError) {
-    console.error("Error fetching monthly revenue:", monthlyError);
-    throw new Error("Failed to fetch monthly revenue");
-  }
-  
-  const monthly_revenue = monthlyData.reduce((sum, order) => sum + order.valor_total, 0);
-
-
-  return { daily_revenue, weekly_revenue, monthly_revenue };
+  return useQuery<RevenueMetrics, Error>({
+    queryKey: ["revenueMetrics", companyId, dateKey],
+    queryFn: async () => {
+      const orders = await fetchOrdersForMetrics(companyId, startDate, endDate);
+      
+      const total_revenue = orders.reduce((sum, order) => sum + order.valor_total, 0);
+      const total_orders = orders.length;
+      
+      return { total_revenue, total_orders };
+    },
+    enabled: true, 
+  });
 };
 
 /**
@@ -152,8 +128,6 @@ const fetchClientCount = async (companyId: string | undefined): Promise<number> 
  * Busca os 10 itens mais vendidos (produtos e serviços) para a empresa.
  * NOTA: A função RPC 'get_top_selling_items' exige um company_id_input. 
  * Se companyId for undefined, não podemos chamar a RPC.
- * Para 'Todas as Empresas', esta métrica será desabilitada, pois a lógica de agregação
- * de vendas de pedidos e agendamentos é complexa demais para ser feita no cliente.
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
 const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]> => {
@@ -174,16 +148,7 @@ const fetchTopSellingItems = async (companyId: string): Promise<TopSellingItem[]
 
 // --- Hooks de Uso ---
 
-export const useRevenueMetrics = (companyId: string | undefined) => {
-  // Adiciona a data atual na query key para garantir que o cache seja atualizado diariamente
-  const currentDate = new Date().toISOString().slice(0, 10); 
-  
-  return useQuery<RevenueMetrics, Error>({
-    queryKey: ["revenueMetrics", companyId, currentDate],
-    queryFn: () => fetchRevenueMetrics(companyId),
-    enabled: true, 
-  });
-};
+// Mantendo useRevenueMetrics acima, pois foi refatorado.
 
 export const useProductCount = (companyId: string | undefined) => {
   return useQuery<number, Error>({

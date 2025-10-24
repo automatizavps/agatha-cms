@@ -39,7 +39,7 @@ export interface Appointment {
 
 // --- Fetch Geral ---
 
-const fetchAppointments = async (companyId?: string, dateFilter?: 'today'): Promise<Appointment[]> => {
+const fetchAppointments = async (companyId?: string, dateFilter?: 'today', startDate?: Date, endDate?: Date): Promise<Appointment[]> => {
   let query = supabase
     .from("agendamentos")
     .select(`
@@ -61,7 +61,7 @@ const fetchAppointments = async (companyId?: string, dateFilter?: 'today'): Prom
   }
   
   // 2. Filtrar por Data (se 'today' for especificado)
-  if (dateFilter === 'today') {
+  if (dateFilter === 'today' && !startDate && !endDate) {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const tomorrowStart = new Date(todayStart);
@@ -72,6 +72,20 @@ const fetchAppointments = async (companyId?: string, dateFilter?: 'today'): Prom
       .gte('data_hora', todayStart.toISOString())
       .lt('data_hora', tomorrowStart.toISOString());
   }
+  
+  // 3. Filtrar por Intervalo de Data (se fornecido)
+  // Se houver um filtro de data, buscamos todos os dados dentro desse intervalo.
+  if (startDate) {
+    query = query.gte('data_hora', startDate.toISOString());
+  }
+  if (endDate) {
+    // Adiciona 1 dia ao endDate para incluir o dia inteiro
+    const end = new Date(endDate);
+    end.setDate(end.getDate() + 1);
+    end.setHours(0, 0, 0, 0);
+    query = query.lt('data_hora', end.toISOString());
+  }
+
 
   const { data, error } = await query.order("data_hora", { ascending: true });
 
@@ -83,10 +97,13 @@ const fetchAppointments = async (companyId?: string, dateFilter?: 'today'): Prom
   return data as Appointment[];
 };
 
-export const useAppointments = (companyId?: string, dateFilter?: 'today') => {
+export const useAppointments = (companyId?: string, dateFilter?: 'today', startDate?: Date, endDate?: Date) => {
+  // Se houver filtro de data, a queryKey deve refletir isso para cache
+  const dateKey = startDate && endDate ? `${startDate.toISOString().slice(0, 10)}_${endDate.toISOString().slice(0, 10)}` : dateFilter;
+  
   return useQuery<Appointment[], Error>({
-    queryKey: ["appointments", companyId, dateFilter],
-    queryFn: () => fetchAppointments(companyId, dateFilter),
+    queryKey: ["appointments", companyId, dateKey],
+    queryFn: () => fetchAppointments(companyId, dateFilter, startDate, endDate),
   });
 };
 

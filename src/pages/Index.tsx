@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered, ShoppingCart } from "lucide-react";
+import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered, ShoppingCart, CalendarIcon } from "lucide-react";
 import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMetrics";
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
@@ -14,9 +14,14 @@ import TopSellingItemsCard from "@/components/TopSellingItemsCard";
 import TopSellingServicesCard from "@/components/TopSellingServicesCard";
 import DailyServiceByHourChart from "@/components/DailyServiceByHourChart";
 import AppointmentStatusChart from "@/components/AppointmentStatusChart";
-import DailyOrderByHourChart from "@/components/DailyOrderByHourChart"; // NOVO
-import OrderStatusChart from "@/components/OrderStatusChart"; // NOVO
+import DailyOrderByHourChart from "@/components/DailyOrderByHourChart";
+import OrderStatusChart from "@/components/OrderStatusChart";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Index = () => {
   const { t } = useTranslation();
@@ -29,13 +34,18 @@ const Index = () => {
     isLoadingFilter 
   } = useDashboardFilter();
   
+  // NOVO: Filtro de Período
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
+  // Passando o filtro de data para as métricas que podem ser adaptadas
+  const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId, startDate, endDate);
   
-  const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
+  const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId, startDate, endDate);
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
-  const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); // NOVO HOOK
+  const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId);
   
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
@@ -57,77 +67,121 @@ const Index = () => {
     }
     return <div className="text-xl font-bold">{value}</div>;
   };
+  
+  // Verifica se há um filtro de data ativo
+  const isDateFilterActive = !!startDate || !!endDate;
+  
+  // Texto para o filtro de data
+  const dateFilterText = startDate && endDate 
+    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+    : t('select_date_range');
 
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
         <h1 className="text-3xl font-bold tracking-tight">{t('dashboard_title')}</h1>
         
-        {/* Filtro de Empresa (Apenas Super Admin) */}
-        {isSuperAdmin && (
-          <div className="w-full md:w-64">
-            <Select 
-              onValueChange={setSelectedCompanyId} 
-              value={selectedCompanyId} 
-              disabled={isLoadingCompanies || isLoading}
-            >
-              <SelectTrigger className="w-full">
-                <Building className="mr-2 h-4 w-4 text-muted-foreground" />
-                <SelectValue placeholder={t('filter_all_companies')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
-                {companies?.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Filtros de Empresa e Período */}
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          
+          {/* Filtro de Empresa (Apenas Super Admin) */}
+          {isSuperAdmin && (
+            <div className="w-full md:w-64">
+              <Select 
+                onValueChange={setSelectedCompanyId} 
+                value={selectedCompanyId} 
+                disabled={isLoadingCompanies || isLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder={t('filter_all_companies')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                  {companies?.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {/* Filtro de Período */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full md:w-64 justify-start text-left font-normal",
+                  (!startDate || !endDate) && "text-muted-foreground"
+                )}
+                disabled={isLoading}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                <span>{dateFilterText}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={{ from: startDate, to: endDate }}
+                onSelect={(range) => {
+                  setStartDate(range?.from);
+                  setEndDate(range?.to);
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+              />
+              <div className="p-2 border-t">
+                <Button 
+                  variant="ghost" 
+                  className="w-full" 
+                  onClick={() => { setStartDate(undefined); setEndDate(undefined); }}
+                >
+                  {t('clear_filter')}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+        
+        {/* Aviso sobre o filtro de data */}
+        {isDateFilterActive && (
+          <div className="p-3 bg-blue-100/50 dark:bg-blue-900/20 border border-blue-400/50 rounded-md text-sm text-blue-800 dark:text-blue-300">
+            {t('dashboard_date_filter_warning')}
           </div>
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        {/* Ajustado para 3 colunas no md e 4 colunas no lg para melhor distribuição de 7 itens */}
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           
-          {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
-          <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
+          {/* Card 1: Faturamento Total (Ajustado para o período) */}
+          <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20 col-span-2 md:col-span-3 lg:col-span-2")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('report_total_revenue')}</CardTitle>
               <DollarSign className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues hoje</p>
+              {renderMetricValue(revenueMetrics?.total_revenue || 0, true)}
+              <p className="text-xs text-muted-foreground">{isDateFilterActive ? t('total_revenue_period') : t('total_revenue_all_time')}</p>
             </CardContent>
           </Card>
           
-          {/* Card 2: Faturamento Semanal */}
+          {/* Card 2: Total de Pedidos (Ajustado para o período) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('weekly_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">{t('total_orders')}</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              {renderMetricValue(revenueMetrics?.weekly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues esta semana</p>
+              {renderMetricValue(revenueMetrics?.total_orders || 0)}
+              <p className="text-xs text-muted-foreground">{isDateFilterActive ? t('total_orders_period') : t('total_orders_all_time')}</p>
             </CardContent>
           </Card>
           
-          {/* Card 3: Faturamento Mensal */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('monthly_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.monthly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues este mês</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 4: Total de Agendamentos */}
+          {/* Card 3: Total de Agendamentos (Ajustado para o período) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
@@ -135,11 +189,11 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(metrics.totalAppointments)}
-              <p className="text-xs text-muted-foreground">Agendamentos para hoje</p>
+              <p className="text-xs text-muted-foreground">{isDateFilterActive ? t('total_appointments_period') : t('total_appointments_all_time')}</p>
             </CardContent>
           </Card>
           
-          {/* Card 5: Agendamentos Pendentes */}
+          {/* Card 4: Agendamentos Pendentes (Ajustado para o período) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
@@ -147,11 +201,11 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(metrics.pendingAppointments)}
-              <p className="text-xs text-muted-foreground">Pendentes para hoje</p>
+              <p className="text-xs text-muted-foreground">{isDateFilterActive ? t('pending_appointments_period') : t('pending_appointments_all_time')}</p>
             </CardContent>
           </Card>
           
-          {/* Card 6: Total de Produtos (RE-ADICIONADO) */}
+          {/* Card 5: Total de Produtos */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
@@ -163,7 +217,7 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Card 7: Total de Clientes */}
+          {/* Card 6: Total de Clientes */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
@@ -176,7 +230,7 @@ const Index = () => {
           </Card>
         </div>
         
-        {/* Seção 2: Metas das Equipes (NOVA POSIÇÃO) */}
+        {/* Seção 2: Metas das Equipes */}
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Target className="h-6 w-6 text-muted-foreground" />
@@ -202,29 +256,61 @@ const Index = () => {
           )}
         </div>
         
-        {/* Seção 3: Gráficos de Agendamentos */}
+        {/* Seção 3: Gráficos de Agendamentos (Desabilitados se filtro de data ativo) */}
         <div className="grid gap-6 grid-cols-12">
-          {/* Gráfico de Serviços por Hora (Linha) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-8">
-            <DailyServiceByHourChart />
+            {isDateFilterActive ? (
+              <Card className="h-64">
+                <CardHeader><CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle></CardHeader>
+                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
+                  {t('chart_disabled_by_date_filter')}
+                </CardContent>
+              </Card>
+            ) : (
+              <DailyServiceByHourChart />
+            )}
           </div>
           
-          {/* Gráfico de Status de Agendamentos (Barra) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
-            <AppointmentStatusChart />
+            {isDateFilterActive ? (
+              <Card className="h-64">
+                <CardHeader><CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle></CardHeader>
+                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
+                  {t('chart_disabled_by_date_filter')}
+                </CardContent>
+              </Card>
+            ) : (
+              <AppointmentStatusChart />
+            )}
           </div>
         </div>
         
-        {/* Seção 4: Gráficos de Pedidos */}
+        {/* Seção 4: Gráficos de Pedidos (Desabilitados se filtro de data ativo) */}
         <div className="grid gap-6 grid-cols-12">
-          {/* Gráfico de Pedidos Entregues por Hora (Linha) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-8">
-            <DailyOrderByHourChart />
+            {isDateFilterActive ? (
+              <Card className="h-64">
+                <CardHeader><CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle></CardHeader>
+                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
+                  {t('chart_disabled_by_date_filter')}
+                </CardContent>
+              </Card>
+            ) : (
+              <DailyOrderByHourChart />
+            )}
           </div>
           
-          {/* Gráfico de Status dos Pedidos (Barra) */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
-            <OrderStatusChart />
+            {isDateFilterActive ? (
+              <Card className="h-64">
+                <CardHeader><CardTitle className="text-lg">{t('chart_title_order_status')}</CardTitle></CardHeader>
+                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
+                  {t('chart_disabled_by_date_filter')}
+                </CardContent>
+              </Card>
+            ) : (
+              <OrderStatusChart />
+            )}
           </div>
         </div>
         
