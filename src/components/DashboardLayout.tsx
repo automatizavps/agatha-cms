@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
@@ -44,6 +44,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0 w-64">
+              {/* Adicionando elementos de acessibilidade ocultos */}
+              <SheetHeader className="sr-only">
+                <SheetTitle>{t('nav_general')}</SheetTitle>
+                <SheetDescription>Navegação principal do aplicativo.</SheetDescription>
+              </SheetHeader>
               {/* Passa a função de fechamento para o Sidebar */}
               <Sidebar onNavigate={() => setIsSheetOpen(false)} isCollapsed={false} />
             </SheetContent>
