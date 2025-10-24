@@ -90,16 +90,19 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, t }) =
   );
 };
 
-// Componente auxiliar para exibir a contagem de itens
-const OrderItemCountDisplay: React.FC<{ order: Order, t: (key: string) => string }> = ({ order, t }) => {
+// Componente auxiliar para exibir a lista de itens
+const OrderItemsDisplay: React.FC<{ order: Order, t: (key: string) => string }> = ({ order, t }) => {
   
   const totalItems = useMemo(() => {
     return order.pedido_itens.reduce((sum, item) => sum + item.quantidade, 0);
   }, [order.pedido_itens]);
   
-  if (totalItems === 0) {
+  if (order.pedido_itens.length === 0) {
     return <span className="text-muted-foreground">N/A</span>;
   }
+  
+  const firstItem = order.pedido_itens[0];
+  const itemName = firstItem.produtos?.nome || t('unknown_item');
   
   const tooltipContent = (
     <div className="space-y-1 text-sm">
@@ -110,15 +113,23 @@ const OrderItemCountDisplay: React.FC<{ order: Order, t: (key: string) => string
           <span className="text-muted-foreground">x{item.quantidade}</span>
         </div>
       ))}
+      <div className="pt-1 border-t mt-1 font-bold flex justify-between">
+        <span>{t('quantity')}:</span>
+        <span>{totalItems}</span>
+      </div>
     </div>
   );
 
   return (
     <Tooltip delayDuration={100}>
       <TooltipTrigger asChild>
-        <div className="flex items-center gap-1 cursor-default">
-          <Package className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{totalItems}</span>
+        <div className="flex flex-col items-start cursor-default">
+          <span className="font-medium truncate max-w-[150px]">{itemName}</span>
+          {order.pedido_itens.length > 1 && (
+            <span className="text-xs text-muted-foreground">
+              + {order.pedido_itens.length - 1} {t('items')}
+            </span>
+          )}
         </div>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">
@@ -321,8 +332,9 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               >
                 {t('order_table_header_client')}
               </SortableHeader>
-              <TableHead className="hidden sm:table-cell text-center">
-                {t('quantity')}
+              {/* NOVO: Coluna de Itens */}
+              <TableHead className="hidden sm:table-cell">
+                {t('nav_products_services')}
               </TableHead>
               <SortableHeader 
                 sortKey="data" 
@@ -375,9 +387,9 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 <TableCell className="font-medium">
                   {order.clientes?.nome || t('no_data_found')}
                 </TableCell>
-                {/* NOVO: Quantidade de Itens */}
-                <TableCell className="hidden sm:table-cell text-center">
-                  <OrderItemCountDisplay order={order} t={t} />
+                {/* NOVO: Itens do Pedido */}
+                <TableCell className="hidden sm:table-cell">
+                  <OrderItemsDisplay order={order} t={t} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}

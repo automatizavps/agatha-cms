@@ -31,6 +31,7 @@ const resources = {
       "delete_confirm": "Sim, Excluir",
       "optional": "Opcional", // NOVO
       "stock_exceeded": "A quantidade de {{name}} excede o estoque disponível ({{stock}}).", // NOVO
+      "items": "itens", // NOVO
 
       // Navegação
       "nav_home": "Home",
