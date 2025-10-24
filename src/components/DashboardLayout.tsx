@@ -57,7 +57,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
-        {/* Ajustando o padding para pt-24 no mobile */}
+        {/* Mantendo o padding pt-24 no mobile */}
         <main className="flex-1 p-4 pt-24 animate-fade-in">{children}</main>
       </div>
     );
@@ -113,8 +113,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <ThemeToggle />
           <UserMenu />
         </header>
-        {/* Ajustando o padding para pt-24 no desktop */}
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in pt-24">
+        {/* Aumentando o padding para pt-28 no desktop */}
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in pt-28">
           {children}
         </main>
       </div>
