@@ -53,6 +53,13 @@ const fetchPermissions = async (customProfileId: string): Promise<PermissionMap>
   return permissionMap;
 };
 
+// Lista de todos os módulos para conceder acesso total
+const ALL_MODULES: string[] = [
+  'users', 'clients', 'products', 'services', 
+  'orders', 'appointments', 'teams', 'analytics', 
+  'companies', 'notifications', 'categories', 'custom_profiles'
+];
+
 
 const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfile | null> => {
   // 1. Buscar dados básicos do usuário (incluindo nome da empresa)
@@ -78,28 +85,36 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   let is_super_admin = false;
   let profileName = "Funcionário"; // Default name
   
-  // 2. Verificar se é Super Admin usando a nova RPC
+  // 2. Verificar se é Super Admin
   const { data: isSaData, error: isSaError } = await supabase.rpc('is_super_admin');
   if (!isSaError && isSaData !== null) {
     is_super_admin = isSaData;
   }
   
-  // 3. Lógica de Permissões
-  if (is_super_admin) {
-    // Se for Super Admin, concedemos acesso total
-    is_super_admin = true;
-    profileName = "Super Admin";
-    permissions = {
-      users: 'escrita', clients: 'escrita', products: 'escrita', services: 'escrita', 
-      orders: 'escrita', appointments: 'escrita', teams: 'escrita', analytics: 'escrita', 
-      companies: 'escrita', notifications: 'escrita', categories: 'escrita',
-      custom_profiles: 'escrita', // NOVO MÓDULO
-    };
+  // 3. Verificar se pertence à empresa de Acesso Total
+  const { data: isFullAccessCompany, error: isFullAccessError } = await supabase.rpc('is_full_access_company_user');
+  const hasFullAccessOverride = !isFullAccessError && isFullAccessCompany === true;
+  
+  // 4. Lógica de Permissões
+  if (is_super_admin || hasFullAccessOverride) {
+    // Se for Super Admin OU pertencer à empresa de Acesso Total, concedemos acesso total
+    if (is_super_admin) {
+      profileName = "Super Admin";
+    } else {
+      profileName = `${companyName} (Acesso Total)`;
+    }
+    
+    // Concede acesso de escrita a todos os módulos
+    permissions = ALL_MODULES.reduce((acc, moduleName) => {
+      acc[moduleName] = 'escrita';
+      return acc;
+    }, {} as PermissionMap);
+    
   } else if (userProfile.perfil_customizado_id) {
     // Se tiver um perfil customizado, buscamos as permissões
     permissions = await fetchPermissions(userProfile.perfil_customizado_id);
     
-    // 4. Buscar o nome do perfil customizado (usando .limit(1) em vez de .single() para robustez)
+    // 5. Buscar o nome do perfil customizado (usando .limit(1) em vez de .single() para robustez)
     const { data: customProfileData, error: customProfileError } = await supabase
       .from("perfis_customizados")
       .select("nome")
@@ -122,7 +137,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
     is_super_admin: is_super_admin,
     permissions: permissions,
     perfis: { nome: profileName }, // Simula a estrutura perfis (nome)
-    empresas: companyName ? { nome: companyName } : null, // Adiciona o nome da empresa
+    empresas: userProfile.empresas, // Mantém o objeto empresas completo
   } as CurrentUserProfile;
 };
 
