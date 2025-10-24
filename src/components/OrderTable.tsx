@@ -38,14 +38,14 @@ interface OrderTableProps {
 interface OrderActionsProps {
   order: Order;
   onEditStatus: (order: Order) => void;
+  t: (key: string) => string; // Passando t para as ações
 }
 
 type SortKey = 'id' | 'cliente' | 'data' | 'valor_total' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
+const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, t }) => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteOrder,
@@ -90,75 +90,8 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
   );
 };
 
-const getStatusBadge = (status: OrderStatus) => {
-  const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
-  switch (status) {
-    case 'entregue':
-      // Verde Escuro (Fundo) e Verde Claro (Texto)
-      return (
-        <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>
-          {t('entregue')}
-        </span>
-      );
-    case 'cancelado':
-      // Vermelho Escuro (Fundo) e Vermelho Claro (Texto)
-      return (
-        <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>
-          {t('cancelado')}
-        </span>
-      );
-    case 'pendente_entrega':
-    default:
-      // Marrom/Ouro Escuro (Fundo) e Amarelo/Ouro Claro (Texto)
-      return (
-        <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>
-          {t('pendente_entrega')}
-        </span>
-      );
-  }
-};
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
-
-interface SortableHeaderProps {
-  children: React.ReactNode;
-  sortKey: SortKey;
-  currentSortKey: SortKey;
-  currentSortDirection: SortDirection;
-  onSort: (key: SortKey) => void;
-  className?: string;
-}
-
-const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
-  const isCurrent = currentSortKey === sortKey;
-  
-  const Icon = isCurrent 
-    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
-    : ArrowUpDown;
-
-  // Verifica se a classe 'text-right' está presente para aplicar 'justify-end'
-  const isTextRight = className?.includes('text-right');
-  // Verifica se a classe 'text-center' está presente para aplicar 'justify-center'
-  const isTextCenter = className?.includes('text-center');
-
-  return (
-    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className={cn("flex items-center gap-1", isTextRight && "justify-end", isTextCenter && "justify-center")}>
-        {children}
-        <Icon className="ml-1 h-3 w-3 opacity-50" />
-      </div>
-    </TableHead>
-  );
-};
-
-// NOVO Componente para exibir a contagem de itens
-const OrderItemCountDisplay: React.FC<{ order: Order }> = ({ order }) => {
-  const { t } = useTranslation();
+// Componente auxiliar para exibir a contagem de itens
+const OrderItemCountDisplay: React.FC<{ order: Order, t: (key: string) => string }> = ({ order, t }) => {
   
   const totalItems = useMemo(() => {
     return order.pedido_itens.reduce((sum, item) => sum + item.quantidade, 0);
@@ -195,13 +128,80 @@ const OrderItemCountDisplay: React.FC<{ order: Order }> = ({ order }) => {
   );
 };
 
+interface SortableHeaderProps {
+  children: React.ReactNode;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  currentSortDirection: SortDirection;
+  onSort: (key: SortKey) => void;
+  className?: string;
+}
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, currentSortKey, currentSortDirection, onSort, className }) => {
+  const isCurrent = currentSortKey === sortKey;
+  
+  const Icon = isCurrent 
+    ? (currentSortDirection === 'asc' ? ArrowUp : ArrowDown) 
+    : ArrowUpDown;
+
+  // Verifica se a classe 'text-right' está presente para aplicar 'justify-end'
+  const isTextRight = className?.includes('text-right');
+  // Verifica se a classe 'text-center' está presente para aplicar 'justify-center'
+  const isTextCenter = className?.includes('text-center');
+
+  return (
+    <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
+      <div className={cn("flex items-center gap-1", isTextRight && "justify-end", isTextCenter && "justify-center")}>
+        {children}
+        <Icon className="ml-1 h-3 w-3 opacity-50" />
+      </div>
+    </TableHead>
+  );
+};
+
 
 const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectChange }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('data');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const { t } = useTranslation();
+  const { t } = useTranslation(); // Hook de tradução
+
+  // Mover getStatusBadge para dentro do componente para acessar 't'
+  const getStatusBadge = (status: OrderStatus) => {
+    const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
+    switch (status) {
+      case 'entregue':
+        // Verde Escuro (Fundo) e Verde Claro (Texto)
+        return (
+          <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>
+            {t('entregue')}
+          </span>
+        );
+      case 'cancelado':
+        // Vermelho Escuro (Fundo) e Vermelho Claro (Texto)
+        return (
+          <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>
+            {t('cancelado')}
+          </span>
+        );
+      case 'pendente_entrega':
+      default:
+        // Marrom/Ouro Escuro (Fundo) e Amarelo/Ouro Claro (Texto)
+        return (
+          <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>
+            {t('pendente_entrega')}
+          </span>
+        );
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   const handleEditStatus = (order: Order) => {
     setEditingOrder(order);
@@ -377,7 +377,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 </TableCell>
                 {/* NOVO: Quantidade de Itens */}
                 <TableCell className="hidden sm:table-cell text-center">
-                  <OrderItemCountDisplay order={order} />
+                  <OrderItemCountDisplay order={order} t={t} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -389,7 +389,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                   {getStatusBadge(order.status)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <OrderActions order={order} onEditStatus={handleEditStatus} />
+                  <OrderActions order={order} onEditStatus={handleEditStatus} t={t} />
                 </TableCell>
               </TableRow>
             ))}
