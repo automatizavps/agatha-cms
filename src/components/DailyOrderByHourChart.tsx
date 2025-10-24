@@ -51,7 +51,7 @@ export default function DailyOrderByHourChart() {
           <CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle>
         </CardHeader>
         <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-          {t("select_company_for_metrics")}
+          <span className="text-xs text-center">{t("select_company_for_metrics")}</span>
         </CardContent>
       </Card>
     );
@@ -64,7 +64,7 @@ export default function DailyOrderByHourChart() {
           <CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle>
         </CardHeader>
         <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-          {isError ? t("chart_error") : t("chart_no_data_today_orders")}
+          <span className="text-xs text-center">{isError ? t("chart_error") : t("chart_no_data_today_orders")}</span>
         </CardContent>
       </Card>
     );

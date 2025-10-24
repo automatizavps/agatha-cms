@@ -28,7 +28,7 @@ const OrderStatusChart: React.FC = () => {
           <CardTitle className="text-lg">{t('chart_title_order_status')}</CardTitle>
         </CardHeader>
         <CardContent className="p-4 text-muted-foreground h-full flex items-center justify-center">
-          {isError ? t("chart_error") : t("chart_no_data_today_orders")}
+          <span className="text-xs text-center">{isError ? t("chart_error") : t("chart_no_data_today_orders")}</span>
         </CardContent>
       </Card>
     );

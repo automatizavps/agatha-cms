@@ -48,7 +48,7 @@ export default function DailyServiceByHourChart() {
           <CardTitle className="text-lg">{t('chart_title_daily_services')}</CardTitle>
         </CardHeader>
         <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-          {isError ? t("chart_error") : t("chart_no_data_today")}
+          <span className="text-xs text-center">{isError ? t("chart_error") : t("chart_no_data_today")}</span>
         </CardContent>
       </Card>
     );
