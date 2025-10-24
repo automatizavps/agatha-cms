@@ -4,12 +4,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Content-Type": "application/json", // Adicionado Content-Type para todas as respostas
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Função auxiliar para retornar erro com CORS
+  const returnError = (message: string, status: number) => {
+    return new Response(JSON.stringify({ error: message }), {
+      status: status,
+      headers: corsHeaders,
+    });
+  };
 
   // 1. Inicializar cliente Admin
   const supabaseAdmin = createClient(
@@ -26,19 +35,13 @@ serve(async (req) => {
   // 2. Autenticação e Verificação de Super Admin
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return new Response("Unauthorized: Missing Authorization header", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
-    return new Response("Unauthorized: Invalid token", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Invalid token", 401);
   }
   
   const adminUserId = userResponse.user.id;
@@ -51,10 +54,7 @@ serve(async (req) => {
     .single();
 
   if (profileError || !profileData || profileData.perfil_id !== 1) {
-    return new Response("Forbidden: Only Super Admin can delete companies", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: Only Super Admin can delete companies", 403);
   }
 
   // 3. Processar o corpo da requisição
@@ -62,16 +62,13 @@ serve(async (req) => {
   try {
     data = await req.json();
   } catch (e) {
-    return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
+    return returnError("Invalid JSON body", 400);
   }
 
   const { companyIdToDelete } = data;
 
   if (!companyIdToDelete) {
-    return new Response("Missing required field: companyIdToDelete", {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return returnError("Missing required field: companyIdToDelete", 400);
   }
   
   // 4. Buscar todos os IDs de usuários associados à empresa
@@ -82,10 +79,7 @@ serve(async (req) => {
     
   if (fetchUsersError) {
     console.error("Supabase Fetch Users Error:", fetchUsersError);
-    return new Response(JSON.stringify({ error: "Failed to fetch associated users." }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError("Failed to fetch associated users.", 400);
   }
   
   const userIdsToDelete = usersData.map(u => u.id);
@@ -99,15 +93,10 @@ serve(async (req) => {
 
   if (deleteCompanyError) {
     console.error("Supabase Delete Company Error:", deleteCompanyError);
-    return new Response(JSON.stringify({ error: deleteCompanyError.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError(deleteCompanyError.message, 400);
   }
   
   // 6. Excluir os usuários do Supabase Auth (requer Service Role Key)
-  // Isso deve ser feito APÓS a exclusão da empresa, pois a exclusão da empresa
-  // já remove as entradas da tabela 'usuarios' via CASCADE.
   for (const userId of userIdsToDelete) {
     const { error: deleteAuthUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (deleteAuthUserError) {
@@ -118,6 +107,6 @@ serve(async (req) => {
 
   return new Response(JSON.stringify({ message: "Company and all associated data deleted successfully" }), {
     status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: corsHeaders,
   });
 });
