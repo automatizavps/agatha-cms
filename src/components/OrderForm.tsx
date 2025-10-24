@@ -31,6 +31,7 @@ import { useTranslation } from "react-i18next";
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
+// Esquema de item temporário para uso interno do formulário
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
@@ -151,6 +152,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       // Atualiza o preço unitário automaticamente ao selecionar o produto/serviço
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
+      // Dispara a validação da quantidade
+      form.trigger(`items.${index}.quantidade`);
     }
   };
   
@@ -158,6 +161,30 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const getItemName = (productId: string) => {
     const item = allItems.find(i => i.id === productId);
     return item ? `${item.nome} (${item.tipo === 'produto' ? t('nav_products') : t('nav_services')})` : t('unknown_item');
+  };
+  
+  // Função de validação de estoque
+  const validateStock = (item: ItemToCreate) => {
+    const product = allItems.find(p => p.id === item.produto_id);
+    
+    if (!product) {
+      return t('select_item');
+    }
+    
+    // Se for serviço ou se o estoque for nulo/indefinido, não há limite de estoque
+    if (product.tipo === 'servico' || product.estoque_total === null || product.estoque_total === undefined) {
+      return true;
+    }
+    
+    // Se for produto, verifica o estoque
+    if (item.quantidade > product.estoque_total) {
+      return t('stock_exceeded', { 
+        name: product.nome, 
+        stock: product.estoque_total 
+      });
+    }
+    
+    return true;
   };
 
 
@@ -379,13 +406,19 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                             min="1" 
                             placeholder="1" 
                             {...field} 
-                            onChange={(e) => field.onChange(e.target.value)}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              // Dispara a validação ao mudar a quantidade
+                              form.trigger(`items.${index}.quantidade`);
+                            }}
                             disabled={isSubmitting || isEditing}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
+                    // Adiciona a validação de estoque aqui
+                    rules={{ validate: (value) => validateStock({ ...form.getValues().items[index], quantidade: Number(value) }) }}
                   />
                   
                   {/* Preço Unitário */}
@@ -450,7 +483,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            t('update_order_button') // <-- CORRIGIDO
+            t('update_order_button')
           ) : (
             t('create_order')
           )}
