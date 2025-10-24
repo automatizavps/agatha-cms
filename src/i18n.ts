@@ -21,14 +21,14 @@ const resources = {
       "confirm_delete": "Tem certeza que deseja excluir?",
       "achieved": "atingido",
       "units": "unidades",
-      "none": "Nenhum", // NOVO
-      "minutes": "minutos", // NOVO
-      "rows_per_page": "Linhas por página", // NOVO
-      "page_info": "Exibindo {{start}}-{{end}} de {{count}}", // NOVO
-      "pagination_disabled_filter": "Paginação desabilitada ao filtrar por empresa.", // NOVO
-      "selected_items_count": "{{count}} item(ns) selecionado(s)", // NOVO
-      "cancel": "Cancelar", // NOVO
-      "delete_confirm": "Sim, Excluir", // NOVO
+      "none": "Nenhum",
+      "minutes": "minutos",
+      "rows_per_page": "Linhas por página",
+      "page_info": "Exibindo {{start}}-{{end}} de {{count}}",
+      "pagination_disabled_filter": "Paginação desabilitada ao filtrar por empresa.",
+      "selected_items_count": "{{count}} item(ns) selecionado(s)",
+      "cancel": "Cancelar",
+      "delete_confirm": "Sim, Excluir",
 
       // Navegação
       "nav_home": "Home",
@@ -46,9 +46,9 @@ const resources = {
       "nav_general": "Geral",
       "nav_operational": "Operacional",
       "nav_config": "Configurações",
-      "nav_products_services": "Produtos & Serviços", // NOVO
-      "nav_categories": "Categorias", // NOVO
-      "nav_notifications": "Notificações", // NOVO
+      "nav_products_services": "Produtos & Serviços",
+      "nav_categories": "Categorias",
+      "nav_notifications": "Notificações",
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
@@ -66,22 +66,22 @@ const resources = {
       "daily_revenue_overview": "Pedidos entregues hoje",
       "weekly_revenue": "Faturamento Semanal",
       "weekly_revenue_overview": "Pedidos entregues esta semana",
-      "monthly_revenue": "Faturamento Mensal", // NOVO
-      "monthly_revenue_overview": "Pedidos entregues este mês", // NOVO
+      "monthly_revenue": "Faturamento Mensal",
+      "monthly_revenue_overview": "Pedidos entregues este mês",
       "total_products": "Total de Produtos",
       "total_products_overview": "Produtos cadastrados na empresa",
-      "total_clients": "Total de Clientes", // NOVO
-      "total_clients_overview": "Clientes cadastrados na empresa", // NOVO
-      "latest_products_title": "Últimos Produtos Cadastrados", // NOVO
-      "top_selling_items_title": "Top 10 Produtos Mais Vendidos (Unidades)", // NOVO
-      "top_selling_services_title": "Top 10 Serviços Mais Realizados", // NOVO
-      "total_sold": "Total Vendido", // NOVO
-      "total_realized": "Total Realizado", // NOVO
+      "total_clients": "Total de Clientes",
+      "total_clients_overview": "Clientes cadastrados na empresa",
+      "latest_products_title": "Últimos Produtos Cadastrados",
+      "top_selling_items_title": "Top 10 Produtos Mais Vendidos (Unidades)",
+      "top_selling_services_title": "Top 10 Serviços Mais Realizados",
+      "total_sold": "Total Vendido",
+      "total_realized": "Total Realizado",
       
       // Páginas
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Relatórios detalhados e visualizações de dados.",
-      "chart_title_appointment_status": "Status dos Agendamentos (Hoje)", // ALTERADO
+      "chart_title_appointment_status": "Status dos Agendamentos (Hoje)",
       "chart_no_data": "Nenhum dado de agendamento para exibir.",
       "chart_error": "Erro ao carregar dados do gráfico.",
       "analytics_placeholder": "Outros relatórios e métricas virão aqui.",
@@ -124,10 +124,10 @@ const resources = {
       "product_table_header_brand": "Marca",
       "product_table_header_category": "Categoria",
       "no_products_found": "Nenhum produto encontrado com os filtros aplicados.",
-      "product_name": "Nome do Produto", // NOVO
-      "product_name_placeholder": "Nome do produto", // NOVO
-      "create_product": "Cadastrar Produto", // NOVO
-      "stock_quantity_placeholder": "Quantidade em estoque", // NOVO
+      "product_name": "Nome do Produto",
+      "product_name_placeholder": "Nome do produto",
+      "create_product": "Cadastrar Produto",
+      "stock_quantity_placeholder": "Quantidade em estoque",
       
       "page_title_services": "Gestão de Serviços",
       "service_list_title": "Lista de Serviços",
@@ -135,9 +135,9 @@ const resources = {
       "service_search_placeholder": "Buscar por nome ou categoria...",
       "service_table_header_duration": "Duração",
       "no_services_found": "Nenhum serviço cadastrado.",
-      "service_name": "Nome do Serviço", // NOVO
-      "service_name_placeholder": "Nome do serviço", // NOVO
-      "create_service": "Cadastrar Serviço", // NOVO
+      "service_name": "Nome do Serviço",
+      "service_name_placeholder": "Nome do serviço",
+      "create_service": "Cadastrar Serviço",
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -149,8 +149,8 @@ const resources = {
       "order_table_header_total": "Valor Total",
       "order_table_header_status": "Status",
       "no_orders_found": "Nenhum pedido cadastrado.",
-      "create_order": "Criar Pedido", // NOVO
-      "update_order_button": "Atualizar Pedido", // NOVO
+      "create_order": "Criar Pedido",
+      "update_order_button": "Atualizar Pedido",
       
       "page_title_settings": "Configurações",
       "page_subtitle_settings": "Gerencie as configurações da sua conta e da sua empresa.",
@@ -195,7 +195,7 @@ const resources = {
       "loading_companies": "Carregando empresas...",
       "select_company": "Selecione a empresa",
       "search_user": "Buscar usuário...",
-      "company_not_found": "Empresa não encontrada", // NOVO
+      "company_not_found": "Empresa não encontrada",
       
       // Categorias (Categories) - NOVO
       "page_title_categories": "Gestão de Categorias",
@@ -229,15 +229,15 @@ const resources = {
       "view_details": "Ver Detalhes",
       "notification_deleted_success": "Notificação excluída.",
       "view_all_notifications": "Ver todas as notificações",
-      "select_all": "Selecionar todos", // NOVO
-      "notifications_deleted_success": "{{count}} notificação(ões) excluída(s) com sucesso.", // NOVO
-      "confirm_delete_single": "Tem certeza que deseja excluir esta notificação?", // NOVO
-      "confirm_delete_bulk": "Tem certeza que deseja excluir {{count}} notificações?", // NOVO
-      "selected_items_count": "{{count}} item(ns) selecionado(s)", // NOVO
-      "delete_read_notifications": "Excluir Lidas", // NOVO
-      "confirm_delete_read_title": "Confirmar Exclusão de Notificações Lidas", // NOVO
-      "confirm_delete_read_message": "Esta ação excluirá permanentemente todas as notificações que você já marcou como lidas. Esta ação não pode ser desfeita.", // NOVO
-      "delete_read_success": "Todas as notificações lidas foram excluídas com sucesso.", // NOVO
+      "select_all": "Selecionar todos",
+      "notifications_deleted_success": "{{count}} notificação(ões) excluída(s) com sucesso.",
+      "confirm_delete_single": "Tem certeza que deseja excluir esta notificação?",
+      "confirm_delete_bulk": "Tem certeza que deseja excluir {{count}} notificações?",
+      "selected_items_count": "{{count}} item(ns) selecionado(s)",
+      "delete_read_notifications": "Excluir Lidas",
+      "confirm_delete_read_title": "Confirmar Exclusão de Notificações Lidas",
+      "confirm_delete_read_message": "Esta ação excluirá permanentemente todas as notificações que você já marcou como lidas. Esta ação não pode ser desfeita.",
+      "delete_read_success": "Todas as notificações lidas foram excluídas com sucesso.",
       
       // Senha (Password) - NOVO
       "change_password": "Mudar Senha",
@@ -279,7 +279,7 @@ const resources = {
       "search_client": "Buscar cliente...",
       "item": "Item",
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
-      "add_new_appointment": "Novo Agendamento", // NOVO
+      "add_new_appointment": "Novo Agendamento",
       
       // Chave que faltava
       "page_title_appointments": "Gestão de Agendamentos",
