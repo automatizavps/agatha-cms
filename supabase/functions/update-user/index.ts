@@ -87,8 +87,12 @@ serve(async (req) => {
     // Se for customizado, definimos o perfil global como 3 (Funcionário) para RLS
     global_perfil_id = 3; 
   } else {
-    // Se for global (deve ser 1), usamos o valor fornecido
-    global_perfil_id = Number(perfil_id);
+    // Se for global (deve ser 1, 2 ou 3), garantimos que é um número válido
+    const parsedId = Number(perfil_id);
+    if (isNaN(parsedId) || parsedId < 1 || parsedId > 3) {
+        return new Response("Invalid global perfil_id value.", { status: 400, headers: corsHeaders });
+    }
+    global_perfil_id = parsedId;
     custom_perfil_id = null;
   }
   
