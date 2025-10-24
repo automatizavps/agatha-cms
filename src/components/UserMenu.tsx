@@ -31,20 +31,31 @@ export function UserMenu() {
         // Se o erro for "Auth session missing", ignoramos, pois o objetivo é deslogar.
         if (!error.message.includes("Auth session missing")) {
           showError("Falha ao fazer logout: " + error.message);
-          // Se for um erro crítico, não prosseguimos com o sucesso/redirecionamento forçado
           return; 
         }
       }
       logoutSuccessful = true;
     } else {
-      // Se não houver sessão, consideramos o logout como "já feito"
       logoutSuccessful = true;
     }
     
+    // --- Medida de Último Recurso para Localhost ---
+    // Força a remoção de chaves de sessão do Supabase no armazenamento local
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+      // Limpa o cache do React Query para garantir que os dados protegidos sejam invalidados
+      // Embora o onAuthStateChange deva fazer isso, é uma garantia extra.
+      // Não podemos acessar o queryClient aqui, mas o navigate forçará a reavaliação.
+    } catch (e) {
+      console.warn("Failed to clear local storage keys:", e);
+    }
+    // ------------------------------------------------
+
     if (logoutSuccessful) {
       showSuccess("Logout realizado com sucesso.");
-      // Força o redirecionamento para /login, garantindo que o router reaja.
-      navigate('/login', { replace: true }); // Adicionado replace: true
+      // Força o redirecionamento. O ProtectedRoute deve ver a sessão como nula na próxima renderização.
+      navigate('/login', { replace: true }); 
     }
   };
 
