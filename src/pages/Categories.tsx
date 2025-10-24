@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Tag, Search, Building } from "lucide-react";
 import { useCategories } from "@/integrations/supabase/categories";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
+import { PermissionGuard } from "@/hooks/use-permission"; // Removido, mas mantido para referência
 import { Button } from "@/components/ui/button";
 import CategoryTable from "@/components/CategoryTable";
 import AddCategorySheet from "@/components/AddCategorySheet";
@@ -20,20 +20,22 @@ const CategoriesContent = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
+  // Permissões baseadas no perfil customizado
+  const canReadCategories = useCanRead('categories');
+  const canWriteCategories = useCanWrite('categories');
+  
+  // Se não puder ler, retorna null (o PermissionGuard externo foi removido)
+  if (!canReadCategories) {
+    return null;
+  }
+  
   // Fetch data using filteredCompanyId. Se filteredCompanyId for undefined (SA em 'all'), busca todas.
   const { data: categories, isLoading, isError, error, refetch, isRefetching } = useCategories(filteredCompanyId);
   
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Permissões baseadas no perfil customizado
-  const canReadCategories = useCanRead('categories');
-  const canWriteCategories = useCanWrite('categories');
-  
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
-  if (!canReadCategories) {
-    return null;
-  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -148,7 +150,8 @@ const CategoriesContent = () => {
 };
 
 const Categories = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
+  // O PermissionGuard agora apenas verifica se o usuário está logado e tem perfil/empresa.
+  // A permissão de leitura específica do módulo é verificada dentro do CategoriesContent.
   <PermissionGuard allowedProfileIds={[1, 3]}>
     <CategoriesContent />
   </PermissionGuard>

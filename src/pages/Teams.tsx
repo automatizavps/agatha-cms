@@ -20,20 +20,21 @@ const TeamsContent = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
+  // Permissões baseadas no perfil customizado
+  const canReadTeams = useCanRead('teams');
+  const canWriteTeams = useCanWrite('teams');
+  
+  if (!canReadTeams) {
+    return null;
+  }
+  
   // Fetch data using filteredCompanyId
   const { data: teams, isLoading, isError, error, refetch, isRefetching } = useTeams(filteredCompanyId);
   
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Permissões baseadas no perfil customizado
-  const canReadTeams = useCanRead('teams');
-  const canWriteTeams = useCanWrite('teams');
-  
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
-  if (!canReadTeams) {
-    return null;
-  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);

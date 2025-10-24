@@ -215,6 +215,11 @@ const AppointmentsContent = () => {
   const canReadAppointments = useCanRead('appointments');
   const canWriteAppointments = useCanWrite('appointments');
 
+  // Se não puder ler, retorna null
+  if (!canReadAppointments) {
+    return null;
+  }
+
   // Fetch data using filters
   const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(
     filteredCompanyId, // Passa o ID filtrado

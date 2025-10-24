@@ -10,8 +10,16 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import AddCustomProfileSheet from "@/components/AddCustomProfileSheet";
 import CustomProfileTable from "@/components/CustomProfileTable";
+import { useCanRead } from "@/hooks/use-module-permission";
 
 const CustomProfilesContent = () => {
+  // Permissões baseadas no perfil customizado
+  const canReadCustomProfiles = useCanRead('custom_profiles');
+  
+  if (!canReadCustomProfiles) {
+    return null;
+  }
+  
   // O hook busca todos os perfis customizados (RLS garante que apenas SA veja todos)
   const { data: profiles, isLoading, isError, error, refetch, isRefetching } = useCustomProfiles();
   const [searchTerm, setSearchTerm] = useState("");

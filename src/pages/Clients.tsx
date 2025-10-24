@@ -38,7 +38,6 @@ const ClientsContent = () => {
   const canWriteClients = useCanWrite('clients');
 
   if (!canReadClients) {
-    // Se não puder ler, redireciona via PermissionGuard (que ainda está no wrapper)
     return null; 
   }
 

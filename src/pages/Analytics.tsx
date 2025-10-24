@@ -7,9 +7,15 @@ import ClientReportTab from "@/components/ClientReportTab"; // NOVO
 import TeamReportTab from "@/components/TeamReportTab";     // NOVO
 import CompanyReportTab from "@/components/CompanyReportTab"; // NOVO
 import { PermissionGuard } from "@/hooks/use-permission";
+import { useCanRead } from "@/hooks/use-module-permission";
 
 const AnalyticsContent = () => {
   const { t } = useTranslation();
+  const canReadAnalytics = useCanRead('analytics');
+  
+  if (!canReadAnalytics) {
+    return null;
+  }
   
   return (
     <DashboardLayout>
