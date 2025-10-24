@@ -40,7 +40,7 @@ const AddCustomProfileSheet = () => {
         <SheetHeader>
           <SheetTitle>{t('add_new_profile')}</SheetTitle>
           <SheetDescription className="sr-only">
-            {t('profile_name_placeholder')}
+            {t('profile_name_placeholder', { defaultValue: 'Crie um novo perfil customizado e defina suas permissões.' })}
           </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
