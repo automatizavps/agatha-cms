@@ -34,7 +34,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   if (isMobile) {
     return (
       <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
+        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-10">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="shrink-0 md:hidden">
@@ -56,20 +56,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
-        {/* Aplicando a animação de fade-in ao conteúdo principal */}
-        <main className="flex-1 p-4 overflow-auto animate-fade-in">{children}</main>
+        {/* Removendo flex-1 e overflow-auto para que a rolagem seja da janela */}
+        <main className="p-4 animate-fade-in">{children}</main>
       </div>
     );
   }
 
   // Layout Desktop/Tablet
   return (
-    <div className="flex min-h-screen w-full overflow-x-hidden">
+    <div className="flex min-h-screen w-full">
       
       {/* Sidebar Fixa */}
       <div 
         className={cn(
-          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden overflow-x-hidden", // Mantido overflow-x-hidden
+          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-auto overflow-x-hidden", // Adicionado overflow-y-auto para a sidebar
           isCollapsed ? "w-[70px]" : "w-[280px]"
         )}
         style={{ width: isCollapsed ? sidebarWidthMd : sidebarWidth }}
@@ -105,8 +105,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <ThemeToggle />
           <UserMenu />
         </header>
-        {/* Aplicando a animação de fade-in ao conteúdo principal */}
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in">
+        {/* Removendo flex-1 para que o conteúdo se estenda e force a rolagem da janela */}
+        <main className="flex flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in">
           {children}
         </main>
       </div>
