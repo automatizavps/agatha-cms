@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -102,6 +102,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   
   // Determina se o submenu de Produtos/Serviços deve estar aberto
   const isProductsServicesOpen = location.pathname.startsWith('/products') || location.pathname.startsWith('/services');
+  
+  // Determina se o submenu de Empresas deve estar aberto
+  const isCompaniesOpen = location.pathname.startsWith('/companies');
 
   return (
     <div 
@@ -234,12 +237,38 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
         
         {isSuperAdmin && (
-          <NavItem
-            to="/companies"
-            icon={<Building className="h-5 w-5" />}
-            label={t('nav_companies')}
-            {...navItemProps}
-          />
+          <Collapsible defaultOpen={isCompaniesOpen} disabled={isCollapsed}>
+            <CollapsibleTrigger 
+              className={cn(
+                "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                isCollapsed ? "justify-start pl-6 pr-2" : "px-3"
+              )}
+            >
+              <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
+                <Building className="h-5 w-5 text-sidebar-primary" /> 
+                {!isCollapsed && t('nav_companies')}
+              </div>
+              {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-1">
+                <NavItem
+                  to="/companies"
+                  icon={<Building className="h-5 w-5" />}
+                  label={t('company_list_title')}
+                  isSubItem
+                  {...navItemProps}
+                />
+                <NavItem
+                  to="/companies/profiles"
+                  icon={<UserCheck className="h-5 w-5" />}
+                  label={t('page_title_custom_profiles')}
+                  isSubItem
+                  {...navItemProps}
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
         
         <Separator className={cn("my-2 bg-sidebar-border", isCollapsed && "mx-auto w-1/2")} />

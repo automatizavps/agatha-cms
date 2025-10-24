@@ -19,7 +19,8 @@ import Orders from "./pages/Orders";
 import Teams from "./pages/Teams";
 import Categories from "./pages/Categories";
 import Notifications from "./pages/Notifications";
-import ProductHistory from "./pages/ProductHistory"; // Importando a nova página
+import ProductHistory from "./pages/ProductHistory";
+import CustomProfiles from "./pages/CustomProfiles"; // Importando a nova página
 import { SessionContextProvider, ProtectedRoute, PublicRoute } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
 import React from "react";
@@ -40,11 +41,12 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/appointments" element={<Appointments />} />
       <Route path="/clients" element={<Clients />} />
       <Route path="/products" element={<Products />} />
-      <Route path="/products/:productId" element={<ProductHistory />} /> {/* NOVA ROTA */}
+      <Route path="/products/:productId" element={<ProductHistory />} />
       <Route path="/services" element={<Services />} />
       <Route path="/orders" element={<Orders />} />
       <Route path="/teams" element={<Teams />} />
       <Route path="/companies" element={<Companies />} />
+      <Route path="/companies/profiles" element={<CustomProfiles />} /> {/* NOVA ROTA */}
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/products/categories" element={<Categories />} />
