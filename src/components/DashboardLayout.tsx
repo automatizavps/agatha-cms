@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Bell,
@@ -32,7 +32,7 @@ import {
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
-import { useNotifications, markAllAsRead } from "@/integrations/supabase/notifications";
+import { useNotifications, markAllNotificationsAsRead } from "@/integrations/supabase/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
@@ -88,14 +88,16 @@ const NavLink: React.FC<NavLinkProps> = ({ to, icon: Icon, label, isActive, isMo
 };
 
 const NotificationDropdown = () => {
-  const { data: notifications, isLoading, refetch } = useNotifications();
+  // CORREÇÃO: useNotifications retorna { data: PaginatedNotifications }
+  const { data: paginatedData, isLoading, refetch } = useNotifications(1, 5); 
+  const notifications = paginatedData?.notifications || [];
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   
-  const unreadCount = notifications?.filter(n => !n.lida).length || 0;
+  const unreadCount = notifications.filter(n => !n.lida).length || 0;
   
   const markAllMutation = useMutation({
-    mutationFn: markAllAsRead,
+    mutationFn: markAllNotificationsAsRead,
     onSuccess: () => {
       showSuccess(t('notifications_marked_read'));
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
