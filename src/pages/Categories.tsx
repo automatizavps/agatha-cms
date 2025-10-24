@@ -67,7 +67,7 @@ const CategoriesContent = () => {
         <CardContent>
           <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
             
-            {/* Filtro de Empresa (Apenas para Super Admin) */}
+            {/* Filtro de Empresa (Apenas para Super Admin) - POSICIONADO PRIMEIRO */}
             {isSuperAdmin && (
               <div className="w-full md:w-48">
                 <Select 
@@ -91,7 +91,7 @@ const CategoriesContent = () => {
               </div>
             )}
             
-            {/* Campo de Busca Textual */}
+            {/* Campo de Busca Textual - AGORA É O SEGUNDO ELEMENTO (flex-1) */}
             <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
