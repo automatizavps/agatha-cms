@@ -85,24 +85,15 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   let is_super_admin = false;
   let profileName = "Funcionário";
   
-  // 2. Verificar se é o ANTIGO Super Admin (empresa_id = NULL e perfil_customizado_id = NULL)
+  // 2. Verificar se é Super Admin (usando a função RPC)
   const { data: isSaData, error: isSaError } = await supabase.rpc('is_super_admin');
   if (!isSaError && isSaData !== null) {
     is_super_admin = isSaData;
   }
   
-  // 3. Verificar se é o NOVO Super Admin (empresa_id IS NOT NULL E perfil_customizado.nome = 'Super Admin')
-  const isNewSuperAdmin = 
-    userProfile.empresa_id !== null && 
-    userProfile.perfil_customizado_id !== null && 
-    userProfile.perfis_customizados?.nome === 'Super Admin';
-    
-  // O flag final de Super Admin é a união dos dois (para permitir a transição)
-  const finalIsSuperAdmin = is_super_admin || isNewSuperAdmin;
-  
-  // 4. Lógica de Permissões
-  if (finalIsSuperAdmin) {
-    // Se for Super Admin (antigo ou novo), concedemos acesso total
+  // 3. Lógica de Permissões
+  if (is_super_admin) {
+    // Se for Super Admin, concedemos acesso total (escrita)
     profileName = "Super Admin";
     
     // Concede acesso de escrita a todos os módulos
@@ -112,18 +103,27 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
     }, {} as PermissionMap);
     
   } else if (userProfile.perfil_customizado_id) {
-    // Se tiver um perfil customizado (e não for o SA), buscamos as permissões
+    // Se tiver um perfil customizado (e não for SA), buscamos as permissões
     permissions = await fetchPermissions(userProfile.perfil_customizado_id);
     profileName = userProfile.perfis_customizados?.nome || "Perfil Customizado";
+  } else if (userProfile.empresa_id) {
+    // Usuário com empresa_id mas sem perfil customizado (Admin de Empresa)
+    profileName = "Admin";
+    // Por padrão, o Admin de Empresa tem acesso de escrita a todos os módulos da sua empresa
+    // (Embora a RLS deva controlar isso, definimos o frontend para 'escrita' para todos os módulos)
+    permissions = ALL_MODULES.reduce((acc, moduleName) => {
+      acc[moduleName] = 'escrita';
+      return acc;
+    }, {} as PermissionMap);
   } else {
-    // Usuário sem perfil customizado e não é SA (deve ser um erro de configuração, provavelmente Admin de Empresa)
-    profileName = "Admin"; // Assumimos Admin se tiver empresa_id mas não perfil customizado
+    // Usuário sem empresa e não SA (deve ser um erro de configuração)
+    profileName = "Usuário Básico";
   }
 
   return {
     ...userProfile,
     is_company_active: is_company_active,
-    is_super_admin: finalIsSuperAdmin,
+    is_super_admin: is_super_admin,
     permissions: permissions,
     perfis: { nome: profileName }, // Simula a estrutura perfis (nome)
     empresas: userProfile.empresas, // Mantém o objeto empresas completo

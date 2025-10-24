@@ -13,18 +13,13 @@ export const useModulePermission = (moduleName: string): AccessType => {
     return 'sem_acesso';
   }
   
-  // 1. Super Admin tem acesso total
+  // 1. Super Admin tem acesso total (escrita)
   if (profile.is_super_admin) {
     return 'escrita';
   }
   
-  // 2. Usuários com perfil customizado
-  if (profile.perfil_customizado_id) {
-    return profile.permissions[moduleName] || 'sem_acesso';
-  }
-  
-  // 3. Outros (usuários sem perfil customizado e não SA)
-  return 'sem_acesso';
+  // 2. Usuários com perfil customizado ou Admin de Empresa (que recebem permissões no useCurrentUserProfile)
+  return profile.permissions[moduleName] || 'sem_acesso';
 };
 
 /**

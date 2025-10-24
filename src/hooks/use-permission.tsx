@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 
 /**
  * Hook para verificar se o usuário logado possui permissão de acesso à página.
- * Acesso é concedido se for Super Admin OU se tiver um perfil customizado.
+ * Acesso é concedido se for Super Admin OU se tiver um perfil customizado OU se for Admin de Empresa.
  * @param allowedProfileIds (Ignorado, mantido para compatibilidade de assinatura)
  */
 export const usePermission = (allowedProfileIds: number[]) => {
@@ -14,8 +14,8 @@ export const usePermission = (allowedProfileIds: number[]) => {
 
   const isChecking = isProfileLoading;
   
-  // Acesso é permitido se for Super Admin OU se tiver um perfil customizado
-  const hasPermission = profile?.is_super_admin || !!profile?.perfil_customizado_id;
+  // Acesso é permitido se for Super Admin OU se tiver um perfil customizado OU se tiver empresa_id (Admin/Funcionario)
+  const hasPermission = profile?.is_super_admin || !!profile?.perfil_customizado_id || !!profile?.empresa_id;
 
   useEffect(() => {
     if (!isChecking && !hasPermission) {
@@ -29,7 +29,7 @@ export const usePermission = (allowedProfileIds: number[]) => {
 
 // Componente de wrapper para proteger o conteúdo da página
 export const PermissionGuard: React.FC<{ allowedProfileIds: number[]; children: React.ReactNode }> = ({ allowedProfileIds, children }) => {
-  // Nota: allowedProfileIds é ignorado, pois a permissão é baseada em is_super_admin ou perfil_customizado_id
+  // Nota: allowedProfileIds é ignorado, pois a permissão é baseada em is_super_admin ou perfil_customizado_id/empresa_id
   const { hasPermission, isChecking } = usePermission(allowedProfileIds);
 
   if (isChecking) {
