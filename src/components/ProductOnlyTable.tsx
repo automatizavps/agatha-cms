@@ -278,7 +278,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
           <TableBody>
             {sortedProducts.map((product) => (
               <TableRow key={product.id}>
-                <TableCell className="font-medium align-middle">
+                <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     {product.fotos && product.fotos.length > 0 ? (
                       <img src={product.fotos[0]} alt={product.nome} className="h-8 w-8 object-cover rounded-md" />
@@ -289,31 +289,31 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                   </div>
                 </TableCell>
                 {isSuperAdmin && (
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground align-middle">
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Building className="h-3 w-3" />
                       {product.empresa?.nome || 'N/A'}
                     </div>
                   </TableCell>
                 )}
-                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground align-middle">
+                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                   {product.categoria || 'N/A'}
                 </TableCell>
-                <TableCell className="hidden md:table-cell text-sm text-muted-foreground align-middle">
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Factory className="h-3 w-3" />
                     {product.marca || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="text-center font-semibold align-middle">
+                <TableCell className="text-center font-semibold"> {/* ALTERADO para text-center */}
                   <Badge variant={product.estoque_total && product.estoque_total > 0 ? 'default' : 'destructive'}>
                     {product.estoque_total !== null ? product.estoque_total : 'N/A'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right font-semibold align-middle">
+                <TableCell className="text-right font-semibold">
                   {formatCurrency(product.preco)}
                 </TableCell>
-                <TableCell className="text-right align-middle">
+                <TableCell className="text-right">
                   <ProductActions product={product} onEdit={handleEdit} />
                 </TableCell>
               </TableRow>
