@@ -204,7 +204,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="hidden xl:table-cell"
+                className="hidden md:table-cell" {/* Alterado de xl para md */}
               >
                 {t('user_table_header_company')}
               </SortableHeader>
@@ -213,7 +213,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="hidden lg:table-cell"
+                className="hidden md:table-cell" {/* Alterado de lg para md */}
               >
                 {t('user_table_header_phone')}
               </SortableHeader>
@@ -222,7 +222,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="hidden xl:table-cell"
+                className="hidden lg:table-cell" {/* Alterado de xl para lg */}
               >
                 {t('user_table_header_address')}
               </SortableHeader>
@@ -249,19 +249,19 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                   </Avatar>
                 </TableCell>
                 <TableCell className="font-medium">{user.nome_completo}</TableCell>
-                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Building className="h-3 w-3" />
                     {user.empresa?.nome || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Phone className="h-3 w-3" />
                     {user.telefone || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     {user.endereco_completo || 'N/A'}
