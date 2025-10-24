@@ -1,10 +1,10 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { createClient } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client'; // Importação corrigida
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
-const supabase = createClient();
+// Não precisamos mais chamar createClient() aqui, pois já importamos a instância.
 
 function Login() {
   const { t } = useTranslation();
