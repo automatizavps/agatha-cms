@@ -42,9 +42,9 @@ const Index = () => {
     isLoadingFilter 
   } = useDashboardFilter();
   
-  // Inicializa o filtro de Período com a data de hoje
-  const [startDate, setStartDate] = useState<Date | undefined>(getToday());
-  const [endDate, setEndDate] = useState<Date | undefined>(getToday());
+  // Removendo a inicialização com getToday() para que o filtro comece limpo
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
@@ -77,7 +77,7 @@ const Index = () => {
     return <div className="text-xl font-bold">{value}</div>;
   };
   
-  // Verifica se há um filtro de data ativo (agora sempre true, a menos que seja limpo)
+  // Verifica se há um filtro de data ativo
   const isDateFilterActive = !!startDate && !!endDate;
   
   // Texto para o filtro de data
