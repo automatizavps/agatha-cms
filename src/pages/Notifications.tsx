@@ -146,8 +146,6 @@ const Notifications = () => {
                 </Select>
               </div>
             )}
-            
-            {/* O seletor de tamanho da página foi movido para o rodapé */}
           </div>
           
           {isChecking && !isRefetching ? (
@@ -164,38 +162,23 @@ const Notifications = () => {
             <>
               <NotificationTable notifications={notificationsToDisplay} />
               
-              {/* Componente de Paginação (Movido para o final) */}
+              {/* Componente de Paginação (Reorganizado) */}
               {totalPages > 1 && (
                 <div className="mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
                   
-                  {/* Seletor de Tamanho da Página (Movido para a esquerda) */}
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <span>{t('rows_per_page')}:</span>
-                    <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking}>
-                      <SelectTrigger className="w-[80px]">
-                        <SelectValue placeholder={String(pageSize)} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAGE_SIZES.map(size => (
-                          <SelectItem key={size} value={String(size)}>{size}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Informação da Página (Alinhado à esquerda) */}
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {t('page_info', { 
+                      current: currentPage, 
+                      total: totalPages, 
+                      start: finalStart,
+                      end: finalEnd,
+                      count: totalCount
+                    })}
+                  </span>
                   
-                  {/* Agrupando Informação da Página e Controles (Movido para a direita) */}
+                  {/* Controles de Paginação e Seletor de Tamanho (Alinhado à direita) */}
                   <div className="flex items-center gap-4">
-                    
-                    {/* Informação da Página */}
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      {t('page_info', { 
-                        current: currentPage, 
-                        total: totalPages, 
-                        start: finalStart,
-                        end: finalEnd,
-                        count: totalCount
-                      })}
-                    </span>
                     
                     {/* Controles de Paginação */}
                     <Pagination>
@@ -245,6 +228,21 @@ const Notifications = () => {
                         </PaginationItem>
                       </PaginationContent>
                     </Pagination>
+                    
+                    {/* Seletor de Tamanho da Página (Última Posição) */}
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground whitespace-nowrap">
+                      <span>{t('rows_per_page')}:</span>
+                      <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking}>
+                        <SelectTrigger className="w-[80px]">
+                          <SelectValue placeholder={String(pageSize)} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAGE_SIZES.map(size => (
+                            <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}
