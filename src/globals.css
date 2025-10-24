@@ -57,8 +57,6 @@
     --foreground: 210 40% 98%; /* Branco */
 
     --card: 240 5.9% 10%;
-    --card-foreground: 210 40% 98%; /* Branco */
-
     --popover: 240 5.9% 10%;
     --popover-foreground: 210 40% 98%;
 
@@ -115,4 +113,39 @@
   .dark input, .dark textarea {
     color: hsl(var(--input-foreground)) !important;
   }
+}
+
+/* --- Page Transition Styles (Fade) --- */
+
+/* Initial state for entering component */
+.fade-enter {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+}
+
+/* Active state for entering component */
+.fade-enter-active {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+}
+
+/* Initial state for exiting component */
+.fade-exit {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Active state for exiting component */
+.fade-exit-active {
+  opacity: 0;
+  transform: translate3d(0, -10px, 0);
+  transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+  
+  /* Posicionamento absoluto para que o elemento de saída não afete o layout 
+     enquanto o novo elemento entra. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
 }

@@ -9,7 +9,9 @@ import { UserMenu } from "./UserMenu";
 import BreadcrumbNavigation from "./BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { NotificationBell } from "./NotificationBell"; // Importando NotificationBell
+import { NotificationBell } from "./NotificationBell";
+import { useLocation } from "react-router-dom"; // NOVO
+import { TransitionGroup, CSSTransition } from "react-transition-group"; // NOVO
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,6 +23,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // Estado para controlar o colapso da sidebar no desktop
   const [isCollapsed, setIsCollapsed] = useState(false); 
   const { t } = useTranslation(); // Usando tradução
+  
+  const location = useLocation(); // Obtém a localização atual para a chave de transição
+  const timeout = 300; // Duração da transição em ms
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -50,12 +55,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="w-full flex items-center justify-between">
             <h1 className="text-lg font-semibold">{t('app_name')}</h1>
             <div className="flex items-center gap-2">
-              <NotificationBell /> {/* Adicionado aqui */}
+              <NotificationBell /> 
               <ThemeToggle />
               <UserMenu />
             </div>
           </div>
         </header>
+        {/* Transição desabilitada no mobile para simplificar */}
         <main className="flex-1 p-4 overflow-auto">{children}</main>
       </div>
     );
@@ -100,12 +106,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="flex-1">
             <BreadcrumbNavigation />
           </div>
-          <NotificationBell /> {/* Adicionado aqui */}
+          <NotificationBell /> 
           <ThemeToggle />
           <UserMenu />
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background">
-          {children}
+        
+        {/* Main Content Area - Apply Transition Here */}
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background relative overflow-hidden">
+          <TransitionGroup component={null}>
+            <CSSTransition
+              // Usamos a chave da rota para disparar a transição
+              key={location.pathname}
+              timeout={timeout}
+              classNames="fade"
+            >
+              {/* 
+                Wrapper para o conteúdo da página. 
+                O CSS 'fade-exit-active' o posicionará absolutamente durante a saída.
+              */}
+              <div className="w-full min-h-full">
+                {children}
+              </div>
+            </CSSTransition>
+          </TransitionGroup>
         </main>
       </div>
     </div>
