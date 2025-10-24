@@ -190,7 +190,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                 </div>
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-1">
+              <CollapsibleContent className="space-y-1"> {/* Removendo space-y-1 daqui */}
                 <NavItem
                   to="/products"
                   icon={<Package className="h-5 w-5" />}
