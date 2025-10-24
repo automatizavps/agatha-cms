@@ -188,7 +188,8 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
   const { data: profile } = useCurrentUserProfile();
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  // CORRIGIDO: Usar a flag is_super_admin do perfil
+  const isSuperAdmin = profile?.is_super_admin;
 
   const handleEdit = (company: Company) => {
     setEditingCompany(company);
@@ -338,7 +339,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
                   )}
                 </TableCell>
                 <TableCell className="text-right">
-                  <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin} />
+                  <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} />
                 </TableCell>
               </TableRow>
             ))}
