@@ -16,7 +16,8 @@ export const DashboardFilterProvider: React.FC<{ children: React.ReactNode }> = 
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { isLoading: isLoadingCompanies } = useCompanies();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  // CORRIGIDO: Usar a flag is_super_admin do perfil
+  const isSuperAdmin = profile?.is_super_admin || false;
   const userCompanyId = profile?.empresa_id;
   
   // State for the selected filter value
