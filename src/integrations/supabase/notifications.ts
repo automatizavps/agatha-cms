@@ -20,15 +20,24 @@ interface PaginatedNotifications {
 
 // --- Fetch Notifications ---
 
-const fetchNotifications = async (userId: string, page: number, pageSize: number): Promise<PaginatedNotifications> => {
+const fetchNotifications = async (userId: string, page: number, pageSize: number, companyId?: string): Promise<PaginatedNotifications> => {
   const offset = (page - 1) * pageSize;
   
   // RLS garante que apenas as notificações do usuário logado sejam retornadas
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("notificacoes")
     .select("*", { count: 'exact' }) // Solicita a contagem total
-    .order("created_at", { ascending: false })
-    .range(offset, offset + pageSize - 1); // Aplica paginação
+    .order("created_at", { ascending: false });
+    
+  // Se um companyId for fornecido (apenas Super Admin pode fazer isso), aplicamos o filtro.
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  // Aplica paginação
+  query = query.range(offset, offset + pageSize - 1);
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error("Error fetching notifications:", error);
@@ -41,13 +50,13 @@ const fetchNotifications = async (userId: string, page: number, pageSize: number
   };
 };
 
-export const useNotifications = (page: number = 1, pageSize: number = 20) => {
+export const useNotifications = (page: number = 1, pageSize: number = 20, companyId?: string) => {
   const { user, isLoading: isAuthLoading } = useSession();
   const userId = user?.id;
 
   return useQuery<PaginatedNotifications, Error>({
-    queryKey: ["notifications", userId, page, pageSize],
-    queryFn: () => fetchNotifications(userId!, page, pageSize),
+    queryKey: ["notifications", userId, page, pageSize, companyId],
+    queryFn: () => fetchNotifications(userId!, page, pageSize, companyId),
     enabled: !!userId && !isAuthLoading,
   });
 };

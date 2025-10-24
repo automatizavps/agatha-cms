@@ -30,38 +30,23 @@ const Notifications = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Fetch de Notificações
-  // NOTA: A paginação é feita no servidor, mas a filtragem por empresa (para SA) é feita no cliente.
-  const { data: paginatedData, isLoading, isError, error, refetch, isRefetching } = useNotifications(currentPage, pageSize);
+  // Fetch de Notificações - Passando o companyId para o servidor se for Super Admin e houver filtro
+  const companyFilter = isSuperAdmin && selectedCompanyId !== 'all' ? selectedCompanyId : undefined;
   
-  const notifications = paginatedData?.notifications;
-  const totalCountServer = paginatedData?.totalCount || 0; // Contagem total no servidor (sem filtro de empresa)
+  const { data: paginatedData, isLoading, isError, error, refetch, isRefetching } = useNotifications(
+    currentPage, 
+    pageSize, 
+    companyFilter
+  );
+  
+  const notificationsToDisplay = paginatedData?.notifications;
+  const totalCount = paginatedData?.totalCount || 0; // Contagem total filtrada pelo servidor
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
-
-  // 1. Filtrar notificações com base no filtro de empresa (se Super Admin)
-  const filteredNotifications = useMemo(() => {
-    if (!notifications) return [];
-    
-    // Se não for Super Admin, ou se o filtro estiver em 'all' (filteredCompanyId é undefined),
-    // retornamos a lista paginada do servidor.
-    if (!isSuperAdmin || !filteredCompanyId) {
-      return notifications;
-    }
-    
-    // Se for Super Admin e houver um filtro ativo, filtramos no cliente.
-    return notifications.filter(n => 
-      !n.empresa_id || n.empresa_id === filteredCompanyId
-    );
-  }, [notifications, filteredCompanyId, isSuperAdmin]);
   
-  // Contagem total real (para o título e paginação)
-  const totalCount = isSuperAdmin && filteredCompanyId
-    ? filteredNotifications.length // Se filtrado por empresa, usamos a contagem local
-    : totalCountServer; // Caso contrário, usamos a contagem total do servidor
-    
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const unreadCount = filteredNotifications.filter(n => !n.lida).length || 0;
+  // A contagem de não lidas agora é feita apenas na página atual, mas é um bom indicador
+  const unreadCount = notificationsToDisplay?.filter(n => !n.lida).length || 0;
 
   const markAllReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
@@ -90,17 +75,8 @@ const Notifications = () => {
     setCurrentPage(1); // Volta para a primeira página ao mudar o tamanho
   };
   
-  // Se o Super Admin estiver filtrando por empresa, desabilitamos a paginação
-  // e exibimos todos os resultados filtrados localmente.
-  const isClientSideFiltered = isSuperAdmin && !!filteredCompanyId;
-  const notificationsToDisplay = isClientSideFiltered ? filteredNotifications : notifications;
-  
-  // Se estiver filtrando no cliente, o total de páginas é 1
-  const finalTotalPages = isClientSideFiltered ? 1 : totalPages;
-  const finalTotalCount = isClientSideFiltered ? filteredNotifications.length : totalCountServer;
-  const finalCurrentPage = isClientSideFiltered ? 1 : currentPage;
-  const finalStart = (finalCurrentPage - 1) * pageSize + 1;
-  const finalEnd = Math.min(finalCurrentPage * pageSize, finalTotalCount);
+  const finalStart = (currentPage - 1) * pageSize + 1;
+  const finalEnd = Math.min(currentPage * pageSize, totalCount);
 
 
   return (
@@ -138,7 +114,7 @@ const Notifications = () => {
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" /> {t('notification_list_title')} ({finalTotalCount})
+            <Bell className="h-5 w-5" /> {t('notification_list_title')} ({totalCount})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -148,7 +124,10 @@ const Notifications = () => {
             {isSuperAdmin && (
               <div className="w-full md:w-64">
                 <Select 
-                  onValueChange={setSelectedCompanyId} 
+                  onValueChange={(value) => {
+                    setSelectedCompanyId(value);
+                    setCurrentPage(1); // Resetar a página ao mudar o filtro
+                  }} 
                   value={selectedCompanyId} 
                   disabled={isLoadingCompanies || isChecking}
                 >
@@ -171,7 +150,7 @@ const Notifications = () => {
             {/* Seletor de Tamanho da Página */}
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <span>{t('rows_per_page')}:</span>
-              <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking || isClientSideFiltered}>
+              <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking}>
                 <SelectTrigger className="w-[80px]">
                   <SelectValue placeholder={String(pageSize)} />
                 </SelectTrigger>
@@ -182,12 +161,6 @@ const Notifications = () => {
                 </SelectContent>
               </Select>
             </div>
-            
-            {isClientSideFiltered && (
-              <div className="text-sm text-yellow-600 dark:text-yellow-400 p-2 border border-yellow-400/50 rounded-md">
-                {t('pagination_disabled_filter')}
-              </div>
-            )}
           </div>
           
           {isChecking && !isRefetching ? (
@@ -205,7 +178,7 @@ const Notifications = () => {
               <NotificationTable notifications={notificationsToDisplay} />
               
               {/* Componente de Paginação */}
-              {finalTotalPages > 1 && !isClientSideFiltered && (
+              {totalPages > 1 && (
                 <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
                   
                   {/* Agrupando Informação da Página e Controles */}
@@ -214,11 +187,11 @@ const Notifications = () => {
                     {/* Informação da Página */}
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
                       {t('page_info', { 
-                        current: finalCurrentPage, 
-                        total: finalTotalPages, 
+                        current: currentPage, 
+                        total: totalPages, 
                         start: finalStart,
                         end: finalEnd,
-                        count: finalTotalCount
+                        count: totalCount
                       })}
                     </span>
                     
@@ -229,8 +202,8 @@ const Notifications = () => {
                           <Button 
                             variant="outline" 
                             size="icon" 
-                            onClick={() => handlePageChange(finalCurrentPage - 1)}
-                            disabled={finalCurrentPage === 1 || isRefetching}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1 || isRefetching}
                           >
                             <ChevronLeft className="h-4 w-4" />
                           </Button>
@@ -240,30 +213,30 @@ const Notifications = () => {
                         <PaginationItem className="flex items-center">
                           <Input 
                             type="number"
-                            value={finalCurrentPage}
+                            value={currentPage}
                             onChange={(e) => {
                               const page = parseInt(e.target.value);
-                              if (!isNaN(page) && page >= 1 && page <= finalTotalPages) {
+                              if (!isNaN(page) && page >= 1 && page <= totalPages) {
                                 setCurrentPage(page);
                               }
                             }}
                             onBlur={() => {
                               // Garante que o valor seja válido ao sair do foco
-                              if (finalCurrentPage < 1) setCurrentPage(1);
-                              if (finalCurrentPage > finalTotalPages) setCurrentPage(finalTotalPages);
+                              if (currentPage < 1) setCurrentPage(1);
+                              if (currentPage > totalPages) setCurrentPage(totalPages);
                             }}
                             className="w-16 text-center h-9"
                             disabled={isRefetching}
                           />
-                          <span className="text-sm text-muted-foreground mx-2">/ {finalTotalPages}</span>
+                          <span className="text-sm text-muted-foreground mx-2">/ {totalPages}</span>
                         </PaginationItem>
 
                         <PaginationItem>
                           <Button 
                             variant="outline" 
                             size="icon" 
-                            onClick={() => handlePageChange(finalCurrentPage + 1)}
-                            disabled={finalCurrentPage === finalTotalPages || isRefetching}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || isRefetching}
                           >
                             <ChevronRight className="h-4 w-4" />
                           </Button>
