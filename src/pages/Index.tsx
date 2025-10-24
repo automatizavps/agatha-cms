@@ -68,8 +68,8 @@ const Index = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        {/* Ajustado para text-2xl no mobile e text-3xl no desktop */}
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{t('dashboard_title')}</h1>
+        {/* Ajustado para text-2xl no mobile e text-2xl no desktop */}
+        <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('dashboard_title')}</h1>
         
         {/* Filtro de Empresa (Apenas Super Admin) */}
         {isSuperAdmin && (

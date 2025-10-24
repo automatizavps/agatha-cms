@@ -34,7 +34,7 @@ const TeamsContent = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{t('page_title_teams')}</h1>
+        <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_teams')}</h1>
         <AddTeamSheet />
       </div>
       
