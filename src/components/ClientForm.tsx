@@ -90,8 +90,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     });
   };
   
-  // Determina se o campo empresa deve ser exibido (Super Admin na criação ou edição)
-  const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
+  // Visibilidade: APENAS Super Admin pode ver e interagir com este campo.
+  const shouldShowCompanyField = isSuperAdmin;
   
   // Encontra o nome da empresa para exibição desabilitada
   const companyIdToDisplay = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
@@ -109,7 +109,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* Campo Empresa (Visível para SA na criação ou edição) */}
+        {/* Campo Empresa (Visível APENAS para Super Admin) */}
         {shouldShowCompanyField && (
           <FormField
             control={form.control}
@@ -118,14 +118,20 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
                 {isEditing ? (
-                  <FormControl>
-                    <Input 
-                      // Exibe o nome da empresa ou 'N/A' se não for encontrado
-                      value={companyName || t("company_not_found")} 
-                      disabled 
-                      className="bg-muted/50"
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={companyName || t("select_company")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies?.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
                     <FormControl>
