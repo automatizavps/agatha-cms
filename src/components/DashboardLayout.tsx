@@ -56,8 +56,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
-        {/* Aplicando a animação de fade-in ao conteúdo principal */}
-        <main className="flex-1 p-4 overflow-auto animate-fade-in">{children}</main>
+        {/* O conteúdo principal rola aqui */}
+        <main className="flex-1 p-4 animate-fade-in">{children}</main>
       </div>
     );
   }
@@ -69,7 +69,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Sidebar Fixa */}
       <div 
         className={cn(
-          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden overflow-x-hidden", // Mantido overflow-x-hidden
+          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden overflow-x-hidden",
           isCollapsed ? "w-[70px]" : "w-[280px]"
         )}
         style={{ width: isCollapsed ? sidebarWidthMd : sidebarWidth }}
@@ -77,9 +77,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <Sidebar isCollapsed={isCollapsed} />
       </div>
       
-      {/* Conteúdo Principal */}
+      {/* Conteúdo Principal (agora com overflow-y-auto para gerenciar a rolagem) */}
       <div 
-        className="flex flex-col flex-1 transition-all duration-300"
+        className="flex flex-col flex-1 transition-all duration-300 min-h-screen overflow-y-auto"
         style={{ marginLeft: isCollapsed ? sidebarWidthMd : sidebarWidth }}
       >
         <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-6">
@@ -105,8 +105,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <ThemeToggle />
           <UserMenu />
         </header>
-        {/* Aplicando a animação de fade-in ao conteúdo principal */}
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in">
+        {/* O main agora é apenas o container do conteúdo, sem flex-1, pois o pai já gerencia a rolagem */}
+        <main className="flex flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in">
           {children}
         </main>
       </div>
