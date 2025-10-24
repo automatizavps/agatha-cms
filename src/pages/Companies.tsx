@@ -8,10 +8,18 @@ import { Button } from "@/components/ui/button";
 import AddCompanySheet from "@/components/AddCompanySheet";
 import CompanyTable from "@/components/CompanyTable";
 import { useTranslation } from "react-i18next";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 
 const CompaniesContent = () => {
   const { data: companies, isLoading, isError, error, refetch, isRefetching } = useCompanies();
   const { t } = useTranslation();
+  
+  const canReadCompanies = useCanRead('companies');
+  const canWriteCompanies = useCanWrite('companies'); // Apenas Super Admin tem 'escrita'
+
+  if (!canReadCompanies) {
+    return null;
+  }
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -21,7 +29,7 @@ const CompaniesContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_companies')}</h1>
-        <AddCompanySheet />
+        {canWriteCompanies && <AddCompanySheet />}
       </div>
       
       <Card className="mt-4">
