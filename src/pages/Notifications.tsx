@@ -185,10 +185,12 @@ const Notifications = () => {
             <>
               <NotificationTable notifications={filteredNotifications} />
               
-              {/* Componente de Paginação */}
+              {/* Componente de Paginação - Ajustado para alinhar à direita */}
               {totalPages > 1 && (
-                <div className="mt-4 flex justify-end items-center">
-                  <span className="text-sm text-muted-foreground mr-4">
+                <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
+                  
+                  {/* Informação da Página */}
+                  <span className="text-sm text-muted-foreground">
                     {t('page_info', { 
                       current: currentPage, 
                       total: totalPages, 
@@ -197,6 +199,8 @@ const Notifications = () => {
                       count: totalCount
                     })}
                   </span>
+                  
+                  {/* Controles de Paginação */}
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
@@ -211,7 +215,7 @@ const Notifications = () => {
                       </PaginationItem>
                       
                       {/* Exibição simplificada de páginas */}
-                      <PaginationItem>
+                      <PaginationItem className="flex items-center">
                         <Input 
                           type="number"
                           value={currentPage}
@@ -229,8 +233,6 @@ const Notifications = () => {
                           className="w-16 text-center h-9"
                           disabled={isRefetching}
                         />
-                      </PaginationItem>
-                      <PaginationItem>
                         <span className="text-sm text-muted-foreground mx-2">/ {totalPages}</span>
                       </PaginationItem>
 
