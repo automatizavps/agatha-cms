@@ -28,18 +28,20 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; //
 
 interface UserTableProps {
   users: UserProfile[];
+  canWriteUsers: boolean; // NOVO: Permissão de escrita
 }
 
 interface UserActionsProps {
   user: UserProfile;
   onEdit: (user: UserProfile) => void;
-  isSuperAdmin: boolean; // NOVO: Flag para Super Admin
+  isSuperAdmin: boolean; // Flag para Super Admin
+  canWrite: boolean; // Flag para exibir ações
 }
 
 type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil';
 type SortDirection = 'asc' | 'desc';
 
-const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, isSuperAdmin }) => {
+const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, isSuperAdmin, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -72,6 +74,10 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, isSuperAdmin })
   
   // A exclusão é permitida apenas para Super Admin E se não for o próprio usuário
   const canDelete = isSuperAdmin && !isCurrentUser;
+  
+  if (!canWrite) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
@@ -131,7 +137,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const UserTable: React.FC<UserTableProps> = ({ users }) => {
+const UserTable: React.FC<UserTableProps> = ({ users, canWriteUsers }) => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('nome_completo');
@@ -265,7 +271,9 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
               >
                 {t('user_table_header_profile')}
               </SortableHeader>
-              <TableHead className="text-right">{t('actions')}</TableHead>
+              {canWriteUsers && (
+                <TableHead className="text-right">{t('actions')}</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -306,9 +314,11 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                   </div>
                 </TableCell>
                 <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
-                <TableCell className="text-right">
-                  <UserActions user={user} onEdit={handleEdit} isSuperAdmin={isSuperAdmin} />
-                </TableCell>
+                {canWriteUsers && (
+                  <TableCell className="text-right">
+                    <UserActions user={user} onEdit={handleEdit} isSuperAdmin={isSuperAdmin} canWrite={canWriteUsers} />
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

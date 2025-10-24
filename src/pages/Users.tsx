@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useCanRead } from "@/hooks/use-module-permission"; // Importando hooks de permissão
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
 import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
 import { useCompanies } from "@/integrations/supabase/companies"; // Importando useCompanies
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
@@ -26,6 +26,8 @@ const UsersContent = () => {
   
   // Permissões baseadas no perfil customizado
   const canReadUsers = useCanRead('users');
+  // Apenas Super Admin pode escrever/editar/excluir usuários
+  const canWriteUsers = useCanWrite('users') && isSuperAdmin; 
   
   if (!canReadUsers) {
     return null;
@@ -62,7 +64,7 @@ const UsersContent = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_users')}</h1>
-        <AddUserSheet />
+        {canWriteUsers && <AddUserSheet />}
       </div>
       
       <Card className="mt-4">
@@ -142,7 +144,7 @@ const UsersContent = () => {
               </Button>
             </div>
           ) : filteredUsers.length > 0 ? (
-            <UserTable users={filteredUsers} />
+            <UserTable users={filteredUsers} canWriteUsers={canWriteUsers} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {searchTerm ? t('no_users_search') : t('no_users_found')}
