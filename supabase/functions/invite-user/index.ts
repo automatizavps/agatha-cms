@@ -19,12 +19,35 @@ serve(async (req) => {
     });
   };
 
-  // 1. Autenticação (Verificar se o usuário é um Super Admin)
+  // 1. Autenticação (Validar o token do usuário logado)
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (!token) {
     return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
+  // Inicializar cliente Supabase com o token do usuário para validação
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    {
+      global: {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    }
+  );
+  
+  // Obter o usuário logado (validação do token)
+  const { data: { user: adminUser }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !adminUser) {
+    return returnError("Unauthorized: Invalid token or session expired", 401);
+  }
+  
+  const inviterUserId = adminUser.id;
+
+  // 2. Inicializar cliente Admin (Service Role Key)
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -35,15 +58,6 @@ serve(async (req) => {
       },
     },
   );
-
-  // Get user claims
-  const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
-
-  if (userError || !userResponse.user) {
-    return returnError("Unauthorized: Invalid token", 401);
-  }
-  
-  const inviterUserId = userResponse.user.id;
 
   // Check if the user is Super Admin
   const { data: profileData, error: profileError } = await supabaseAdmin

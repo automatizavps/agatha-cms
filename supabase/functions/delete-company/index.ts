@@ -20,7 +20,35 @@ serve(async (req) => {
     });
   };
 
-  // 1. Inicializar cliente Admin
+  // 1. Autenticação (Validar o token do usuário logado)
+  const authHeader = req.headers.get("Authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (!token) {
+    return returnError("Unauthorized: Missing Authorization header", 401);
+  }
+
+  // Inicializar cliente Supabase com o token do usuário para validação
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    {
+      global: {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    }
+  );
+  
+  // Obter o usuário logado (validação do token)
+  const { data: { user: adminUser }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !adminUser) {
+    return returnError("Unauthorized: Invalid token or session expired", 401);
+  }
+  
+  const adminUserId = adminUser.id;
+
+  // 2. Inicializar cliente Admin (Service Role Key)
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -32,21 +60,7 @@ serve(async (req) => {
     },
   );
 
-  // 2. Autenticação e Verificação de Super Admin
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return returnError("Unauthorized: Missing Authorization header", 401);
-  }
-
-  const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
-
-  if (userError || !userResponse.user) {
-    return returnError("Unauthorized: Invalid token", 401);
-  }
-  
-  const adminUserId = userResponse.user.id;
-
-  // Check if the user is a Super Admin (using the new definition)
+  // 3. Autenticação e Verificação de Super Admin
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
     .select(`
@@ -71,7 +85,7 @@ serve(async (req) => {
     return returnError("Forbidden: Only Super Admin (with custom profile 'Super Admin' and associated company) can delete companies", 403);
   }
 
-  // 3. Processar o corpo da requisição
+  // 4. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
@@ -85,7 +99,7 @@ serve(async (req) => {
     return returnError("Missing required field: companyIdToDelete", 400);
   }
   
-  // 4. Buscar todos os IDs de usuários associados à empresa
+  // 5. Buscar todos os IDs de usuários associados à empresa
   const { data: usersData, error: fetchUsersError } = await supabaseAdmin
     .from("usuarios")
     .select("id")
@@ -101,7 +115,7 @@ serve(async (req) => {
     .map(u => u.id)
     .filter(id => id !== adminUserId); // NÃO exclui o Super Admin logado
 
-  // 5. Excluir a empresa da tabela 'empresas'
+  // 6. Excluir a empresa da tabela 'empresas'
   // Esta ação deve disparar a exclusão em cascata de todos os dados relacionados (clientes, produtos, pedidos, agendamentos, etc.)
   const { error: deleteCompanyError } = await supabaseAdmin
     .from("empresas")
@@ -113,7 +127,7 @@ serve(async (req) => {
     return returnError(deleteCompanyError.message, 400);
   }
   
-  // 6. Excluir os usuários associados do Supabase Auth (exceto o Super Admin)
+  // 7. Excluir os usuários associados do Supabase Auth (exceto o Super Admin)
   for (const userId of userIdsToDelete) {
     const { error: deleteAuthUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (deleteAuthUserError) {

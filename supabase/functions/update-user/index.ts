@@ -19,12 +19,35 @@ serve(async (req) => {
     });
   };
 
-  // 1. Autenticação (Verificar se o usuário é um administrador)
+  // 1. Autenticação (Validar o token do usuário logado)
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (!token) {
     return returnError("Unauthorized: Missing Authorization header", 401);
   }
+  
+  // Inicializar cliente Supabase com o token do usuário para validação
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    {
+      global: {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    }
+  );
+  
+  // Obter o usuário logado (validação do token)
+  const { data: { user: adminUser }, error: userError } = await supabase.auth.getUser();
 
+  if (userError || !adminUser) {
+    return returnError("Unauthorized: Invalid token or session expired", 401);
+  }
+  
+  const adminUserId = adminUser.id;
+
+  // 2. Inicializar cliente Admin (Service Role Key)
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -35,15 +58,6 @@ serve(async (req) => {
       },
     },
   );
-
-  // Get user claims
-  const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
-
-  if (userError || !userResponse.user) {
-    return returnError("Unauthorized: Invalid token", 401);
-  }
-  
-  const adminUserId = userResponse.user.id;
 
   // Check if the user is Super Admin OR belongs to a company
   const { data: profileData, error: profileError } = await supabaseAdmin
@@ -72,7 +86,7 @@ serve(async (req) => {
     return returnError("Forbidden: User does not have administrative privileges", 403);
   }
 
-  // 2. Processar o corpo da requisição
+  // 3. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
@@ -114,7 +128,7 @@ serve(async (req) => {
     updatePayload.empresa_id = empresa_id || null;
   }
   
-  // 3. Atualizar o perfil do usuário na tabela 'usuarios'
+  // 4. Atualizar o perfil do usuário na tabela 'usuarios'
   const { error: updateError } = await supabaseAdmin
     .from("usuarios")
     .update(updatePayload)
@@ -125,7 +139,7 @@ serve(async (req) => {
     return returnError(updateError.message, 400);
   }
 
-  // 4. Opcional: Atualizar o metadado do usuário no auth.users (para consistência)
+  // 5. Opcional: Atualizar o metadado do usuário no auth.users (para consistência)
   const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
     userIdToUpdate,
     {

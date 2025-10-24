@@ -11,15 +11,43 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // 1. Autenticação (Verificar se o usuário é um administrador)
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response("Unauthorized: Missing Authorization header", {
-      status: 401,
-      headers: corsHeaders,
+  // Função auxiliar para retornar erro JSON
+  const returnError = (message: string, status: number) => {
+    return new Response(JSON.stringify({ error: message }), {
+      status: status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  };
+
+  // 1. Autenticação (Validar o token do usuário logado)
+  const authHeader = req.headers.get("Authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (!token) {
+    return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
+  // Inicializar cliente Supabase com o token do usuário para validação
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    {
+      global: {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    }
+  );
+  
+  // Obter o usuário logado (validação do token)
+  const { data: { user: adminUser }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !adminUser) {
+    return returnError("Unauthorized: Invalid token or session expired", 401);
+  }
+  
+  const adminUserId = adminUser.id;
+
+  // 2. Inicializar cliente Admin (Service Role Key)
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -31,18 +59,6 @@ serve(async (req) => {
     },
   );
 
-  // Get user claims
-  const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
-
-  if (userError || !userResponse.user) {
-    return new Response("Unauthorized: Invalid token", {
-      status: 401,
-      headers: corsHeaders,
-    });
-  }
-  
-  const adminUserId = userResponse.user.id;
-
   // Check if the user is Super Admin
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
@@ -51,10 +67,7 @@ serve(async (req) => {
     .single();
 
   if (profileError || !profileData) {
-    return new Response("Forbidden: User profile not found", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: User profile not found", 403);
   }
   
   // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL (OLD SA)
@@ -70,49 +83,35 @@ serve(async (req) => {
 
   // *** REFORÇO DE SEGURANÇA: APENAS SUPER ADMIN PODE DELETAR ***
   if (!isSuperAdmin) {
-    return new Response("Forbidden: Only Super Admin can delete users", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: Only Super Admin can delete users", 403);
   }
   // ************************************************************
 
-  // 2. Processar o corpo da requisição
+  // 3. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
   } catch (e) {
-    return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
+    return returnError("Invalid JSON body", 400);
   }
 
   const { userIdToDelete } = data;
 
   if (!userIdToDelete) {
-    return new Response("Missing required field: userIdToDelete", {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return returnError("Missing required field: userIdToDelete", 400);
   }
   
   // Prevenção: Administradores não podem excluir a si mesmos
   if (userIdToDelete === adminUserId) {
-    return new Response("Forbidden: Cannot delete your own account via this endpoint", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: Cannot delete your own account via this endpoint", 403);
   }
   
-  // A verificação de empresa para não-SA foi removida, pois apenas SA pode prosseguir.
-
-  // 3. Excluir o usuário usando o Service Role Key
+  // 4. Excluir o usuário usando o Service Role Key
   const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userIdToDelete);
 
   if (deleteError) {
     console.error("Supabase Delete User Error:", deleteError);
-    return new Response(JSON.stringify({ error: deleteError.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError(deleteError.message, 400);
   }
 
   return new Response(JSON.stringify({ message: "User deleted successfully" }), {
