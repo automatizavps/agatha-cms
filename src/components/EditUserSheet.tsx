@@ -52,7 +52,7 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
     mutation.mutate({
       userIdToUpdate: user.id,
       full_name: values.full_name,
-      perfil_id: parseInt(values.perfil_id),
+      perfil_id: values.perfil_id, // Passa como string (UUID ou '1')
       telefone: values.telefone,
       endereco_completo: values.endereco_completo,
       empresa_id: values.empresa_id,
