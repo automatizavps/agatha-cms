@@ -322,6 +322,10 @@ const AppointmentsContent = () => {
     }
   };
   
+  const handleCancelSelection = () => {
+    setSelectedAppointmentIds(new Set());
+  };
+  
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const allIds = new Set(filteredAppointments.map(a => a.id));
@@ -561,19 +565,12 @@ const AppointmentsContent = () => {
         </CardContent>
       </Card>
       
-      {editingAppointment && (
-        <EditAppointmentSheet 
-          appointment={editingAppointment} 
-          isOpen={isEditSheetOpen} 
-          onOpenChange={handleCloseEditSheet} 
-        />
-      )}
-      
       {/* Componente Flutuante de Ações em Massa */}
       <FloatingBulkActions 
         selectedCount={selectedAppointmentIds.size}
         onDelete={handleBulkDelete}
         isDeleting={bulkDeleteMutation.isPending}
+        onCancel={handleCancelSelection}
       />
     </DashboardLayout>
   );

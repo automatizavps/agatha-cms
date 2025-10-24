@@ -24,7 +24,7 @@ const ClientsContent = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
-  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set()); // NOVO ESTADO
+  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
 
   const isSuperAdmin = profile?.perfil_id === 1;
@@ -81,6 +81,10 @@ const ClientsContent = () => {
     if (window.confirm(confirmMessage)) {
       bulkDeleteMutation.mutate(Array.from(selectedClientIds));
     }
+  };
+  
+  const handleCancelSelection = () => {
+    setSelectedClientIds(new Set());
   };
 
   return (
@@ -188,6 +192,7 @@ const ClientsContent = () => {
         selectedCount={selectedClientIds.size}
         onDelete={handleBulkDelete}
         isDeleting={bulkDeleteMutation.isPending}
+        onCancel={handleCancelSelection}
       />
     </DashboardLayout>
   );
