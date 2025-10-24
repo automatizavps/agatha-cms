@@ -11,13 +11,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Função auxiliar para retornar erro JSON
+  const returnError = (message: string, status: number) => {
+    return new Response(JSON.stringify({ error: message }), {
+      status: status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  };
+
   // 1. Autenticação (Verificar se o usuário é um administrador)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return new Response("Unauthorized: Missing Authorization header", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
   const supabaseAdmin = createClient(
@@ -35,10 +40,7 @@ serve(async (req) => {
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
-    return new Response("Unauthorized: Invalid token", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Invalid token", 401);
   }
   
   const adminUserId = userResponse.user.id;
@@ -46,26 +48,28 @@ serve(async (req) => {
   // Check if the user is Super Admin OR belongs to a company
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("empresa_id, perfil_customizado_id")
+    .select("empresa_id, perfil_customizado_id, perfis_customizados (nome)")
     .eq("id", adminUserId)
     .single();
 
   if (profileError || !profileData) {
-    return new Response("Forbidden: User profile not found", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: User profile not found", 403);
   }
   
-  // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL
-  const isSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
-  const isCompanyAdmin = profileData.empresa_id !== null; // Assume que se está na empresa, tem permissão de Admin/Gerente para editar usuários (o frontend controla a permissão real)
+  // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL (OLD SA)
+  const isOldSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
+  
+  // New SA check: perfil_customizado_id is 'Super Admin' AND empresa_id is NOT NULL (NEW SA)
+  const isNewSuperAdmin = 
+    profileData.empresa_id !== null && 
+    profileData.perfil_customizado_id !== null && 
+    profileData.perfis_customizados?.nome === 'Super Admin';
+    
+  const isSuperAdmin = isOldSuperAdmin || isNewSuperAdmin;
+  const isCompanyAdmin = profileData.empresa_id !== null; 
 
   if (!isSuperAdmin && !isCompanyAdmin) {
-    return new Response("Forbidden: User does not have administrative privileges", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: User does not have administrative privileges", 403);
   }
 
   // 2. Processar o corpo da requisição
@@ -73,19 +77,16 @@ serve(async (req) => {
   try {
     data = await req.json();
   } catch (e) {
-    return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
+    return returnError("Invalid JSON body", 400);
   }
 
   const { userIdToUpdate, full_name, perfil_id, telefone, endereco_completo, empresa_id } = data;
 
   if (!userIdToUpdate || !full_name || !perfil_id) {
-    return new Response("Missing required fields: userIdToUpdate, full_name, or perfil_id", {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return returnError("Missing required fields: userIdToUpdate, full_name, or perfil_id", 400);
   }
   
-  // Determinar se o perfil_id é um UUID (customizado) ou INTEGER '1' (Super Admin)
+  // Determinar se o perfil_id é um UUID (customizado) ou INTEGER '1' (Antigo Super Admin)
   const isCustomProfile = typeof perfil_id === 'string' && perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   
   let custom_perfil_id: string | null = null;
@@ -93,10 +94,10 @@ serve(async (req) => {
   if (isCustomProfile) {
     custom_perfil_id = perfil_id;
   } else if (perfil_id === '1') {
-    // Se for Super Admin, o custom_perfil_id deve ser NULL
+    // Se for o antigo Super Admin, o custom_perfil_id deve ser NULL
     custom_perfil_id = null;
   } else {
-    return new Response("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", { status: 400, headers: corsHeaders });
+    return returnError("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", 400);
   }
   
   // Construir o objeto de atualização
@@ -121,10 +122,7 @@ serve(async (req) => {
 
   if (updateError) {
     console.error("Supabase Update User Error:", updateError);
-    return new Response(JSON.stringify({ error: updateError.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError(updateError.message, 400);
   }
 
   // 4. Opcional: Atualizar o metadado do usuário no auth.users (para consistência)

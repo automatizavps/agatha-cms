@@ -62,10 +62,10 @@ const ALL_MODULES: string[] = [
 
 
 const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfile | null> => {
-  // 1. Buscar dados básicos do usuário (incluindo nome da empresa)
+  // 1. Buscar dados básicos do usuário (incluindo nome da empresa e nome do perfil customizado)
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active, nome)") // Adicionado 'nome' da empresa
+    .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active, nome), perfis_customizados (nome)")
     .eq("id", userId)
     .limit(1); 
 
@@ -79,30 +79,31 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   if (!userProfile) return null;
   
   const is_company_active = userProfile.empresas ? userProfile.empresas.is_active : true;
-  const companyName = userProfile.empresas?.nome || null; // Extrai o nome da empresa
+  const companyName = userProfile.empresas?.nome || null;
   
   let permissions: PermissionMap = {};
   let is_super_admin = false;
-  let profileName = "Funcionário"; // Default name
+  let profileName = "Funcionário";
   
-  // 2. Verificar se é Super Admin
+  // 2. Verificar se é o ANTIGO Super Admin (empresa_id = NULL e perfil_customizado_id = NULL)
   const { data: isSaData, error: isSaError } = await supabase.rpc('is_super_admin');
   if (!isSaError && isSaData !== null) {
     is_super_admin = isSaData;
   }
   
-  // 3. Verificar se pertence à empresa de Acesso Total
-  const { data: isFullAccessCompany, error: isFullAccessError } = await supabase.rpc('is_full_access_company_user');
-  const hasFullAccessOverride = !isFullAccessError && isFullAccessCompany === true;
+  // 3. Verificar se é o NOVO Super Admin (empresa_id IS NOT NULL E perfil_customizado.nome = 'Super Admin')
+  const isNewSuperAdmin = 
+    userProfile.empresa_id !== null && 
+    userProfile.perfil_customizado_id !== null && 
+    userProfile.perfis_customizados?.nome === 'Super Admin';
+    
+  // O flag final de Super Admin é a união dos dois (para permitir a transição)
+  const finalIsSuperAdmin = is_super_admin || isNewSuperAdmin;
   
   // 4. Lógica de Permissões
-  if (is_super_admin || hasFullAccessOverride) {
-    // Se for Super Admin OU pertencer à empresa de Acesso Total, concedemos acesso total
-    if (is_super_admin) {
-      profileName = "Super Admin";
-    } else {
-      profileName = `${companyName} (Acesso Total)`;
-    }
+  if (finalIsSuperAdmin) {
+    // Se for Super Admin (antigo ou novo), concedemos acesso total
+    profileName = "Super Admin";
     
     // Concede acesso de escrita a todos os módulos
     permissions = ALL_MODULES.reduce((acc, moduleName) => {
@@ -111,30 +112,18 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
     }, {} as PermissionMap);
     
   } else if (userProfile.perfil_customizado_id) {
-    // Se tiver um perfil customizado, buscamos as permissões
+    // Se tiver um perfil customizado (e não for o SA), buscamos as permissões
     permissions = await fetchPermissions(userProfile.perfil_customizado_id);
-    
-    // 5. Buscar o nome do perfil customizado (usando .limit(1) em vez de .single() para robustez)
-    const { data: customProfileData, error: customProfileError } = await supabase
-      .from("perfis_customizados")
-      .select("nome")
-      .eq("id", userProfile.perfil_customizado_id)
-      .limit(1);
-      
-    if (customProfileError) {
-        console.error("Error fetching custom profile name:", customProfileError);
-    }
-      
-    profileName = customProfileData?.[0]?.nome || "Perfil Customizado";
+    profileName = userProfile.perfis_customizados?.nome || "Perfil Customizado";
   } else {
-    // Usuário sem perfil customizado e não é SA (deve ser um erro de configuração)
-    profileName = "Sem Perfil";
+    // Usuário sem perfil customizado e não é SA (deve ser um erro de configuração, provavelmente Admin de Empresa)
+    profileName = "Admin"; // Assumimos Admin se tiver empresa_id mas não perfil customizado
   }
 
   return {
     ...userProfile,
     is_company_active: is_company_active,
-    is_super_admin: is_super_admin,
+    is_super_admin: finalIsSuperAdmin,
     permissions: permissions,
     perfis: { nome: profileName }, // Simula a estrutura perfis (nome)
     empresas: userProfile.empresas, // Mantém o objeto empresas completo

@@ -29,6 +29,7 @@ const resources = {
       "selected_items_count": "{{count}} item(ns) selecionado(s)",
       "cancel": "Cancelar",
       "delete_confirm": "Sim, Excluir",
+      "optional": "Opcional", // NOVO
 
       // Navegação
       "nav_home": "Home",
@@ -101,6 +102,11 @@ const resources = {
       "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.",
       "loading_user_data": "Carregando Dados do Usuário...",
       "loading_user_data_description": "Aguarde enquanto carregamos as informações do usuário.",
+      "only_super_admin_can_invite": "Apenas Super Admin pode convidar novos usuários.", // NOVO
+      "loading_profiles": "Carregando perfis...", // NOVO
+      "select_profile": "Selecione um perfil", // NOVO
+      "select_company_to_load_profiles": "Selecione uma empresa para carregar os perfis customizados.", // NOVO
+      "unknown_profile": "Perfil Desconhecido", // NOVO
       
       "page_title_companies": "Gestão de Empresas",
       "company_list_title": "Lista de Empresas",
@@ -159,7 +165,7 @@ const resources = {
       "orders_deleted_success": "{{count}} pedido(s) excluído(s) com sucesso.",
       
       "page_title_appointments": "Gestão de Agendamentos",
-      "appointments_deleted_success": "{{count}} agendamento(s) excluído(s) com sucesso.", // NOVO
+      "appointments_deleted_success": "{{count}} agendamento(s) excluído(s) com sucesso.",
       
       "page_title_settings": "Configurações",
       "page_subtitle_settings": "Gerencie as configurações da sua conta e da sua empresa.",
@@ -206,7 +212,7 @@ const resources = {
       "search_user": "Buscar usuário...",
       "company_not_found": "Empresa não encontrada",
       
-      // Categorias (Categories) - NOVO
+      // Categorias (Categories)
       "page_title_categories": "Gestão de Categorias",
       "category_list_title": "Lista de Categorias",
       "add_new_category": "Nova Categoria",
@@ -222,7 +228,7 @@ const resources = {
       "select_category": "Selecione a categoria",
       "search_category": "Buscar categoria...",
       
-      // Notificações (Notifications) - NOVO
+      // Notificações (Notifications)
       "page_title_notifications": "Notificações",
       "notification_list_title": "Histórico de Notificações",
       "notifications_marked_read": "Todas as notificações marcadas como lidas.",
@@ -247,7 +253,7 @@ const resources = {
       "confirm_delete_read_message": "Esta ação excluirá permanentemente todas as notificações que você já marcou como lidas. Esta ação não pode ser desfeita.",
       "delete_read_success": "Todas as notificações lidas foram excluídas com sucesso.",
       
-      // Senha (Password) - NOVO
+      // Senha (Password)
       "change_password": "Mudar Senha",
       "new_password": "Nova Senha",
       "confirm_new_password": "Confirmar Nova Senha",
@@ -258,12 +264,12 @@ const resources = {
       "your_account": "sua conta",
       "must_change_password_warning": "Você deve alterar sua senha para acessar a plataforma.",
       
-      // Gráfico de Serviços por Hora (NOVO)
+      // Gráfico de Serviços por Hora
       "chart_title_daily_services": "Serviços Concluídos por Hora (Hoje)",
       "chart_no_data_today": "Nenhum serviço concluído hoje para exibir.",
       "services_completed": "Serviços Concluídos",
       
-      // Gráfico de Pedidos por Hora (NOVO)
+      // Gráfico de Pedidos por Hora
       "chart_title_daily_orders": "Pedidos Entregues por Hora (Hoje)",
       "chart_no_data_today_orders": "Nenhum pedido entregue hoje para exibir.",
       "orders_delivered": "Pedidos Entregues",
@@ -272,7 +278,7 @@ const resources = {
       
       "count": "Contagem",
       
-      // Agendamento (Appointment) - NOVO
+      // Agendamento (Appointment)
       "responsible": "Responsável",
       "select_responsible": "Selecione o responsável",
       "select_date": "Selecione uma data",
@@ -294,7 +300,7 @@ const resources = {
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
       "add_new_appointment": "Novo Agendamento",
       
-      // Relatórios (Reports) - NOVO
+      // Relatórios (Reports)
       "select_date_range": "Selecione o intervalo de datas",
       "filter_all_status": "Todos os Status",
       "export_data": "Exportar Dados",
@@ -315,7 +321,7 @@ const resources = {
       "confirmado": "Confirmado",
       "concluido": "Concluído",
       
-      // Chaves de Login (Auth UI) - NOVO
+      // Chaves de Login (Auth UI)
       "login_hero_title": "Gerencie seu negócio com eficiência e estilo.",
       "login_hero_subtitle": "Simplifique agendamentos, pedidos e estoque em uma única plataforma intuitiva.",
       "login_welcome": "Bem-vindo de volta!",
@@ -340,7 +346,7 @@ const resources = {
       "send_magic_link": "Enviar link mágico",
       "sending_magic_link": "Enviando link...",
       
-      // Mensagens de Alerta do Auth UI (NOVO)
+      // Mensagens de Alerta do Auth UI
       "auth_success_email_sent": "Verifique seu email para o link de redefinição de senha.",
       "auth_success_confirmation_text": "Verifique seu email para o link de confirmação.",
       "auth_success_no_session": "Sessão iniciada com sucesso.",
@@ -352,7 +358,7 @@ const resources = {
       "auth_error_user_already_exists": "Usuário já existe.",
       "auth_error_default": "Ocorreu um erro. Tente novamente.",
       
-      // NOVO: Histórico de Vendas do Produto
+      // Histórico de Vendas do Produto
       "sales_history_title": "Histórico de Vendas: {{name}}",
       "sales_history_subtitle": "Detalhes e histórico de vendas/serviços realizados para este {{type}}.",
       "sales_history_table_title": "Transações Concluídas",
@@ -360,11 +366,11 @@ const resources = {
       "weekly_sales_history": "Vendas Semanais (Últimos 7 dias)",
       "type": "Tipo",
       
-      // NOVO: Status da Empresa
+      // Status da Empresa
       "company_status_active": "Ativa",
       "company_status_inactive": "Inativa",
       
-      // NOVO: Perfis Customizados
+      // Perfis Customizados
       "page_title_custom_profiles": "Perfis Customizados",
       "custom_profile_list_title": "Perfis por Empresa",
       "add_new_profile": "Novo Perfil Customizado",

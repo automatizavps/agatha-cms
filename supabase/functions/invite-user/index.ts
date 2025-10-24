@@ -45,21 +45,31 @@ serve(async (req) => {
   
   const inviterUserId = userResponse.user.id;
 
-  // Check if the user is a Super Admin (perfil_customizado_id is NULL AND empresa_id is NULL)
+  // 2. Verificar se o usuário é o novo tipo de Super Admin (Associado a uma empresa E tem perfil customizado 'Super Admin')
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
-    .select("empresa_id, perfil_customizado_id")
+    .select(`
+      empresa_id, 
+      perfil_customizado_id,
+      perfis_customizados (nome)
+    `)
     .eq("id", inviterUserId)
     .single();
 
-  const isSuperAdmin = profileData?.perfil_customizado_id === null && profileData?.empresa_id === null;
-
-  if (profileError || !isSuperAdmin) {
-    // Apenas Super Admin pode convidar agora
-    return returnError("Forbidden: Only Super Admin can invite new users", 403);
+  if (profileError || !profileData) {
+    return returnError("Forbidden: User profile not found", 403);
   }
   
-  // 2. Processar o corpo da requisição
+  const isNewSuperAdmin = 
+    profileData.empresa_id !== null && 
+    profileData.perfil_customizado_id !== null && 
+    profileData.perfis_customizados?.nome === 'Super Admin';
+
+  if (!isNewSuperAdmin) {
+    return returnError("Forbidden: Only Super Admin (with custom profile 'Super Admin' and associated company) can invite new users", 403);
+  }
+  
+  // 3. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
@@ -73,14 +83,19 @@ serve(async (req) => {
     return returnError("Missing required fields: email, full_name, or perfil_id", 400);
   }
   
-  // Determinar a empresa alvo (obrigatório para Super Admin)
-  let final_empresa_id = target_empresa_id || null;
+  // Determinar a empresa alvo: Se o Super Admin está logado, ele deve fornecer a empresa_id.
+  // Se o perfil_id for '1' (o antigo SA), ele deve ser rejeitado, pois agora só aceitamos UUIDs de perfis customizados.
+  if (perfil_id === '1') {
+      return returnError("Invalid profile ID provided. Only custom profile UUIDs are allowed for invitations.", 400);
+  }
   
-  if (!final_empresa_id && perfil_id !== '1') {
-    return returnError("A empresa é obrigatória para o Super Admin ao convidar, a menos que o perfil seja Super Admin.", 400);
+  let final_empresa_id = target_empresa_id || profileData.empresa_id; // Usa a empresa do SA se não for fornecida (embora o frontend deva fornecer)
+  
+  if (!final_empresa_id) {
+    return returnError("Target company ID is required for invitation.", 400);
   }
 
-  // O perfil_id pode ser um UUID (customizado) ou '1' (Super Admin)
+  // O perfil_id deve ser um UUID (customizado)
   let meta_perfil_id: string = perfil_id;
   
   // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
@@ -95,13 +110,13 @@ serve(async (req) => {
     final_empresa_id,
   });
 
-  // 3. Convidar o usuário usando o Service Role Key
+  // 4. Convidar o usuário usando o Service Role Key
   const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
     email,
     {
       data: {
         full_name: full_name,
-        perfil_id: meta_perfil_id, // Passa o ID (UUID ou '1')
+        perfil_id: meta_perfil_id, // Passa o UUID do perfil customizado
         telefone: telefone,
         endereco_completo: endereco_completo,
       },
@@ -119,23 +134,26 @@ serve(async (req) => {
     return returnError(inviteError.message, 400);
   }
   
-  // 4. Atualizar a empresa_id diretamente na tabela usuarios
+  // 5. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
   const invitedUserId = inviteData.user?.id;
 
-  if (invitedUserId && final_empresa_id) {
-    const { error: updateCompanyError } = await supabaseAdmin
+  if (invitedUserId) {
+    const { error: updateProfileError } = await supabaseAdmin
       .from("usuarios")
-      .update({ empresa_id: final_empresa_id })
+      .update({ 
+        empresa_id: final_empresa_id,
+        perfil_customizado_id: meta_perfil_id, // Define o perfil customizado
+      })
       .eq("id", invitedUserId);
 
-    if (updateCompanyError) {
-      console.error("Supabase Update Company ID Error:", updateCompanyError);
+    if (updateProfileError) {
+      console.error("Supabase Update Profile Error:", updateProfileError);
     }
   }
 
 
   return new Response(JSON.stringify({ message: "User invited successfully", user: inviteData.user }), {
     status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: corsHeaders,
   });
 });

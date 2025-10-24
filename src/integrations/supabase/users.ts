@@ -20,10 +20,10 @@ export interface UserProfile {
 }
 
 const fetchUsers = async (): Promise<UserProfile[]> => {
-  // Query simplificada para evitar falha de RLS ao tentar acessar auth.users
+  // Query para buscar usuários, nome da empresa e nome do perfil customizado
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, perfis:perfis_customizados (nome), empresas (nome)")
+    .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, perfis:perfis_customizados (nome), empresa:empresas (nome)")
     .order("nome_completo", { ascending: true });
 
   if (error) {
@@ -38,11 +38,15 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
     // Se não houver perfil customizado, determinamos o perfil global
     if (!user.perfil_customizado_id) {
       if (user.empresa_id === null) {
-        profileName = 'Super Admin';
+        profileName = 'Super Admin'; // Antigo SA
       } else {
-        // Se tem empresa_id mas não tem perfil customizado, é o Admin da empresa (perfil 2)
-        profileName = 'Admin'; 
+        profileName = 'Admin'; // Admin de Empresa (sem perfil customizado)
       }
+    }
+    
+    // Se o perfil customizado for 'Super Admin' e tiver empresa_id, ele é o NOVO SA.
+    if (profileName === 'Super Admin' && user.empresa_id !== null) {
+        profileName = 'Super Admin';
     }
     
     return {
@@ -64,7 +68,7 @@ export const useUsers = () => {
 interface InviteUserParams {
   email: string;
   full_name: string;
-  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para SA
+  perfil_id: string; // Agora é o UUID do perfil customizado
   telefone: string | null; // Novo campo
   endereco_completo: string | null; // Novo campo
   empresa_id?: string; // Opcional, apenas para Super Admin
@@ -93,7 +97,7 @@ export const inviteUser = async ({ email, full_name, perfil_id, telefone, endere
 interface UpdateUserParams {
   userIdToUpdate: string;
   full_name: string;
-  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para SA
+  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para Antigo SA
   telefone: string | null; // Novo campo
   endereco_completo: string | null; // Novo campo
   empresa_id?: string | null; // Opcional, apenas para Super Admin
