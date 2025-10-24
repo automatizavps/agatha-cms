@@ -36,9 +36,9 @@ export interface Order {
 
 // --- Fetch ---
 
-const fetchOrders = async (): Promise<Order[]> => {
+const fetchOrders = async (companyId?: string, startDate?: Date, endDate?: Date): Promise<Order[]> => {
   // Buscamos pedidos e o nome/email do cliente
-  const { data, error } = await supabase
+  let query = supabase
     .from("pedidos")
     .select(`
       id,
@@ -48,8 +48,25 @@ const fetchOrders = async (): Promise<Order[]> => {
       status,
       created_at,
       clientes (nome, email)
-    `)
-    .order("created_at", { ascending: false });
+    `);
+    
+  // 1. Filtrar por Empresa
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+  
+  // 2. Filtrar por Data (created_at)
+  if (startDate) {
+    query = query.gte('created_at', startDate.toISOString());
+  }
+  if (endDate) {
+    // Adiciona 1 dia ao endDate para incluir o dia inteiro
+    const end = new Date(endDate);
+    end.setDate(end.getDate() + 1);
+    query = query.lt('created_at', end.toISOString());
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching orders:", error);
@@ -59,10 +76,13 @@ const fetchOrders = async (): Promise<Order[]> => {
   return data as Order[];
 };
 
-export const useOrders = () => {
+export const useOrders = (companyId?: string, startDate?: Date, endDate?: Date) => {
+  // A query key agora inclui as datas para re-fetch quando o filtro muda
+  const dateKey = startDate?.toISOString() + endDate?.toISOString();
+  
   return useQuery<Order[], Error>({
-    queryKey: ["orders"],
-    queryFn: fetchOrders,
+    queryKey: ["orders", companyId, dateKey],
+    queryFn: () => fetchOrders(companyId, startDate, endDate),
   });
 };
 
@@ -223,6 +243,14 @@ export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrder
       queryClient: queryClient,
     });
   }
+  
+  // 3. Invalida a query de métricas diárias se o status for 'entregue'
+  if (status === 'entregue') {
+    const currentDate = new Date().toISOString().slice(0, 10);
+    // Invalida a query que alimenta o gráfico de pedidos por hora
+    queryClient.invalidateQueries({ queryKey: ["dailyOrderCountByHour", data.empresa_id, currentDate] });
+  }
+
 
   return data;
 };

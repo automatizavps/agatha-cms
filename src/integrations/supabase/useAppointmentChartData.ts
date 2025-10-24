@@ -15,10 +15,14 @@ const statusColors: Record<Appointment['status'], string> = {
   concluido: '#60a5fa', // blue-400
 };
 
-export const useAppointmentChartData = () => {
+export const useAppointmentChartData = (startDate?: Date, endDate?: Date) => {
   const { filteredCompanyId } = useDashboardFilter();
-  // Passamos filteredCompanyId e o filtro 'today' para useAppointments
-  const { data: appointments, isLoading, isError, error } = useAppointments(filteredCompanyId, 'today');
+  
+  // Se houver filtro de data, passamos as datas. Caso contrário, usamos o filtro 'today'.
+  const dateFilterType = !startDate && !endDate ? 'today' : undefined;
+  
+  // Passamos filteredCompanyId e os filtros de data
+  const { data: appointments, isLoading, isError, error } = useAppointments(filteredCompanyId, dateFilterType, startDate, endDate);
 
   const metrics: ChartData[] = [];
 

@@ -5,9 +5,14 @@ import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDashboardFilter } from '@/hooks/useDashboardFilter'; // Importando
 
-const AppointmentStatusChart: React.FC = () => {
+interface AppointmentStatusChartProps {
+  startDate?: Date;
+  endDate?: Date;
+}
+
+const AppointmentStatusChart: React.FC<AppointmentStatusChartProps> = ({ startDate, endDate }) => {
   // O hook useAppointmentChartData agora obtém o companyId do contexto
-  const { chartData, isLoading, isError } = useAppointmentChartData();
+  const { chartData, isLoading, isError } = useAppointmentChartData(startDate, endDate);
   const { t } = useTranslation();
   const { filteredCompanyId, isSuperAdmin } = useDashboardFilter(); // Usando o filtro
 

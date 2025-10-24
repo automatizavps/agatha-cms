@@ -5,8 +5,13 @@ import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDashboardFilter } from '@/hooks/useDashboardFilter'; // Importando
 
-const OrderStatusChart: React.FC = () => {
-  const { chartData, isLoading, isError } = useOrderStatusChartData();
+interface OrderStatusChartProps {
+  startDate?: Date;
+  endDate?: Date;
+}
+
+const OrderStatusChart: React.FC<OrderStatusChartProps> = ({ startDate, endDate }) => {
+  const { chartData, isLoading, isError } = useOrderStatusChartData(startDate, endDate);
   const { t } = useTranslation();
   const { filteredCompanyId, isSuperAdmin } = useDashboardFilter(); // Usando o filtro
 

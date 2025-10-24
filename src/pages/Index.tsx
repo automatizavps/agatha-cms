@@ -275,16 +275,8 @@ const Index = () => {
           </div>
           
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
-            {isDateFilterActive ? (
-              <Card className="h-64">
-                <CardHeader><CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle></CardHeader>
-                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-                  {t('chart_disabled_by_date_filter')}
-                </CardContent>
-              </Card>
-            ) : (
-              <AppointmentStatusChart />
-            )}
+            {/* Passando os filtros de data para o gráfico de status */}
+            <AppointmentStatusChart startDate={startDate} endDate={endDate} />
           </div>
         </div>
         
@@ -304,16 +296,8 @@ const Index = () => {
           </div>
           
           <div className="col-span-12 md:col-span-6 lg:col-span-4">
-            {isDateFilterActive ? (
-              <Card className="h-64">
-                <CardHeader><CardTitle className="text-lg">{t('chart_title_order_status')}</CardTitle></CardHeader>
-                <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
-                  {t('chart_disabled_by_date_filter')}
-                </CardContent>
-              </Card>
-            ) : (
-              <OrderStatusChart />
-            )}
+            {/* Passando os filtros de data para o gráfico de status */}
+            <OrderStatusChart startDate={startDate} endDate={endDate} />
           </div>
         </div>
         
