@@ -9,7 +9,7 @@ function Login() {
   const { t } = useTranslation();
   
   // URL de placeholder para a imagem de fundo
-  const backgroundImageUrl = "https://images.unsplash.com/photo-1568957511835-26d02ad0a9e6?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1172";
+  const backgroundImageUrl = "https://images.unsplash.com/photo-1543730698-ea2a214991af?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170";
 
   return (
     <div className="min-h-screen flex">
