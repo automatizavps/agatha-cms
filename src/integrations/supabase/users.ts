@@ -23,6 +23,7 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
   const { data, error } = await supabase
     .from("usuarios")
     .select("id, nome_completo, perfil_id, empresa_id, avatar_url, telefone, endereco_completo, perfis (nome), empresas (nome)")
+    // REMOVIDO: .eq("id", userId) // Esta linha estava incorreta para listar todos os usuários
     .order("nome_completo", { ascending: true });
 
   if (error) {
