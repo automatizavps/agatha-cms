@@ -319,7 +319,7 @@ const AppointmentsContent = () => {
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="text-center" // Adicionando text-center ao cabeçalho
+                      className="text-center"
                     >
                       {t('order_table_header_status')}
                     </SortableHeader>
@@ -345,7 +345,7 @@ const AppointmentsContent = () => {
                         {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>
                       <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
-                      <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
+                      <TableCell className="text-center align-middle"> {/* Adicionado align-middle */}
                         <span className={getStatusBadge(appointment.status)}>
                           {appointment.status}
                         </span>
