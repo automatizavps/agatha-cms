@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany, updateCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +48,9 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
     onSuccess: () => {
       showSuccess(`Empresa ${company.nome} excluída com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["companies"] });
+      // Invalida queries de usuários e dashboard para forçar revalidação
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
     },
     onError: (error) => {
       showError(t("error_loading_data") + ": " + error.message);
@@ -78,7 +81,12 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
   });
 
   const handleDelete = () => {
-    if (window.confirm(t('confirm_delete'))) {
+    if (!isSuperAdmin) return;
+    
+    // Aviso de atenção
+    const confirmationMessage = `ATENÇÃO! Ao excluir a empresa ${company.nome}, TODOS os dados relacionados (usuários, clientes, pedidos, agendamentos, produtos, etc.) serão PERMANENTEMENTE excluídos. Esta ação não pode ser desfeita. Confirma a exclusão?`;
+    
+    if (window.confirm(confirmationMessage)) {
       deleteMutation.mutate(company.id);
     }
   };
@@ -124,17 +132,22 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
               )}
               {company.is_active ? "Desativar Empresa" : "Ativar Empresa"}
             </DropdownMenuItem>
+            
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={handleDelete} 
+              disabled={deleteMutation.isPending}
+              className="text-destructive focus:text-destructive font-bold"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <AlertTriangle className="mr-2 h-4 w-4" />
+              )}
+              {t('delete')} Empresa
+            </DropdownMenuItem>
           </>
         )}
-        
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleDelete} 
-          disabled={deleteMutation.isPending}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { useSession } from "./auth"; // Importando useSession
 
 export interface Company {
   id: string;
@@ -121,16 +122,31 @@ export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_complet
   return data;
 };
 
-// --- Delete ---
+// --- Delete (Agora usa Edge Function) ---
 
-export const deleteCompany = async (id: string) => {
-  const { error } = await supabase
-    .from("empresas")
-    .delete()
-    .eq("id", id);
+export const deleteCompany = async (companyIdToDelete: string) => {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  
+  if (!accessToken) {
+    throw new Error("Sessão de administrador ausente.");
+  }
+  
+  const { data, error } = await supabase.functions.invoke("delete-company", {
+    body: { companyIdToDelete },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   if (error) {
-    console.error("Error deleting company:", error);
+    console.error("Error deleting company via Edge Function:", error);
     throw new Error(error.message);
   }
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
 };
