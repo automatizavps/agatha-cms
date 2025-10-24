@@ -38,7 +38,6 @@ const Index = () => {
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
   const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); // NOVO HOOK
   
-  // useTeams agora só é habilitado se filteredCompanyId existir
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
   const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount;
@@ -97,92 +96,99 @@ const Index = () => {
         )}
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
-        {/* Ajustado para 3 colunas no md e 4 colunas no lg para melhor distribuição de 7 itens */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="flex flex-col gap-4">
           
-          {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
-          <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos hoje</p>
-            </CardContent>
-          </Card>
+          {/* Linha 1: 4 Colunas (Faturamento) */}
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            
+            {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
+            <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
+                <DollarSign className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
+                <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos hoje</p>
+              </CardContent>
+            </Card>
+            
+            {/* Card 2: Faturamento Semanal */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('weekly_revenue')}</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {renderMetricValue(revenueMetrics?.weekly_revenue || 0, true)}
+                <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos esta semana</p>
+              </CardContent>
+            </Card>
+            
+            {/* Card 3: Faturamento Mensal */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('monthly_revenue')}</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {renderMetricValue(revenueMetrics?.monthly_revenue || 0, true)}
+                <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos este mês</p>
+              </CardContent>
+            </Card>
+            
+            {/* Card 4: Total de Agendamentos */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
+                <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {renderMetricValue(metrics.totalAppointments)}
+                <p className="text-xs text-muted-foreground">Agendamentos para hoje</p>
+              </CardContent>
+            </Card>
+          </div>
           
-          {/* Card 2: Faturamento Semanal */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('weekly_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.weekly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos esta semana</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 3: Faturamento Mensal */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('monthly_revenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(revenueMetrics?.monthly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos este mês</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 4: Total de Agendamentos */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_appointments')}</CardTitle>
-              <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(metrics.totalAppointments)}
-              <p className="text-xs text-muted-foreground">Agendamentos para hoje</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 5: Agendamentos Pendentes */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(metrics.pendingAppointments)}
-              <p className="text-xs text-muted-foreground">Pendentes para hoje</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 6: Total de Produtos (RE-ADICIONADO) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(productCount || 0)}
-              <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
-            </CardContent>
-          </Card>
-          
-          {/* Card 7: Total de Clientes */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {renderMetricValue(clientCount || 0)}
-              <p className="text-xs text-muted-foreground">{t('total_clients_overview')}</p>
-            </CardContent>
-          </Card>
+          {/* Linha 2: 3 Colunas (Contagens) */}
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+            
+            {/* Card 5: Agendamentos Pendentes */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('pending_appointments')}</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {renderMetricValue(metrics.pendingAppointments)}
+                <p className="text-xs text-muted-foreground">Pendentes para hoje</p>
+              </CardContent>
+            </Card>
+            
+            {/* Card 6: Total de Produtos */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('total_products')}</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {renderMetricValue(productCount || 0)}
+                <p className="text-xs text-muted-foreground">{t('total_products_overview')}</p>
+              </CardContent>
+            </Card>
+            
+            {/* Card 7: Total de Clientes */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t('total_clients')}</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {renderMetricValue(clientCount || 0)}
+                <p className="text-xs text-muted-foreground">{t('total_clients_overview')}</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
         
         {/* Seção 2: Metas das Equipes */}
