@@ -117,6 +117,20 @@ export const deleteNotifications = async (notificationIds: string[]) => {
   }
 };
 
+// --- Delete All Read Notifications ---
+export const deleteAllReadNotifications = async () => {
+  // RLS garante que apenas as notificações lidas do usuário logado sejam excluídas
+  const { error } = await supabase
+    .from("notificacoes")
+    .delete()
+    .eq("lida", true);
+
+  if (error) {
+    console.error("Error deleting all read notifications:", error);
+    throw new Error(error.message);
+  }
+};
+
 // --- Create Notification Utility (for internal use in mutations) ---
 
 interface CreateNotificationParams {

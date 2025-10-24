@@ -27,6 +27,8 @@ const resources = {
       "page_info": "Exibindo {{start}}-{{end}} de {{count}}", // NOVO
       "pagination_disabled_filter": "Paginação desabilitada ao filtrar por empresa.", // NOVO
       "selected_items_count": "{{count}} item(ns) selecionado(s)", // NOVO
+      "cancel": "Cancelar", // NOVO
+      "delete_confirm": "Sim, Excluir", // NOVO
 
       // Navegação
       "nav_home": "Home",
@@ -232,6 +234,10 @@ const resources = {
       "confirm_delete_single": "Tem certeza que deseja excluir esta notificação?", // NOVO
       "confirm_delete_bulk": "Tem certeza que deseja excluir {{count}} notificações?", // NOVO
       "selected_items_count": "{{count}} item(ns) selecionado(s)", // NOVO
+      "delete_read_notifications": "Excluir Lidas", // NOVO
+      "confirm_delete_read_title": "Confirmar Exclusão de Notificações Lidas", // NOVO
+      "confirm_delete_read_message": "Esta ação excluirá permanentemente todas as notificações que você já marcou como lidas. Esta ação não pode ser desfeita.", // NOVO
+      "delete_read_success": "Todas as notificações lidas foram excluídas com sucesso.", // NOVO
       
       // Senha (Password) - NOVO
       "change_password": "Mudar Senha",

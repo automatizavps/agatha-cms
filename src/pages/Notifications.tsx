@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMemo, useState } from "react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
-import FloatingBulkActions from "@/components/FloatingBulkActions"; // Importando o novo componente
+import FloatingBulkActions from "@/components/FloatingBulkActions";
+import DeleteReadNotificationsDialog from "@/components/DeleteReadNotificationsDialog"; // Importando o novo componente
 
 const PAGE_SIZES = [20, 50, 100];
 
@@ -51,6 +52,9 @@ const Notifications = () => {
   
   // A contagem de não lidas agora é feita apenas na página atual, mas é um bom indicador
   const unreadCount = notificationsToDisplay?.filter(n => !n.lida).length || 0;
+  
+  // Verifica se há notificações lidas na página atual para habilitar o botão
+  const hasReadNotifications = notificationsToDisplay?.some(n => n.lida) || false;
 
   const markAllReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
@@ -114,6 +118,10 @@ const Notifications = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{t('page_title_notifications')}</h1>
         <div className="flex gap-2">
+          
+          {/* NOVO: Botão Excluir Lidas */}
+          <DeleteReadNotificationsDialog disabled={!hasReadNotifications || isLoading} />
+          
           {/* Botão Marcar Todas como Lidas */}
           <Button 
             variant="outline" 
