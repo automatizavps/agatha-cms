@@ -26,6 +26,7 @@ export function UserMenu() {
     
     if (session) {
       const { error } = await supabase.auth.signOut();
+      
       if (error) {
         // Se o erro for "Auth session missing", ignoramos, pois o objetivo é deslogar.
         if (!error.message.includes("Auth session missing")) {
@@ -43,6 +44,7 @@ export function UserMenu() {
     if (logoutSuccessful) {
       showSuccess("Logout realizado com sucesso.");
       // Força o redirecionamento para /login, garantindo que o router reaja.
+      // O SessionContextProvider também fará isso, mas esta é uma garantia extra.
       navigate('/login');
     }
   };
