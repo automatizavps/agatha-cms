@@ -147,20 +147,7 @@ const Notifications = () => {
               </div>
             )}
             
-            {/* Seletor de Tamanho da Página */}
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>{t('rows_per_page')}:</span>
-              <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking}>
-                <SelectTrigger className="w-[80px]">
-                  <SelectValue placeholder={String(pageSize)} />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZES.map(size => (
-                    <SelectItem key={size} value={String(size)}>{size}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* O seletor de tamanho da página foi movido para o rodapé */}
           </div>
           
           {isChecking && !isRefetching ? (
@@ -177,11 +164,26 @@ const Notifications = () => {
             <>
               <NotificationTable notifications={notificationsToDisplay} />
               
-              {/* Componente de Paginação */}
+              {/* Componente de Paginação (Movido para o final) */}
               {totalPages > 1 && (
-                <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
+                <div className="mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
                   
-                  {/* Agrupando Informação da Página e Controles */}
+                  {/* Seletor de Tamanho da Página (Movido para a esquerda) */}
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <span>{t('rows_per_page')}:</span>
+                    <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking}>
+                      <SelectTrigger className="w-[80px]">
+                        <SelectValue placeholder={String(pageSize)} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZES.map(size => (
+                          <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Agrupando Informação da Página e Controles (Movido para a direita) */}
                   <div className="flex items-center gap-4">
                     
                     {/* Informação da Página */}
