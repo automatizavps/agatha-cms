@@ -34,8 +34,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   if (isMobile) {
     return (
       <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
-        {/* Header Fixo no Mobile (h-14) */}
-        <header className="fixed top-0 left-0 right-0 z-20 flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
+        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="shrink-0 md:hidden">
@@ -57,8 +56,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
-        {/* Adiciona padding no topo para compensar o header fixo (h-14 -> pt-14) */}
-        <main className="flex-1 p-4 pt-16 animate-fade-in">{children}</main>
+        {/* Aplicando a animação de fade-in ao conteúdo principal */}
+        <main className="flex-1 p-4 overflow-auto animate-fade-in">{children}</main>
       </div>
     );
   }
@@ -70,7 +69,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Sidebar Fixa */}
       <div 
         className={cn(
-          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden overflow-x-hidden",
+          "fixed top-0 left-0 h-screen border-r bg-sidebar transition-all duration-300 z-20 overflow-y-hidden overflow-x-hidden", // Mantido overflow-x-hidden
           isCollapsed ? "w-[70px]" : "w-[280px]"
         )}
         style={{ width: isCollapsed ? sidebarWidthMd : sidebarWidth }}
@@ -78,15 +77,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <Sidebar isCollapsed={isCollapsed} />
       </div>
       
-      {/* Conteúdo Principal (agora com overflow-y-auto para gerenciar a rolagem) */}
+      {/* Conteúdo Principal */}
       <div 
-        className="flex flex-col flex-1 transition-all duration-300 min-h-screen overflow-y-auto" // RESTAURADO: overflow-y-auto
+        className="flex flex-col flex-1 transition-all duration-300"
         style={{ marginLeft: isCollapsed ? sidebarWidthMd : sidebarWidth }}
       >
-        {/* Header Fixo no Desktop (h-16) */}
-        <header className="fixed top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-6 w-full"
-          style={{ left: isCollapsed ? sidebarWidthMd : sidebarWidth }}
-        >
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-6">
           {/* Botão de Toggle */}
           <Button 
             variant="ghost" 
@@ -109,8 +105,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <ThemeToggle />
           <UserMenu />
         </header>
-        {/* Adiciona padding no topo para compensar o header fixo (h-16 -> pt-16) */}
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in pt-20">
+        {/* Aplicando a animação de fade-in ao conteúdo principal */}
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-4 lg:p-4 bg-background animate-fade-in">
           {children}
         </main>
       </div>
