@@ -68,7 +68,7 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
   const { data: categories, isLoading: isLoadingCategories } = useCategories(); // Novo hook
   const { t } = useTranslation();
   
-  const isSuperAdmin = currentProfile?.perfil_id === 1;
+  const isSuperAdmin = currentProfile?.is_super_admin; // Usando a flag correta
   const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies) || isLoadingCategories;
   
   const [photos, setPhotos] = useState<string[] | null>(defaultValues?.fotos || null);
