@@ -113,8 +113,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <ThemeToggle />
           <UserMenu />
         </header>
-        {/* Aplicando pt-20 no desktop */}
-        <main className="flex flex-1 flex-col gap-4 px-4 pb-4 lg:gap-4 lg:px-4 lg:pb-4 bg-background animate-fade-in pt-20">
+        {/* Aplicando pt-20 (padrão) e lg:pt-24 (desktop) */}
+        <main className="flex flex-1 flex-col gap-4 px-4 pb-4 lg:gap-4 lg:px-4 lg:pb-4 bg-background animate-fade-in pt-20 lg:pt-24">
           {children}
         </main>
       </div>
