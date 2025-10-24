@@ -80,7 +80,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       
       {/* Conteúdo Principal (agora com overflow-y-auto para gerenciar a rolagem) */}
       <div 
-        className="flex flex-col flex-1 transition-all duration-300 min-h-screen"
+        className="flex flex-col flex-1 transition-all duration-300 min-h-screen overflow-y-auto" // RESTAURADO: overflow-y-auto
         style={{ marginLeft: isCollapsed ? sidebarWidthMd : sidebarWidth }}
       >
         {/* Header Fixo no Desktop (h-16) */}
