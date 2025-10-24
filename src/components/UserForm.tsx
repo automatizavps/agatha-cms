@@ -162,6 +162,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
+      // Na criação, values.empresa_id é garantido ser uma string UUID
       empresa_id = values.empresa_id || null;
     } else {
       // Se não for Super Admin, o convite não deveria ser possível, mas se for edição,

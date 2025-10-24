@@ -19,7 +19,7 @@ serve(async (req) => {
     });
   };
 
-  // 1. Autenticação (Verificar se o usuário é um administrador)
+  // 1. Autenticação (Verificar se o usuário é um Super Admin)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return returnError("Unauthorized: Missing Authorization header", 401);
@@ -45,7 +45,7 @@ serve(async (req) => {
   
   const inviterUserId = userResponse.user.id;
 
-  // 2. Verificar se o usuário é o novo tipo de Super Admin (Associado a uma empresa E tem perfil customizado 'Super Admin')
+  // Check if the user is the new type of Super Admin
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
     .select(`
@@ -79,24 +79,17 @@ serve(async (req) => {
 
   const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id } = data;
 
-  if (!email || !full_name || !perfil_id) {
-    return returnError("Missing required fields: email, full_name, or perfil_id", 400);
+  if (!email || !full_name || !perfil_id || !target_empresa_id) {
+    return returnError("Missing required fields: email, full_name, perfil_id, or target_empresa_id", 400);
   }
   
-  // Determinar a empresa alvo: Se o Super Admin está logado, ele deve fornecer a empresa_id.
-  // Se o perfil_id for '1' (o antigo SA), ele deve ser rejeitado, pois agora só aceitamos UUIDs de perfis customizados.
-  if (perfil_id === '1') {
+  // O perfil_id deve ser um UUID (customizado)
+  if (perfil_id === '1' || !perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
       return returnError("Invalid profile ID provided. Only custom profile UUIDs are allowed for invitations.", 400);
   }
   
-  let final_empresa_id = target_empresa_id || profileData.empresa_id; // Usa a empresa do SA se não for fornecida (embora o frontend deva fornecer)
-  
-  if (!final_empresa_id) {
-    return returnError("Target company ID is required for invitation.", 400);
-  }
-
-  // O perfil_id deve ser um UUID (customizado)
-  let meta_perfil_id: string = perfil_id;
+  const final_empresa_id = target_empresa_id;
+  const meta_perfil_id: string = perfil_id;
   
   // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
   const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
