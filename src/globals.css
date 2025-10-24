@@ -15,7 +15,8 @@
     --popover-foreground: 222.2 84% 4.9%;
 
     /* Primary: Roxo (Ex: HSL 250 80% 50%) */
-    --primary: 250 80% 50%;
+    /*--primary: 250 80% 50%;  */
+    --primary: 209 100% 34%;
     --primary-foreground: 210 40% 98%; /* Branco */
 
     --secondary: 210 40% 96.1%;
@@ -40,7 +41,7 @@
     --radius: 0.5rem;
 
     /* Sidebar Light */
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 0 0% 90%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 250 80% 50%; /* Roxo para item ativo e título */
     --sidebar-primary-foreground: 0 0% 98%; /* Branco para texto do item ativo */
