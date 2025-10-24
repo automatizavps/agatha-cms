@@ -103,9 +103,8 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
       (initialPhotos && currentPhotos && initialPhotos.some((url, index) => url !== currentPhotos[index]));
       
     if (arePhotosDifferent) {
-      // Se as fotos mudaram, marca o formulário como alterado
-      form.trigger(); // Força a revalidação
-      form.formState.isDirty = true; // Marca como dirty manualmente (embora trigger() deva fazer isso)
+      // Se as fotos mudaram, forçamos a revalidação e marcamos como dirty
+      form.setValue('nome', form.getValues('nome'), { shouldDirty: true, shouldValidate: true });
     }
   }, [photos, defaultValues?.fotos, form]);
   

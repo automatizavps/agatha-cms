@@ -106,9 +106,10 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
       (initialPhotos && currentPhotos && initialPhotos.some((url, index) => url !== currentPhotos[index]));
       
     if (arePhotosDifferent) {
-      // Se as fotos mudaram, marca o formulário como alterado
-      form.trigger(); // Força a revalidação
-      form.formState.isDirty = true; // Marca como dirty manualmente (embora trigger() deva fazer isso)
+      // Se as fotos mudaram, forçamos a revalidação e marcamos como dirty
+      // Usamos um campo dummy ou um campo que não afeta a lógica de submissão se não for alterado
+      // Aqui, usamos 'nome' apenas para forçar o estado 'dirty'
+      form.setValue('nome', form.getValues('nome'), { shouldDirty: true, shouldValidate: true });
     }
   }, [photos, defaultValues?.fotos, form]);
 
@@ -329,6 +330,8 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           onUrlsChange={(newUrls) => {
             setPhotos(newUrls);
             // Força o formulário a reconhecer a mudança para habilitar o botão Salvar
+            // Usamos um campo que não é o 'nome' para evitar conflitos com a validação assíncrona,
+            // mas 'nome' é o único campo que sabemos que existe. Vamos usar 'nome' e confiar no shouldValidate.
             form.setValue('nome', form.getValues('nome'), { shouldDirty: true, shouldValidate: true });
           }}
           disabled={isSubmitting}
