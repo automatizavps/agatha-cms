@@ -78,6 +78,38 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const isSuperAdmin = profile?.is_super_admin; // Usando a flag correta
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
+  // --- 1. Determinar o Schema Final (antes de usar useForm) ---
+  const initialSchema = useMemo(() => {
+    let schema = baseFormSchema;
+    
+    if (isSuperAdmin && !isEditing) {
+      schema = schema.extend({
+        empresa_id: z.string().uuid({
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
+      });
+    }
+    return schema;
+  }, [isSuperAdmin, isEditing, t]);
+
+  // --- 2. Inicializar o Formulário ---
+  const form = useForm<OrderFormValues>({
+    resolver: zodResolver(initialSchema),
+    defaultValues: {
+      cliente_id: defaultValues?.cliente_id || "",
+      items: defaultValues?.items || [],
+      status: defaultValues?.status || 'pendente_entrega',
+      empresa_id: defaultValues?.empresa_id || "",
+    },
+  });
+  
+  // --- 3. Variáveis dependentes de form.watch/profile ---
+  
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+  
   // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
   const companyIdFromDefault = defaultValues?.empresa_id;
   const companyIdFromWatch = isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id;
@@ -102,29 +134,18 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
-  // --- ZOD SCHEMA COM VALIDAÇÃO DE ESTOQUE NO NÍVEL DO ARRAY ---
-  
   // Função auxiliar para obter o produto pelo ID
   const getProductById = (id: string): Product | undefined => {
     return allItems.find(i => i.id === id);
   };
 
-  const finalFormSchema = useMemo(() => {
-    let schema = baseFormSchema;
-    
-    if (isSuperAdmin && !isEditing) {
-      schema = schema.extend({
-        empresa_id: z.string().uuid({
-          message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
-      });
-    }
-    
-    // Adiciona validação de estoque no nível do array de items
-    return schema.extend({
+  // --- 4. Validação de Estoque (Refine no nível do Resolver) ---
+  
+  // Recria o resolver com a validação de estoque, que agora depende de allItems
+  const stockValidationSchema = useMemo(() => {
+    return initialSchema.extend({
       items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." })
         .refine((items) => {
-          // Esta validação só é executada se a empresa estiver selecionada e os itens estiverem carregados
           if (!isCompanySelected || isLoadingItems) return true; 
           
           for (const item of items) {
@@ -132,34 +153,22 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             
             if (product && product.tipo === 'produto' && product.estoque_total !== null && product.estoque_total !== undefined) {
               if (item.quantidade > product.estoque_total) {
-                // Se a validação falhar, retornamos false. A mensagem de erro será tratada no nível do campo.
                 return false; 
               }
             }
           }
           return true;
         }, {
-          // Esta mensagem de erro genérica será substituída pela mensagem específica do campo
           message: "Erro de estoque em um ou mais produtos.",
-          path: ['items'], // Define o caminho do erro para o array
+          path: ['items'],
         }),
     });
-  }, [isSuperAdmin, isEditing, isCompanySelected, isLoadingItems, t]);
-
-  const form = useForm<OrderFormValues>({
-    resolver: zodResolver(finalFormSchema),
-    defaultValues: {
-      cliente_id: defaultValues?.cliente_id || "",
-      items: defaultValues?.items || [],
-      status: defaultValues?.status || 'pendente_entrega',
-      empresa_id: defaultValues?.empresa_id || "",
-    },
-  });
+  }, [initialSchema, isCompanySelected, isLoadingItems, getProductById]);
   
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "items",
-  });
+  // Atualiza o resolver do formulário dinamicamente
+  useEffect(() => {
+    form.setResolver(zodResolver(stockValidationSchema));
+  }, [stockValidationSchema, form]);
   
   // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
   useEffect(() => {
@@ -186,7 +195,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       // Atualiza o preço unitário automaticamente ao selecionar o produto/serviço
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
-      // Dispara a validação da quantidade e do item
+      // Dispara a validação da quantidade e do array
       form.trigger(`items.${index}.quantidade`);
       form.trigger(`items`);
     }
@@ -443,7 +452,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                             {...field} 
                             onChange={(e) => {
                               field.onChange(e.target.value);
-                              // Dispara a validação ao mudar a quantidade e o array
+                              // Dispara a validação ao mudar a quantidade
                               form.trigger(`items.${index}.quantidade`);
                               form.trigger(`items`);
                             }}
@@ -454,7 +463,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                       </FormItem>
                     )}
                     // A validação de estoque é mantida aqui para exibir a mensagem específica do campo
-                    rules={{ validate: validateStock }}
+                    rules={{ validate: (value) => validateStock({ ...form.getValues().items[index], quantidade: Number(value) }) }}
                   />
                   
                   {/* Preço Unitário */}
