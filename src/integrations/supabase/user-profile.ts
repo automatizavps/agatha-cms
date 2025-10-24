@@ -94,14 +94,18 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
     // Se tiver um perfil customizado, buscamos as permissões
     permissions = await fetchPermissions(userProfile.perfil_customizado_id);
     
-    // 4. Buscar o nome do perfil customizado
-    const { data: customProfileData } = await supabase
+    // 4. Buscar o nome do perfil customizado (usando .limit(1) em vez de .single() para robustez)
+    const { data: customProfileData, error: customProfileError } = await supabase
       .from("perfis_customizados")
       .select("nome")
       .eq("id", userProfile.perfil_customizado_id)
-      .single();
+      .limit(1);
       
-    profileName = customProfileData?.nome || "Perfil Customizado";
+    if (customProfileError) {
+        console.error("Error fetching custom profile name:", customProfileError);
+    }
+      
+    profileName = customProfileData?.[0]?.nome || "Perfil Customizado";
   } else {
     // Usuário sem perfil customizado e não é SA (deve ser um erro de configuração)
     profileName = "Sem Perfil";
