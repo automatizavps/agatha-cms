@@ -38,7 +38,7 @@ const itemSchema = z.object({
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
 });
 
-// Definimos o esquema base (sem validação de estoque no nível do array)
+// Definimos o esquema base
 const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
@@ -179,6 +179,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   
   // Função de validação de estoque (usada apenas para exibir a mensagem no campo)
   const validateStock = (item: ItemToCreate) => {
+    // Se estiver editando, ignoramos a validação de estoque, pois os itens já foram subtraídos.
+    if (isEditing) {
+      return true;
+    }
+    
     const product = getProductById(item.produto_id);
     
     if (!product) {
@@ -203,6 +208,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
 
   // Validação de estoque no submit (global)
   const validateGlobalStock = (items: ItemToCreate[]) => {
+    // Se estiver editando, ignoramos a validação de estoque global
+    if (isEditing) {
+      return true;
+    }
+    
     for (const item of items) {
       const validationResult = validateStock(item);
       if (validationResult !== true) {
@@ -215,12 +225,14 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
 
 
   const handleSubmit = (values: OrderFormValues) => {
-    // 1. Validação de estoque global antes de enviar
-    const stockError = validateGlobalStock(values.items);
-    if (stockError !== true) {
-      form.setError('items', { type: 'manual', message: stockError });
-      showError(stockError);
-      return;
+    // 1. Validação de estoque global antes de enviar (apenas na criação)
+    if (!isEditing) {
+      const stockError = validateGlobalStock(values.items);
+      if (stockError !== true) {
+        form.setError('items', { type: 'manual', message: stockError });
+        showError(stockError);
+        return;
+      }
     }
     
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
