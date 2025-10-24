@@ -28,8 +28,8 @@ const Notifications = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   
-  // Estado para seleção de linhas
-  const [selectedNotificationIds, setSelectedNotificationIds] = new Set<string>([]);
+  // Estado para seleção de linhas - CORRIGIDO
+  const [selectedNotificationIds, setSelectedNotificationIds] = useState<Set<string>>(new Set());
 
   // Filtro de Empresa (Super Admin)
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
