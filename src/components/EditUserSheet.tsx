@@ -23,7 +23,7 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
   // Perfil do usuário logado
   const { data: currentProfile } = useCurrentUserProfile();
   const isSuperAdmin = currentProfile?.perfil_id === 1;
-  const isEditingSelf = currentProfile?.id === user.id;
+  // Removida a verificação isEditingSelf para permitir que o Super Admin redefina a própria senha
   
   // Busca o email real do usuário que está sendo editado
   const { data: userEmail, isLoading: isLoadingEmail } = useUserEmail(user.id);
@@ -104,8 +104,8 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
             isEditing={true}
           />
           
-          {/* Opção de Redefinir Senha (Apenas Super Admin e não editando a si mesmo) */}
-          {isSuperAdmin && !isEditingSelf && (
+          {/* Opção de Redefinir Senha (Apenas Super Admin) */}
+          {isSuperAdmin && (
             <div className="pt-6 border-t mt-6">
               <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                 <Key className="h-5 w-5 text-muted-foreground" />
