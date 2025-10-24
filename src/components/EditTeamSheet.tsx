@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import TeamForm from "./TeamForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateTeam, Team, useTeamMembers, updateTeamMembers } from "@/integrations/supabase/teams";
@@ -84,7 +84,7 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
   if (isLoadingMembers) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-xl flex flex-col">
+        <SheetContent className="sm:max-w-xl flex flex-col" aria-describedby={undefined}>
           <SheetHeader>
             <SheetTitle>{t('loading_team_data')}</SheetTitle>
           </SheetHeader>
@@ -98,9 +98,12 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-xl flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col" aria-describedby={undefined}>
         <SheetHeader>
           <SheetTitle>{t('edit_team')}: {team.nome}</SheetTitle>
+          <SheetDescription className="sr-only">
+            {t('edit_team_description', { defaultValue: 'Formulário para editar os detalhes da equipe.' })}
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <TeamForm 
