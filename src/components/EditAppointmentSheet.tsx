@@ -5,6 +5,7 @@ import { updateAppointment, Appointment, useAppointmentItems } from "@/integrati
 import { showSuccess, showError } from "@/utils/toast";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { utcToZonedTime } from "date-fns-tz"; // Importando para conversão de exibição
 
 interface EditAppointmentSheetProps {
   appointment: Appointment;
@@ -15,6 +16,8 @@ interface EditAppointmentSheetProps {
 const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
   const { data: appointmentItems, isLoading: isLoadingItems } = useAppointmentItems(appointment.id);
+  
+  const TIMEZONE = 'America/Sao_Paulo';
 
   const mutation = useMutation({
     mutationFn: updateAppointment,
@@ -39,21 +42,23 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
       id: appointment.id,
       cliente_id: values.cliente_id,
       responsavel_id: values.responsavel_id,
-      data_hora: values.data_hora,
+      data_hora: values.data_hora, // Já é UTC vindo do form
       status: values.status,
       queryClient: queryClient, // Passando o queryClient
     });
   };
 
-  // Preparar valores iniciais
-  const appointmentDate = new Date(appointment.data_hora);
+  // Preparar valores iniciais: Converter UTC do banco para São Paulo para exibição no formulário
+  const appointmentDateUtc = new Date(appointment.data_hora);
+  const appointmentDateSaoPaulo = utcToZonedTime(appointmentDateUtc, TIMEZONE);
+  
   const initialValues = {
     cliente_id: appointment.cliente_id || "",
     responsavel_id: appointment.responsavel_id || "",
-    date: appointmentDate,
-    time: format(appointmentDate, "HH:mm"),
+    date: appointmentDateSaoPaulo, // Passa a data no fuso horário de SP
+    time: format(appointmentDateSaoPaulo, "HH:mm"), // Extrai a hora de SP
     status: appointment.status,
-    empresa_id: appointment.empresa_id, // <-- Adicionando empresa_id aqui
+    empresa_id: appointment.empresa_id,
     // Mapeamos os itens carregados para o formato esperado pelo AppointmentForm
     items: appointmentItems?.map(item => ({
       produto_id: item.produto_id,

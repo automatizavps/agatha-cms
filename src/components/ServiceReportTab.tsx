@@ -15,6 +15,7 @@ import { Calendar } from '@/components/ui/calendar';
 import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Appointment } from '@/integrations/supabase/appointments';
+import { formatToSaoPaulo } from '@/utils/date'; // Importando utilitário de data
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -82,7 +83,7 @@ const ServiceReportTab: React.FC = () => {
   const exportData = useMemo(() => {
     return filteredAppointments.map(app => ({
       ID_Agendamento: app.id,
-      Data_Hora: format(new Date(app.data_hora), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      Data_Hora: formatToSaoPaulo(app.data_hora), // Usando utilitário
       Status: app.status.toUpperCase(),
       Cliente_Nome: app.clientes?.nome || 'N/A',
       Cliente_Email: app.clientes?.email || 'N/A',
@@ -241,7 +242,7 @@ const ServiceReportTab: React.FC = () => {
                       {app.responsavel?.nome_completo || 'N/A'}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(app.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      {formatToSaoPaulo(app.data_hora)}
                     </TableCell>
                     <TableCell className="text-center">
                       {getStatusBadge(app.status)}

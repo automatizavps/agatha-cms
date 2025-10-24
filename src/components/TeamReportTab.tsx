@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ExportButton from './ExportButton';
+import { formatToSaoPaulo } from '@/utils/date'; // Importando utilitário de data
 
 const TeamReportTab: React.FC = () => {
   const { t } = useTranslation();
@@ -55,7 +56,7 @@ const TeamReportTab: React.FC = () => {
       Nome: team.nome,
       Meta_Valor: team.meta_mensal_valor,
       Meta_Quantidade: team.meta_mensal_quantidade,
-      Data_Criacao: format(new Date(team.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      Data_Criacao: formatToSaoPaulo(team.created_at, 'dd/MM/yyyy HH:mm'), // Usando utilitário
       Empresa: team.empresas?.nome || 'N/A',
       Membros: team.membros.map(m => m.usuarios?.nome_completo || 'N/A').join('; '),
     }));
@@ -164,7 +165,7 @@ const TeamReportTab: React.FC = () => {
                       {team.meta_mensal_quantidade} {t('units')}
                     </TableCell>
                     <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                      {format(new Date(team.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                      {formatToSaoPaulo(team.created_at, "dd/MM/yyyy")}
                     </TableCell>
                   </TableRow>
                 ))}

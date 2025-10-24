@@ -35,6 +35,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
+import { convertLocalToUtcSaoPaulo } from "@/utils/date"; // Importando utilitário de conversão
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -196,15 +197,19 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   const handleSubmit = (values: AppointmentFormValues) => {
     const [hours, minutes] = values.time.split(':').map(Number);
     
-    const data_hora = new Date(values.date);
-    data_hora.setHours(hours, minutes, 0, 0);
+    // 1. Combina data e hora
+    const localDateWithTime = new Date(values.date);
+    localDateWithTime.setHours(hours, minutes, 0, 0);
+    
+    // 2. Converte a data (que é tratada como São Paulo) para UTC antes de enviar ao Supabase
+    const data_hora_utc = convertLocalToUtcSaoPaulo(localDateWithTime);
     
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
 
     onSubmit({
       cliente_id: values.cliente_id,
       responsavel_id: values.responsavel_id,
-      data_hora: data_hora,
+      data_hora: data_hora_utc, // Envia a data em UTC
       items: values.items.map(item => ({
         produto_id: item.produto_id,
         quantidade: item.quantidade,
