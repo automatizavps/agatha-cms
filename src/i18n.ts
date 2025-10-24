@@ -25,7 +25,8 @@ const resources = {
       "minutes": "minutos", // NOVO
       "rows_per_page": "Linhas por página", // NOVO
       "page_info": "Exibindo {{start}}-{{end}} de {{count}}", // NOVO
-      
+      "pagination_disabled_filter": "Paginação desabilitada ao filtrar por empresa.", // NOVO
+
       // Navegação
       "nav_home": "Home",
       "nav_analytics": "Analytics",
