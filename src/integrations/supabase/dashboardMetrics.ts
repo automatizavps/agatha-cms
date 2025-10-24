@@ -18,86 +18,31 @@ export interface TopSellingItem {
 }
 
 /**
- * Busca o faturamento total de pedidos 'entregues' para a empresa especificada
- * na data atual, na semana atual e no mês atual.
- * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
+ * Busca o faturamento total (pedidos + agendamentos) para a empresa especificada
+ * na data atual, na semana atual e no mês atual, usando uma função RPC.
+ * @param companyId O ID da empresa a ser filtrada.
  */
-const fetchRevenueMetrics = async (companyId: string | undefined): Promise<RevenueMetrics> => {
-  // Define o início do dia de hoje (00:00:00)
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  
-  // Define o início da semana (Domingo, 00:00:00)
-  const dayOfWeek = todayStart.getDay(); // 0 = Domingo, 6 = Sábado
-  const weekStart = new Date(todayStart);
-  weekStart.setDate(todayStart.getDate() - dayOfWeek);
-  
-  // Define o início do mês (Dia 1, 00:00:00)
-  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+const fetchRevenueMetrics = async (companyId: string): Promise<RevenueMetrics> => {
+  // Usamos a função RPC criada no banco de dados
+  const { data, error } = await supabase.rpc('get_total_revenue_metrics', { company_id_input: companyId });
 
-
-  // 1. Faturamento Diário (Hoje)
-  let dailyQuery = supabase
-    .from("pedidos")
-    .select("valor_total")
-    .eq("status", "entregue")
-    .gte("created_at", todayStart.toISOString());
-    
-  if (companyId) {
-    dailyQuery = dailyQuery.eq("empresa_id", companyId);
-  }
-
-  const { data: dailyData, error: dailyError } = await dailyQuery;
-
-  if (dailyError) {
-    console.error("Error fetching daily revenue:", dailyError);
-    throw new Error("Failed to fetch daily revenue");
+  if (error) {
+    console.error("Error fetching revenue metrics:", error);
+    throw new Error("Failed to fetch revenue metrics: " + error.message);
   }
   
-  const daily_revenue = dailyData.reduce((sum, order) => sum + order.valor_total, 0);
+  // A função retorna uma tabela com uma única linha
+  const result = data?.[0];
 
-  // 2. Faturamento Semanal (Esta Semana)
-  let weeklyQuery = supabase
-    .from("pedidos")
-    .select("valor_total")
-    .eq("status", "entregue")
-    .gte("created_at", weekStart.toISOString());
-    
-  if (companyId) {
-    weeklyQuery = weeklyQuery.eq("empresa_id", companyId);
+  if (!result) {
+    return { daily_revenue: 0, weekly_revenue: 0, monthly_revenue: 0 };
   }
 
-  const { data: weeklyData, error: weeklyError } = await weeklyQuery;
-
-  if (weeklyError) {
-    console.error("Error fetching weekly revenue:", weeklyError);
-    throw new Error("Failed to fetch weekly revenue");
-  }
-  
-  const weekly_revenue = weeklyData.reduce((sum, order) => sum + order.valor_total, 0);
-  
-  // 3. Faturamento Mensal (Este Mês)
-  let monthlyQuery = supabase
-    .from("pedidos")
-    .select("valor_total")
-    .eq("status", "entregue")
-    .gte("created_at", monthStart.toISOString());
-    
-  if (companyId) {
-    monthlyQuery = monthlyQuery.eq("empresa_id", companyId);
-  }
-
-  const { data: monthlyData, error: monthlyError } = await monthlyQuery;
-
-  if (monthlyError) {
-    console.error("Error fetching monthly revenue:", monthlyError);
-    throw new Error("Failed to fetch monthly revenue");
-  }
-  
-  const monthly_revenue = monthlyData.reduce((sum, order) => sum + order.valor_total, 0);
-
-
-  return { daily_revenue, weekly_revenue, monthly_revenue };
+  return {
+    daily_revenue: parseFloat(result.daily_revenue) || 0,
+    weekly_revenue: parseFloat(result.weekly_revenue) || 0,
+    monthly_revenue: parseFloat(result.monthly_revenue) || 0,
+  };
 };
 
 /**
@@ -180,8 +125,9 @@ export const useRevenueMetrics = (companyId: string | undefined) => {
   
   return useQuery<RevenueMetrics, Error>({
     queryKey: ["revenueMetrics", companyId, currentDate],
-    queryFn: () => fetchRevenueMetrics(companyId),
-    enabled: true, 
+    queryFn: () => fetchRevenueMetrics(companyId!),
+    // Habilitado apenas se houver um companyId (a RPC exige)
+    enabled: !!companyId, 
   });
 };
 

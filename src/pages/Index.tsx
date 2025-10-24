@@ -33,6 +33,7 @@ const Index = () => {
   
   const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
   
+  // useRevenueMetrics agora só é habilitado se filteredCompanyId existir
   const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
   const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); // NOVO HOOK
@@ -40,6 +41,9 @@ const Index = () => {
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
   const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount;
+  
+  // Verifica se as métricas de receita estão desabilitadas (Super Admin em 'all')
+  const isRevenueDisabled = isSuperAdmin && selectedCompanyId === 'all';
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -49,8 +53,11 @@ const Index = () => {
   };
 
   const renderMetricValue = (value: number | string, isCurrency: boolean = false) => {
-    if (isLoading) {
+    if (isLoading && !isRevenueDisabled) {
       return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
+    }
+    if (isRevenueDisabled) {
+      return <div className="text-sm text-muted-foreground">{t("select_company_for_metrics")}</div>;
     }
     if (isCurrency) {
       return <div className="text-xl font-bold">{formatCurrency(value as number)}</div>;
@@ -100,7 +107,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues hoje</p>
+              <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos hoje</p>
             </CardContent>
           </Card>
           
@@ -112,7 +119,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(revenueMetrics?.weekly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues esta semana</p>
+              <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos esta semana</p>
             </CardContent>
           </Card>
           
@@ -124,7 +131,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {renderMetricValue(revenueMetrics?.monthly_revenue || 0, true)}
-              <p className="text-xs text-muted-foreground">Pedidos entregues este mês</p>
+              <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos este mês</p>
             </CardContent>
           </Card>
           
