@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, ShoppingCart, Search, Trash2 } from "lucide-react";
+import { Loader2, RefreshCw, ShoppingCart, Search, Trash2, CalendarIcon } from "lucide-react";
 import { useOrders, deleteOrders } from "@/integrations/supabase/orders";
 import { showError, showSuccess } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
@@ -12,13 +12,28 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const OrdersContent = () => {
-  const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders();
+  // --- Filter States ---
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  
+  // Fetch data using filters
+  const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders(
+    undefined, // companyId é undefined, RLS filtra
+    {
+      startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+      endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+    }
+  );
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -77,8 +92,43 @@ const OrdersContent = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center mb-4">
-            <div className="relative w-full max-w-sm">
+          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+            
+            {/* Filtro de Data (Período) */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full md:w-[280px] justify-start text-left font-normal",
+                    (!startDate || !endDate) && "text-muted-foreground"
+                  )}
+                  disabled={isLoading}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate && endDate ? (
+                    `${format(startDate, 'dd/MM/yyyy', { locale: ptBR })} - ${format(endDate, 'dd/MM/yyyy', { locale: ptBR })}`
+                  ) : (
+                    <span>{t('select_date_range')}</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={{ from: startDate, to: endDate }}
+                  onSelect={(range) => {
+                    setStartDate(range?.from);
+                    setEndDate(range?.to);
+                  }}
+                  numberOfMonths={2}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+            
+            {/* Campo de Busca Textual */}
+            <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={t('order_search_placeholder')}
@@ -88,12 +138,14 @@ const OrdersContent = () => {
                 disabled={isLoading && !isRefetching}
               />
             </div>
+            
+            {/* Botão de Recarregar */}
             <Button 
               variant="outline" 
               size="icon" 
               onClick={() => refetch()} 
               disabled={isRefetching}
-              className="ml-2"
+              className="shrink-0"
             >
               {isRefetching ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
