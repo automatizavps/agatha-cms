@@ -19,7 +19,7 @@ import Orders from "./pages/Orders";
 import Teams from "./pages/Teams";
 import Categories from "./pages/Categories";
 import Notifications from "./pages/Notifications"; // Importando a nova página
-import { SessionContextProvider, ProtectedRoute } from "@/integrations/supabase/auth";
+import { SessionContextProvider, ProtectedRoute, PublicRoute } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter"; // Importando o novo provider
 import React from "react"; // Importando React
 
@@ -64,7 +64,7 @@ const App = () => (
         <SessionContextProvider>
           <Routes>
             {/* Public Route */}
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
             {/* Protected Routes Wrapper */}
             <Route 
