@@ -127,7 +127,7 @@ const resources = {
       "product_list_title": "Lista de Produtos",
       "add_new_product": "Novo Produto",
       "product_search_placeholder": "Buscar por nome, categoria ou marca...",
-      // "filter_all_categories": "Todas as Categorias", // REMOVIDO
+      "filter_all_categories": "Todas as Categorias", // ADICIONADO
       "filter_all_brands": "Todas as Marcas",
       "low_stock_alert_title": "Atenção: Estoque Baixo!",
       "low_stock_alert_description": "Os seguintes produtos estão com estoque abaixo de {{threshold}} unidades:",

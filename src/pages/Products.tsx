@@ -17,26 +17,29 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import EditProductSheet from "@/components/EditProductSheet";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
 
 const LOW_STOCK_THRESHOLD = 10;
 
 const ProductsContent = () => {
-  const { data: products, isLoading, isError, error, refetch, isRefetching } = useProductsOnly();
-  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { t } = useTranslation();
+  
+  // Usando o filtro global do dashboard
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
+  // Passando filteredCompanyId para o hook de fetch
+  const { data: allProducts, isLoading, isError, error, refetch, isRefetching } = useProductsOnly();
+  
   const [searchTerm, setSearchTerm] = useState("");
-  // const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all'); // REMOVIDO
+  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all'); // REINTRODUZIDO
   const [brandFilter, setBrandFilter] = useState<string | 'all'>('all');
-  const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
-  const { t } = useTranslation();
   
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
-  const isChecking = isLoading || isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
   // Permissões baseadas no perfil customizado
   const canReadProducts = useCanRead('products');
@@ -53,8 +56,8 @@ const ProductsContent = () => {
   // Efeito para verificar o parâmetro 'editId' na URL
   useEffect(() => {
     const editId = searchParams.get('editId');
-    if (editId && products) {
-      const productToEdit = products.find(p => p.id === editId);
+    if (editId && allProducts) {
+      const productToEdit = allProducts.find(p => p.id === editId);
       if (productToEdit) {
         setEditingProduct(productToEdit);
         setIsEditSheetOpen(true);
@@ -63,7 +66,7 @@ const ProductsContent = () => {
         navigate('/products', { replace: true });
       }
     }
-  }, [searchParams, products, isLoading, navigate]);
+  }, [searchParams, allProducts, isLoading, navigate]);
   
   // Função para lidar com a edição vinda da tabela
   const handleEditFromTable = (product: Product) => {
@@ -85,31 +88,56 @@ const ProductsContent = () => {
     showError(t("error_loading_data") + ": " + error.message);
   }
   
-  // Extrai marcas únicas
+  // 1. Filtragem Inicial por Empresa (Lado do Cliente)
+  const productsByCompany = useMemo(() => {
+    if (!allProducts) return [];
+    
+    // Se for Super Admin e o filtro estiver em 'all', mostramos todos.
+    if (isSuperAdmin && filteredCompanyId === undefined) {
+      return allProducts;
+    }
+    
+    // Se houver um ID de empresa filtrado (seja pelo SA ou pelo Admin/Func fixo)
+    if (filteredCompanyId) {
+      return allProducts.filter(p => p.empresa_id === filteredCompanyId);
+    }
+    
+    // Caso contrário (Admin/Func sem empresa, ou erro de carregamento), retorna vazio
+    return [];
+  }, [allProducts, filteredCompanyId, isSuperAdmin]);
+  
+  // Extrai categorias e marcas únicas dos produtos filtrados pela empresa
+  const uniqueCategories = useMemo(() => {
+    const categories = new Set<string>();
+    productsByCompany.forEach(p => {
+      if (p.categoria) categories.add(p.categoria);
+    });
+    return Array.from(categories).sort();
+  }, [productsByCompany]);
+  
   const uniqueBrands = useMemo(() => {
-    if (!products) return [];
     const brands = new Set<string>();
-    products.forEach(p => {
+    productsByCompany.forEach(p => {
       if (p.marca) brands.add(p.marca);
     });
     return Array.from(brands).sort();
-  }, [products]);
+  }, [productsByCompany]);
   
+  // 2. Filtragem Final (Marca, Categoria, Busca)
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    let filtered = products;
+    let filtered = productsByCompany;
     
-    // 1. Filtragem por Empresa (se Super Admin e filtro ativo)
-    if (isSuperAdmin && companyFilterId !== 'all') {
-      filtered = filtered.filter(product => product.empresa_id === companyFilterId);
+    // Filtragem por Categoria
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(product => product.categoria === categoryFilter);
     }
 
-    // 2. Filtragem por Marca
+    // Filtragem por Marca
     if (brandFilter !== 'all') {
       filtered = filtered.filter(product => product.marca === brandFilter);
     }
 
-    // 3. Filtragem por Termo de Busca
+    // Filtragem por Termo de Busca
     if (searchTerm) {
       const lowerCaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(product => 
@@ -120,17 +148,16 @@ const ProductsContent = () => {
     }
 
     return filtered;
-  }, [products, searchTerm, brandFilter, companyFilterId, isSuperAdmin]);
+  }, [productsByCompany, searchTerm, brandFilter, categoryFilter]);
   
   // Produtos com estoque baixo (apenas produtos, excluindo serviços)
   const lowStockProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter(p => 
+    return productsByCompany.filter(p => 
       p.tipo === 'produto' && 
       p.estoque_total !== null && 
       p.estoque_total < LOW_STOCK_THRESHOLD
     );
-  }, [products]);
+  }, [productsByCompany]);
 
   return (
     <DashboardLayout>
@@ -176,8 +203,13 @@ const ProductsContent = () => {
             {isSuperAdmin && (
               <div className="w-full md:w-48">
                 <Select 
-                  onValueChange={setCompanyFilterId} 
-                  value={companyFilterId} 
+                  onValueChange={(value) => {
+                    setSelectedCompanyId(value);
+                    // Resetar filtros de marca e categoria ao mudar a empresa
+                    setBrandFilter('all');
+                    setCategoryFilter('all');
+                  }} 
+                  value={selectedCompanyId} 
                   disabled={isLoadingCompanies || isChecking}
                 >
                   <SelectTrigger className="w-full">
@@ -196,12 +228,34 @@ const ProductsContent = () => {
               </div>
             )}
             
+            {/* Filtro de Categoria */}
+            <div className="w-full md:w-48">
+              <Select 
+                onValueChange={setCategoryFilter} 
+                value={categoryFilter} 
+                disabled={isChecking || uniqueCategories.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <Tag className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder={t('filter_all_categories')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter_all_categories')}</SelectItem>
+                  {uniqueCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             {/* Filtro de Marca */}
             <div className="w-full md:w-48">
               <Select 
                 onValueChange={setBrandFilter} 
                 value={brandFilter} 
-                disabled={isChecking}
+                disabled={isChecking || uniqueBrands.length === 0}
               >
                 <SelectTrigger className="w-full">
                   <Factory className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -246,7 +300,7 @@ const ProductsContent = () => {
             </Button>
           </div>
 
-          {isLoading && !isRefetching ? (
+          {isChecking && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
