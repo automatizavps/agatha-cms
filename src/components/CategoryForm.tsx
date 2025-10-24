@@ -41,7 +41,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: se for Super Admin, empresa_id é obrigatório na criação
@@ -100,7 +100,6 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {/* REMOVIDO: SelectItem value="" */}
                     {companies?.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.nome}
