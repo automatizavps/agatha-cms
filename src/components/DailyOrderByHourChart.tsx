@@ -28,7 +28,7 @@ const CustomTooltip = ({ active, payload, label, t }: any) => {
 export default function DailyOrderByHourChart() {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useDailyOrderByHour();
-  const { filteredCompanyId } = useDashboardFilter();
+  const { filteredCompanyId, isSuperAdmin } = useDashboardFilter();
 
   if (isLoading) {
     return (
@@ -44,7 +44,7 @@ export default function DailyOrderByHourChart() {
   }
   
   // Se for Super Admin e estiver em 'Todas as Empresas', desabilitamos o gráfico (RPC exige ID)
-  if (!filteredCompanyId) {
+  if (isSuperAdmin && !filteredCompanyId) {
     return (
       <Card className="h-64">
         <CardHeader>

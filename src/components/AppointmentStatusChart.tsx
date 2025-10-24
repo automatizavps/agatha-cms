@@ -3,11 +3,13 @@ import { useAppointmentChartData } from '@/integrations/supabase/useAppointmentC
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useDashboardFilter } from '@/hooks/useDashboardFilter'; // Importando
 
 const AppointmentStatusChart: React.FC = () => {
   // O hook useAppointmentChartData agora obtém o companyId do contexto
   const { chartData, isLoading, isError } = useAppointmentChartData();
   const { t } = useTranslation();
+  const { filteredCompanyId, isSuperAdmin } = useDashboardFilter(); // Usando o filtro
 
   if (isLoading) {
     return (
@@ -17,6 +19,20 @@ const AppointmentStatusChart: React.FC = () => {
         </CardHeader>
         <CardContent className="flex justify-center items-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Se for Super Admin e estiver em 'Todas as Empresas', desabilitamos o gráfico
+  if (isSuperAdmin && !filteredCompanyId) {
+    return (
+      <Card className="h-64">
+        <CardHeader>
+          <CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle>
+        </CardHeader>
+        <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
+          {t("select_company_for_metrics")}
         </CardContent>
       </Card>
     );
