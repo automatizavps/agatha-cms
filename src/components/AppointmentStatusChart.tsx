@@ -29,7 +29,8 @@ const AppointmentStatusChart: React.FC = () => {
           <CardTitle className="text-lg">{t('chart_title_appointment_status')}</CardTitle>
         </CardHeader>
         <CardContent className="p-4 text-muted-foreground h-full flex items-center justify-center">
-          {isError ? t("chart_error") : t("chart_no_data")}
+          {/* Alterado text-sm para text-xs */}
+          <span className="text-xs text-center">{isError ? t("chart_error") : t("chart_no_data")}</span>
         </CardContent>
       </Card>
     );
