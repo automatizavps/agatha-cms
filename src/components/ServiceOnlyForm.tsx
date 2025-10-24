@@ -244,7 +244,7 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
                   <SelectItem value="" className="text-muted-foreground">
                     {t('none')}
                   </SelectItem>
-                  {categories?.map((category) => (
+                  {categories?.filter(c => c.nome && c.nome.trim() !== '').map((category) => (
                     <SelectItem key={category.id} value={category.nome}>
                       {category.nome}
                     </SelectItem>
