@@ -64,7 +64,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   // Layout Desktop/Tablet
   return (
-    <div className="flex min-h-screen w-full">
+    // Removido min-h-screen para que o conteúdo defina a altura e o body role
+    <div className="flex w-full"> 
       
       {/* Sidebar Fixa */}
       <div 
