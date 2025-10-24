@@ -69,7 +69,7 @@ const TeamReportTab: React.FC = () => {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Target className="h-5 w-5" /> {t('team_list_title')}
         </CardTitle>
       </CardHeader>
@@ -155,7 +155,7 @@ const TeamReportTab: React.FC = () => {
                       </TableCell>
                     )}
                     <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                      {team.membros.length > 0 ? team.membros.map(m => m.usuarios?.nome_completo).join(', ') : t('no_members')}
+                      {team.membros.length > 0 ? team.membros.map(m => m.usuarios?.nome_completo || 'N/A').join(', ') : t('no_members')}
                     </TableCell>
                     <TableCell className="text-right hidden md:table-cell font-semibold text-primary">
                       {formatCurrency(team.meta_mensal_valor)}

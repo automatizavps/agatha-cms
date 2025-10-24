@@ -29,7 +29,7 @@ const Notifications = () => {
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   
   // Estado para seleção de linhas
-  const [selectedNotificationIds, setSelectedNotificationIds] = useState<Set<string>>(new Set());
+  const [selectedNotificationIds, setSelectedNotificationIds] = new Set<string>([]);
 
   // Filtro de Empresa (Super Admin)
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
@@ -154,7 +154,7 @@ const Notifications = () => {
       
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Bell className="h-5 w-5" /> {t('notification_list_title')} ({totalCount})
           </CardTitle>
         </CardHeader>

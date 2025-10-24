@@ -40,7 +40,7 @@ const UsersContent = () => {
       
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>{t('user_list_title')}</CardTitle>
+          <CardTitle className="text-lg">{t('user_list_title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4">

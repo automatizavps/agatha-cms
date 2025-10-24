@@ -39,7 +39,7 @@ const CategoriesContent = () => {
       
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Tag className="h-5 w-5" /> {t('category_list_title')}
           </CardTitle>
         </CardHeader>

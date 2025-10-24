@@ -108,7 +108,7 @@ const OrderReportTab: React.FC = () => {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <ShoppingCart className="h-5 w-5" /> {t('order_list_title')}
         </CardTitle>
       </CardHeader>

@@ -64,7 +64,7 @@ const ClientReportTab: React.FC = () => {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Users className="h-5 w-5" /> {t('client_list_title')}
         </CardTitle>
       </CardHeader>

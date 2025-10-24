@@ -26,7 +26,7 @@ const CompaniesContent = () => {
       
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Building className="h-5 w-5" /> {t('company_list_title')}
           </CardTitle>
         </CardHeader>

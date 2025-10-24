@@ -353,7 +353,7 @@ const AppointmentsContent = () => {
       
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <CalendarCheck className="h-5 w-5" /> {t('nav_appointments')}
           </CardTitle>
         </CardHeader>
