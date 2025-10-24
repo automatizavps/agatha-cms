@@ -71,14 +71,18 @@ const NotificationItem: React.FC<{ notification: Notification }> = ({ notificati
 
 
 export function NotificationBell() {
-  const { data: notifications, isLoading, isError } = useNotifications();
+  // CORREÇÃO: Desestruturando o objeto retornado pelo useNotifications
+  const { data: paginatedData, isLoading, isError } = useNotifications(1, 5); // Usamos página 1 e limite 5 para o sino
+  const notifications = paginatedData?.notifications || [];
+  
   const { filteredCompanyId, isSuperAdmin } = useDashboardFilter();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
   // 1. Filtrar notificações com base no filtro de empresa (se Super Admin)
   const filteredNotifications = useMemo(() => {
-    if (!notifications) return [];
+    // Garantimos que notifications é um array
+    if (notifications.length === 0) return [];
     
     // Se não for Super Admin, ou se o filtro estiver em 'all' (filteredCompanyId é undefined),
     // mostramos todas as notificações do usuário logado.
@@ -95,6 +99,7 @@ export function NotificationBell() {
   }, [notifications, filteredCompanyId, isSuperAdmin]);
   
   const unreadCount = useMemo(() => {
+    // Agora filteredNotifications é garantido ser um array
     return filteredNotifications.filter(n => !n.lida).length || 0;
   }, [filteredNotifications]);
   
