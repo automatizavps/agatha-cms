@@ -93,7 +93,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   const { data: products, isLoading: isLoadingProducts } = useProductsOnly();
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
@@ -226,7 +226,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   const shouldShowCompanyField = isSuperAdmin || isEditing;
   
   // Determina se o aviso deve ser exibido (Apenas Super Admin E empresa não selecionada)
-  const shouldShowWarning = isSuperAdmin && !isCompanySelected;
+  const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
   
   if (isCheckingPermissions) {
     return (
@@ -249,7 +249,17 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
                 {isCompanyFieldEditable ? (
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting || isEditing}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Limpa campos dependentes ao mudar a empresa
+                      form.setValue('cliente_id', '');
+                      form.setValue('responsavel_id', '');
+                      form.setValue('items', []);
+                    }} 
+                    value={field.value} 
+                    disabled={isLoadingCompanies || isSubmitting}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
@@ -280,7 +290,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         )}
         
         {/* Aviso se a empresa não estiver selecionada (Apenas Super Admin na CRIAÇÃO) */}
-        {shouldShowWarning && !isEditing && (
+        {shouldShowWarning && (
           <div className="p-3 bg-yellow-100/50 dark:bg-yellow-900/20 border border-yellow-400/50 rounded-md text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
             <Building className="h-4 w-4" />
             {t('select_company_to_load_data')}
