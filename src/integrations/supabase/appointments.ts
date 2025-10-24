@@ -62,19 +62,12 @@ const fetchAppointments = async (companyId?: string, dateFilter?: 'today'): Prom
   
   // 2. Filtrar por Data (se 'today' for especificado)
   if (dateFilter === 'today') {
-    // NOTA: O backend (RPCs) já usa America/Sao_Paulo para CURRENT_DATE.
-    // Aqui, estamos apenas filtrando a coluna data_hora (que é UTC) para o dia de hoje em UTC.
-    // Para garantir que o filtro seja preciso no fuso horário de São Paulo, 
-    // o ideal seria usar uma função RPC para filtrar, mas para manter a simplicidade do hook,
-    // vamos manter a lógica de filtro de data simples, que funciona bem para a maioria dos casos
-    // onde a data_hora é próxima do tempo atual.
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(todayStart.getDate() + 1);
     
-    // Filtra agendamentos que ocorrem entre 00:00:00 de hoje e 00:00:00 de amanhã (no fuso horário local do servidor/cliente)
-    // Isso é aceitável para o dashboard, mas a exibição usará o utilitário de fuso horário.
+    // Filtra agendamentos que ocorrem entre 00:00:00 de hoje e 00:00:00 de amanhã
     query = query
       .gte('data_hora', todayStart.toISOString())
       .lt('data_hora', tomorrowStart.toISOString());
@@ -139,7 +132,7 @@ interface ItemToCreate {
 interface CreateAppointmentParams {
   cliente_id: string;
   responsavel_id: string;
-  data_hora: Date; // Agora é um objeto Date (UTC)
+  data_hora: Date;
   items: ItemToCreate[]; // Novo campo
   queryClient: QueryClient; // Adicionando QueryClient
   empresa_id?: string; // NOVO: Opcional para Super Admin
@@ -176,7 +169,7 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora,
       empresa_id: empresa_id,
       cliente_id: cliente_id,
       responsavel_id: responsavel_id,
-      data_hora: data_hora.toISOString(), // data_hora já é UTC
+      data_hora: data_hora.toISOString(),
       created_by: created_by,
       status: 'pendente', // Padrão
     })
@@ -210,7 +203,6 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora,
   
   // 5. Criar notificação para o usuário logado
   if (user) {
-    // NOTA: A data_hora aqui é UTC, mas a notificação usará o fuso horário local do usuário para exibição.
     createNotification({
       user_id: user.id,
       empresa_id: empresa_id,
@@ -231,7 +223,7 @@ interface UpdateAppointmentParams {
   id: string;
   cliente_id: string;
   responsavel_id: string;
-  data_hora: Date; // Agora é um objeto Date (UTC)
+  data_hora: Date;
   status: Appointment['status'];
   queryClient: QueryClient; // Adicionando QueryClient
   // Itens não são atualizados via este endpoint, apenas o status e dados principais
@@ -243,7 +235,7 @@ export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_h
     .update({
       cliente_id: cliente_id,
       responsavel_id: responsavel_id,
-      data_hora: data_hora.toISOString(), // data_hora já é UTC
+      data_hora: data_hora.toISOString(),
       status: status,
     })
     .eq("id", id)

@@ -11,7 +11,6 @@ import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ExportButton from './ExportButton';
 import { PermissionGuard } from '@/hooks/use-permission';
-import { formatToSaoPaulo } from '@/utils/date'; // Importando utilitário de data
 
 const CompanyReportTabContent: React.FC = () => {
   const { t } = useTranslation();
@@ -53,7 +52,7 @@ const CompanyReportTabContent: React.FC = () => {
       Email: company.email || 'N/A',
       Telefone: company.telefone || 'N/A',
       Endereco: company.endereco_completo || 'N/A',
-      Data_Criacao: formatToSaoPaulo(company.created_at, 'dd/MM/yyyy HH:mm'), // Usando utilitário
+      Data_Criacao: format(new Date(company.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
     }));
   }, [filteredCompanies]);
 
@@ -148,7 +147,7 @@ const CompanyReportTabContent: React.FC = () => {
                     <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{company.email || 'N/A'}</TableCell>
                     <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{company.telefone || 'N/A'}</TableCell>
                     <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                      {formatToSaoPaulo(company.created_at, "dd/MM/yyyy")}
+                      {format(new Date(company.created_at), "dd/MM/yyyy", { locale: ptBR })}
                     </TableCell>
                   </TableRow>
                 ))}

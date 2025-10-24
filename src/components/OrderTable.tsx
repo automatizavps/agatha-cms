@@ -26,7 +26,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { formatToSaoPaulo } from "@/utils/date"; // Importando utilitário de data
 
 interface OrderTableProps {
   orders: Order[];
@@ -274,7 +273,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
                   {order.clientes?.nome || t('no_data_found')}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                  {formatToSaoPaulo(order.created_at)}
+                  {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                 </TableCell>
                 <TableCell className="text-right font-semibold">
                   {formatCurrency(order.valor_total)}

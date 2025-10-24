@@ -29,8 +29,4 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Adicionando otimização de dependências para date-fns-tz
-  optimizeDeps: {
-    include: ['date-fns-tz'],
-  },
 }));

@@ -15,7 +15,6 @@ import { Calendar } from '@/components/ui/calendar';
 import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OrderStatus } from '@/integrations/supabase/orders';
-import { formatToSaoPaulo } from '@/utils/date'; // Importando utilitário de data
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -88,7 +87,7 @@ const OrderReportTab: React.FC = () => {
   const exportData = useMemo(() => {
     return filteredOrders.map(order => ({
       ID_Pedido: order.id,
-      Data_Criacao: formatToSaoPaulo(order.created_at), // Usando utilitário
+      Data_Criacao: format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       Status: order.status.replace('_', ' ').toUpperCase(),
       Valor_Total: order.valor_total,
       Cliente_Nome: order.clientes?.nome || 'N/A',
@@ -244,7 +243,7 @@ const OrderReportTab: React.FC = () => {
                       {order.clientes?.nome || t('no_data_found')}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                      {formatToSaoPaulo(order.created_at)}
+                      {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
                       {formatCurrency(order.valor_total)}

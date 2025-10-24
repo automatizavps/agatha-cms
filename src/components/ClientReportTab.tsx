@@ -10,7 +10,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ExportButton from './ExportButton';
-import { formatToSaoPaulo } from '@/utils/date'; // Importando utilitário de data
 
 const ClientReportTab: React.FC = () => {
   const { t } = useTranslation();
@@ -52,7 +51,7 @@ const ClientReportTab: React.FC = () => {
       Email: client.email || 'N/A',
       Telefone: client.telefone || 'N/A',
       Endereco: client.endereco_completo || 'N/A',
-      Data_Cadastro: formatToSaoPaulo(client.created_at, 'dd/MM/yyyy HH:mm'), // Usando utilitário
+      Data_Cadastro: format(new Date(client.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       Empresa: client.empresa?.nome || 'N/A',
     }));
   }, [filteredClients]);
@@ -154,7 +153,7 @@ const ClientReportTab: React.FC = () => {
                       </TableCell>
                     )}
                     <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                      {formatToSaoPaulo(client.created_at, "dd/MM/yyyy")}
+                      {format(new Date(client.created_at), "dd/MM/yyyy", { locale: ptBR })}
                     </TableCell>
                   </TableRow>
                 ))}

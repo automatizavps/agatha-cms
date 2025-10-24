@@ -24,8 +24,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { cn } from "@/lib/utils";
-import { PermissionGuard } from "@/hooks/use-permission";
-import { formatToSaoPaulo } from "@/utils/date"; // Importando utilitário de data
+import { PermissionGuard } from "@/hooks/use-permission"; // CORREÇÃO: Importando PermissionGuard
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -320,7 +319,7 @@ const AppointmentsContent = () => {
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="text-center"
+                      className="text-center" // Adicionando text-center ao cabeçalho
                     >
                       {t('order_table_header_status')}
                     </SortableHeader>
@@ -330,28 +329,28 @@ const AppointmentsContent = () => {
                 <TableBody>
                   {sortedAppointments.map((appointment) => (
                     <TableRow key={appointment.id}>
-                      <TableCell className="font-medium align-middle">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
+                      <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
                       {isSuperAdmin && (
-                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground align-middle">
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Building className="h-3 w-3" />
                             {appointment.empresas?.nome || 'N/A'}
                           </div>
                         </TableCell>
                       )}
-                      <TableCell className="align-middle">
+                      <TableCell>
                         <AppointmentItemDisplay appointmentId={appointment.id} />
                       </TableCell>
-                      <TableCell className="align-middle">
-                        {formatToSaoPaulo(appointment.data_hora)}
+                      <TableCell>
+                        {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>
-                      <TableCell className="align-middle">{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
-                      <TableCell className="text-center align-middle">
+                      <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
+                      <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
                         <span className={getStatusBadge(appointment.status)}>
                           {appointment.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right align-middle">
+                      <TableCell className="text-right">
                         <AppointmentActions appointment={appointment} onEdit={handleEdit} />
                       </TableCell>
                     </TableRow>
