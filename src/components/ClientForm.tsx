@@ -117,37 +117,25 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
-                {isEditing ? (
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={companyName || t("select_company")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {companies?.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {companies?.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value} 
+                  // O campo é editável se for Super Admin e não estiver submetendo
+                  disabled={isLoadingCompanies || isSubmitting}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : companyName || t("select_company")} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -159,9 +147,9 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           name="nome"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('client_name')}</FormLabel> {/* CORRIGIDO AQUI */}
+              <FormLabel>{t('client_name')}</FormLabel>
               <FormControl>
-                <Input placeholder={t('client_name_placeholder')} {...field} disabled={isSubmitting} /> {/* CORRIGIDO AQUI */}
+                <Input placeholder={t('client_name_placeholder')} {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
