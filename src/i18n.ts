@@ -165,6 +165,7 @@ const resources = {
       "category_updated_success": "Categoria {{name}} atualizada com sucesso!",
       "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
       "category_name_exists": "Já existe uma categoria com este nome nesta empresa.",
+      "select_category_placeholder": "Selecione ou deixe vazio", // NOVO
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",

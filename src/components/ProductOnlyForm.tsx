@@ -15,10 +15,11 @@ import { Loader2 } from "lucide-react";
 import { Product } from "@/integrations/supabase/products";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MultiImageUpload from "./MultiImageUpload";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
+import { useCategories } from "@/integrations/supabase/categories"; // Importando useCategories
 
 // Definimos o esquema para PRODUTO
 const formSchema = z.object({
@@ -33,7 +34,8 @@ const formSchema = z.object({
   }).optional().nullable(),
   
   marca: z.string().optional().nullable(),
-  categoria: z.string().optional().nullable(), // Mantemos o campo, mas sem validação de unicidade/combobox
+  // Categoria agora é um Select, mas ainda armazena o nome como string
+  categoria: z.string().optional().nullable(), 
   
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
@@ -90,8 +92,14 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
     },
   });
   
+  // Determina o ID da empresa para carregar categorias
+  const companyIdForCategories = isSuperAdmin ? form.watch('empresa_id') : currentProfile?.empresa_id;
+  const isCompanySelected = !!companyIdForCategories;
+  
+  // Carrega categorias filtradas pela empresa selecionada
+  const { data: categories, isLoading: isLoadingCategories } = useCategories(companyIdForCategories || undefined);
+  
   // Determina se o campo empresa deve ser exibido
-  // Deve ser exibido se for Super Admin (criação ou edição) OU se estiver editando e tiver um ID de empresa
   const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
   
   // Determina se o campo empresa deve ser editável
@@ -111,6 +119,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
     
     // Normaliza campos vazios para null
     const marca = values.marca ? values.marca : null;
+    // Categoria: Se for string vazia, é null
     const categoria = values.categoria ? values.categoria : null;
 
     onSubmit({
@@ -147,7 +156,15 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
                 {isCompanyFieldEditable ? (
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Resetar categoria ao mudar a empresa
+                      form.setValue('categoria', '');
+                    }} 
+                    value={field.value} 
+                    disabled={isLoadingCompanies || isSubmitting}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
@@ -210,21 +227,35 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           )}
         />
         
-        {/* Categoria (Input de Texto Simples) */}
+        {/* Categoria (Select) */}
         <FormField
           control={form.control}
           name="categoria"
           render={({ field }) => (
             <FormItem>
               <FormLabel>{t('product_table_header_category')} ({t('optional')})</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Ex: Shampoos" 
-                  {...field} 
-                  disabled={isSubmitting}
-                  value={field.value || ""}
-                />
-              </FormControl>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value || ""} 
+                disabled={isSubmitting || isLoadingCategories || !isCompanySelected}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingCategories ? t("loading") : t("select_category_placeholder")} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {/* Opção para limpar o campo */}
+                  <SelectItem value="" className="text-muted-foreground">
+                    {t('none')}
+                  </SelectItem>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.nome}>
+                      {category.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

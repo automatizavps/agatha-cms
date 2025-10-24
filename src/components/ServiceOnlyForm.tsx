@@ -19,6 +19,7 @@ import { useState } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
+import { useCategories } from "@/integrations/supabase/categories"; // Importando useCategories
 
 // Definimos o esquema para SERVIÇO
 const formSchema = z.object({
@@ -32,7 +33,7 @@ const formSchema = z.object({
     message: "O tempo de serviço deve ser um número inteiro positivo.",
   }).optional().nullable(),
   
-  categoria: z.string().optional().nullable(), // Mantemos o campo, mas sem validação de unicidade/combobox
+  categoria: z.string().optional().nullable(), // Mantemos o campo, mas agora é um Select
   
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
@@ -88,6 +89,13 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
     },
   });
   
+  // Determina o ID da empresa para carregar categorias
+  const companyIdForCategories = isSuperAdmin ? form.watch('empresa_id') : currentProfile?.empresa_id;
+  const isCompanySelected = !!companyIdForCategories;
+  
+  // Carrega categorias filtradas pela empresa selecionada
+  const { data: categories, isLoading: isLoadingCategories } = useCategories(companyIdForCategories || undefined);
+  
   // Determina se o campo empresa deve ser exibido
   const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
   
@@ -106,7 +114,7 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
     // Se for Super Admin, passamos o ID da empresa.
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
-    // Normaliza campos vazios para null
+    // Normaliza campos vazias para null
     const categoria = values.categoria ? values.categoria : null;
 
     onSubmit({
@@ -143,7 +151,15 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
                 {isCompanyFieldEditable ? (
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Resetar categoria ao mudar a empresa
+                      form.setValue('categoria', '');
+                    }} 
+                    value={field.value} 
+                    disabled={isLoadingCompanies || isSubmitting}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={isLoadingCompanies ? t("loading_companies") : t("select_company")} />
@@ -206,21 +222,35 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
           )}
         />
         
-        {/* Categoria (Input de Texto Simples) */}
+        {/* Categoria (Select) */}
         <FormField
           control={form.control}
           name="categoria"
           render={({ field }) => (
             <FormItem>
               <FormLabel>{t('product_table_header_category')} ({t('optional')})</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="Ex: Cortes de Cabelo" 
-                  {...field} 
-                  disabled={isSubmitting}
-                  value={field.value || ""}
-                />
-              </FormControl>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value || ""} 
+                disabled={isSubmitting || isLoadingCategories || !isCompanySelected}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingCategories ? t("loading") : t("select_category_placeholder")} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {/* Opção para limpar o campo */}
+                  <SelectItem value="" className="text-muted-foreground">
+                    {t('none')}
+                  </SelectItem>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.nome}>
+                      {category.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
