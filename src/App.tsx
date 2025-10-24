@@ -20,6 +20,7 @@ import Teams from "./pages/Teams";
 import Notifications from "./pages/Notifications";
 import ProductHistory from "./pages/ProductHistory";
 import CustomProfiles from "./pages/CustomProfiles";
+import Categories from "./pages/Categories"; // IMPORTADO
 import { SessionContextProvider, ProtectedRoute, PublicRoute, useSession } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
 import React, { useState, useEffect } from "react";
@@ -42,6 +43,7 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/clients" element={<Clients />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:productId" element={<ProductHistory />} />
+      <Route path="/products/categories" element={<Categories />} /> {/* ROTA ADICIONADA */}
       <Route path="/services" element={<Services />} />
       <Route path="/orders" element={<Orders />} />
       <Route path="/teams" element={<Teams />} />

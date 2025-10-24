@@ -151,6 +151,21 @@ const resources = {
       "service_name_placeholder": "Nome do serviço",
       "create_service": "Cadastrar Serviço",
       
+      // CATEGORIAS ADICIONADAS
+      "page_title_categories": "Gestão de Categorias",
+      "category_list_title": "Lista de Categorias",
+      "add_new_category": "Nova Categoria",
+      "no_categories_found": "Nenhuma categoria encontrada.",
+      "category_search_placeholder": "Buscar por nome da categoria...",
+      "category_name": "Nome da Categoria",
+      "category_name_placeholder": "Ex: Shampoos, Cortes de Cabelo",
+      "create_category": "Criar Categoria",
+      "edit_category": "Editar Categoria",
+      "category_created_success": "Categoria {{name}} criada com sucesso!",
+      "category_updated_success": "Categoria {{name}} atualizada com sucesso!",
+      "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
+      "category_name_exists": "Já existe uma categoria com este nome nesta empresa.",
+      
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
       "add_new_order": "Novo Pedido",
@@ -212,22 +227,6 @@ const resources = {
       "select_company": "Selecione a empresa",
       "search_user": "Buscar usuário...",
       "company_not_found": "Empresa não encontrada",
-      
-      // Categorias (REMOVIDO)
-      // "page_title_categories": "Gestão de Categorias",
-      // "category_list_title": "Lista de Categorias",
-      // "add_new_category": "Nova Categoria",
-      // "no_categories_found": "Nenhuma categoria encontrada.",
-      // "category_search_placeholder": "Buscar por nome da categoria...",
-      // "category_name": "Nome da Categoria",
-      // "category_name_placeholder": "Ex: Shampoos, Cortes de Cabelo",
-      // "create_category": "Criar Categoria",
-      // "edit_category": "Editar Categoria",
-      // "category_created_success": "Categoria {{name}} criada com sucesso!",
-      // "category_updated_success": "Categoria {{name}} atualizada com sucesso!",
-      // "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
-      // "select_category": "Selecione a categoria",
-      // "search_category": "Buscar categoria...",
       
       // Notificações (Notifications)
       "page_title_notifications": "Notificações",
@@ -406,6 +405,7 @@ const resources = {
       "analytics": "Analytics",
       "companies": "Empresas",
       "notifications": "Notificações",
+      "categories": "Categorias", // ADICIONADO
     },
   },
 };

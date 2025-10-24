@@ -57,7 +57,7 @@ const fetchPermissions = async (customProfileId: string): Promise<PermissionMap>
 const ALL_MODULES: string[] = [
   'users', 'clients', 'products', 'services', 
   'orders', 'appointments', 'teams', 'analytics', 
-  'companies', 'notifications', 'custom_profiles' // 'categories' REMOVIDO
+  'companies', 'notifications', 'custom_profiles', 'categories' // ADICIONADO categories
 ];
 
 

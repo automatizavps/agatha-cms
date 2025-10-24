@@ -102,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadClients = useCanRead('clients');
   const canReadProducts = useCanRead('products');
   const canReadServices = useCanRead('services');
-  // const canReadCategories = useCanRead('categories'); // REMOVIDO
+  const canReadCategories = useCanRead('categories'); // ADICIONADO
   const canReadUsers = useCanRead('users');
   const canReadTeams = useCanRead('teams');
   const canReadCompanies = useCanRead('companies');
@@ -120,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const isCompaniesOpen = location.pathname.startsWith('/companies');
   
   // Verifica se o grupo de Produtos/Serviços deve ser exibido
-  const showProductsServicesGroup = canReadProducts || canReadServices; // canReadCategories REMOVIDO
+  const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories; // ADICIONADO canReadCategories
   
   // Verifica se o grupo de Empresas deve ser exibido
   const showCompaniesGroup = canReadCompanies || canReadCustomProfiles;
@@ -240,7 +240,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                       {...navItemProps}
                     />
                   )}
-                  {/* Item de Categoria REMOVIDO */}
+                  {canReadCategories && (
+                    <NavItem
+                      to="/products/categories"
+                      icon={<Tag className="h-5 w-5" />}
+                      label={t('page_title_categories')}
+                      isSubItem
+                      {...navItemProps}
+                    />
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
