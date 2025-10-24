@@ -30,7 +30,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import FloatingBulkActions from "@/components/FloatingBulkActions";
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -440,6 +439,31 @@ const AppointmentsContent = () => {
             </Button>
           </div>
           
+          {/* Barra de Ações em Massa (NOVA POSIÇÃO) */}
+          {selectedAppointmentIds.size > 0 && (
+            <div className={cn(
+              "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
+              "flex items-center justify-between bg-card"
+            )}>
+              <span className="text-sm font-medium text-foreground">
+                {t('selected_items_count', { count: selectedAppointmentIds.size })}
+              </span>
+              
+              <Button 
+                variant="destructive" 
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                {bulkDeleteMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                {t('delete')} ({selectedAppointmentIds.size})
+              </Button>
+            </div>
+          )}
+          
           {isLoading && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -568,13 +592,6 @@ const AppointmentsContent = () => {
           onOpenChange={handleCloseEditSheet} 
         />
       )}
-      
-      {/* Componente Flutuante de Ações em Massa */}
-      <FloatingBulkActions 
-        selectedCount={selectedAppointmentIds.size}
-        onDelete={handleBulkDelete}
-        isDeleting={bulkDeleteMutation.isPending}
-      />
     </DashboardLayout>
   );
 };

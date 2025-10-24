@@ -13,8 +13,8 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
-import FloatingBulkActions from "@/components/FloatingBulkActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 const ClientsContent = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
@@ -24,7 +24,7 @@ const ClientsContent = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
-  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set()); // NOVO ESTADO
+  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
 
   const isSuperAdmin = profile?.perfil_id === 1;
@@ -150,6 +150,31 @@ const ClientsContent = () => {
               )}
             </Button>
           </div>
+          
+          {/* Barra de Ações em Massa (NOVA POSIÇÃO) */}
+          {selectedClientIds.size > 0 && (
+            <div className={cn(
+              "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
+              "flex items-center justify-between bg-card"
+            )}>
+              <span className="text-sm font-medium text-foreground">
+                {t('selected_items_count', { count: selectedClientIds.size })}
+              </span>
+              
+              <Button 
+                variant="destructive" 
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                {bulkDeleteMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                {t('delete')} ({selectedClientIds.size})
+              </Button>
+            </div>
+          )}
 
           {isChecking && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
@@ -182,13 +207,6 @@ const ClientsContent = () => {
           )}
         </CardContent>
       </Card>
-      
-      {/* Componente Flutuante de Ações em Massa */}
-      <FloatingBulkActions 
-        selectedCount={selectedClientIds.size}
-        onDelete={handleBulkDelete}
-        isDeleting={bulkDeleteMutation.isPending}
-      />
     </DashboardLayout>
   );
 };

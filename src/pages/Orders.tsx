@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, ShoppingCart, Search } from "lucide-react";
+import { Loader2, RefreshCw, ShoppingCart, Search, Trash2 } from "lucide-react";
 import { useOrders, deleteOrders } from "@/integrations/supabase/orders";
 import { showError, showSuccess } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
@@ -10,13 +10,13 @@ import AddOrderSheet from "@/components/AddOrderSheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
-import FloatingBulkActions from "@/components/FloatingBulkActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 const OrdersContent = () => {
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set()); // NOVO ESTADO
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -102,6 +102,31 @@ const OrdersContent = () => {
               )}
             </Button>
           </div>
+          
+          {/* Barra de Ações em Massa (NOVA POSIÇÃO) */}
+          {selectedOrderIds.size > 0 && (
+            <div className={cn(
+              "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
+              "flex items-center justify-between bg-card"
+            )}>
+              <span className="text-sm font-medium text-foreground">
+                {t('selected_items_count', { count: selectedOrderIds.size })}
+              </span>
+              
+              <Button 
+                variant="destructive" 
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                {bulkDeleteMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                {t('delete')} ({selectedOrderIds.size})
+              </Button>
+            </div>
+          )}
 
           {isLoading && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
@@ -134,13 +159,6 @@ const OrdersContent = () => {
           )}
         </CardContent>
       </Card>
-      
-      {/* Componente Flutuante de Ações em Massa */}
-      <FloatingBulkActions 
-        selectedCount={selectedOrderIds.size}
-        onDelete={handleBulkDelete}
-        isDeleting={bulkDeleteMutation.isPending}
-      />
     </DashboardLayout>
   );
 };
