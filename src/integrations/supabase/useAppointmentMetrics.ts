@@ -1,4 +1,5 @@
 import { useAppointments, Appointment } from "./appointments";
+import { format } from "date-fns";
 
 interface AppointmentMetrics {
   totalAppointments: number;
@@ -7,8 +8,14 @@ interface AppointmentMetrics {
 }
 
 export const useAppointmentMetrics = (companyId?: string) => {
+  // Define o filtro para 'today' usando DateRange
+  const todayStart = format(new Date(), 'yyyy-MM-dd');
+  
   // Passamos companyId e o filtro 'today' para useAppointments
-  const { data: appointments, isLoading, isError, error } = useAppointments(companyId, 'today');
+  const { data: appointments, isLoading, isError, error } = useAppointments(companyId, {
+    startDate: todayStart,
+    endDate: todayStart,
+  });
 
   const metrics: AppointmentMetrics = {
     totalAppointments: 0,

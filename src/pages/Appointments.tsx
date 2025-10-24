@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppointments, Appointment, deleteAppointment, useAppointmentItems } from "@/integrations/supabase/appointments";
-import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown, Search, RefreshCw, CalendarIcon, Filter } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -24,7 +24,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { cn } from "@/lib/utils";
-import { PermissionGuard } from "@/hooks/use-permission"; // CORREÇÃO: Importando PermissionGuard
+import { PermissionGuard } from "@/hooks/use-permission";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -169,9 +173,9 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
   );
 };
 
+const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
 const AppointmentsContent = () => {
-  const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments();
   const { data: profile } = useCurrentUserProfile();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
@@ -179,7 +183,23 @@ const AppointmentsContent = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
+  // --- Filter States ---
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Appointment['status'] | 'all'>('all');
+  
   const isSuperAdmin = profile?.perfil_id === 1;
+
+  // Fetch data using filters
+  const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(
+    isSuperAdmin ? undefined : profile?.empresa_id, // Company filter is handled by RLS/hook, but we pass undefined for SA to fetch all
+    {
+      startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+      endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+      status: statusFilter,
+    }
+  );
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -206,10 +226,30 @@ const AppointmentsContent = () => {
     }
   };
   
-  const sortedAppointments = useMemo(() => {
+  // Client-side search filtering
+  const filteredAppointments = useMemo(() => {
     if (!appointments) return [];
     
-    const sorted = [...appointments].sort((a, b) => {
+    let filtered = appointments;
+    
+    // 1. Search Term Filter (client-side)
+    if (searchTerm) {
+      const lowerCaseSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(appointment => 
+        appointment.clientes?.nome.toLowerCase().includes(lowerCaseSearch) ||
+        appointment.responsavel?.nome_completo.toLowerCase().includes(lowerCaseSearch) ||
+        appointment.status.toLowerCase().includes(lowerCaseSearch)
+      );
+    }
+    
+    return filtered;
+  }, [appointments, searchTerm]);
+  
+  // Sorting logic
+  const sortedAppointments = useMemo(() => {
+    if (!filteredAppointments) return [];
+    
+    const sorted = [...filteredAppointments].sort((a, b) => {
       let aValue: any;
       let bValue: any;
       
@@ -248,7 +288,7 @@ const AppointmentsContent = () => {
     });
     
     return sorted;
-  }, [appointments, sortKey, sortDirection]);
+  }, [filteredAppointments, sortKey, sortDirection]);
 
 
   return (
@@ -265,6 +305,87 @@ const AppointmentsContent = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          
+          {/* --- Filter UI --- */}
+          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+            
+            {/* Filtro de Data */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full md:w-[280px] justify-start text-left font-normal",
+                    (!startDate || !endDate) && "text-muted-foreground"
+                  )}
+                  disabled={isLoading}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate && endDate ? (
+                    `${format(startDate, 'dd/MM/yyyy', { locale: ptBR })} - ${format(endDate, 'dd/MM/yyyy', { locale: ptBR })}`
+                  ) : (
+                    <span>{t('select_date_range')}</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={{ from: startDate, to: endDate }}
+                  onSelect={(range) => {
+                    setStartDate(range?.from);
+                    setEndDate(range?.to);
+                  }}
+                  numberOfMonths={2}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+            
+            {/* Filtro de Status */}
+            <Select onValueChange={(val) => setStatusFilter(val as Appointment['status'] | 'all')} value={statusFilter} disabled={isLoading}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder={t('filter_all_status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filter_all_status')}</SelectItem>
+                {statusOptions.map((status) => (
+                  <SelectItem key={status} value={status} className="capitalize">
+                    {t(status)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Campo de Busca Textual */}
+            <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t('appointment_search_placeholder')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+                disabled={isLoading}
+              />
+            </div>
+            
+            {/* Botão de Recarregar */}
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => refetch()} 
+              disabled={isRefetching}
+              className="shrink-0"
+            >
+              {isRefetching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          
           {isLoading && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -319,7 +440,7 @@ const AppointmentsContent = () => {
                       currentSortKey={sortKey} 
                       currentSortDirection={sortDirection} 
                       onSort={handleSort}
-                      className="text-center" // Adicionando text-center ao cabeçalho
+                      className="text-center"
                     >
                       {t('order_table_header_status')}
                     </SortableHeader>
@@ -345,9 +466,9 @@ const AppointmentsContent = () => {
                         {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>
                       <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
-                      <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
+                      <TableCell className="text-center">
                         <span className={getStatusBadge(appointment.status)}>
-                          {appointment.status}
+                          {t(appointment.status)}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">

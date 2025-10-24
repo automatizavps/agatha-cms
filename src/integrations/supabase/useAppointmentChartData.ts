@@ -1,5 +1,6 @@
 import { useAppointments, Appointment } from "./appointments";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando o hook de filtro
+import { format } from "date-fns"; // Importando format
 
 interface ChartData {
   name: string;
@@ -17,8 +18,15 @@ const statusColors: Record<Appointment['status'], string> = {
 
 export const useAppointmentChartData = () => {
   const { filteredCompanyId } = useDashboardFilter();
+  
+  // Define o filtro para 'today' usando DateRange
+  const todayStart = format(new Date(), 'yyyy-MM-dd');
+  
   // Passamos filteredCompanyId e o filtro 'today' para useAppointments
-  const { data: appointments, isLoading, isError, error } = useAppointments(filteredCompanyId, 'today');
+  const { data: appointments, isLoading, isError, error } = useAppointments(filteredCompanyId, {
+    startDate: todayStart,
+    endDate: todayStart,
+  });
 
   const metrics: ChartData[] = [];
 
