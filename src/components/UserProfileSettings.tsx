@@ -159,7 +159,7 @@ const UserProfileSettings = () => {
         
         {/* Seção de Avatar */}
         <div className="flex flex-col items-center border-b pb-4">
-          <h3 className="text-lg font-semibold mb-2">{t('profile_full_name')}</h3>
+          <h3 className="text-lg font-semibold mb-2">Minha Foto</h3> {/* ALTERADO AQUI */}
           <AvatarUpload 
             currentAvatarUrl={profile.avatar_url}
             onUploadComplete={handleAvatarUploadComplete}
