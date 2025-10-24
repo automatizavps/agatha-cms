@@ -82,8 +82,11 @@ serve(async (req) => {
     return returnError("Failed to fetch associated users.", 400);
   }
   
-  const userIdsToDelete = usersData.map(u => u.id);
-  
+  // Filtra a lista de usuários a serem excluídos do Auth, excluindo o Super Admin logado
+  const userIdsToDelete = usersData
+    .map(u => u.id)
+    .filter(id => id !== adminUserId); // NÃO exclui o Super Admin logado
+
   // 5. Excluir a empresa da tabela 'empresas'
   // Esta ação deve disparar a exclusão em cascata de todos os dados relacionados (clientes, produtos, pedidos, agendamentos, etc.)
   const { error: deleteCompanyError } = await supabaseAdmin
@@ -96,7 +99,7 @@ serve(async (req) => {
     return returnError(deleteCompanyError.message, 400);
   }
   
-  // 6. Excluir os usuários do Supabase Auth (requer Service Role Key)
+  // 6. Excluir os usuários associados do Supabase Auth (exceto o Super Admin)
   for (const userId of userIdsToDelete) {
     const { error: deleteAuthUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (deleteAuthUserError) {
