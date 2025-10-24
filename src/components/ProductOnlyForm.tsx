@@ -69,7 +69,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
   const { data: categories, isLoading: isLoadingCategories } = useCategories(); // Novo hook
   const { t } = useTranslation();
   
-  const isSuperAdmin = currentProfile?.perfil_id === 1;
+  const isSuperAdmin = currentProfile?.is_super_admin; // Usando a flag correta
   const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies) || isLoadingCategories;
   
   const [photos, setPhotos] = useState<string[] | null>(defaultValues?.fotos || null);
@@ -96,6 +96,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
   });
   
   // Determina se o campo empresa deve ser exibido
+  // Deve ser exibido se for Super Admin (criação ou edição) OU se estiver editando e tiver um ID de empresa
   const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
   
   // Determina se o campo empresa deve ser editável
