@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import ExportButton from "@/components/ExportButton"; // Importando ExportButton
+import { format } from "date-fns"; // Importando format
 
 const ClientsContent = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
@@ -56,6 +58,19 @@ const ClientsContent = () => {
 
     return filtered;
   }, [clients, searchTerm, companyFilterId, isSuperAdmin]);
+  
+  // Mapeamento de dados para exportação
+  const exportData = useMemo(() => {
+    return filteredClients.map(client => ({
+      ID_Cliente: client.id,
+      Nome: client.nome,
+      Email: client.email || 'N/A',
+      Telefone: client.telefone || 'N/A',
+      Endereco: client.endereco_completo || 'N/A',
+      Data_Cadastro: format(new Date(client.created_at), 'dd/MM/yyyy HH:mm'),
+      Empresa: client.empresa?.nome || 'N/A',
+    }));
+  }, [filteredClients]);
   
   // Mutação para exclusão em massa
   const bulkDeleteMutation = useMutation({
@@ -135,23 +150,31 @@ const ClientsContent = () => {
               />
             </div>
             
-            {/* Botão de Recarregar */}
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => refetch()} 
-              disabled={isRefetching}
-              className="shrink-0"
-            >
-              {isRefetching ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
+            {/* Botões de Ação */}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => refetch()} 
+                disabled={isRefetching}
+                className="shrink-0"
+              >
+                {isRefetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
+              <ExportButton 
+                data={exportData} 
+                fileName={`Relatorio_Clientes_${format(new Date(), 'yyyyMMdd')}`}
+                disabled={isChecking || filteredClients.length === 0}
+                isLoading={false}
+              />
+            </div>
           </div>
           
-          {/* Barra de Ações em Massa (NOVA POSIÇÃO) */}
+          {/* Barra de Ações em Massa */}
           {selectedClientIds.size > 0 && (
             <div className={cn(
               "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
