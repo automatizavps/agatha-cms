@@ -31,6 +31,7 @@ const formatTimeUnit = (tick: number | string, isPeriod: boolean) => {
 // Função auxiliar para formatar o tooltip
 const CustomTooltip = ({ active, payload, label, t, isPeriod }: any) => {
   if (active && payload && payload.length) {
+    // O label é o valor de dataKey (time_unit)
     const title = isPeriod 
       ? format(new Date(label), 'dd/MM/yyyy', { locale: ptBR })
       : formatTimeUnit(label, false);
@@ -123,6 +124,8 @@ export default function DailyServiceByHourChart({ startDate, endDate }: DailySer
               tickLine={false}
               axisLine={false}
               tickFormatter={(tick) => formatTimeUnit(tick, isPeriodFilterActive)}
+              // Garante que o eixo X seja tratado como categoria (para strings de data)
+              type="category" 
             />
             <YAxis
               stroke="hsl(var(--foreground))"

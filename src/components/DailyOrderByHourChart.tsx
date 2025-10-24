@@ -123,6 +123,8 @@ export default function DailyOrderByHourChart({ startDate, endDate }: DailyOrder
               tickLine={false}
               axisLine={false}
               tickFormatter={(tick) => formatTimeUnit(tick, isPeriodFilterActive)}
+              // Garante que o eixo X seja tratado como categoria (para strings de data)
+              type="category" 
             />
             <YAxis
               stroke="hsl(var(--foreground))"
