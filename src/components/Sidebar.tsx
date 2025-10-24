@@ -96,21 +96,28 @@ interface SidebarGroupProps {
 const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, children, onNavigate, basePath }) => {
   const location = useLocation();
   const { t } = useTranslation();
-  const isActive = location.pathname.startsWith(basePath);
+  
+  // Verifica se a rota atual começa com o basePath (usado para determinar se o grupo deve estar aberto)
+  const isRouteActive = location.pathname.startsWith(basePath);
   
   // HOOKS MOVIDOS PARA O TOPO (incondicionalmente)
-  const [isOpen, setIsOpen] = useState(isActive);
+  const [isOpen, setIsOpen] = useState(isRouteActive);
   
   // Sync internal state with active route when expanded
   useEffect(() => {
     if (!isCollapsed) {
-      setIsOpen(isActive);
+      setIsOpen(isRouteActive);
     }
-  }, [isActive, isCollapsed]);
+  }, [isRouteActive, isCollapsed]);
   
+  // Helper para verificar se algum subitem está ativo (para o destaque do ícone no modo colapsado)
+  const isAnySubItemActive = isRouteActive;
+
   // Helper to render the icon with correct styling
   const renderIcon = (isActive: boolean) => {
-    const iconColorClass = isActive 
+    // No modo expandido, o ícone do grupo não deve ter a cor primária, a menos que o grupo esteja aberto
+    // No modo colapsado, o ícone deve ter a cor primária se qualquer subitem estiver ativo
+    const iconColorClass = isCollapsed && isAnySubItemActive
       ? "text-sidebar-primary-foreground"
       : "text-sidebar-primary";
       
@@ -167,12 +174,13 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
               <div
                 className={cn(
                   "flex items-center justify-center rounded-lg py-2 transition-all cursor-pointer",
-                  isActive
+                  // Apenas aplica o fundo primário se estiver colapsado E a rota for ativa
+                  isAnySubItemActive
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-primary hover:bg-sidebar-accent"
                 )}
               >
-                {renderIcon(isActive)}
+                {renderIcon(isAnySubItemActive)}
               </div>
             </TooltipTrigger>
           </DropdownMenuTrigger>
@@ -189,20 +197,20 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
   }
 
   // Expanded state: Collapsible
-  // O estado isOpen já foi declarado incondicionalmente no topo.
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger 
         className={cn(
           "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-          isActive
-            ? "bg-sidebar-primary text-sidebar-primary-foreground"
-            : "text-sidebar-foreground",
+          // Remove o destaque de fundo do CollapsibleTrigger, deixando apenas o NavItem fazer isso.
+          // Mantemos o texto foreground padrão.
+          "text-sidebar-foreground",
           "px-3"
         )}
       >
         <div className={cn("flex items-center gap-3")}>
-          {renderIcon(isActive)}
+          {/* O ícone agora usa a cor primária padrão no modo expandido */}
+          {renderIcon(false)} 
           {label}
         </div>
         <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
