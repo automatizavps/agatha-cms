@@ -10,6 +10,10 @@ function Login() {
   
   // URL de placeholder para a imagem de fundo
   const backgroundImageUrl = "https://images.unsplash.com/photo-1543730698-ea2a214991af?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170";
+  
+  // URL de redirecionamento para o fluxo de autenticação (deve ser o URL base da aplicação + /login)
+  // O Supabase adicionará o hash #access_token=... ou #type=recovery
+  const REDIRECT_TO_URL = "https://site-landing3.b9c03f.easypanel.host/login";
 
   return (
     <div className="min-h-screen flex">
@@ -81,6 +85,7 @@ function Login() {
               },
             }}
             theme="light"
+            redirectTo={REDIRECT_TO_URL} // Adicionando redirectTo
             localization={{
               variables: {
                 sign_in: {
