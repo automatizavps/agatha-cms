@@ -31,7 +31,7 @@ export interface Order {
   } | null;
   
   // Itens do pedido (carregados separadamente ou via join)
-  pedido_itens: OrderItem[];
+  pedido_itens: OrderItem[]; // INCLUÍDO AQUI
 }
 
 // --- Fetch ---
@@ -42,7 +42,7 @@ interface OrderFilters {
 }
 
 const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Promise<Order[]> => {
-  // Buscamos pedidos e o nome/email do cliente
+  // Buscamos pedidos, o nome/email do cliente E os itens do pedido
   let query = supabase
     .from("pedidos")
     .select(`
@@ -52,7 +52,14 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
       valor_total,
       status,
       created_at,
-      clientes (nome, email)
+      clientes (nome, email),
+      pedido_itens (
+        id,
+        produto_id,
+        quantidade,
+        preco_unitario,
+        produtos (nome, tipo)
+      )
     `);
     
   // 1. Filtrar por Empresa
@@ -89,7 +96,7 @@ export const useOrders = (companyId?: string, filters: OrderFilters = {}) => {
   });
 };
 
-// --- Fetch Order Items ---
+// --- Fetch Order Items (Mantido, mas pode ser redundante para a tabela) ---
 
 const fetchOrderItems = async (orderId: string): Promise<OrderItem[]> => {
   const { data, error } = await supabase

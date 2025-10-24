@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Order, deleteOrder, OrderStatus } from "@/integrations/supabase/orders";
-import { MoreHorizontal, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Package } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,7 @@ import { ptBR } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Importando Tooltip
 
 interface OrderTableProps {
   orders: Order[];
@@ -96,14 +97,14 @@ const getStatusBadge = (status: OrderStatus) => {
       // Verde Escuro (Fundo) e Verde Claro (Texto)
       return (
         <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>
-          Entregue
+          {t('entregue')}
         </span>
       );
     case 'cancelado':
       // Vermelho Escuro (Fundo) e Vermelho Claro (Texto)
       return (
         <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>
-          Cancelado
+          {t('cancelado')}
         </span>
       );
     case 'pendente_entrega':
@@ -111,7 +112,7 @@ const getStatusBadge = (status: OrderStatus) => {
       // Marrom/Ouro Escuro (Fundo) e Amarelo/Ouro Claro (Texto)
       return (
         <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>
-          {status.replace('_', ' ')}
+          {t('pendente_entrega')}
         </span>
       );
   }
@@ -152,6 +153,45 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
     </TableHead>
+  );
+};
+
+// NOVO Componente para exibir a contagem de itens
+const OrderItemCountDisplay: React.FC<{ order: Order }> = ({ order }) => {
+  const { t } = useTranslation();
+  
+  const totalItems = useMemo(() => {
+    return order.pedido_itens.reduce((sum, item) => sum + item.quantidade, 0);
+  }, [order.pedido_itens]);
+  
+  if (totalItems === 0) {
+    return <span className="text-muted-foreground">N/A</span>;
+  }
+  
+  const tooltipContent = (
+    <div className="space-y-1 text-sm">
+      <p className="font-semibold mb-1">{t('order_list_title')}:</p>
+      {order.pedido_itens.map((item, index) => (
+        <div key={index} className="flex justify-between gap-4">
+          <span className="truncate max-w-[150px]">{item.produtos?.nome || t('unknown_item')}</span>
+          <span className="text-muted-foreground">x{item.quantidade}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <div className="flex items-center gap-1 cursor-default">
+          <Package className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">{totalItems}</span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        {tooltipContent}
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
@@ -281,6 +321,9 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               >
                 {t('order_table_header_client')}
               </SortableHeader>
+              <TableHead className="hidden sm:table-cell text-center">
+                {t('quantity')}
+              </TableHead>
               <SortableHeader 
                 sortKey="data" 
                 currentSortKey={sortKey} 
@@ -331,6 +374,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 </TableCell>
                 <TableCell className="font-medium">
                   {order.clientes?.nome || t('no_data_found')}
+                </TableCell>
+                {/* NOVO: Quantidade de Itens */}
+                <TableCell className="hidden sm:table-cell text-center">
+                  <OrderItemCountDisplay order={order} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
