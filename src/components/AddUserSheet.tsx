@@ -7,18 +7,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { inviteUser } from "@/integrations/supabase/users";
 import { showSuccess, showError } from "@/utils/toast";
 import { useTranslation } from "react-i18next";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCanWrite } from "@/hooks/use-module-permission"; // Importando useCanWrite
 
 const AddUserSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { data: currentProfile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   
-  const isSuperAdmin = currentProfile?.perfil_id === 1;
+  // Permissão de escrita para o módulo 'users'
+  const canWriteUsers = useCanWrite('users');
   
-  if (isLoadingProfile || !isSuperAdmin) {
-    // Apenas Super Admin pode convidar novos usuários
+  if (!canWriteUsers) {
+    // Apenas usuários com permissão de escrita (Super Admin ou perfil customizado com 'escrita')
+    // podem ver o botão. No entanto, a Edge Function restringe a ação a Super Admin.
+    // Mantemos a verificação aqui para consistência de UI, mas a segurança é na Edge Function.
     return null;
   }
 
