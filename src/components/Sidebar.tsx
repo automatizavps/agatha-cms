@@ -107,8 +107,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadTeams = useCanRead('teams');
   const canReadCompanies = useCanRead('companies');
   const canReadNotifications = useCanRead('notifications');
+  const canReadCustomProfiles = useCanRead('custom_profiles'); // NOVO
 
-  const isSuperAdmin = profile?.perfil_id === 1;
+  const isSuperAdmin = profile?.is_super_admin;
 
   const navItemProps = { isCollapsed, onClick: onNavigate };
   
@@ -120,6 +121,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   
   // Verifica se o grupo de Produtos/Serviços deve ser exibido
   const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories;
+  
+  // Verifica se o grupo de Empresas deve ser exibido
+  const showCompaniesGroup = canReadCompanies || canReadCustomProfiles;
+
 
   return (
     <div 
@@ -268,7 +273,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
         
-        {isSuperAdmin && (
+        {showCompaniesGroup && (
           <Collapsible defaultOpen={isCompaniesOpen} disabled={isCollapsed}>
             <CollapsibleTrigger 
               className={cn(
@@ -293,13 +298,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                     {...navItemProps}
                   />
                 )}
-                <NavItem
-                  to="/companies/profiles"
-                  icon={<UserCheck className="h-5 w-5" />}
-                  label={t('page_title_custom_profiles')}
-                  isSubItem
-                  {...navItemProps}
-                />
+                {canReadCustomProfiles && (
+                  <NavItem
+                    to="/companies/profiles"
+                    icon={<UserCheck className="h-5 w-5" />}
+                    label={t('page_title_custom_profiles')}
+                    isSubItem
+                    {...navItemProps}
+                  />
+                )}
               </div>
             </CollapsibleContent>
           </Collapsible>

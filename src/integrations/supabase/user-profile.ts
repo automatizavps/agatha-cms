@@ -89,6 +89,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
       users: 'escrita', clients: 'escrita', products: 'escrita', services: 'escrita', 
       orders: 'escrita', appointments: 'escrita', teams: 'escrita', analytics: 'escrita', 
       companies: 'escrita', notifications: 'escrita', categories: 'escrita',
+      custom_profiles: 'escrita', // NOVO MÓDULO
     };
   } else if (userProfile.perfil_customizado_id) {
     // Se tiver um perfil customizado, buscamos as permissões
