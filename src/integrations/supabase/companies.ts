@@ -10,6 +10,7 @@ export interface Company {
   endereco_completo: string | null;
   email: string | null;
   created_at: string;
+  is_active: boolean; // NOVO CAMPO
 }
 
 // --- Fetch ---
@@ -19,7 +20,7 @@ const fetchCompanies = async (): Promise<Company[]> => {
   // Para o Super Admin (ID 1), a política 'Super Admin pode gerenciar todas as empresas' permite SELECT *.
   const { data, error } = await supabase
     .from("empresas")
-    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at")
+    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at, is_active")
     .order("nome", { ascending: true });
 
   if (error) {
@@ -66,6 +67,7 @@ export const createCompany = async ({ nome, cnpj, telefone, endereco_completo, e
       telefone: telefone,
       endereco_completo: endereco_completo,
       email: email,
+      is_active: true, // Sempre ativa na criação
     })
     .select()
     .single();
@@ -87,18 +89,26 @@ interface UpdateCompanyParams {
   telefone: string | null;
   endereco_completo: string | null;
   email: string | null;
+  is_active?: boolean; // NOVO: Opcional para permitir atualização de outros campos
 }
 
-export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_completo, email }: UpdateCompanyParams) => {
+export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_completo, email, is_active }: UpdateCompanyParams) => {
+  const updatePayload: Partial<UpdateCompanyParams> = {
+    nome: nome,
+    cnpj: cnpj,
+    telefone: telefone,
+    endereco_completo: endereco_completo,
+    email: email,
+  };
+  
+  // Adiciona is_active apenas se for fornecido
+  if (is_active !== undefined) {
+    updatePayload.is_active = is_active;
+  }
+  
   const { data, error } = await supabase
     .from("empresas")
-    .update({
-      nome: nome,
-      cnpj: cnpj,
-      telefone: telefone,
-      endereco_completo: endereco_completo,
-      email: email,
-    })
+    .update(updatePayload)
     .eq("id", id)
     .select()
     .single();

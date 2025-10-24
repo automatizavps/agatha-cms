@@ -63,11 +63,11 @@ const resources = {
       
       // Novas Métricas do Dashboard
       "daily_revenue": "Faturamento Diário",
-      "daily_revenue_overview": "Pedidos entregues hoje",
+      "daily_revenue_overview": "Pedidos e Serviços concluídos hoje",
       "weekly_revenue": "Faturamento Semanal",
-      "weekly_revenue_overview": "Pedidos entregues esta semana",
+      "weekly_revenue_overview": "Pedidos e Serviços concluídos esta semana",
       "monthly_revenue": "Faturamento Mensal",
-      "monthly_revenue_overview": "Pedidos entregues este mês",
+      "monthly_revenue_overview": "Pedidos e Serviços concluídos este mês",
       "total_products": "Total de Produtos",
       "total_products_overview": "Produtos cadastrados na empresa",
       "total_clients": "Total de Clientes",
@@ -338,6 +338,10 @@ const resources = {
       "no_sales_history_found": "Nenhuma transação concluída encontrada para este item.",
       "weekly_sales_history": "Vendas Semanais (Últimos 7 dias)",
       "type": "Tipo",
+      
+      // NOVO: Status da Empresa
+      "company_status_active": "Ativa",
+      "company_status_inactive": "Inativa",
     },
   },
 };

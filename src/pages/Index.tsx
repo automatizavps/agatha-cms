@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered, ShoppingCart } from "lucide-react";
+import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered, ShoppingCart, AlertTriangle } from "lucide-react";
 import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMetrics";
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
@@ -17,6 +17,7 @@ import AppointmentStatusChart from "@/components/AppointmentStatusChart";
 import DailyOrderByHourChart from "@/components/DailyOrderByHourChart"; // NOVO
 import OrderStatusChart from "@/components/OrderStatusChart"; // NOVO
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
 
 const Index = () => {
   const { t } = useTranslation();
@@ -29,7 +30,41 @@ const Index = () => {
     isLoadingFilter 
   } = useDashboardFilter();
   
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  
+  // Verifica o status de ativação da empresa do usuário logado
+  const isCompanyActive = profile?.is_company_active ?? true; // Assume true se for SA ou se não houver empresa_id
+  
+  // Se a empresa do usuário logado estiver inativa, bloqueia o acesso ao conteúdo
+  if (!isCompanyActive && !isSuperAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-[calc(100vh-100px)] flex items-center justify-center p-4">
+          <Card className="max-w-lg w-full text-center border-destructive/50 bg-destructive/5">
+            <CardHeader>
+              <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-2" />
+              <CardTitle className="text-2xl text-destructive">Acesso Bloqueado</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-lg">
+                Sua empresa está atualmente **inativa**.
+              </p>
+              <p className="text-muted-foreground">
+                Para reativar o acesso e restaurar seus dados, por favor, entre em contato com o suporte:
+              </p>
+              <a 
+                href="mailto:automatizavps@gmail.com" 
+                className="text-primary font-semibold hover:underline"
+              >
+                automatizavps@gmail.com
+              </a>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
   
   // Agora, useAppointmentMetrics também aceita undefined
   const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
@@ -42,7 +77,7 @@ const Index = () => {
   // useTeams agora aceita undefined
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
-  const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount;
+  const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount || isLoadingProfile;
   
   // A métrica de equipes é desabilitada se for 'Todas as Empresas' (pois a RPC de progresso exige ID)
   const isTeamsDisabled = isSuperAdmin && selectedCompanyId === 'all';

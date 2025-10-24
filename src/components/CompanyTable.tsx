@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Company, deleteCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Company, deleteCompany, updateCompany } from "@/integrations/supabase/companies";
+import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditCompanySheet from "./EditCompanySheet";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
 
 interface CompanyTableProps {
   companies: Company[];
@@ -31,12 +32,13 @@ interface CompanyTableProps {
 interface CompanyActionsProps {
   company: Company;
   onEdit: (company: Company) => void;
+  isSuperAdmin: boolean;
 }
 
-type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj';
+type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj' | 'is_active';
 type SortDirection = 'asc' | 'desc';
 
-const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
+const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSuperAdmin }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -50,10 +52,41 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+  
+  const toggleActiveMutation = useMutation({
+    mutationFn: (isActive: boolean) => updateCompany({ 
+      id: company.id, 
+      nome: company.nome, 
+      cnpj: company.cnpj, 
+      telefone: company.telefone, 
+      endereco_completo: company.endereco_completo, 
+      email: company.email,
+      is_active: isActive,
+    }),
+    onSuccess: (data) => {
+      const status = data.is_active ? "ativada" : "desativada";
+      showSuccess(`Empresa ${data.nome} ${status} com sucesso.`);
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      // Invalida queries de usuários e dashboard para forçar revalidação de RLS
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
+    },
+    onError: (error) => {
+      showError(t("error_loading_data") + ": " + error.message);
+    },
+  });
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate(company.id);
+    }
+  };
+  
+  const handleToggleActive = () => {
+    const newStatus = !company.is_active;
+    const action = newStatus ? "ativar" : "desativar";
+    if (window.confirm(`Tem certeza que deseja ${action} a empresa ${company.nome}?`)) {
+      toggleActiveMutation.mutate(newStatus);
     }
   };
 
@@ -70,6 +103,29 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit }) => {
         <DropdownMenuItem onClick={() => onEdit(company)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
+        
+        {isSuperAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={handleToggleActive} 
+              disabled={toggleActiveMutation.isPending}
+              className={cn(
+                company.is_active ? "text-destructive focus:text-destructive" : "text-green-500 focus:text-green-500"
+              )}
+            >
+              {toggleActiveMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : company.is_active ? (
+                <XCircle className="mr-2 h-4 w-4" />
+              ) : (
+                <CheckCircle className="mr-2 h-4 w-4" />
+              )}
+              {company.is_active ? "Desativar Empresa" : "Ativar Empresa"}
+            </DropdownMenuItem>
+          </>
+        )}
+        
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           onClick={handleDelete} 
@@ -115,7 +171,10 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const { data: profile } = useCurrentUserProfile();
   const { t } = useTranslation();
+  
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   const handleEdit = (company: Company) => {
     setEditingCompany(company);
@@ -162,6 +221,10 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
           aValue = a.cnpj || '';
           bValue = b.cnpj || '';
           break;
+        case 'is_active':
+          aValue = a.is_active ? 1 : 0;
+          bValue = b.is_active ? 1 : 0;
+          break;
         default:
           return 0;
       }
@@ -178,6 +241,13 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
     return sorted;
   }, [companies, sortKey, sortDirection]);
 
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   return (
     <>
@@ -220,12 +290,21 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
               >
                 CNPJ
               </SortableHeader>
+              <SortableHeader 
+                sortKey="is_active" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-center"
+              >
+                Status
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedCompanies.map((company) => (
-              <TableRow key={company.id}>
+              <TableRow key={company.id} className={!company.is_active ? "bg-destructive/10 hover:bg-destructive/20" : ""}>
                 <TableCell className="font-medium flex items-center gap-2">
                   <Building className="h-4 w-4 text-muted-foreground" />
                   {company.nome}
@@ -237,8 +316,15 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
                   {company.telefone || 'N/A'}
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">{company.cnpj || 'N/A'}</TableCell>
+                <TableCell className="text-center">
+                  {company.is_active ? (
+                    <Badge className="bg-green-600 hover:bg-green-600/90 text-white">Ativa</Badge>
+                  ) : (
+                    <Badge variant="destructive">Inativa</Badge>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">
-                  <CompanyActions company={company} onEdit={handleEdit} />
+                  <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin} />
                 </TableCell>
               </TableRow>
             ))}
