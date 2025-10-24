@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import TeamForm from "./TeamForm";
@@ -54,9 +54,12 @@ const AddTeamSheet = () => {
           <PlusCircle className="mr-2 h-4 w-4" /> {t('add_new_team')}
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-xl flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col" aria-describedby={undefined}>
         <SheetHeader>
           <SheetTitle>{t('add_new_team')}</SheetTitle>
+          <SheetDescription className="sr-only">
+            {t('team_name_placeholder', { defaultValue: 'Formulário para criar uma nova equipe.' })}
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <TeamForm 
