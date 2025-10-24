@@ -107,6 +107,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
+      // Se o campo for "" (vazio), ele se torna null.
       empresa_id = values.empresa_id || null;
     }
     // Se não for Super Admin, empresa_id permanece undefined e a Edge Function usa o ID do Admin logado.

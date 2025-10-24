@@ -83,10 +83,11 @@ serve(async (req) => {
   
   if (isSuperAdmin) {
     // Para Super Admin, target_empresa_id deve ser fornecido e ser um UUID válido (não nulo ou string vazia)
-    if (!target_empresa_id || typeof target_empresa_id !== 'string' || target_empresa_id.length === 0) { 
-      return new Response("Missing required field: empresa_id (for Super Admin)", {
+    // target_empresa_id pode ser null se o campo estiver vazio no frontend (UserForm envia null para "")
+    if (!target_empresa_id || (typeof target_empresa_id === 'string' && target_empresa_id.length === 0)) { 
+      return new Response(JSON.stringify({ error: "A empresa é obrigatória para o Super Admin ao convidar." }), {
         status: 400,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     final_empresa_id = target_empresa_id;
@@ -96,9 +97,9 @@ serve(async (req) => {
   }
 
   if (!final_empresa_id) {
-    return new Response("Cannot determine target company ID.", {
+    return new Response(JSON.stringify({ error: "Não foi possível determinar a empresa do usuário logado." }), {
       status: 400,
-      headers: corsHeaders,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
