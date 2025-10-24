@@ -2,9 +2,10 @@ import React from 'react';
 import { Product } from '@/integrations/supabase/products';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Image as ImageIcon, Factory, DollarSign, Pencil } from 'lucide-react';
+import { Factory, Pencil } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import ProductImageCarousel from './ProductImageCarousel'; // Importando o novo componente
 
 interface LatestProductCardProps {
   product: Product;
@@ -22,22 +23,14 @@ const LatestProductCard: React.FC<LatestProductCardProps> = ({ product }) => {
 
   return (
     <Card className="w-full flex flex-col overflow-hidden h-full">
-      <div className="relative h-32 w-full bg-muted/50 flex items-center justify-center">
-        {product.fotos && product.fotos.length > 0 ? (
-          <img 
-            src={product.fotos[0]} 
-            alt={product.nome} 
-            className="h-full w-full object-cover" 
-          />
-        ) : (
-          <ImageIcon className="h-8 w-8 text-muted-foreground" />
-        )}
-      </div>
+      
+      {/* Área da Imagem/Carrossel */}
+      <ProductImageCarousel photos={product.fotos} alt={product.nome} />
+      
       <CardHeader className="p-3 pb-1 flex-1">
         <CardTitle className="text-base truncate">{product.nome}</CardTitle>
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-1 text-sm">
-        {/* Removido o ícone DollarSign */}
         <div className="flex items-center text-muted-foreground">
           <span>{formatCurrency(product.preco)}</span>
         </div>
