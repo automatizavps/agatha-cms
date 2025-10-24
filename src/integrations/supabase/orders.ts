@@ -36,9 +36,14 @@ export interface Order {
 
 // --- Fetch ---
 
-const fetchOrders = async (): Promise<Order[]> => {
+interface OrderFilters {
+  startDate?: string; // ISO date string (YYYY-MM-DD)
+  endDate?: string;   // ISO date string (YYYY-MM-DD)
+}
+
+const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Promise<Order[]> => {
   // Buscamos pedidos e o nome/email do cliente
-  const { data, error } = await supabase
+  let query = supabase
     .from("pedidos")
     .select(`
       id,
@@ -48,8 +53,25 @@ const fetchOrders = async (): Promise<Order[]> => {
       status,
       created_at,
       clientes (nome, email)
-    `)
-    .order("created_at", { ascending: false });
+    `);
+    
+  // 1. Filtrar por Empresa
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+  
+  // 2. Filtrar por Intervalo de Data (created_at)
+  if (filters.startDate) {
+    query = query.gte('created_at', filters.startDate);
+  }
+  if (filters.endDate) {
+    // Adiciona 1 dia ao endDate para incluir o dia inteiro
+    const end = new Date(filters.endDate);
+    end.setDate(end.getDate() + 1);
+    query = query.lt('created_at', end.toISOString());
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching orders:", error);
@@ -59,10 +81,11 @@ const fetchOrders = async (): Promise<Order[]> => {
   return data as Order[];
 };
 
-export const useOrders = () => {
+export const useOrders = (companyId?: string, filters: OrderFilters = {}) => {
+  // Adiciona companyId e filtros na queryKey
   return useQuery<Order[], Error>({
-    queryKey: ["orders"],
-    queryFn: fetchOrders,
+    queryKey: ["orders", companyId, filters],
+    queryFn: () => fetchOrders(companyId, filters),
   });
 };
 

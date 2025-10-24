@@ -99,7 +99,7 @@ export const useServicesOnly = () => {
 
 // --- Fetch Latest Products Only (tipo='produto') ---
 
-const fetchLatestProductsOnly = async (companyId: string): Promise<Product[]> => {
+const fetchLatestProductsOnly = async (companyId: string | undefined): Promise<Product[]> => {
   let query = supabase
     .from("produtos")
     .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
@@ -124,8 +124,8 @@ const fetchLatestProductsOnly = async (companyId: string): Promise<Product[]> =>
 export const useLatestProductsOnly = (companyId: string | undefined) => {
   return useQuery<Product[], Error>({
     queryKey: ["latest_products_only", companyId],
-    queryFn: () => fetchLatestProductsOnly(companyId!),
-    enabled: !!companyId,
+    queryFn: () => fetchLatestProductsOnly(companyId),
+    enabled: true, // Sempre habilitado, pois a função lida com companyId opcional
   });
 };
 

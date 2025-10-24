@@ -1,5 +1,6 @@
 import { useOrders, Order } from "./orders";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { format } from "date-fns"; // Importando format
 
 interface ChartData {
   name: string;
@@ -14,30 +15,24 @@ const statusColors: Record<Order['status'], string> = {
   cancelado: '#f87171', // red-400
 };
 
-// Função auxiliar para filtrar pedidos pela data de hoje
-const filterOrdersByToday = (orders: Order[]): Order[] => {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  
-  return orders.filter(order => {
-    const orderDate = new Date(order.created_at);
-    return orderDate >= todayStart;
-  });
-};
-
-
 export const useOrderStatusChartData = () => {
   const { filteredCompanyId } = useDashboardFilter();
-  // Usamos useOrders, que já lida com o filtro de empresa (ou todas)
-  const { data: orders, isLoading, isError, error } = useOrders(filteredCompanyId);
+  
+  // Define o filtro para 'today' usando DateRange
+  const todayStart = format(new Date(), 'yyyy-MM-dd');
+  
+  // Passamos filteredCompanyId e o filtro 'today' para useOrders
+  const { data: orders, isLoading, isError, error } = useOrders(filteredCompanyId, {
+    startDate: todayStart,
+    endDate: todayStart,
+  });
 
   const metrics: ChartData[] = [];
 
   if (orders) {
-    // Filtramos apenas os pedidos criados hoje
-    const todayOrders = filterOrdersByToday(orders);
+    // Não precisamos mais de filterOrdersByToday, pois o fetch já filtra pela data de criação
     
-    const statusCounts = todayOrders.reduce((acc, order) => {
+    const statusCounts = orders.reduce((acc, order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {} as Record<Order['status'], number>);
