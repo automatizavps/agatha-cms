@@ -32,6 +32,7 @@ const resources = {
       "optional": "Opcional", // NOVO
       "stock_exceeded": "A quantidade de {{name}} excede o estoque disponível ({{stock}}).", // NOVO
       "items": "itens", // NOVO
+      "no_actions_available": "Nenhuma ação disponível", // NOVO
 
       // Navegação
       "nav_home": "Home",
