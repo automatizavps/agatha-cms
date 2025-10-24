@@ -36,7 +36,7 @@ const AddOrderSheet = () => {
           <ShoppingCart className="mr-2 h-4 w-4" /> {t('add_new_order')}
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-lg flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('add_new_order')}</SheetTitle>
           <SheetDescription className="sr-only">

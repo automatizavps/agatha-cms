@@ -47,7 +47,7 @@ const EditCompanySheet: React.FC<EditCompanySheetProps> = ({ company, isOpen, on
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Empresa: {company.nome}</SheetTitle>
         </SheetHeader>

@@ -57,7 +57,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
   if (isLoadingItems) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-lg flex flex-col">
+        <SheetContent className="sm:max-w-xl flex flex-col">
           <SheetHeader>
             <SheetTitle>Carregando Pedido...</SheetTitle>
             <SheetDescription className="sr-only">
@@ -74,7 +74,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Status do Pedido #{order.id.slice(0, 8)}</SheetTitle>
           <SheetDescription className="sr-only">

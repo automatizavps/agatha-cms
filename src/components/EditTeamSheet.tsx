@@ -84,7 +84,7 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
   if (isLoadingMembers) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-lg flex flex-col">
+        <SheetContent className="sm:max-w-xl flex flex-col">
           <SheetHeader>
             <SheetTitle>{t('loading_team_data')}</SheetTitle>
           </SheetHeader>
@@ -98,7 +98,7 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('edit_team')}: {team.nome}</SheetTitle>
         </SheetHeader>

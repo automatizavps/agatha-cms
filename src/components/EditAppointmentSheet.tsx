@@ -65,7 +65,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
   if (isLoadingItems) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-lg flex flex-col">
+        <SheetContent className="sm:max-w-xl flex flex-col">
           <SheetHeader>
             <SheetTitle>Carregando Agendamento...</SheetTitle>
             <SheetDescription className="sr-only">
@@ -82,7 +82,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Agendamento</SheetTitle>
           <SheetDescription className="sr-only">

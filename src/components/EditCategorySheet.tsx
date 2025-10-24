@@ -41,7 +41,7 @@ const EditCategorySheet: React.FC<EditCategorySheetProps> = ({ category, isOpen,
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg flex flex-col">
+      <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('edit_category')}: {category.nome}</SheetTitle>
         </SheetHeader>
