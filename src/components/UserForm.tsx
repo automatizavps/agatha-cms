@@ -22,6 +22,8 @@ import {
 import { useProfiles } from "@/integrations/supabase/profiles";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
+import { useCustomProfiles } from "@/integrations/supabase/customProfiles"; // Importando perfis customizados
+import { useMemo } from "react";
 
 // Definimos o esquema base
 const baseFormSchema = z.object({
@@ -59,7 +61,7 @@ interface UserFormProps {
 }
 
 const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
-  const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
+  const { data: globalProfiles, isLoading: isLoadingGlobalProfiles } = useProfiles();
   const { data: currentProfile, isLoading: isLoadingCurrentProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
@@ -67,17 +69,13 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: 
-  // 1. Se for Super Admin e não estiver editando, empresa_id é obrigatório.
-  // 2. Se estiver editando, o email não precisa ser validado (pois está desabilitado).
   let finalFormSchema = baseFormSchema;
   
   if (isEditing) {
-    // Remove a validação de email na edição, pois o campo está desabilitado
     finalFormSchema = finalFormSchema.extend({
       email: z.string().optional(),
     });
   } else if (isSuperAdmin) {
-    // Torna empresa_id obrigatório na criação para Super Admin
     finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: "Selecione uma empresa válida.",
@@ -90,13 +88,64 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     resolver: zodResolver(finalFormSchema),
     defaultValues: {
       full_name: defaultValues?.full_name || "",
-      email: defaultValues?.email || "", // Usando o email real
+      email: defaultValues?.email || "", 
       perfil_id: defaultValues?.perfil_id || "",
       telefone: defaultValues?.telefone || "",
       endereco_completo: defaultValues?.endereco_completo || "",
       empresa_id: defaultValues?.empresa_id || "",
     },
   });
+  
+  // Observa o ID da empresa selecionada (apenas relevante para Super Admin na criação)
+  const selectedCompanyId = isSuperAdmin && !isEditing ? form.watch('empresa_id') : undefined;
+  
+  // Carrega perfis customizados filtrados pela empresa selecionada
+  const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(selectedCompanyId);
+  
+  const isLoadingProfiles = isLoadingGlobalProfiles || isLoadingCustomProfiles;
+
+  // Combina perfis globais e customizados
+  const allProfiles = useMemo(() => {
+    if (!globalProfiles) return [];
+    
+    let combined = [...globalProfiles];
+    
+    // Se for Super Admin e uma empresa estiver selecionada, adicionamos os perfis customizados
+    if (isSuperAdmin && selectedCompanyId && customProfiles) {
+      // Mapeamos perfis customizados para o formato Profile (id: string, nome: string)
+      const mappedCustomProfiles = customProfiles.map(p => ({
+        id: p.id,
+        nome: `${p.nome} (Custom)`,
+        descricao: `Perfil customizado da empresa ${p.empresas?.nome || ''}`,
+      }));
+      
+      // Adicionamos os perfis customizados. Usamos o ID do perfil customizado (UUID)
+      // e não o perfil_id (1, 2, 3)
+      combined.push(...mappedCustomProfiles as any);
+    }
+    
+    // Se não for Super Admin, ou se estiver editando, mostramos apenas os perfis globais
+    // (A lógica de edição de perfil customizado para Admin/Funcionário é mais complexa e será tratada separadamente)
+    if (!isSuperAdmin && !isEditing) {
+        // Admin/Funcionário só pode convidar Funcionários (ID 3)
+        return combined.filter(p => p.id === 3);
+    }
+    
+    // Na edição, se o perfil atual for customizado, garantimos que ele apareça na lista
+    if (isEditing && defaultValues?.perfil_id && isNaN(Number(defaultValues.perfil_id))) {
+        const existingCustomProfile = customProfiles?.find(p => p.id === defaultValues.perfil_id);
+        if (existingCustomProfile && !combined.some(p => p.id === existingCustomProfile.id)) {
+             combined.push({
+                id: existingCustomProfile.id,
+                nome: `${existingCustomProfile.nome} (Custom)`,
+                descricao: `Perfil customizado da empresa ${existingCustomProfile.empresas?.nome || ''}`,
+             } as any);
+        }
+    }
+    
+    return combined;
+  }, [globalProfiles, customProfiles, isSuperAdmin, selectedCompanyId, isEditing, defaultValues?.perfil_id]);
+
 
   const handleSubmit = (values: UserFormValues) => {
     // Normaliza campos vazios para null antes de enviar ao Supabase
@@ -107,10 +156,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
-      // Se o campo for "" (vazio), ele se torna null.
       empresa_id = values.empresa_id || null;
     }
-    // Se não for Super Admin, empresa_id permanece undefined e a Edge Function usa o ID do Admin logado.
 
     onSubmit({
       full_name: values.full_name,
@@ -141,7 +188,15 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Empresa</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""} disabled={isLoadingCompanies || isSubmitting}>
+                <Select 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    // Limpa o perfil selecionado ao mudar a empresa
+                    form.setValue('perfil_id', ''); 
+                  }} 
+                  value={field.value || ""} 
+                  disabled={isLoadingCompanies || isSubmitting || isEditing}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={isLoadingCompanies ? "Carregando empresas..." : "Selecione a empresa"} />
@@ -239,14 +294,18 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
           render={({ field }) => (
             <FormItem>
               <FormLabel>Perfil</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingProfiles || isSubmitting}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value} 
+                disabled={isLoadingProfiles || isSubmitting || (isSuperAdmin && !isEditing && !selectedCompanyId)}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingProfiles ? "Carregando perfis..." : "Selecione um perfil"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {profiles?.map((profile) => (
+                  {allProfiles.map((profile) => (
                     <SelectItem key={profile.id} value={String(profile.id)}>
                       {profile.nome}
                     </SelectItem>
@@ -254,6 +313,9 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
                 </SelectContent>
               </Select>
               <FormMessage />
+              {isSuperAdmin && !isEditing && !selectedCompanyId && (
+                <p className="text-xs text-destructive mt-1">Selecione uma empresa para carregar os perfis customizados.</p>
+              )}
             </FormItem>
           )}
         />
