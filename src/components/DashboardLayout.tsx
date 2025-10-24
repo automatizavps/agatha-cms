@@ -3,7 +3,7 @@ import Sidebar from "./Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronLeft, ChevronRight } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, Bot } from "lucide-react"; // Importando Bot
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import BreadcrumbNavigation from "./BreadcrumbNavigation";
@@ -54,8 +54,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </SheetContent>
           </Sheet>
           <div className="w-full flex items-center justify-between">
-            {/* Aplicando text-primary */}
-            <h1 className="text-lg font-semibold text-primary">{t('app_name')}</h1> 
+            {/* Adicionando o ícone Bot */}
+            <h1 className="text-lg font-semibold text-primary flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              {t('app_name')}
+            </h1> 
             <div className="flex items-center gap-2">
               <NotificationBell /> {/* Adicionado aqui */}
               <ThemeToggle />
