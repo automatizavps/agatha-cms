@@ -1,14 +1,21 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, ChevronDown } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
-import React, { useState, useEffect } from "react"; // Importando useState e useEffect
+import React, { useState, useEffect } from "react";
 import { useCanRead } from "@/hooks/use-module-permission";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface NavItemProps {
   to: string;
@@ -16,27 +23,23 @@ interface NavItemProps {
   label: string;
   isCollapsed: boolean;
   onClick?: () => void;
-  isSubItem?: boolean; // Novo prop para sub-itens
+  isSubItem?: boolean;
 }
 
 const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick, isSubItem = false }) => {
   
   const renderIcon = (isActive: boolean) => {
-    // Cor do ícone: Branco quando ativo, Roxo quando inativo
     const iconColorClass = isActive 
-      ? "text-sidebar-primary-foreground" // Branco
-      : "text-sidebar-primary"; // Roxo
+      ? "text-sidebar-primary-foreground"
+      : "text-sidebar-primary";
       
     const iconClasses = cn(
       "h-5 w-5 flex-shrink-0", 
-      iconColorClass, // Aplica a cor
-      isCollapsed ? "mr-0" : "mr-3" // Adiciona margem para separar do label quando não colapsado
+      iconColorClass,
+      isCollapsed ? "mr-0" : "mr-3"
     );
     
-    // Clona o elemento para injetar as classes de cor e tamanho
     if (React.isValidElement(icon)) {
-      // Remove classes de cor existentes e aplica as novas
-      // Usamos cn para garantir que a classe de cor seja aplicada corretamente
       return React.cloneElement(icon as React.ReactElement, { 
         className: cn(icon.props.className, iconClasses) 
       });
@@ -48,18 +51,14 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
     <NavLink
       to={to}
       onClick={onClick}
-      // Usamos 'end' para garantir que apenas a rota exata seja ativada,
-      // a menos que seja a rota raiz "/"
       end={to !== "/"} 
       className={({ isActive }) =>
         cn(
           "flex items-center rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           isActive
-            ? "bg-sidebar-primary text-sidebar-primary-foreground" // Ativo: Fundo roxo, texto branco
-            : "text-sidebar-foreground", // Inativo: Texto cinza (para o label)
-          // Estilos para estado colapsado: pl-6 pr-2 para centralização visual
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+            : "text-sidebar-foreground",
           isCollapsed ? "justify-start w-full pl-6 pr-2 gap-0" : "px-3 gap-3",
-          // Estilos para sub-item
           isSubItem && !isCollapsed && "pl-8 text-sm py-1.5",
         )
       }
@@ -85,6 +84,137 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isCollapsed, onClick
   return content;
 };
 
+interface SidebarGroupProps {
+  icon: React.ReactNode;
+  label: string;
+  isCollapsed: boolean;
+  children: React.ReactNode;
+  onNavigate?: () => void;
+  basePath: string; 
+}
+
+const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, children, onNavigate, basePath }) => {
+  const location = useLocation();
+  const { t } = useTranslation();
+  const isActive = location.pathname.startsWith(basePath);
+  
+  // Helper to render the icon with correct styling
+  const renderIcon = (isActive: boolean) => {
+    const iconColorClass = isActive 
+      ? "text-sidebar-primary-foreground"
+      : "text-sidebar-primary";
+      
+    const iconClasses = cn(
+      "h-5 w-5 flex-shrink-0", 
+      iconColorClass, 
+      isCollapsed ? "mr-0" : "mr-3"
+    );
+    
+    if (React.isValidElement(icon)) {
+      return React.cloneElement(icon as React.ReactElement, { 
+        className: cn(icon.props.className, iconClasses) 
+      });
+    }
+    return <span className={iconClasses}>{icon}</span>;
+  };
+  
+  // Helper to render the children as DropdownMenuItems
+  const renderDropdownItems = () => {
+    return React.Children.map(children, (child) => {
+      if (React.isValidElement(child) && child.type === NavItem) {
+        const navItemProps = child.props as NavItemProps;
+        
+        return (
+          <DropdownMenuItem key={navItemProps.to} asChild>
+            <NavLink 
+              to={navItemProps.to} 
+              onClick={onNavigate}
+              className={({ isActive: isSubActive }) => cn(
+                "flex items-center w-full px-2 py-1.5 text-sm transition-colors",
+                isSubActive ? "text-primary font-semibold" : "text-foreground hover:text-primary"
+              )}
+            >
+              {/* Renderiza o ícone do sub-item com cor baseada no estado ativo */}
+              {React.cloneElement(navItemProps.icon as React.ReactElement, { 
+                className: cn("h-4 w-4 mr-2", navItemProps.to === location.pathname ? "text-primary" : "text-muted-foreground") 
+              })}
+              {navItemProps.label}
+            </NavLink>
+          </DropdownMenuItem>
+        );
+      }
+      return child;
+    });
+  };
+
+  if (isCollapsed) {
+    // Collapsed state: Dropdown Menu triggered by the icon
+    return (
+      <DropdownMenu>
+        <Tooltip delayDuration={0}>
+          <DropdownMenuTrigger asChild>
+            <TooltipTrigger asChild>
+              <div
+                className={cn(
+                  "flex items-center justify-center rounded-lg py-2 transition-all cursor-pointer",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-primary hover:bg-sidebar-accent"
+                )}
+              >
+                {renderIcon(isActive)}
+              </div>
+            </TooltipTrigger>
+          </DropdownMenuTrigger>
+          <TooltipContent side="right">{label}</TooltipContent>
+        </Tooltip>
+        
+        <DropdownMenuContent side="right" align="start" className="w-56 ml-2">
+          <DropdownMenuLabel>{label}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {renderDropdownItems()}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
+  // Expanded state: Collapsible
+  const [isOpen, setIsOpen] = useState(isActive);
+  
+  // Sync internal state with active route when expanded
+  useEffect(() => {
+    if (!isCollapsed) {
+      setIsOpen(isActive);
+    }
+  }, [isActive, isCollapsed]);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger 
+        className={cn(
+          "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          isActive
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+            : "text-sidebar-foreground",
+          "px-3"
+        )}
+      >
+        <div className={cn("flex items-center gap-3")}>
+          {renderIcon(isActive)}
+          {label}
+        </div>
+        <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="space-y-1">
+          {children}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+
 interface SidebarProps {
   onNavigate?: () => void;
   isCollapsed: boolean;
@@ -93,7 +223,6 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   const { t } = useTranslation();
-  const location = useLocation();
   
   // Permissões baseadas no novo hook
   const canReadAnalytics = useCanRead('analytics');
@@ -109,40 +238,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadNotifications = useCanRead('notifications');
   const canReadCustomProfiles = useCanRead('custom_profiles'); 
 
-  const isSuperAdmin = profile?.is_super_admin;
-
   const navItemProps = { isCollapsed, onClick: onNavigate };
   
-  // 1. Estados controlados para os submenus
-  const [isProductsServicesOpen, setIsProductsServicesOpen] = useState(
-    location.pathname.startsWith('/products') || location.pathname.startsWith('/services')
-  );
-  const [isCompaniesOpen, setIsCompaniesOpen] = useState(
-    location.pathname.startsWith('/companies')
-  );
-  
-  // 2. Efeito para fechar os submenus quando a barra lateral é colapsada
-  useEffect(() => {
-    if (isCollapsed) {
-      setIsProductsServicesOpen(false);
-      setIsCompaniesOpen(false);
-    }
-  }, [isCollapsed]);
-  
-  // 3. Efeito para manter o submenu aberto se a rota for ativa (mesmo após navegação interna)
-  useEffect(() => {
-    const isProductsServicesActive = location.pathname.startsWith('/products') || location.pathname.startsWith('/services');
-    const isCompaniesActive = location.pathname.startsWith('/companies');
-    
-    if (isProductsServicesActive && !isCollapsed) {
-      setIsProductsServicesOpen(true);
-    }
-    if (isCompaniesActive && !isCollapsed) {
-      setIsCompaniesOpen(true);
-    }
-  }, [location.pathname, isCollapsed]);
-
-
   // Verifica se o grupo de Produtos/Serviços deve ser exibido
   const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories;
   
@@ -227,56 +324,44 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
 
         {showProductsServicesGroup && (
-          <>
-            {/* Submenu de Produtos/Serviços */}
-            <Collapsible open={isProductsServicesOpen} onOpenChange={setIsProductsServicesOpen} disabled={isCollapsed}>
-              <CollapsibleTrigger 
-                className={cn(
-                  "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isCollapsed ? "justify-start pl-6 pr-2" : "px-3"
-                )}
-              >
-                <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
-                  {/* Ícone do Trigger deve ser roxo, pois não é um item de rota */}
-                  <Package className="h-5 w-5" /> 
-                  {!isCollapsed && t('nav_products_services')}
-                </div>
-                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                {/* Wrapper para aplicar o espaçamento vertical suavemente */}
-                <div className="space-y-1">
-                  {canReadProducts && (
-                    <NavItem
-                      to="/products"
-                      icon={<Package className="h-5 w-5" />}
-                      label={t('nav_products')}
-                      isSubItem
-                      {...navItemProps}
-                    />
-                  )}
-                  {canReadServices && (
-                    <NavItem
-                      to="/services"
-                      icon={<Clock className="h-5 w-5" />}
-                      label={t('nav_services')}
-                      isSubItem
-                      {...navItemProps}
-                    />
-                  )}
-                  {canReadCategories && (
-                    <NavItem
-                      to="/products/categories"
-                      icon={<Tag className="h-5 w-5" />}
-                      label={t('page_title_categories')}
-                      isSubItem
-                      {...navItemProps}
-                    />
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </>
+          <SidebarGroup
+            icon={<Package className="h-5 w-5" />}
+            label={t('nav_products_services')}
+            isCollapsed={isCollapsed}
+            onNavigate={onNavigate}
+            basePath="/products"
+          >
+            {canReadProducts && (
+              <NavItem
+                to="/products"
+                icon={<Package className="h-5 w-5" />}
+                label={t('nav_products')}
+                isSubItem
+                isCollapsed={false}
+                onClick={onNavigate}
+              />
+            )}
+            {canReadServices && (
+              <NavItem
+                to="/services"
+                icon={<Clock className="h-5 w-5" />}
+                label={t('nav_services')}
+                isSubItem
+                isCollapsed={false}
+                onClick={onNavigate}
+              />
+            )}
+            {canReadCategories && (
+              <NavItem
+                to="/products/categories"
+                icon={<Tag className="h-5 w-5" />}
+                label={t('page_title_categories')}
+                isSubItem
+                isCollapsed={false}
+                onClick={onNavigate}
+              />
+            )}
+          </SidebarGroup>
         )}
         
         {canReadUsers && (
@@ -298,42 +383,34 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
         
         {showCompaniesGroup && (
-          <Collapsible open={isCompaniesOpen} onOpenChange={setIsCompaniesOpen} disabled={isCollapsed}>
-            <CollapsibleTrigger 
-              className={cn(
-                "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isCollapsed ? "justify-start pl-6 pr-2" : "px-3"
-              )}
-            >
-              <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
-                <Building className="h-5 w-5" /> 
-                {!isCollapsed && t('nav_companies')}
-              </div>
-              {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="space-y-1">
-                {canReadCompanies && (
-                  <NavItem
-                    to="/companies"
-                    icon={<Building className="h-5 w-5" />}
-                    label={t('company_list_title')}
-                    isSubItem
-                    {...navItemProps}
-                  />
-                )}
-                {canReadCustomProfiles && (
-                  <NavItem
-                    to="/companies/profiles"
-                    icon={<UserCheck className="h-5 w-5" />}
-                    label={t('page_title_custom_profiles')}
-                    isSubItem
-                    {...navItemProps}
-                  />
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          <SidebarGroup
+            icon={<Building className="h-5 w-5" />}
+            label={t('nav_companies')}
+            isCollapsed={isCollapsed}
+            onNavigate={onNavigate}
+            basePath="/companies"
+          >
+            {canReadCompanies && (
+              <NavItem
+                to="/companies"
+                icon={<Building className="h-5 w-5" />}
+                label={t('company_list_title')}
+                isSubItem
+                isCollapsed={false}
+                onClick={onNavigate}
+              />
+            )}
+            {canReadCustomProfiles && (
+              <NavItem
+                to="/companies/profiles"
+                icon={<UserCheck className="h-5 w-5" />}
+                label={t('page_title_custom_profiles')}
+                isSubItem
+                isCollapsed={false}
+                onClick={onNavigate}
+              />
+            )}
+          </SidebarGroup>
         )}
         
         <Separator className={cn("my-2 bg-sidebar-border", isCollapsed && "mx-auto w-1/2")} />
