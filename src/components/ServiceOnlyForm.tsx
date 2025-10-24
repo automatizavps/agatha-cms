@@ -59,6 +59,8 @@ interface ServiceOnlyFormProps {
   isEditing?: boolean;
 }
 
+const NONE_VALUE = "__NONE__";
+
 const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: currentProfile, isLoading: isLoadingCurrentProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
@@ -115,7 +117,7 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
     // Normaliza campos vazias para null
-    const categoria = values.categoria ? values.categoria : null;
+    const categoria = values.categoria && values.categoria !== NONE_VALUE ? values.categoria : null;
 
     onSubmit({
       nome: values.nome,
@@ -230,8 +232,8 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
             <FormItem>
               <FormLabel>{t('product_table_header_category')} ({t('optional')})</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
-                value={field.value || ""} 
+                onValueChange={(value) => field.onChange(value === NONE_VALUE ? "" : value)} 
+                value={field.value || NONE_VALUE} // Usa NONE_VALUE se o valor for null ou ""
                 disabled={isSubmitting || isLoadingCategories || !isCompanySelected}
               >
                 <FormControl>
@@ -240,8 +242,8 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {/* Opção para limpar o campo */}
-                  <SelectItem value="" className="text-muted-foreground">
+                  {/* Opção para limpar o campo - Agora usa NONE_VALUE */}
+                  <SelectItem value={NONE_VALUE} className="text-muted-foreground">
                     {t('none')}
                   </SelectItem>
                   {categories?.filter(c => c.nome && c.nome.trim() !== '').map((category) => (
