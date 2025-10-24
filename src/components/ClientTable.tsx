@@ -24,9 +24,12 @@ import EditClientSheet from "./EditClientSheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
 
 interface ClientTableProps {
   clients: Client[];
+  selectedIds: Set<string>; // NOVO
+  onSelectChange: (newSelectedIds: Set<string>) => void; // NOVO
 }
 
 interface ClientActionsProps {
@@ -111,7 +114,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
+const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelectChange }) => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
@@ -185,6 +188,28 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
     
     return sorted;
   }, [clients, sortKey, sortDirection]);
+  
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(clients.map(c => c.id));
+      onSelectChange(allIds);
+    } else {
+      onSelectChange(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const newSelectedIds = new Set(selectedIds);
+    if (checked) {
+      newSelectedIds.add(id);
+    } else {
+      newSelectedIds.delete(id);
+    }
+    onSelectChange(newSelectedIds);
+  };
+  
+  const isAllSelected = clients.length > 0 && selectedIds.size === clients.length;
+  const isIndeterminate = selectedIds.size > 0 && selectedIds.size < clients.length;
 
 
   return (
@@ -193,6 +218,14 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
         <Table>
           <TableHeader>
             <TableRow>
+              {/* Checkbox Header */}
+              <TableHead className="w-[50px] text-center">
+                <Checkbox
+                  checked={isAllSelected || isIndeterminate}
+                  onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                  aria-label={t('select_all')}
+                />
+              </TableHead>
               <SortableHeader 
                 sortKey="nome" 
                 currentSortKey={sortKey} 
@@ -244,7 +277,19 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients }) => {
           </TableHeader>
           <TableBody>
             {sortedClients.map((client) => (
-              <TableRow key={client.id}>
+              <TableRow 
+                key={client.id}
+                className={cn(
+                  selectedIds.has(client.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30"
+                )}
+              >
+                {/* Checkbox Cell */}
+                <TableCell className="text-center">
+                  <Checkbox
+                    checked={selectedIds.has(client.id)}
+                    onCheckedChange={(checked) => handleSelectRow(client.id, !!checked)}
+                  />
+                </TableCell>
                 <TableCell className="font-medium flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   {client.nome}

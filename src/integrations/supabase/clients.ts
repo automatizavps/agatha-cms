@@ -136,3 +136,16 @@ export const deleteClient = async (id: string) => {
     throw new Error(error.message);
   }
 };
+
+// --- Bulk Delete ---
+export const deleteClients = async (clientIds: string[]) => {
+  const { error } = await supabase
+    .from("clientes")
+    .delete()
+    .in("id", clientIds);
+
+  if (error) {
+    console.error("Error deleting clients:", error);
+    throw new Error(error.message);
+  }
+};

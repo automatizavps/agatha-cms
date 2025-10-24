@@ -1,8 +1,8 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Users, Search, Building } from "lucide-react";
-import { useClients } from "@/integrations/supabase/clients";
-import { showError } from "@/utils/toast";
+import { Loader2, RefreshCw, Users, Search, Building, Trash2 } from "lucide-react";
+import { useClients, deleteClients } from "@/integrations/supabase/clients";
+import { showError, showSuccess } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import ClientTable from "@/components/ClientTable";
@@ -13,14 +13,18 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
+import FloatingBulkActions from "@/components/FloatingBulkActions";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const ClientsContent = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  const queryClient = useQueryClient();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [companyFilterId, setCompanyFilterId] = useState<string | 'all'>('all');
+  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set()); // NOVO ESTADO
   const { t } = useTranslation();
 
   const isSuperAdmin = profile?.perfil_id === 1;
@@ -52,6 +56,32 @@ const ClientsContent = () => {
 
     return filtered;
   }, [clients, searchTerm, companyFilterId, isSuperAdmin]);
+  
+  // Mutação para exclusão em massa
+  const bulkDeleteMutation = useMutation({
+    mutationFn: deleteClients,
+    onSuccess: () => {
+      showSuccess(t('clients_deleted_success', { count: selectedClientIds.size }));
+      setSelectedClientIds(new Set()); // Limpa a seleção
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    },
+    onError: (error) => {
+      showError(t('error_loading_data') + ": " + error.message);
+    },
+  });
+  
+  const handleBulkDelete = () => {
+    if (selectedClientIds.size === 0) return;
+    
+    const count = selectedClientIds.size;
+    const confirmMessage = count === 1 
+      ? t('confirm_delete_single') 
+      : t('confirm_delete_bulk', { count });
+      
+    if (window.confirm(confirmMessage)) {
+      bulkDeleteMutation.mutate(Array.from(selectedClientIds));
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -140,7 +170,11 @@ const ClientsContent = () => {
               </Button>
             </div>
           ) : filteredClients.length > 0 ? (
-            <ClientTable clients={filteredClients} />
+            <ClientTable 
+              clients={filteredClients} 
+              selectedIds={selectedClientIds}
+              onSelectChange={setSelectedClientIds}
+            />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {t('no_clients_found')}
@@ -148,6 +182,13 @@ const ClientsContent = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Componente Flutuante de Ações em Massa */}
+      <FloatingBulkActions 
+        selectedCount={selectedClientIds.size}
+        onDelete={handleBulkDelete}
+        isDeleting={bulkDeleteMutation.isPending}
+      />
     </DashboardLayout>
   );
 };

@@ -110,6 +110,7 @@ const resources = {
       "filter_all_companies": "Todas as Empresas",
       "no_clients_found": "Nenhum cliente encontrado com os filtros aplicados.",
       "client_table_header_address": "Endereço",
+      "clients_deleted_success": "{{count}} cliente(s) excluído(s) com sucesso.", // NOVO
       
       "page_title_products": "Gestão de Produtos",
       "product_list_title": "Lista de Produtos",
@@ -233,7 +234,6 @@ const resources = {
       "notifications_deleted_success": "{{count}} notificação(ões) excluída(s) com sucesso.",
       "confirm_delete_single": "Tem certeza que deseja excluir esta notificação?",
       "confirm_delete_bulk": "Tem certeza que deseja excluir {{count}} notificações?",
-      "selected_items_count": "{{count}} item(ns) selecionado(s)",
       "delete_read_notifications": "Excluir Lidas",
       "confirm_delete_read_title": "Confirmar Exclusão de Notificações Lidas",
       "confirm_delete_read_message": "Esta ação excluirá permanentemente todas as notificações que você já marcou como lidas. Esta ação não pode ser desfeita.",
