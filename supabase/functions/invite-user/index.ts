@@ -113,6 +113,10 @@ serve(async (req) => {
         endereco_completo: endereco_completo,
       },
       redirectTo: redirectUrl,
+      // NOVO: Adicionando app_metadata para forçar a mudança de senha
+      app_metadata: {
+        must_change_password: true,
+      }
     }
   );
 

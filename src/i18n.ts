@@ -255,6 +255,8 @@ const resources = {
       "reset_password": "Redefinir Senha",
       "reset_password_title": "Redefinir Senha do Usuário",
       "reset_password_description": "Defina uma nova senha para {{name}}. O usuário poderá alterá-la posteriormente.",
+      "your_account": "sua conta",
+      "must_change_password_warning": "Você deve alterar sua senha para acessar a plataforma.",
       
       // Gráfico de Serviços por Hora (NOVO)
       "chart_title_daily_services": "Serviços Concluídos por Hora (Hoje)",

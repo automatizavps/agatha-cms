@@ -20,10 +20,11 @@ import Teams from "./pages/Teams";
 import Categories from "./pages/Categories";
 import Notifications from "./pages/Notifications";
 import ProductHistory from "./pages/ProductHistory";
-import CustomProfiles from "./pages/CustomProfiles"; // Importando a nova página
-import { SessionContextProvider, ProtectedRoute, PublicRoute } from "@/integrations/supabase/auth";
+import CustomProfiles from "./pages/CustomProfiles";
+import { SessionContextProvider, ProtectedRoute, PublicRoute, useSession } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import ForcePasswordChangeDialog from "./components/ForcePasswordChangeDialog"; // Importando o modal
 
 const queryClient = new QueryClient();
 
@@ -46,7 +47,7 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/orders" element={<Orders />} />
       <Route path="/teams" element={<Teams />} />
       <Route path="/companies" element={<Companies />} />
-      <Route path="/companies/profiles" element={<CustomProfiles />} /> {/* NOVA ROTA */}
+      <Route path="/companies/profiles" element={<CustomProfiles />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/products/categories" element={<Categories />} />
@@ -55,6 +56,42 @@ const RouteContentWrapper: React.FC = () => {
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+  );
+};
+
+// Novo componente para envolver o conteúdo protegido e gerenciar o modal
+const ProtectedContentWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, session } = useSession();
+  const [showForceChange, setShowForceChange] = useState(false);
+  
+  // Verifica se o flag must_change_password está ativo
+  useEffect(() => {
+    const mustChange = user?.app_metadata?.must_change_password === true;
+    setShowForceChange(mustChange);
+  }, [user]);
+  
+  // Função para fechar o modal após a alteração bem-sucedida
+  const handlePasswordChanged = () => {
+    // Força o refresh da sessão para obter o app_metadata atualizado
+    if (session) {
+      session.refresh_token && supabase.auth.refreshSession();
+    }
+    setShowForceChange(false);
+  };
+
+  return (
+    <>
+      {/* O modal é exibido sobre todo o conteúdo, bloqueando a interação */}
+      <ForcePasswordChangeDialog 
+        isOpen={showForceChange} 
+        onPasswordChanged={handlePasswordChanged} 
+      />
+      
+      {/* Renderiza o conteúdo normal, mas desabilitado se o modal estiver aberto */}
+      <div style={{ pointerEvents: showForceChange ? 'none' : 'auto' }}>
+        {children}
+      </div>
+    </>
   );
 };
 
@@ -76,8 +113,10 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <DashboardFilterProvider>
-                    {/* Renderiza o wrapper de conteúdo de rota */}
-                    <RouteContentWrapper />
+                    <ProtectedContentWrapper>
+                      {/* Renderiza o wrapper de conteúdo de rota */}
+                      <RouteContentWrapper />
+                    </ProtectedContentWrapper>
                   </DashboardFilterProvider>
                 </ProtectedRoute>
               } 
