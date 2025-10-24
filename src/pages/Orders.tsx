@@ -1,8 +1,8 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, ShoppingCart, Search } from "lucide-react";
-import { useOrders } from "@/integrations/supabase/orders";
-import { showError } from "@/utils/toast";
+import { useOrders, deleteOrders } from "@/integrations/supabase/orders";
+import { showError, showSuccess } from "@/utils/toast";
 import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import OrderTable from "@/components/OrderTable";
@@ -10,11 +10,15 @@ import AddOrderSheet from "@/components/AddOrderSheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
+import FloatingBulkActions from "@/components/FloatingBulkActions";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const OrdersContent = () => {
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set()); // NOVO ESTADO
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -32,6 +36,32 @@ const OrdersContent = () => {
       order.id.slice(0, 8).toLowerCase().includes(lowerCaseSearch)
     );
   }, [orders, searchTerm]);
+  
+  // Mutação para exclusão em massa
+  const bulkDeleteMutation = useMutation({
+    mutationFn: deleteOrders,
+    onSuccess: () => {
+      showSuccess(t('orders_deleted_success', { count: selectedOrderIds.size }));
+      setSelectedOrderIds(new Set()); // Limpa a seleção
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (error) => {
+      showError(t('error_loading_data') + ": " + error.message);
+    },
+  });
+  
+  const handleBulkDelete = () => {
+    if (selectedOrderIds.size === 0) return;
+    
+    const count = selectedOrderIds.size;
+    const confirmMessage = count === 1 
+      ? t('confirm_delete_single') 
+      : t('confirm_delete_bulk', { count });
+      
+    if (window.confirm(confirmMessage)) {
+      bulkDeleteMutation.mutate(Array.from(selectedOrderIds));
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -92,7 +122,11 @@ const OrdersContent = () => {
               </Button>
             </div>
           ) : filteredOrders.length > 0 ? (
-            <OrderTable orders={filteredOrders} />
+            <OrderTable 
+              orders={filteredOrders} 
+              selectedIds={selectedOrderIds}
+              onSelectChange={setSelectedOrderIds}
+            />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {searchTerm ? t('no_data_found') : t('no_orders_found')}
@@ -100,6 +134,13 @@ const OrdersContent = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Componente Flutuante de Ações em Massa */}
+      <FloatingBulkActions 
+        selectedCount={selectedOrderIds.size}
+        onDelete={handleBulkDelete}
+        isDeleting={bulkDeleteMutation.isPending}
+      />
     </DashboardLayout>
   );
 };

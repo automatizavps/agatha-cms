@@ -241,3 +241,16 @@ export const deleteOrder = async (id: string) => {
     throw new Error(error.message);
   }
 };
+
+// --- Bulk Delete ---
+export const deleteOrders = async (orderIds: string[]) => {
+  const { error } = await supabase
+    .from("pedidos")
+    .delete()
+    .in("id", orderIds);
+
+  if (error) {
+    console.error("Error deleting orders:", error);
+    throw new Error(error.message);
+  }
+};

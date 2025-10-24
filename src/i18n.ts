@@ -110,7 +110,7 @@ const resources = {
       "filter_all_companies": "Todas as Empresas",
       "no_clients_found": "Nenhum cliente encontrado com os filtros aplicados.",
       "client_table_header_address": "Endereço",
-      "clients_deleted_success": "{{count}} cliente(s) excluído(s) com sucesso.", // NOVO
+      "clients_deleted_success": "{{count}} cliente(s) excluído(s) com sucesso.",
       
       "page_title_products": "Gestão de Produtos",
       "product_list_title": "Lista de Produtos",
@@ -152,6 +152,7 @@ const resources = {
       "no_orders_found": "Nenhum pedido cadastrado.",
       "create_order": "Criar Pedido",
       "update_order_button": "Atualizar Pedido",
+      "orders_deleted_success": "{{count}} pedido(s) excluído(s) com sucesso.", // NOVO
       
       "page_title_settings": "Configurações",
       "page_subtitle_settings": "Gerencie as configurações da sua conta e da sua empresa.",

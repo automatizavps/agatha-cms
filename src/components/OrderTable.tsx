@@ -26,9 +26,12 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
 
 interface OrderTableProps {
   orders: Order[];
+  selectedIds: Set<string>; // NOVO
+  onSelectChange: (newSelectedIds: Set<string>) => void; // NOVO
 }
 
 interface OrderActionsProps {
@@ -138,7 +141,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
+const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectChange }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('data');
@@ -209,6 +212,28 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
     
     return sorted;
   }, [orders, sortKey, sortDirection]);
+  
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(orders.map(o => o.id));
+      onSelectChange(allIds);
+    } else {
+      onSelectChange(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const newSelectedIds = new Set(selectedIds);
+    if (checked) {
+      newSelectedIds.add(id);
+    } else {
+      newSelectedIds.delete(id);
+    }
+    onSelectChange(newSelectedIds);
+  };
+  
+  const isAllSelected = orders.length > 0 && selectedIds.size === orders.length;
+  const isIndeterminate = selectedIds.size > 0 && selectedIds.size < orders.length;
 
 
   return (
@@ -217,6 +242,14 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
         <Table>
           <TableHeader>
             <TableRow>
+              {/* Checkbox Header */}
+              <TableHead className="w-[50px] text-center">
+                <Checkbox
+                  checked={isAllSelected || isIndeterminate}
+                  onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                  aria-label={t('select_all')}
+                />
+              </TableHead>
               <SortableHeader 
                 sortKey="id" 
                 currentSortKey={sortKey} 
@@ -265,7 +298,19 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
           </TableHeader>
           <TableBody>
             {sortedOrders.map((order) => (
-              <TableRow key={order.id}>
+              <TableRow 
+                key={order.id}
+                className={cn(
+                  selectedIds.has(order.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30"
+                )}
+              >
+                {/* Checkbox Cell */}
+                <TableCell className="text-center">
+                  <Checkbox
+                    checked={selectedIds.has(order.id)}
+                    onCheckedChange={(checked) => handleSelectRow(order.id, !!checked)}
+                  />
+                </TableCell>
                 <TableCell className="font-medium text-xs text-muted-foreground">
                   {order.id.slice(0, 8)}
                 </TableCell>
