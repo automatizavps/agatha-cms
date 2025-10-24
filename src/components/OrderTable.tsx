@@ -90,15 +90,27 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
 };
 
 const getStatusBadge = (status: OrderStatus) => {
-  const baseClasses = "capitalize";
+  const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
   switch (status) {
     case 'entregue':
-      return <Badge className={baseClasses} variant="default">Entregue</Badge>;
+      return (
+        <span className={cn(baseClasses, "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400")}>
+          Entregue
+        </span>
+      );
     case 'cancelado':
+      return (
+        <span className={cn(baseClasses, "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400")}>
+          Cancelado
+        </span>
+      );
     case 'pendente_entrega':
     default:
-      // Usando secondary para pendente e destructive para cancelado
-      return <Badge className={baseClasses} variant={status === 'cancelado' ? 'destructive' : 'secondary'}>{status.replace('_', ' ')}</Badge>;
+      return (
+        <span className={cn(baseClasses, "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-400")}>
+          {status.replace('_', ' ')}
+        </span>
+      );
   }
 };
 
