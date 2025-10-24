@@ -90,6 +90,14 @@ serve(async (req) => {
   // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
   const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
 
+  console.log("Attempting to invite user with metadata:", {
+    email,
+    full_name,
+    perfil_id: meta_perfil_id,
+    telefone,
+    endereco_completo,
+    final_empresa_id,
+  });
 
   // 3. Convidar o usuário usando o Service Role Key
   const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
@@ -111,6 +119,7 @@ serve(async (req) => {
 
   if (inviteError) {
     console.error("Supabase Invite Error:", inviteError);
+    // Retorna a mensagem de erro específica do Supabase Auth
     return returnError(inviteError.message, 400);
   }
   
