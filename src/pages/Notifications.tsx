@@ -1,71 +1,79 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Bell, Search, Trash2, CheckCheck } from "lucide-react";
+import { Loader2, RefreshCw, Bell, CheckCheck, Building, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useNotifications, markAllNotificationsAsRead, deleteNotifications } from "@/integrations/supabase/notifications";
 import { showError, showSuccess } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import NotificationTable from "@/components/NotificationTable";
-import { useState, useMemo } from "react";
-import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
-import FloatingBulkActions from "@/components/FloatingBulkActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import DeleteReadNotificationsDialog from "@/components/DeleteReadNotificationsDialog";
+import { useSession } from "@/integrations/supabase/auth";
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMemo, useState } from "react";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Input } from "@/components/ui/input";
+import FloatingBulkActions from "@/components/FloatingBulkActions";
+import DeleteReadNotificationsDialog from "@/components/DeleteReadNotificationsDialog"; // Importando o novo componente
 
-const NotificationsContent = () => {
-  const { t } = useTranslation();
+const PAGE_SIZES = [20, 50, 100];
+
+const Notifications = () => {
+  const { user } = useSession();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   
-  // --- Pagination & Fetch States ---
-  const [page, setPage] = useState(1);
-  const pageSize = 20;
-  const { data, isLoading, isError, error, refetch, isRefetching } = useNotifications(page, pageSize);
-  const notifications = data?.notifications || [];
-  const totalCount = data?.totalCount || 0;
+  // Paginação e Tamanho da Página
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   
-  // --- Filter States ---
-  const [searchTerm, setSearchTerm] = useState("");
+  // Estado para seleção de linhas
   const [selectedNotificationIds, setSelectedNotificationIds] = useState<Set<string>>(new Set());
-  
-  const unreadCount = useMemo(() => notifications.filter(n => !n.lida).length, [notifications]);
-  const hasReadNotifications = notifications.some(n => n.lida);
 
-  if (isError && error) {
-    showError(t("error_loading_data") + ": " + error.message);
-  }
+  // Filtro de Empresa (Super Admin)
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // --- Filtering (Client-side for simplicity with pagination) ---
-  const filteredNotifications = useMemo(() => {
-    if (!notifications) return [];
-    if (!searchTerm) return notifications;
+  // Fetch de Notificações - Passando o companyId para o servidor se for Super Admin e houver filtro
+  const companyFilter = isSuperAdmin && selectedCompanyId !== 'all' ? selectedCompanyId : undefined;
+  
+  const { data: paginatedData, isLoading, isError, error, refetch, isRefetching } = useNotifications(
+    currentPage, 
+    pageSize, 
+    companyFilter
+  );
+  
+  const notificationsToDisplay = paginatedData?.notifications;
+  const totalCount = paginatedData?.totalCount || 0; // Contagem total filtrada pelo servidor
+  const totalPages = Math.ceil(totalCount / pageSize);
 
-    const lowerCaseSearch = searchTerm.toLowerCase();
-    return notifications.filter(n => 
-      n.titulo.toLowerCase().includes(lowerCaseSearch) ||
-      (n.mensagem && n.mensagem.toLowerCase().includes(lowerCaseSearch))
-    );
-  }, [notifications, searchTerm]);
+  const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
-  // --- Mutations ---
+  // A contagem de não lidas agora é feita apenas na página atual, mas é um bom indicador
+  const unreadCount = notificationsToDisplay?.filter(n => !n.lida).length || 0;
   
+  // Verifica se há notificações lidas na página atual para habilitar o botão
+  const hasReadNotifications = notificationsToDisplay?.some(n => n.lida) || false;
+
   const markAllReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
       showSuccess(t('notifications_marked_read'));
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
       showError(t('error_loading_data') + ": " + error.message);
     }
   });
   
+  // Mutação para exclusão em massa
   const bulkDeleteMutation = useMutation({
     mutationFn: deleteNotifications,
     onSuccess: () => {
       showSuccess(t('notifications_deleted_success', { count: selectedNotificationIds.size }));
       setSelectedNotificationIds(new Set()); // Limpa a seleção
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
     },
     onError: (error) => {
       showError(t('error_loading_data') + ": " + error.message);
@@ -85,14 +93,38 @@ const NotificationsContent = () => {
     }
   };
 
+  if (isError && error) {
+    showError(t("error_loading_data") + ": " + error.message);
+  }
+  
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+  
+  const handlePageSizeChange = (size: string) => {
+    const newSize = parseInt(size);
+    setPageSize(newSize);
+    setCurrentPage(1); // Volta para a primeira página ao mudar o tamanho
+  };
+  
+  const finalStart = (currentPage - 1) * pageSize + 1;
+  const finalEnd = Math.min(currentPage * pageSize, totalCount);
+
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{t('page_title_notifications')}</h1>
-        <div className="flex items-center space-x-2">
+        <div className="flex gap-2">
+          
+          {/* NOVO: Botão Excluir Lidas */}
+          <DeleteReadNotificationsDialog disabled={!hasReadNotifications || isLoading} />
+          
+          {/* Botão Marcar Todas como Lidas */}
           <Button 
             variant="outline" 
-            size="sm" 
             onClick={() => markAllReadMutation.mutate()}
             disabled={unreadCount === 0 || markAllReadMutation.isPending}
           >
@@ -103,44 +135,63 @@ const NotificationsContent = () => {
             )}
             {t('mark_all_read')}
           </Button>
-          <DeleteReadNotificationsDialog disabled={!hasReadNotifications} />
+          
+          {/* Botão de Recarregar */}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => refetch()} 
+            disabled={isRefetching}
+          >
+            {isRefetching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
       
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" /> {t('notification_list_title')}
+            <Bell className="h-5 w-5" /> {t('notification_list_title')} ({totalCount})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center mb-4">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={t('search_placeholder')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-                disabled={isLoading && !isRefetching}
-              />
-            </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => refetch()} 
-              disabled={isRefetching}
-              className="ml-2"
-            >
-              {isRefetching ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+            {/* Filtro de Empresa (Apenas para Super Admin) */}
+            {isSuperAdmin && (
+              <div className="w-full md:w-64">
+                <Select 
+                  onValueChange={(value) => {
+                    setSelectedCompanyId(value);
+                    setCurrentPage(1); // Resetar a página ao mudar o filtro
+                  }} 
+                  value={selectedCompanyId} 
+                  disabled={isLoadingCompanies || isChecking}
+                >
+                  <SelectTrigger className="w-full">
+                    <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder={t('filter_all_companies')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            {/* O seletor de tamanho da página foi movido para o rodapé */}
           </div>
-
-          {isLoading && !isRefetching ? (
+          
+          {isChecking && !isRefetching ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -149,51 +200,103 @@ const NotificationsContent = () => {
               <p className="text-destructive">
                 {t('error_loading_data')}
               </p>
-              <Button onClick={() => refetch()} disabled={isRefetching}>
-                {isRefetching ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                {t('try_again')}
-              </Button>
             </div>
-          ) : filteredNotifications.length > 0 ? (
-            <NotificationTable 
-              notifications={filteredNotifications} 
-              selectedIds={selectedNotificationIds}
-              onSelectChange={setSelectedNotificationIds}
-            />
+          ) : notificationsToDisplay && notificationsToDisplay.length > 0 ? (
+            <>
+              <NotificationTable 
+                notifications={notificationsToDisplay} 
+                selectedIds={selectedNotificationIds}
+                onSelectChange={setSelectedNotificationIds}
+              />
+              
+              {/* Componente de Paginação (Reorganizado para uma única linha) */}
+              {totalPages > 1 && (
+                <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
+                  
+                  {/* Informação da Página (Alinhado à esquerda) */}
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {t('page_info', { 
+                      current: currentPage, 
+                      total: totalPages, 
+                      start: finalStart,
+                      end: finalEnd,
+                      count: totalCount
+                    })}
+                  </span>
+                  
+                  {/* Controles de Paginação e Seletor de Tamanho (Alinhado à direita) */}
+                  <div className="flex items-center gap-4">
+                    
+                    {/* Controles de Paginação */}
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1 || isRefetching}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                        </PaginationItem>
+                        
+                        {/* Exibição simplificada de páginas */}
+                        <PaginationItem className="flex items-center">
+                          <Input 
+                            type="number"
+                            value={currentPage}
+                            onChange={(e) => {
+                              const page = parseInt(e.target.value);
+                              if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                                setCurrentPage(page);
+                              }
+                            }}
+                            onBlur={() => {
+                              // Garante que o valor seja válido ao sair do foco
+                              if (currentPage < 1) setCurrentPage(1);
+                              if (currentPage > totalPages) setCurrentPage(totalPages);
+                            }}
+                            className="w-16 text-center h-9"
+                            disabled={isRefetching}
+                          />
+                          <span className="text-sm text-muted-foreground mx-2">/ {totalPages}</span>
+                        </PaginationItem>
+
+                        <PaginationItem>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || isRefetching}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    
+                    {/* Seletor de Tamanho da Página (Última Posição) */}
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground whitespace-nowrap">
+                      <span>{t('rows_per_page')}:</span>
+                      <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking}>
+                        <SelectTrigger className="w-[80px]">
+                          <SelectValue placeholder={String(pageSize)} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAGE_SIZES.map(size => (
+                            <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm ? t('no_data_found') : t('no_notifications_found')}
-            </div>
-          )}
-          
-          {/* Paginação (Simples) */}
-          {totalCount > pageSize && (
-            <div className="flex justify-between items-center mt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setPage(p => Math.max(1, p - 1))} 
-                disabled={page === 1 || isLoading}
-              >
-                {t('previous')}
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {t('page_info', { 
-                  start: (page - 1) * pageSize + 1, 
-                  end: Math.min(page * pageSize, totalCount), 
-                  count: totalCount 
-                })}
-              </span>
-              <Button 
-                variant="outline" 
-                onClick={() => setPage(p => p + 1)} 
-                disabled={page * pageSize >= totalCount || isLoading}
-              >
-                {t('next')}
-              </Button>
+              {t('no_notifications_found')}
             </div>
           )}
         </CardContent>
@@ -208,12 +311,5 @@ const NotificationsContent = () => {
     </DashboardLayout>
   );
 };
-
-const Notifications = () => (
-  // Todos os usuários podem ver suas notificações
-  <PermissionGuard allowedProfileIds={[1, 2, 3]}>
-    <NotificationsContent />
-  </PermissionGuard>
-);
 
 export default Notifications;
