@@ -64,17 +64,19 @@ const ServiceReportTab: React.FC = () => {
   const totalCompletedServices = filteredAppointments.filter(a => a.status === 'concluido').length;
 
   const getStatusBadge = (status: Appointment['status']) => {
-    const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
+    const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
     switch (status) {
       case 'confirmado':
-        return <span className={cn(baseClasses, "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200")}>{t(status)}</span>;
-      case 'cancelado':
-        return <span className={cn(baseClasses, "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200")}>{t(status)}</span>;
       case 'concluido':
-        return <span className={cn(baseClasses, "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200")}>{t(status)}</span>;
+        // Verde Escuro (Fundo) e Verde Claro (Texto)
+        return <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>{t(status)}</span>;
+      case 'cancelado':
+        // Vermelho Escuro (Fundo) e Vermelho Claro (Texto)
+        return <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>{t(status)}</span>;
       case 'pendente':
       default:
-        return <span className={cn(baseClasses, "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200")}>{t(status)}</span>;
+        // Marrom/Ouro Escuro (Fundo) e Amarelo/Ouro Claro (Texto)
+        return <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>{t(status)}</span>;
     }
   };
   

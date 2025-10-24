@@ -134,17 +134,19 @@ const AppointmentItemDisplay: React.FC<{ appointmentId: string }> = ({ appointme
 };
 
 const getStatusBadge = (status: Appointment['status']) => {
-  const baseClasses = "capitalize px-2 py-1 rounded-full text-xs font-semibold";
+  const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
   switch (status) {
     case 'confirmado':
-      return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
-    case 'cancelado':
-      return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`;
     case 'concluido':
-      return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`;
+      // Verde Escuro (Fundo) e Verde Claro (Texto)
+      return cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300");
+    case 'cancelado':
+      // Vermelho Escuro (Fundo) e Vermelho Claro (Texto)
+      return cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300");
     case 'pendente':
     default:
-      return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
+      // Marrom/Ouro Escuro (Fundo) e Amarelo/Ouro Claro (Texto)
+      return cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300");
   }
 };
 
