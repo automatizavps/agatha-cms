@@ -59,8 +59,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <Bot className="h-5 w-5" />
               {t('app_name')}
             </h1> 
-            <div className="flex items-center gap-2">
-              <NotificationBell /> {/* Adicionado aqui */}
+            {/* Aumentando o gap de 2 para 3 no mobile */}
+            <div className="flex items-center gap-3"> 
+              <NotificationBell />
               <ThemeToggle />
               <UserMenu />
             </div>
