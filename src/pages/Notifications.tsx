@@ -1,223 +1,219 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { Bell, Trash2, Check, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { useNotifications } from "@/hooks/use-notifications";
-import { Notification } from "@/types/notification";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { FloatingBulkActions } from "@/components/FloatingBulkActions";
-import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, RefreshCw, Bell, Search, Trash2, CheckCheck } from "lucide-react";
+import { useNotifications, markAllNotificationsAsRead, deleteNotifications } from "@/integrations/supabase/notifications";
+import { showError, showSuccess } from "@/utils/toast";
+import { PermissionGuard } from "@/hooks/use-permission";
+import { Button } from "@/components/ui/button";
+import NotificationTable from "@/components/NotificationTable";
+import { useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
+import FloatingBulkActions from "@/components/FloatingBulkActions";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import DeleteReadNotificationsDialog from "@/components/DeleteReadNotificationsDialog";
 
-const NotificationItem: React.FC<{ notification: Notification; onToggle: (id: string) => void }> = ({
-  notification,
-  onToggle,
-}) => {
+const NotificationsContent = () => {
   const { t } = useTranslation();
-  const isSelected = notification.isSelected || false;
+  const queryClient = useQueryClient();
+  
+  // --- Pagination & Fetch States ---
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+  const { data, isLoading, isError, error, refetch, isRefetching } = useNotifications(page, pageSize);
+  const notifications = data?.notifications || [];
+  const totalCount = data?.totalCount || 0;
+  
+  // --- Filter States ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedNotificationIds, setSelectedNotificationIds] = useState<Set<string>>(new Set());
+  
+  const unreadCount = useMemo(() => notifications.filter(n => !n.lida).length, [notifications]);
+  const hasReadNotifications = notifications.some(n => n.lida);
 
-  return (
-    <div
-      className={`flex items-start p-4 transition-colors hover:bg-accent/50 ${
-        notification.lida ? "opacity-70" : "bg-primary-foreground/10"
-      }`}
-    >
-      <div className="flex items-center h-5 mr-4">
-        <Checkbox
-          id={`notification-${notification.id}`}
-          checked={isSelected}
-          onCheckedChange={() => onToggle(notification.id)}
-          className="mt-1"
-        />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-start">
-          <Link to={notification.link || "#"} className="block w-full">
-            <p className={`font-semibold ${notification.lida ? "text-muted-foreground" : "text-foreground"}`}>
-              {notification.titulo}
-            </p>
-            <p className="text-sm text-muted-foreground truncate">{notification.mensagem}</p>
-          </Link>
-        </div>
-        <div className="mt-1 text-xs text-gray-500">
-          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: ptBR })}
-        </div>
-      </div>
-      {!notification.lida && (
-        <span className="ml-4 flex-shrink-0 h-2 w-2 rounded-full bg-primary" title={t("unread")} />
-      )}
-    </div>
-  );
-};
+  if (isError && error) {
+    showError(t("error_loading_data") + ": " + error.message);
+  }
+  
+  // --- Filtering (Client-side for simplicity with pagination) ---
+  const filteredNotifications = useMemo(() => {
+    if (!notifications) return [];
+    if (!searchTerm) return notifications;
 
-const NotificationsPage: React.FC = () => {
-  const { t } = useTranslation();
-  const { toast } = useToast();
-  const {
-    notifications,
-    isLoading,
-    error,
-    markAsRead,
-    deleteNotifications,
-    toggleSelect,
-    toggleSelectAll,
-    selectedCount,
-    hasUnread,
-    markAllAsRead,
-    isMutating,
-  } = useNotifications();
-
-  const selectedIds = useMemo(() => notifications.filter(n => n.isSelected).map(n => n.id), [notifications]);
-  const hasSelected = selectedCount > 0;
-  const allSelected = notifications.length > 0 && selectedCount === notifications.length;
-
-  const handleMarkAsRead = async () => {
-    if (selectedIds.length === 0) return;
-    await markAsRead(selectedIds);
-    toast({
-      title: t("notifications.success_read_title"),
-      description: t("notifications.success_read_description", { count: selectedIds.length }),
-    });
-  };
-
-  const handleDelete = async () => {
-    if (selectedIds.length === 0) return;
-    await deleteNotifications(selectedIds);
-    toast({
-      title: t("notifications.success_delete_title"),
-      description: t("notifications.success_delete_description", { count: selectedIds.length }),
-      variant: "destructive",
-    });
-  };
-
-  const handleMarkAllAsRead = async () => {
-    await markAllAsRead();
-    toast({
-      title: t("notifications.success_read_all_title"),
-      description: t("notifications.success_read_all_description"),
-    });
-  };
-
-  const unreadCount = notifications.filter(n => !n.lida).length;
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full" />
-          ))}
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <Alert variant="destructive">
-          <AlertTitle>{t("notifications.error_loading_title")}</AlertTitle>
-          <AlertDescription>{t("notifications.error_loading_description")}</AlertDescription>
-        </Alert>
-      );
-    }
-
-    if (notifications.length === 0) {
-      return (
-        <div className="text-center py-10 text-muted-foreground">
-          <Bell className="h-10 w-10 mx-auto mb-3" />
-          <p>{t("notifications.no_notifications")}</p>
-        </div>
-      );
-    }
-
-    return (
-      // Removendo qualquer div de rolagem aqui para garantir que a rolagem seja da janela
-      <div className="divide-y divide-border">
-        {notifications.map((notification) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            onToggle={toggleSelect}
-          />
-        ))}
-      </div>
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return notifications.filter(n => 
+      n.titulo.toLowerCase().includes(lowerCaseSearch) ||
+      (n.mensagem && n.mensagem.toLowerCase().includes(lowerCaseSearch))
     );
+  }, [notifications, searchTerm]);
+  
+  // --- Mutations ---
+  
+  const markAllReadMutation = useMutation({
+    mutationFn: markAllNotificationsAsRead,
+    onSuccess: () => {
+      showSuccess(t('notifications_marked_read'));
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error) => {
+      showError(t('error_loading_data') + ": " + error.message);
+    }
+  });
+  
+  const bulkDeleteMutation = useMutation({
+    mutationFn: deleteNotifications,
+    onSuccess: () => {
+      showSuccess(t('notifications_deleted_success', { count: selectedNotificationIds.size }));
+      setSelectedNotificationIds(new Set()); // Limpa a seleção
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error) => {
+      showError(t('error_loading_data') + ": " + error.message);
+    },
+  });
+  
+  const handleBulkDelete = () => {
+    if (selectedNotificationIds.size === 0) return;
+    
+    const count = selectedNotificationIds.size;
+    const confirmMessage = count === 1 
+      ? t('confirm_delete_single') 
+      : t('confirm_delete_bulk', { count });
+      
+    if (window.confirm(confirmMessage)) {
+      bulkDeleteMutation.mutate(Array.from(selectedNotificationIds));
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-6 w-6" />
-            {t("notifications.title")}
-            {unreadCount > 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
-                {unreadCount} {t("notifications.unread_count")}
-              </span>
+    <DashboardLayout>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">{t('page_title_notifications')}</h1>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => markAllReadMutation.mutate()}
+            disabled={unreadCount === 0 || markAllReadMutation.isPending}
+          >
+            {markAllReadMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCheck className="mr-2 h-4 w-4" />
             )}
+            {t('mark_all_read')}
+          </Button>
+          <DeleteReadNotificationsDialog disabled={!hasReadNotifications} />
+        </div>
+      </div>
+      
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" /> {t('notification_list_title')}
           </CardTitle>
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleMarkAllAsRead} 
-              disabled={!hasUnread || isMutating}
-            >
-              {isMutating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-              {t("notifications.mark_all_read")}
-            </Button>
-          </div>
         </CardHeader>
-        <Separator />
-        <CardContent className="p-0">
-          <div className="flex items-center p-4 border-b bg-secondary/30">
-            <div className="flex items-center h-5 mr-4">
-              <Checkbox
-                id="select-all"
-                checked={allSelected}
-                onCheckedChange={toggleSelectAll}
-                disabled={notifications.length === 0 || isMutating}
+        <CardContent>
+          <div className="flex items-center mb-4">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t('search_placeholder')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+                disabled={isLoading && !isRefetching}
               />
             </div>
-            <label htmlFor="select-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              {t("notifications.select_all")} ({selectedCount}/{notifications.length})
-            </label>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => refetch()} 
+              disabled={isRefetching}
+              className="ml-2"
+            >
+              {isRefetching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
           </div>
+
+          {isLoading && !isRefetching ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : isError ? (
+            <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
+              <p className="text-destructive">
+                {t('error_loading_data')}
+              </p>
+              <Button onClick={() => refetch()} disabled={isRefetching}>
+                {isRefetching ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                {t('try_again')}
+              </Button>
+            </div>
+          ) : filteredNotifications.length > 0 ? (
+            <NotificationTable 
+              notifications={filteredNotifications} 
+              selectedIds={selectedNotificationIds}
+              onSelectChange={setSelectedNotificationIds}
+            />
+          ) : (
+            <div className="text-center p-4 text-muted-foreground">
+              {searchTerm ? t('no_data_found') : t('no_notifications_found')}
+            </div>
+          )}
           
-          {renderContent()}
-          
+          {/* Paginação (Simples) */}
+          {totalCount > pageSize && (
+            <div className="flex justify-between items-center mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page === 1 || isLoading}
+              >
+                {t('previous')}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {t('page_info', { 
+                  start: (page - 1) * pageSize + 1, 
+                  end: Math.min(page * pageSize, totalCount), 
+                  count: totalCount 
+                })}
+              </span>
+              <Button 
+                variant="outline" 
+                onClick={() => setPage(p => p + 1)} 
+                disabled={page * pageSize >= totalCount || isLoading}
+              >
+                {t('next')}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Floating Bulk Actions é renderizado aqui, no nível da página, fora da Card. */}
-      {hasSelected && (
-        <FloatingBulkActions selectedCount={selectedCount}>
-          <Button 
-            onClick={handleMarkAsRead} 
-            disabled={isMutating}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <Check className="mr-2 h-4 w-4" />
-            {t("notifications.mark_read")}
-          </Button>
-          <Button 
-            onClick={handleDelete} 
-            disabled={isMutating}
-            variant="destructive"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {t("notifications.delete")}
-          </Button>
-        </FloatingBulkActions>
-      )}
-    </div>
+      
+      {/* Componente Flutuante de Ações em Massa */}
+      <FloatingBulkActions 
+        selectedCount={selectedNotificationIds.size}
+        onDelete={handleBulkDelete}
+        isDeleting={bulkDeleteMutation.isPending}
+      />
+    </DashboardLayout>
   );
 };
 
-export default NotificationsPage;
+const Notifications = () => (
+  // Todos os usuários podem ver suas notificações
+  <PermissionGuard allowedProfileIds={[1, 2, 3]}>
+    <NotificationsContent />
+  </PermissionGuard>
+);
+
+export default Notifications;

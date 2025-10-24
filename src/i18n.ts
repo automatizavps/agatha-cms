@@ -29,6 +29,8 @@ const resources = {
       "selected_items_count": "{{count}} item(ns) selecionado(s)",
       "cancel": "Cancelar",
       "delete_confirm": "Sim, Excluir",
+      "previous": "Anterior",
+      "next": "Próximo",
 
       // Navegação
       "nav_home": "Home",
