@@ -146,6 +146,8 @@ const Notifications = () => {
                 </Select>
               </div>
             )}
+            
+            {/* O seletor de tamanho da página foi movido para o rodapé */}
           </div>
           
           {isChecking && !isRefetching ? (
@@ -162,23 +164,23 @@ const Notifications = () => {
             <>
               <NotificationTable notifications={notificationsToDisplay} />
               
-              {/* Componente de Paginação (Reorganizado) */}
+              {/* Componente de Paginação (Reorganizado para uma única linha) */}
               {totalPages > 1 && (
-                <div className="mt-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
                   
-                  {/* Informação da Página (Alinhado à esquerda) */}
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    {t('page_info', { 
-                      current: currentPage, 
-                      total: totalPages, 
-                      start: finalStart,
-                      end: finalEnd,
-                      count: totalCount
-                    })}
-                  </span>
-                  
-                  {/* Controles de Paginação e Seletor de Tamanho (Alinhado à direita) */}
+                  {/* Controles de Paginação e Informação da Página */}
                   <div className="flex items-center gap-4">
+                    
+                    {/* Informação da Página */}
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      {t('page_info', { 
+                        current: currentPage, 
+                        total: totalPages, 
+                        start: finalStart,
+                        end: finalEnd,
+                        count: totalCount
+                      })}
+                    </span>
                     
                     {/* Controles de Paginação */}
                     <Pagination>
