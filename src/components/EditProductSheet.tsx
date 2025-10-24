@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProduct, Product, ProductType } from "@/integrations/supabase/products";
 import { showSuccess, showError } from "@/utils/toast";
@@ -66,6 +66,10 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
       <SheetContent className="sm:max-w-xl flex flex-col">
         <SheetHeader>
           <SheetTitle>Editar Produto: {product.nome}</SheetTitle>
+          {/* Adicionando SheetDescription para acessibilidade */}
+          <SheetDescription className="sr-only">
+            Formulário para editar os detalhes do produto.
+          </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
           <ProductOnlyForm 
