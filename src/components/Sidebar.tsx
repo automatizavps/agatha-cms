@@ -245,7 +245,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadProducts = useCanRead('products');
   const canReadServices = useCanRead('services');
   const canReadCategories = useCanRead('categories');
-  const canReadUsers = useCanRead('users'); // RE-HABILITADO
+  const canReadUsers = useCanRead('users'); // RE-ADICIONADO
   const canReadTeams = useCanRead('teams');
   const canReadCompanies = useCanRead('companies');
   const canReadNotifications = useCanRead('notifications');

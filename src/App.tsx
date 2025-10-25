@@ -39,7 +39,7 @@ const RouteContentWrapper: React.FC = () => {
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={<Index />} />
       <Route path="/analytics" element={<Analytics />} />
-      <Route path="/users" element={<Users />} /> {/* ROTA ADICIONADA */}
+      <Route path="/users" element={<Users />} /> {/* ROTA RE-ADICIONADA */}
       <Route path="/appointments" element={<Appointments />} />
       <Route path="/clients" element={<Clients />} />
       <Route path="/products" element={<Products />} />
