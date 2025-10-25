@@ -128,7 +128,7 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex justify-between items-center p-4">
-          <h3 className="text-lg font-semibold">{t('nav_notifications')} ({unreadCount})</h3>
+          <h3 className="text-base font-semibold">{t('nav_notifications')} ({unreadCount})</h3>
           <Button 
             variant="ghost" 
             size="sm" 
