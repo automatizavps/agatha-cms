@@ -10,6 +10,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Função auxiliar para retornar erro JSON
   const returnError = (message: string, status: number) => {
+    console.error(`Returning error ${status}: ${message}`);
     return new Response(JSON.stringify({ error: message }), {
       status: status,
       headers: corsHeaders,
@@ -41,13 +42,6 @@ serve(async (req) => {
       },
     );
     
-    // Decodificar o token para obter o ID do usuário logado (Admin/Editor)
-    const { data: { user: adminUser }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
-
-    if (userError || !adminUser) {
-      return returnError("Unauthorized: Invalid token or session expired", 401);
-    }
-    
     // 3. Verificar se o usuário logado é Super Admin usando a função RPC
     // Usamos o cliente anon com o token do usuário para que o RPC 'is_super_admin' funcione corretamente.
     const supabaseClient = createClient(
@@ -62,12 +56,20 @@ serve(async (req) => {
       }
     );
     
+    console.log("Checking Super Admin permission via RPC...");
     const { data: isSaData, error: isSaError } = await supabaseClient.rpc('is_super_admin');
 
-    if (isSaError || isSaData !== true) {
-      console.error("Super Admin check failed:", isSaError?.message || "Not Super Admin");
+    if (isSaError) {
+      console.error("RPC Error during is_super_admin check:", isSaError);
+      return returnError(`Permission check failed: ${isSaError.message}`, 403);
+    }
+    
+    if (isSaData !== true) {
+      console.warn("User is not Super Admin. isSaData:", isSaData);
       return returnError("Forbidden: Only Super Admin can invite new users", 403);
     }
+    
+    console.log("Permission granted: User is Super Admin.");
     
     // 4. Processar o corpo da requisição
     let data;
