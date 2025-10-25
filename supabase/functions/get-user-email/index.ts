@@ -52,38 +52,53 @@ serve(async (req) => {
     const adminUserId = adminUser.id;
 
     // 3. Verificar se o usuário logado tem permissão (Super Admin ou Admin de Empresa)
-    
-    // Cliente com token do usuário para chamar RPCs
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
-    );
-    
-    // Verifica se é Super Admin (RPC)
-    const { data: isSaData } = await supabaseClient.rpc('is_super_admin');
-    let isSuperAdmin = isSaData === true;
+    let isSuperAdmin = false;
     let isCompanyAdmin = false;
     
-    // Se não for Super Admin, verifica se tem empresa_id (Admin de Empresa)
-    if (!isSuperAdmin) {
-        const { data: profileData } = await supabaseAdmin
-            .from("usuarios")
-            .select("empresa_id")
-            .eq("id", adminUserId)
-            .maybeSingle(); // Usamos maybeSingle para evitar erro se o perfil não existir
-            
-        // Se o perfil existir e tiver empresa_id, é um usuário de empresa
-        if (profileData && profileData.empresa_id !== null) {
-            isCompanyAdmin = true;
+    try {
+        // Cliente com token do usuário para chamar RPCs
+        const supabaseClient = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          }
+        );
+        
+        // Verifica se é Super Admin (RPC)
+        const { data: isSaData, error: isSaError } = await supabaseClient.rpc('is_super_admin');
+        
+        if (isSaError) {
+            console.warn("RPC is_super_admin failed, assuming not SA:", isSaError.message);
+        } else {
+            isSuperAdmin = isSaData === true;
         }
+        
+        // Se não for Super Admin, verifica se tem empresa_id (Admin de Empresa)
+        if (!isSuperAdmin) {
+            const { data: profileData, error: profileError } = await supabaseAdmin
+                .from("usuarios")
+                .select("empresa_id")
+                .eq("id", adminUserId)
+                .maybeSingle();
+                
+            if (profileError) {
+                console.error("Profile fetch failed for company admin check:", profileError);
+                // Se falhar, assumimos que não é Admin de Empresa
+            } else if (profileData && profileData.empresa_id !== null) {
+                isCompanyAdmin = true;
+            }
+        }
+    } catch (e) {
+        console.error("Error during permission check:", e);
+        // Se houver qualquer erro na verificação de permissão, negamos o acesso
+        return returnError("Forbidden: Permission check failed internally", 403);
     }
+
 
     if (!isSuperAdmin && !isCompanyAdmin) {
       return returnError("Forbidden: User does not have administrative privileges", 403);
@@ -114,7 +129,7 @@ serve(async (req) => {
     const email = userData.user?.email;
 
     if (!email) {
-      return returnError("Email not found for user.", 404);
+      return return Error("Email not found for user.", 404);
     }
 
     return new Response(JSON.stringify({ email: email }), {
