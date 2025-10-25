@@ -52,47 +52,31 @@ serve(async (req) => {
     const adminUserId = adminUser.id;
 
     // 3. Verificar se o usuário logado tem permissão (Super Admin ou Admin de Empresa)
-    let isSuperAdmin = false;
-    let isCompanyAdmin = false;
-    
-    try {
-        // Cliente com token do usuário para chamar RPCs
-        const supabaseClient = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_ANON_KEY")!,
-          {
-            global: {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          }
-        );
+    // Usamos o cliente Admin para buscar o perfil e determinar o papel.
+    const { data: profileData, error: profileError } = await supabaseAdmin
+        .from("usuarios")
+        .select(`
+            empresa_id, 
+            perfil_customizado_id,
+            perfis_customizados (nome)
+        `)
+        .eq("id", adminUserId)
+        .maybeSingle();
         
-        // Verifica se é Super Admin (RPC)
-        const { data: isSaData } = await supabaseClient.rpc('is_super_admin');
-        
-        isSuperAdmin = isSaData === true;
-        
-        // Se não for Super Admin, verifica se tem empresa_id (Admin de Empresa)
-        if (!isSuperAdmin) {
-            const { data: profileData } = await supabaseAdmin
-                .from("usuarios")
-                .select("empresa_id")
-                .eq("id", adminUserId)
-                .maybeSingle();
-                
-            // Se o perfil existir e tiver empresa_id, é um usuário de empresa
-            if (profileData && profileData.empresa_id !== null) {
-                isCompanyAdmin = true;
-            }
-        }
-    } catch (e) {
-        console.error("Error during permission check:", e);
-        // Se houver qualquer erro na verificação de permissão, negamos o acesso
-        return returnError("Forbidden: Permission check failed internally", 403);
+    if (profileError) {
+        console.error("Profile fetch failed for permission check:", profileError);
+        return returnError("Forbidden: Failed to verify user profile.", 403);
     }
-
+    
+    // Lógica de Permissão:
+    // a) Super Admin (Novo SA: perfil_customizado.nome = 'Super Admin' E empresa_id IS NOT NULL)
+    // b) Super Admin (Antigo SA: perfil_customizado_id IS NULL E empresa_id IS NULL)
+    // c) Admin de Empresa (perfil_customizado_id IS NULL E empresa_id IS NOT NULL)
+    const isSuperAdmin = 
+        (profileData?.perfil_customizado_id === null && profileData?.empresa_id === null) ||
+        (profileData?.perfil_customizado_id !== null && profileData?.perfis_customizados?.nome === 'Super Admin');
+        
+    const isCompanyAdmin = profileData?.empresa_id !== null;
 
     if (!isSuperAdmin && !isCompanyAdmin) {
       return returnError("Forbidden: User does not have administrative privileges", 403);
@@ -123,7 +107,6 @@ serve(async (req) => {
     const email = userData.user?.email;
 
     if (!email) {
-      // CORREÇÃO: Usar a função returnError
       return returnError("Email not found for user.", 404);
     }
 
