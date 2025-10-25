@@ -34,11 +34,12 @@ const baseFormSchema = z.object({
   email: z.string().email({
     message: "Insira um email válido.",
   }),
-  perfil_id: z.string().min(1, { // Agora é o UUID
+  perfil_id: z.string().min(1, { // Agora é o UUID ou '1'
     message: "Selecione um perfil.",
   }),
   telefone: z.string().optional().nullable(),
   endereco_completo: z.string().optional().nullable(),
+  // empresa_id é opcional no base, mas será estendido para ser obrigatório na criação para SA
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional().nullable(),
@@ -74,19 +75,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   if (isEditing) {
     finalFormSchema = finalFormSchema.extend({
       email: z.string().optional(),
-      // Na edição, se for Super Admin, empresa_id é opcional (pode ser null)
-      empresa_id: isSuperAdmin 
-        ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
-        : z.string().optional().nullable(),
-      // Na edição, o perfil pode ser '1' (antigo SA) ou um UUID
+      // Na edição, empresa_id é opcional (pode ser null)
+      empresa_id: z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable(),
       perfil_id: z.string().min(1, { message: t("select_profile") }),
     });
   } else if (isSuperAdmin) {
-    // Na criação, Super Admin deve selecionar a empresa
+    // Na criação, Super Admin deve selecionar a empresa (ou deixar vazio para SA Antigo)
     finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
+        }).or(z.literal("")).optional().nullable(),
       });
   } else {
     // Se não for Super Admin, o convite não deveria ser possível
@@ -99,10 +97,10 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     defaultValues: {
       full_name: defaultValues?.full_name || "",
       email: defaultValues?.email || "", 
-      // Garante que perfil_id seja sempre uma string (UUID ou '1')
       perfil_id: String(defaultValues?.perfil_id || ""),
       telefone: defaultValues?.telefone || "",
       endereco_completo: defaultValues?.endereco_completo || "",
+      // Garante que o valor inicial seja string vazia se for null, para o Select funcionar
       empresa_id: defaultValues?.empresa_id || "",
     },
   });
@@ -115,11 +113,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   
   const isLoadingProfiles = isLoadingCustomProfiles;
 
-  // Combina perfis globais (apenas Super Admin) e customizados
+  // Combina perfis globais (Super Admin) e customizados
   const allProfiles = useMemo(() => {
     let combined: { id: string; nome: string; }[] = [];
     
-    // 1. Adicionar perfis customizados se uma empresa estiver selecionada
+    // 1. Adicionar Super Admin (ID '1') - Apenas se for Super Admin logado
+    if (isSuperAdmin) {
+        combined.push({ id: '1', nome: 'Super Admin' });
+    }
+    
+    // 2. Adicionar perfis customizados se uma empresa estiver selecionada
     if (selectedCompanyId && customProfiles) {
       const mappedCustomProfiles = customProfiles.map(p => ({
         id: p.id,
@@ -129,18 +132,12 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
       combined.push(...mappedCustomProfiles);
     }
     
-    // 2. Na edição, se o perfil atual for o antigo SA ('1') ou um perfil customizado que não está na lista,
+    // 3. Na edição, se o perfil atual for um perfil customizado que não está na lista (ex: filtro de empresa mudou),
     // precisamos garantir que ele apareça.
-    if (isEditing && defaultValues?.perfil_id) {
+    if (isEditing && defaultValues?.perfil_id && defaultValues.perfil_id !== '1') {
         const currentProfileId = String(defaultValues.perfil_id);
         
-        // Caso 1: Antigo Super Admin (ID '1')
-        if (currentProfileId === '1' && !combined.some(p => p.id === '1')) {
-            combined.push({ id: '1', nome: 'Super Admin (Antigo)' });
-        }
-        
-        // Caso 2: Perfil customizado que não foi carregado (ex: empresa inativa)
-        if (currentProfileId !== '1' && !customProfiles?.some(p => p.id === currentProfileId)) {
+        if (!customProfiles?.some(p => p.id === currentProfileId)) {
             const currentProfileName = defaultValues.perfis?.nome || t('unknown_profile');
             // Adicionamos o perfil atual se ele for um UUID e não estiver na lista
             if (currentProfileId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
@@ -149,13 +146,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
         }
     }
     
-    // 3. Filtra o perfil 'Super Admin (Antigo)' (ID '1') na CRIAÇÃO, pois convites devem ser para perfis customizados
-    if (!isEditing) {
-        return combined.filter(p => p.id !== '1');
-    }
+    // Remove duplicatas e ordena
+    const uniqueProfiles = Array.from(new Map(combined.map(p => [p.id, p])).values());
     
-    return combined;
-  }, [customProfiles, selectedCompanyId, isEditing, defaultValues, t]);
+    // Ordena: SA no topo, depois por nome
+    return uniqueProfiles.sort((a, b) => {
+        if (a.id === '1') return -1;
+        if (b.id === '1') return 1;
+        return a.nome.localeCompare(b.nome);
+    });
+  }, [customProfiles, selectedCompanyId, isEditing, defaultValues, isSuperAdmin, t]);
 
 
   const handleSubmit = (values: UserFormValues) => {
@@ -167,11 +167,9 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
-      // Na criação, values.empresa_id é garantido ser uma string UUID
       empresa_id = values.empresa_id || null;
     } else {
-      // Se não for Super Admin, o convite não deveria ser possível, mas se for edição,
-      // o empresa_id é o do usuário logado (que não é usado na mutação de edição, mas é bom ter).
+      // Se não for Super Admin, o empresa_id é o do usuário logado (fixo)
       empresa_id = currentProfile?.empresa_id || null;
     }
 
@@ -185,6 +183,23 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     });
   };
   
+  // Determina se o campo empresa deve ser exibido
+  const shouldShowCompanyField = isSuperAdmin;
+  
+  // Encontra o nome da empresa para exibição desabilitada (se não for SA)
+  const companyName = companies?.find(c => c.id === defaultValues?.empresa_id)?.nome;
+  
+  // Verifica se o perfil selecionado é o Super Admin (ID '1')
+  const isSelectedProfileSA = form.watch('perfil_id') === '1';
+  
+  // Validação de empresa para perfis não-SA
+  const isCompanyRequired = !isSelectedProfileSA;
+  const isCompanySelected = !!form.watch('empresa_id');
+  
+  // Desabilita o botão se a empresa for obrigatória e não estiver selecionada
+  const isSubmitDisabled = isSubmitting || (isSuperAdmin && !isEditing && isCompanyRequired && !isCompanySelected);
+
+
   if (isCheckingPermissions) {
     return (
       <div className="flex justify-center items-center h-40">
@@ -197,8 +212,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* Campo Empresa (Visível para SA na Criação e Edição) */}
-        {isSuperAdmin && (
+        {/* Campo Empresa (Visível para SA) */}
+        {shouldShowCompanyField && (
           <FormField
             control={form.control}
             name="empresa_id"
@@ -212,7 +227,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
                     form.setValue('perfil_id', ''); 
                   }} 
                   value={field.value || ""} 
-                  disabled={isLoadingCompanies || isSubmitting}
+                  disabled={isSubmitting}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -311,9 +326,21 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
             <FormItem>
               <FormLabel>{t('user_table_header_profile')}</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
+                onValueChange={(value) => {
+                    field.onChange(value);
+                    // Se o perfil for SA, limpa a empresa_id
+                    if (value === '1' && isSuperAdmin) {
+                        form.setValue('empresa_id', null);
+                    }
+                    // Se o perfil não for SA, e a empresa_id estiver nula, força a seleção
+                    if (value !== '1' && isSuperAdmin && !form.getValues('empresa_id')) {
+                        form.setError('empresa_id', { type: 'manual', message: t("company_required_super_admin") });
+                    } else {
+                        form.clearErrors('empresa_id');
+                    }
+                }} 
                 value={field.value} 
-                disabled={isSubmitting || (isSuperAdmin && !selectedCompanyId)}
+                disabled={isSubmitting || (isSuperAdmin && !selectedCompanyId && !isEditing)}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -332,10 +359,13 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
               {isSuperAdmin && !isEditing && !selectedCompanyId && (
                 <p className="text-xs text-destructive mt-1">{t("select_company_to_load_profiles")}</p>
               )}
+              {isSuperAdmin && isCompanyRequired && !isCompanySelected && (
+                <p className="text-xs text-destructive mt-1">{t("company_required_for_profile")}</p>
+              )}
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitDisabled}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (

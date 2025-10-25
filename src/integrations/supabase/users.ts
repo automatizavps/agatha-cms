@@ -4,17 +4,16 @@ import { supabase } from "./client";
 export interface UserProfile {
   id: string;
   nome_completo: string;
-  // perfil_id (global) removido
   empresa_id: string | null;
   avatar_url: string | null;
-  telefone: string | null; // Novo campo
-  endereco_completo: string | null; // Novo campo
+  telefone: string | null;
+  endereco_completo: string | null;
   email: string; // Mantemos o campo, mas será 'N/A' na lista
-  perfil_customizado_id: string | null; // NOVO: ID do perfil customizado (UUID)
+  perfil_customizado_id: string | null; // ID do perfil customizado (UUID)
   perfis: {
     nome: string;
   } | null;
-  empresa: { // Novo campo para o nome da empresa
+  empresa: { // Nome da empresa
     nome: string;
   } | null;
 }
@@ -45,6 +44,7 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
     }
     
     // Se o perfil customizado for 'Super Admin' e tiver empresa_id, ele é o NOVO SA.
+    // (Esta lógica é redundante se a RPC is_super_admin for usada, mas mantemos para consistência visual)
     if (profileName === 'Super Admin' && user.empresa_id !== null) {
         profileName = 'Super Admin';
     }
@@ -68,13 +68,14 @@ export const useUsers = () => {
 interface InviteUserParams {
   email: string;
   full_name: string;
-  perfil_id: string; // Agora é o UUID do perfil customizado
-  telefone: string | null; // Novo campo
-  endereco_completo: string | null; // Novo campo
-  empresa_id?: string; // Opcional, apenas para Super Admin
+  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para SA
+  telefone: string | null;
+  endereco_completo: string | null;
+  empresa_id?: string | null; // Opcional, apenas para Super Admin
 }
 
 export const inviteUser = async ({ email, full_name, perfil_id, telefone, endereco_completo, empresa_id }: InviteUserParams) => {
+  // A Edge Function agora lida com a lógica de perfil_id ('1' vs UUID)
   const { data, error } = await supabase.functions.invoke("invite-user", {
     body: { email, full_name, perfil_id, telefone, endereco_completo, empresa_id },
     headers: {
@@ -97,13 +98,14 @@ export const inviteUser = async ({ email, full_name, perfil_id, telefone, endere
 interface UpdateUserParams {
   userIdToUpdate: string;
   full_name: string;
-  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para Antigo SA
-  telefone: string | null; // Novo campo
-  endereco_completo: string | null; // Novo campo
+  perfil_id: string; // Agora é o UUID do perfil customizado ou '1' para SA
+  telefone: string | null;
+  endereco_completo: string | null;
   empresa_id?: string | null; // Opcional, apenas para Super Admin
 }
 
 export const updateUser = async ({ userIdToUpdate, full_name, perfil_id, telefone, endereco_completo, empresa_id }: UpdateUserParams) => {
+  // A Edge Function agora lida com a lógica de perfil_id ('1' vs UUID)
   const { data, error } = await supabase.functions.invoke("update-user", {
     body: { userIdToUpdate, full_name, perfil_id, telefone, endereco_completo, empresa_id },
     headers: {

@@ -110,6 +110,7 @@ const resources = {
       "select_profile": "Selecione um perfil", // NOVO
       "select_company_to_load_profiles": "Selecione uma empresa para carregar os perfis customizados.", // NOVO
       "unknown_profile": "Perfil Desconhecido", // NOVO
+      "company_required_for_profile": "A empresa é obrigatória para este perfil.", // NOVO
       
       "page_title_companies": "Gestão de Empresas",
       "company_list_title": "Lista de Empresas",

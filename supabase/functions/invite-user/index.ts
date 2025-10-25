@@ -42,8 +42,7 @@ serve(async (req) => {
       },
     );
     
-    // 3. Verificar se o usuário logado é Super Admin usando a função RPC
-    // Usamos o cliente anon com o token do usuário para que o RPC 'is_super_admin' funcione corretamente.
+    // 3. Verificar se o usuário logado é Super Admin (usando RPC)
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -56,20 +55,11 @@ serve(async (req) => {
       }
     );
     
-    console.log("Checking Super Admin permission via RPC...");
     const { data: isSaData, error: isSaError } = await supabaseClient.rpc('is_super_admin');
 
-    if (isSaError) {
-      console.error("RPC Error during is_super_admin check:", isSaError);
-      return returnError(`Permission check failed: ${isSaError.message}`, 403);
-    }
-    
-    if (isSaData !== true) {
-      console.warn("User is not Super Admin. isSaData:", isSaData);
+    if (isSaError || isSaData !== true) {
       return returnError("Forbidden: Only Super Admin can invite new users", 403);
     }
-    
-    console.log("Permission granted: User is Super Admin.");
     
     // 4. Processar o corpo da requisição
     let data;
@@ -82,17 +72,29 @@ serve(async (req) => {
     const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id } = data;
 
     // Validação de campos obrigatórios
-    if (!email || !full_name || !perfil_id || !target_empresa_id) {
-      return returnError("Missing required fields: email, full_name, perfil_id, or target_empresa_id", 400);
+    if (!email || !full_name || !perfil_id) {
+      return returnError("Missing required fields: email, full_name, or perfil_id", 400);
     }
     
-    // O perfil_id deve ser um UUID (customizado)
-    if (perfil_id === '1' || !perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        return returnError("Invalid profile ID provided. Only custom profile UUIDs are allowed for invitations.", 400);
-    }
+    // O perfil_id deve ser '1' (Super Admin) ou um UUID (Customizado)
+    const isCustomProfile = typeof perfil_id === 'string' && perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     
-    const final_empresa_id = target_empresa_id;
-    const meta_perfil_id: string = perfil_id;
+    let final_empresa_id: string | null = target_empresa_id || null;
+    let custom_perfil_id: string | null = null;
+    
+    if (perfil_id === '1') {
+        // Se for Super Admin, a empresa_id deve ser NULL
+        final_empresa_id = null;
+        custom_perfil_id = null;
+    } else if (isCustomProfile) {
+        // Se for perfil customizado, a empresa_id é obrigatória
+        if (!final_empresa_id) {
+            return returnError("Company ID is required for custom profiles.", 400);
+        }
+        custom_perfil_id = perfil_id;
+    } else {
+        return returnError("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", 400);
+    }
     
     // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
     const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
@@ -103,12 +105,11 @@ serve(async (req) => {
       {
         data: {
           full_name: full_name,
-          perfil_id: meta_perfil_id, // Passa o UUID do perfil customizado
+          perfil_id: perfil_id, // Passa o ID original (UUID ou '1') para o metadado
           telefone: telefone,
           endereco_completo: endereco_completo,
         },
         redirectTo: redirectUrl,
-        // NOVO: Adicionando app_metadata para forçar a mudança de senha
         app_metadata: {
           must_change_password: true,
         }
@@ -117,7 +118,6 @@ serve(async (req) => {
 
     if (inviteError) {
       console.error("Supabase Invite Error:", inviteError);
-      // Retorna a mensagem de erro específica do Supabase Auth
       return returnError(inviteError.message, 400);
     }
     
@@ -129,7 +129,7 @@ serve(async (req) => {
         .from("usuarios")
         .update({ 
           empresa_id: final_empresa_id,
-          perfil_customizado_id: meta_perfil_id, // Define o perfil customizado
+          perfil_customizado_id: custom_perfil_id, // Define o UUID do perfil customizado (ou NULL)
         })
         .eq("id", invitedUserId);
 
@@ -145,7 +145,6 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("Catastrophic error in invite-user:", e);
-    // Garante que qualquer exceção não tratada retorne 500 com a mensagem de erro
     return returnError(`Internal Server Error: ${e.message}`, 500);
   }
 });

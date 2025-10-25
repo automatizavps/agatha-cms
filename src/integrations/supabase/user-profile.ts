@@ -10,21 +10,20 @@ export interface PermissionMap {
 export interface CurrentUserProfile {
   id: string;
   nome_completo: string;
-  // perfil_id (global) removido
   avatar_url: string | null;
-  telefone: string | null; // Adicionado
-  endereco_completo: string | null; // Adicionado
-  empresa_id: string | null; // Adicionado
-  perfil_customizado_id: string | null; // NOVO: ID do perfil customizado (UUID)
-  is_company_active: boolean; // NOVO: Status de ativação da empresa
+  telefone: string | null;
+  endereco_completo: string | null;
+  empresa_id: string | null;
+  perfil_customizado_id: string | null;
+  is_company_active: boolean;
   perfis: {
     nome: string;
   } | null;
-  empresas: { // NOVO: Nome da empresa
+  empresas: {
     nome: string;
   } | null;
-  permissions: PermissionMap; // NOVO: Mapa de permissões
-  is_super_admin: boolean; // NOVO: Flag para Super Admin
+  permissions: PermissionMap;
+  is_super_admin: boolean; // Flag para Super Admin
 }
 
 // Função auxiliar para buscar permissões
@@ -79,13 +78,13 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   if (!userProfile) return null;
   
   const is_company_active = userProfile.empresas ? userProfile.empresas.is_active : true;
-  const companyName = userProfile.empresas?.nome || null;
   
   let permissions: PermissionMap = {};
   let is_super_admin = false;
   let profileName = "Funcionário";
   
   // 2. Verificar se é Super Admin (usando a função RPC)
+  // Esta RPC é a fonte de verdade para o status de SA
   const { data: isSaData, error: isSaError } = await supabase.rpc('is_super_admin');
   if (!isSaError && isSaData !== null) {
     is_super_admin = isSaData;
@@ -109,8 +108,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   } else if (userProfile.empresa_id) {
     // Usuário com empresa_id mas sem perfil customizado (Admin de Empresa)
     profileName = "Admin";
-    // Por padrão, o Admin de Empresa tem acesso de escrita a todos os módulos da sua empresa
-    // (Embora a RLS deva controlar isso, definimos o frontend para 'escrita' para todos os módulos)
+    // O Admin de Empresa tem acesso de escrita a todos os módulos da sua empresa
     permissions = ALL_MODULES.reduce((acc, moduleName) => {
       acc[moduleName] = 'escrita';
       return acc;
