@@ -244,7 +244,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadProducts = useCanRead('products');
   const canReadServices = useCanRead('services');
   const canReadCategories = useCanRead('categories');
-  const canReadUsers = useCanRead('users'); // MANTIDO
+  const canReadUsers = useCanRead('users'); // RE-HABILITADO
   const canReadTeams = useCanRead('teams');
   const canReadCompanies = useCanRead('companies');
   const canReadNotifications = useCanRead('notifications');
@@ -342,7 +342,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             isCollapsed={isCollapsed}
             onNavigate={onNavigate}
             basePath="/products"
-            additionalActivePaths={['/services']} // Adicionando /services
+            additionalActivePaths={['/services']}
           >
             {canReadProducts && (
               <NavItem
@@ -377,15 +377,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           </SidebarGroup>
         )}
         
-        {/* REMOVIDO: Link de Usuários */}
-        {/* {canReadUsers && (
+        {canReadUsers && (
           <NavItem
             to="/users"
             icon={<Users className="h-5 w-5" />}
             label={t('nav_users')}
             {...navItemProps}
           />
-        )} */}
+        )}
         
         {canReadTeams && (
           <NavItem

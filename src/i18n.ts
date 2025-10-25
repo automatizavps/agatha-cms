@@ -89,27 +89,24 @@ const resources = {
       "chart_error": "Erro ao carregar dados do gráfico.",
       "analytics_placeholder": "Outros relatórios e métricas virão aqui.",
       
-      // REMOVIDO: "page_title_users": "Gestão de Usuários",
-      // REMOVIDO: "user_list_title": "Lista de Usuários",
-      // REMOVIDO: "user_search_placeholder": "Buscar por nome ou perfil...",
-      // REMOVIDO: "add_new_user": "Adicionar Novo Usuário",
-      // REMOVIDO: "no_users_found": "Nenhum usuário encontrado para esta empresa.",
-      // REMOVIDO: "no_users_search": "Nenhum usuário encontrado com o termo de busca.",
+      "page_title_users": "Gestão de Usuários", // RE-ADICIONADO
+      "user_list_title": "Lista de Usuários", // RE-ADICIONADO
+      "user_search_placeholder": "Buscar por nome, email ou perfil...", // RE-ADICIONADO
+      "invite_user": "Convidar Usuário", // NOVO
+      "user_invited_success": "Convite enviado com sucesso para {{email}}.", // NOVO
+      "user_updated_success": "Usuário {{name}} atualizado com sucesso.", // NOVO
+      "no_users_found": "Nenhum usuário encontrado para esta empresa.", // RE-ADICIONADO
       "user_table_header_name": "Nome",
       "user_table_header_company": "Empresa",
       "user_table_header_phone": "Telefone",
       "user_table_header_address": "Endereço",
       "user_table_header_profile": "Perfil",
-      // REMOVIDO: "edit_user": "Editar Usuário",
-      // REMOVIDO: "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.",
-      // REMOVIDO: "loading_user_data": "Carregando Dados do Usuário...",
-      // REMOVIDO: "loading_user_data_description": "Aguarde enquanto carregamos as informações do usuário.",
-      // REMOVIDO: "only_super_admin_can_invite": "Apenas Super Admin pode convidar novos usuários.", // NOVO
-      "loading_profiles": "Carregando perfis...", // NOVO
-      "select_profile": "Selecione um perfil", // NOVO
-      "select_company_to_load_profiles": "Selecione uma empresa para carregar os perfis customizados.", // NOVO
+      "edit_user": "Editar Usuário", // NOVO
+      "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.", // NOVO
+      "loading_user_data": "Carregando Dados do Usuário...", // NOVO
       "unknown_profile": "Perfil Desconhecido", // NOVO
-      "company_required_for_profile": "A empresa é obrigatória para este perfil.", // NOVO
+      "cannot_delete_self": "Não é possível excluir sua própria conta.", // NOVO
+      "invite_user_description": "Envie um convite por email para um novo usuário se cadastrar.", // NOVO
       
       "page_title_companies": "Gestão de Empresas",
       "company_list_title": "Lista de Empresas",
