@@ -21,15 +21,13 @@ export interface UserProfile {
 // --- Fetch Users ---
 
 const fetchUsers = async (companyId?: string): Promise<UserProfile[]> => {
-  // RLS should handle filtering by company_id automatically for non-Super Admins.
-  // Super Admins see all users.
+  // 1. Buscar dados básicos do usuário (RLS garante o filtro por empresa)
   let query = supabase
     .from("usuarios")
     .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, perfis:perfis_customizados (nome), empresa:empresas (nome)")
     .order("nome_completo", { ascending: true });
     
   // Se um companyId for fornecido (apenas Super Admin pode fazer isso), aplicamos o filtro.
-  // Para Admin/Funcionário, o RLS já restringe ao seu empresa_id.
   if (companyId) {
     query = query.eq('empresa_id', companyId);
   }
@@ -41,28 +39,12 @@ const fetchUsers = async (companyId?: string): Promise<UserProfile[]> => {
     throw new Error("Failed to fetch users: " + error.message);
   }
   
-  // Fetch emails separately (only accessible by Admin/SA via RLS on auth.users)
-  const userIds = data.map(u => u.id);
-  const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 1000, // Assuming less than 1000 users in total for simplicity
-  });
+  // 2. Obter o email do usuário logado (se disponível na sessão)
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  const currentUserId = currentUser?.id;
+  const currentUserEmail = currentUser?.email || 'N/A';
   
-  if (authError) {
-    console.warn("Warning: Failed to fetch auth users for emails:", authError);
-    // Continue without emails if fetching fails
-  }
-  
-  const emailMap = new Map<string, string>();
-  if (authUsers?.users) {
-    authUsers.users.forEach(u => {
-      if (userIds.includes(u.id)) {
-        emailMap.set(u.id, u.email || 'N/A');
-      }
-    });
-  }
-  
-  // Map profile names and inject emails
+  // 3. Mapear perfis e injetar emails (apenas o email do usuário logado é garantido)
   return data.map(user => {
     let profileName = user.perfis?.nome;
     
@@ -74,9 +56,12 @@ const fetchUsers = async (companyId?: string): Promise<UserProfile[]> => {
       }
     }
     
+    // Injeta o email: usa o email da sessão se for o usuário logado, senão usa 'N/A'
+    const email = user.id === currentUserId ? currentUserEmail : 'N/A';
+    
     return {
       ...user,
-      email: emailMap.get(user.id) || 'N/A', 
+      email: email, 
       perfis: { nome: profileName || 'N/A' },
     };
   }) as UserProfile[];
