@@ -103,24 +103,25 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
   const isRouteActive = location.pathname.startsWith(basePath) || 
                        additionalActivePaths.some(path => location.pathname.startsWith(path));
   
-  // NOVO: Inicializa o estado aberto com base na rota ativa, mas não usa useEffect para sincronização
+  // NOVO: Usamos o estado interno para controlar o colapso, inicializando com base na rota ativa
   const [isOpen, setIsOpen] = useState(isRouteActive);
   
-  // Se o estado de colapso mudar, redefinimos o estado interno para refletir a rota ativa
+  // CORREÇÃO: Se o grupo estiver ativo, forçamos a abertura no modo expandido.
+  // Se o modo colapsado for ativado, fechamos o estado interno para evitar conflitos.
   useEffect(() => {
-    if (!isCollapsed) {
-      setIsOpen(isRouteActive);
+    if (isCollapsed) {
+      setIsOpen(false);
+    } else if (isRouteActive) {
+      setIsOpen(true);
     }
-  }, [isCollapsed, isRouteActive]); // Depende apenas de isCollapsed e isRouteActive
+  }, [isCollapsed, isRouteActive]);
 
-  // Helper para verificar se algum subitem está ativo (para o destaque do ícone no modo colapsado)
-  const isAnySubItemActive = isRouteActive;
 
   // Helper to render the icon with correct styling
   const renderIcon = (isActive: boolean) => {
     // No modo expandido, o ícone do grupo não deve ter a cor primária, a menos que o grupo esteja aberto
     // No modo colapsado, o ícone deve ter a cor primária se qualquer subitem estiver ativo
-    const iconColorClass = isCollapsed && isAnySubItemActive
+    const iconColorClass = isCollapsed && isRouteActive
       ? "text-sidebar-primary-foreground"
       : "text-sidebar-primary";
       
@@ -178,12 +179,12 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
                 className={cn(
                   "flex items-center justify-center rounded-lg py-2 transition-all cursor-pointer",
                   // Apenas aplica o fundo primário se estiver colapsado E a rota for ativa
-                  isAnySubItemActive
+                  isRouteActive
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-primary hover:bg-sidebar-accent"
                 )}
               >
-                {renderIcon(isAnySubItemActive)}
+                {renderIcon(isRouteActive)}
               </div>
             </TooltipTrigger>
           </DropdownMenuTrigger>
