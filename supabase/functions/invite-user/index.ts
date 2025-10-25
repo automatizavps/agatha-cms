@@ -48,39 +48,31 @@ serve(async (req) => {
       return returnError("Unauthorized: Invalid token or session expired", 401);
     }
     
-    const inviterUserId = adminUser.id;
-
-    // Check if the user is Super Admin
-    const { data: profileData, error: profileError } = await supabaseAdmin
-      .from("usuarios")
-      .select(`
-        empresa_id, 
-        perfil_customizado_id,
-        perfis_customizados (nome)
-      `)
-      .eq("id", inviterUserId)
-      .single();
-
-    if (profileError || !profileData) {
-      return returnError("Forbidden: User profile not found", 403);
-    }
+    // 3. Verificar se o usuário logado é Super Admin usando a função RPC
+    // Nota: O cliente Admin não pode usar RPCs que dependem de auth.uid(),
+    // mas podemos usar o cliente anon (que é o que o createClient faz por padrão)
+    // e passar o token para que o RLS/RPC funcione.
     
-    // Check 1: Antigo Super Admin (sem empresa e sem perfil customizado)
-    const isOldSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
     
-    // Check 2: Novo Super Admin (com empresa E perfil customizado 'Super Admin')
-    const isNewSuperAdmin = 
-      profileData.empresa_id !== null && 
-      profileData.perfil_customizado_id !== null && 
-      profileData.perfis_customizados?.nome === 'Super Admin';
-      
-    const isSuperAdmin = isOldSuperAdmin || isNewSuperAdmin;
+    const { data: isSaData, error: isSaError } = await supabaseClient.rpc('is_super_admin');
 
-    if (!isSuperAdmin) {
+    if (isSaError || isSaData !== true) {
+      console.error("Super Admin check failed:", isSaError?.message || "Not Super Admin");
       return returnError("Forbidden: Only Super Admin can invite new users", 403);
     }
     
-    // 3. Processar o corpo da requisição
+    // 4. Processar o corpo da requisição
     let data;
     try {
       data = await req.json();
@@ -114,7 +106,7 @@ serve(async (req) => {
       final_empresa_id,
     });
 
-    // 4. Convidar o usuário usando o Service Role Key
+    // 5. Convidar o usuário usando o Service Role Key
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
       email,
       {
@@ -138,7 +130,7 @@ serve(async (req) => {
       return returnError(inviteError.message, 400);
     }
     
-    // 5. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
+    // 6. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
     const invitedUserId = inviteData.user?.id;
 
     if (invitedUserId) {
