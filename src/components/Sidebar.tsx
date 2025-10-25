@@ -237,7 +237,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { data: profile, isLoading } = useCurrentUserProfile();
   const { t } = useTranslation();
   
-  // Permissões baseadas no novo hook
+  // Permissões baseadas no novo hook - MANTIDAS, MAS IGNORADAS ABAIXO
   const canReadAnalytics = useCanRead('analytics');
   const canReadOrders = useCanRead('orders');
   const canReadAppointments = useCanRead('appointments');
@@ -245,7 +245,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadProducts = useCanRead('products');
   const canReadServices = useCanRead('services');
   const canReadCategories = useCanRead('categories');
-  const canReadUsers = useCanRead('users'); // RE-ADICIONADO
+  const canReadUsers = useCanRead('users'); 
   const canReadTeams = useCanRead('teams');
   const canReadCompanies = useCanRead('companies');
   const canReadNotifications = useCanRead('notifications');
@@ -253,11 +253,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
 
   const navItemProps = { isCollapsed, onClick: onNavigate };
   
-  // Verifica se o grupo de Produtos/Serviços deve ser exibido
-  const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories;
-  
-  // Verifica se o grupo de Empresas deve ser exibido
-  const showCompaniesGroup = canReadCompanies || canReadCustomProfiles;
+  // FORÇANDO A EXIBIÇÃO DE TODOS OS GRUPOS PARA TESTE
+  const showProductsServicesGroup = true;
+  const showCompaniesGroup = true;
 
 
   return (
@@ -284,7 +282,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
         <NavItem to="/" icon={<Home className="h-5 w-5" />} label={t('nav_home')} {...navItemProps} />
         
-        {canReadAnalytics && (
+        {/* FORÇANDO A EXIBIÇÃO */}
+        {true && (
           <NavItem
             to="/analytics"
             icon={<BarChart3 className="h-5 w-5" />}
@@ -300,7 +299,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_operational')}</div>
         )}
         
-        {canReadNotifications && (
+        {/* FORÇANDO A EXIBIÇÃO */}
+        {true && (
           <NavItem
             to="/notifications"
             icon={<Bell className="h-5 w-5" />}
@@ -309,7 +309,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
         
-        {canReadOrders && (
+        {/* FORÇANDO A EXIBIÇÃO */}
+        {true && (
           <NavItem
             to="/orders"
             icon={<ShoppingCart className="h-5 w-5" />}
@@ -318,7 +319,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
         
-        {canReadAppointments && (
+        {/* FORÇANDO A EXIBIÇÃO */}
+        {true && (
           <NavItem
             to="/appointments"
             icon={<Calendar className="h-5 w-5" />}
@@ -327,7 +329,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
 
-        {canReadClients && (
+        {/* FORÇANDO A EXIBIÇÃO */}
+        {true && (
           <NavItem
             to="/clients"
             icon={<Briefcase className="h-5 w-5" />}
@@ -345,7 +348,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             basePath="/products"
             additionalActivePaths={['/services']}
           >
-            {canReadProducts && (
+            {true && (
               <NavItem
                 to="/products"
                 icon={<Package className="h-5 w-5" />}
@@ -355,7 +358,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                 onClick={onNavigate}
               />
             )}
-            {canReadServices && (
+            {true && (
               <NavItem
                 to="/services"
                 icon={<Clock className="h-5 w-5" />}
@@ -365,7 +368,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                 onClick={onNavigate}
               />
             )}
-            {canReadCategories && (
+            {true && (
               <NavItem
                 to="/products/categories"
                 icon={<Tag className="h-5 w-5" />}
@@ -378,7 +381,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           </SidebarGroup>
         )}
         
-        {canReadUsers && (
+        {/* RE-ADICIONADO E FORÇANDO A EXIBIÇÃO */}
+        {true && (
           <NavItem
             to="/users"
             icon={<Users className="h-5 w-5" />}
@@ -387,7 +391,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
         
-        {canReadTeams && (
+        {/* FORÇANDO A EXIBIÇÃO */}
+        {true && (
           <NavItem
             to="/teams"
             icon={<Target className="h-5 w-5" />}
@@ -404,7 +409,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             onNavigate={onNavigate}
             basePath="/companies"
           >
-            {canReadCompanies && (
+            {true && (
               <NavItem
                 to="/companies"
                 icon={<Building className="h-5 w-5" />}
@@ -414,7 +419,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                 onClick={onNavigate}
               />
             )}
-            {canReadCustomProfiles && (
+            {true && (
               <NavItem
                 to="/companies/profiles"
                 icon={<UserCheck className="h-5 w-5" />}
