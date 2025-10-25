@@ -34,7 +34,7 @@ const AddUserSheet = () => {
     perfil_id: string; 
     telefone: string | null; 
     endereco_completo: string | null;
-    empresa_id?: string | null;
+    empresa_id?: string | null; // Pode ser null
   }) => {
     mutation.mutate({
       email: values.email,
@@ -43,7 +43,8 @@ const AddUserSheet = () => {
       perfil_id: values.perfil_id, 
       telefone: values.telefone,
       endereco_completo: values.endereco_completo,
-      empresa_id: values.empresa_id || undefined,
+      // Passa explicitamente null se for null/vazio, ou o ID
+      empresa_id: values.empresa_id || null, 
     });
   };
 
