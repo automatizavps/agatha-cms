@@ -70,26 +70,20 @@ serve(async (req) => {
         );
         
         // Verifica se é Super Admin (RPC)
-        const { data: isSaData, error: isSaError } = await supabaseClient.rpc('is_super_admin');
+        const { data: isSaData } = await supabaseClient.rpc('is_super_admin');
         
-        if (isSaError) {
-            console.warn("RPC is_super_admin failed, assuming not SA:", isSaError.message);
-        } else {
-            isSuperAdmin = isSaData === true;
-        }
+        isSuperAdmin = isSaData === true;
         
         // Se não for Super Admin, verifica se tem empresa_id (Admin de Empresa)
         if (!isSuperAdmin) {
-            const { data: profileData, error: profileError } = await supabaseAdmin
+            const { data: profileData } = await supabaseAdmin
                 .from("usuarios")
                 .select("empresa_id")
                 .eq("id", adminUserId)
                 .maybeSingle();
                 
-            if (profileError) {
-                console.error("Profile fetch failed for company admin check:", profileError);
-                // Se falhar, assumimos que não é Admin de Empresa
-            } else if (profileData && profileData.empresa_id !== null) {
+            // Se o perfil existir e tiver empresa_id, é um usuário de empresa
+            if (profileData && profileData.empresa_id !== null) {
                 isCompanyAdmin = true;
             }
         }
@@ -129,7 +123,8 @@ serve(async (req) => {
     const email = userData.user?.email;
 
     if (!email) {
-      return return Error("Email not found for user.", 404);
+      // CORREÇÃO: Usar a função returnError
+      return returnError("Email not found for user.", 404);
     }
 
     return new Response(JSON.stringify({ email: email }), {
