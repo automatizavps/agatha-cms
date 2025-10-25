@@ -28,20 +28,26 @@ import { Badge } from "@/components/ui/badge"; // IMPORTAÇÃO CORRIGIDA
 
 interface CompanyTableProps {
   companies: Company[];
+  canWrite: boolean; // NOVO
 }
 
 interface CompanyActionsProps {
   company: Company;
   onEdit: (company: Company) => void;
   isSuperAdmin: boolean;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj' | 'is_active';
 type SortDirection = 'asc' | 'desc';
 
-const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSuperAdmin }) => {
+const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSuperAdmin, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteCompany,
@@ -180,7 +186,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
+const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('nome');
@@ -339,7 +345,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
                   )}
                 </TableCell>
                 <TableCell className="text-right">
-                  <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} />
+                  <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}

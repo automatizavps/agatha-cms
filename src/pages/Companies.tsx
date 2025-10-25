@@ -53,7 +53,7 @@ const Companies = () => {
               </Button>
             </div>
           ) : companies && companies.length > 0 ? (
-            <CompanyTable companies={companies} />
+            <CompanyTable companies={companies} canWrite={canWriteCompanies} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {t('no_companies_found')}

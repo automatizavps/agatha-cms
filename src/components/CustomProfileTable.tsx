@@ -26,19 +26,25 @@ import EditCustomProfileSheet from "./EditCustomProfileSheet";
 
 interface CustomProfileTableProps {
   profiles: CustomProfile[];
+  canWrite: boolean; // NOVO
 }
 
 interface ProfileActionsProps {
   profile: CustomProfile;
   onEdit: (profile: CustomProfile) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome' | 'empresa';
 type SortDirection = 'asc' | 'desc';
 
-const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, onEdit }) => {
+const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteCustomProfile,
@@ -110,7 +116,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const CustomProfileTable: React.FC<CustomProfileTableProps> = ({ profiles }) => {
+const CustomProfileTable: React.FC<CustomProfileTableProps> = ({ profiles, canWrite }) => {
   const [editingProfile, setEditingProfile] = useState<CustomProfile | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('nome');
@@ -211,7 +217,7 @@ const CustomProfileTable: React.FC<CustomProfileTableProps> = ({ profiles }) => 
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <ProfileActions profile={profile} onEdit={handleEdit} />
+                  <ProfileActions profile={profile} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}

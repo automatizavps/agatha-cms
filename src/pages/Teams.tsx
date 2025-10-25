@@ -131,7 +131,7 @@ const Teams = () => {
               </Button>
             </div>
           ) : filteredTeams.length > 0 ? (
-            <TeamTable teams={filteredTeams} />
+            <TeamTable teams={filteredTeams} canWrite={canWriteTeams} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {searchTerm ? t('no_data_found') : t('no_teams_found')}

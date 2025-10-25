@@ -27,19 +27,25 @@ import { cn } from "@/lib/utils";
 
 interface UserTableProps {
   users: UserProfile[];
+  canWrite: boolean; // NOVO
 }
 
 interface UserActionsProps {
   user: UserProfile;
   onEdit: (user: UserProfile) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil';
 type SortDirection = 'asc' | 'desc';
 
-const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
+const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
@@ -111,7 +117,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const UserTable: React.FC<UserTableProps> = ({ users }) => {
+const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('nome_completo');
@@ -284,7 +290,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 </TableCell>
                 <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
                 <TableCell className="text-right">
-                  <UserActions user={user} onEdit={handleEdit} />
+                  <UserActions user={user} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}

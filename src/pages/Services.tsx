@@ -151,7 +151,7 @@ const Services = () => {
               </Button>
             </div>
           ) : filteredServices.length > 0 ? (
-            <ServiceOnlyTable services={filteredServices} />
+            <ServiceOnlyTable services={filteredServices} canWrite={canWriteServices} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {searchTerm ? t('no_data_found') : t('no_services_found')}

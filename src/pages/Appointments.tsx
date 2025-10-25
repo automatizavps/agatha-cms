@@ -63,6 +63,11 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
     }
   };
 
+  // Oculta o menu inteiro se não puder escrever
+  if (!canWrite) {
+    return null;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -74,23 +79,19 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         
-        {canWrite && (
-          <DropdownMenuItem onClick={() => onEdit(appointment)}>
-            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={() => onEdit(appointment)}>
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+        </DropdownMenuItem>
         
-        {canWrite && <DropdownMenuSeparator />}
+        <DropdownMenuSeparator />
         
-        {canWrite && (
-          <DropdownMenuItem 
-            onClick={handleDelete} 
-            disabled={deleteMutation.isPending}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem 
+          onClick={handleDelete} 
+          disabled={deleteMutation.isPending}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

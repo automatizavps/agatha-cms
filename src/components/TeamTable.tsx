@@ -29,19 +29,25 @@ import { cn } from "@/lib/utils";
 
 interface TeamTableProps {
   teams: Team[];
+  canWrite: boolean; // NOVO
 }
 
 interface TeamActionsProps {
   team: Team;
   onEdit: (team: Team) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome' | 'empresa' | 'meta_valor' | 'meta_quantidade';
 type SortDirection = 'asc' | 'desc';
 
-const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit }) => {
+const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteTeam,
@@ -171,7 +177,7 @@ const TeamMembersDisplay: React.FC<{ teamId: string }> = ({ teamId }) => {
 };
 
 
-const TeamTable: React.FC<TeamTableProps> = ({ teams }) => {
+const TeamTable: React.FC<TeamTableProps> = ({ teams, canWrite }) => {
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
@@ -322,7 +328,7 @@ const TeamTable: React.FC<TeamTableProps> = ({ teams }) => {
                   {team.meta_mensal_quantidade} {t('units')}
                 </TableCell>
                 <TableCell className="text-right">
-                  <TeamActions team={team} onEdit={handleEdit} />
+                  <TeamActions team={team} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}

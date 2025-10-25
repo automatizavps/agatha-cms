@@ -312,7 +312,7 @@ const Products = () => {
               </Button>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <ProductOnlyTable products={filteredProducts} onEdit={handleEditFromTable} />
+            <ProductOnlyTable products={filteredProducts} onEdit={handleEditFromTable} canWrite={canWriteProducts} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {t('no_products_found')}

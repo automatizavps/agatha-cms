@@ -137,7 +137,7 @@ const Users = () => {
               </Button>
             </div>
           ) : filteredUsers.length > 0 ? (
-            <UserTable users={filteredUsers} />
+            <UserTable users={filteredUsers} canWrite={canWriteUsers} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {searchTerm ? t('no_users_search') : t('no_users_found')}

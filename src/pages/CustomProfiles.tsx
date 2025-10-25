@@ -130,7 +130,7 @@ const CustomProfiles = () => {
               </Button>
             </div>
           ) : filteredProfiles.length > 0 ? (
-            <CustomProfileTable profiles={filteredProfiles} />
+            <CustomProfileTable profiles={filteredProfiles} canWrite={canWriteCustomProfiles} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {searchTerm ? t('no_data_found') : t('no_custom_profiles_found')}

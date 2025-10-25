@@ -25,6 +25,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 interface ClientTableProps {
   clients: Client[];
@@ -35,14 +36,19 @@ interface ClientTableProps {
 interface ClientActionsProps {
   client: Client;
   onEdit: (client: Client) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome' | 'empresa' | 'email' | 'telefone' | 'endereco_completo';
 type SortDirection = 'asc' | 'desc';
 
-const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit }) => {
+const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteClient,
@@ -123,6 +129,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.perfil_id === 1;
+  const canWriteClients = useCanWrite('clients'); // Obtendo a permissão
 
   const handleEdit = (client: Client) => {
     setEditingClient(client);
@@ -224,6 +231,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
                   checked={isAllSelected || isIndeterminate}
                   onCheckedChange={(checked) => handleSelectAll(!!checked)}
                   aria-label={t('select_all')}
+                  disabled={!canWriteClients}
                 />
               </TableHead>
               <SortableHeader 
@@ -288,6 +296,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
                   <Checkbox
                     checked={selectedIds.has(client.id)}
                     onCheckedChange={(checked) => handleSelectRow(client.id, !!checked)}
+                    disabled={!canWriteClients}
                   />
                 </TableCell>
                 <TableCell className="font-medium flex items-center gap-2">
@@ -306,7 +315,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
                 <TableCell className="hidden md:table-cell">{client.telefone || 'N/A'}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{client.endereco_completo || 'N/A'}</TableCell>
                 <TableCell className="text-right">
-                  <ClientActions client={client} onEdit={handleEdit} />
+                  <ClientActions client={client} onEdit={handleEdit} canWrite={canWriteClients} />
                 </TableCell>
               </TableRow>
             ))}

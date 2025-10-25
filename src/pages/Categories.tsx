@@ -130,7 +130,7 @@ const Categories = () => {
               </Button>
             </div>
           ) : filteredCategories.length > 0 ? (
-            <CategoryTable categories={filteredCategories} />
+            <CategoryTable categories={filteredCategories} canWrite={canWriteCategories} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {searchTerm ? t('no_data_found') : t('no_categories_found')}

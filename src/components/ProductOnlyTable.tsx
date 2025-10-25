@@ -30,19 +30,25 @@ import { Link } from "react-router-dom"; // Importando Link
 interface ProductTableProps {
   products: Product[];
   onEdit?: (product: Product) => void; // Adicionando prop opcional
+  canWrite: boolean; // NOVO
 }
 
 interface ProductActionsProps {
   product: Product;
   onEdit: (product: Product) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome' | 'empresa' | 'categoria' | 'marca' | 'estoque_total' | 'preco';
 type SortDirection = 'asc' | 'desc';
 
-const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit }) => {
+const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -127,7 +133,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEditProp }) => {
+const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEditProp, canWrite }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
@@ -226,6 +232,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">Avatar</TableHead>
               <SortableHeader 
                 sortKey="nome" 
                 currentSortKey={sortKey} 
@@ -294,9 +301,9 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                     ) : (
                       <ImageIcon className="h-8 w-8 text-muted-foreground p-1 border rounded-md" />
                     )}
-                    {product.nome}
                   </div>
                 </TableCell>
+                <TableCell className="font-medium">{product.nome}</TableCell>
                 {isSuperAdmin && (
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
@@ -315,7 +322,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                   </div>
                 </TableCell>
                 <TableCell className="text-center font-semibold"> {/* ALTERADO para text-center */}
-                  <Badge variant={product.estoque_total && product.estoque_total > 0 ? 'default' : 'destructive'}>
+                  <Badge variant={product.estoque_total && product.estoque_total > 10 ? 'default' : 'destructive'}>
                     {product.estoque_total !== null ? product.estoque_total : 'N/A'}
                   </Badge>
                 </TableCell>
@@ -323,7 +330,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                   {formatCurrency(product.preco)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <ProductActions product={product} onEdit={handleEdit} />
+                  <ProductActions product={product} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}

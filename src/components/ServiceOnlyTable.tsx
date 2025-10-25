@@ -28,19 +28,25 @@ import { Link } from "react-router-dom"; // Importando Link
 
 interface ServiceOnlyTableProps {
   services: Product[];
+  canWrite: boolean; // NOVO
 }
 
 interface ServiceActionsProps {
   service: Product;
   onEdit: (service: Product) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome' | 'empresa' | 'categoria' | 'tempo_servico' | 'preco';
 type SortDirection = 'asc' | 'desc';
 
-const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit }) => {
+const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -125,7 +131,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
+const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services, canWrite }) => {
   const [editingService, setEditingService] = useState<Product | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
@@ -214,6 +220,7 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">Avatar</TableHead>
               <SortableHeader 
                 sortKey="nome" 
                 currentSortKey={sortKey} 
@@ -273,9 +280,9 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
                     ) : (
                       <ImageIcon className="h-8 w-8 text-muted-foreground p-1 border rounded-md" />
                     )}
-                    {service.nome}
                   </div>
                 </TableCell>
+                <TableCell className="font-medium">{service.nome}</TableCell>
                 {isSuperAdmin && (
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
@@ -297,7 +304,7 @@ const ServiceOnlyTable: React.FC<ServiceOnlyTableProps> = ({ services }) => {
                   {formatCurrency(service.preco)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <ServiceActions service={service} onEdit={handleEdit} />
+                  <ServiceActions service={service} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}

@@ -27,19 +27,25 @@ import { cn } from "@/lib/utils";
 
 interface CategoryTableProps {
   categories: Category[];
+  canWrite: boolean; // NOVO
 }
 
 interface CategoryActionsProps {
   category: Category;
   onEdit: (category: Category) => void;
+  canWrite: boolean; // NOVO
 }
 
 type SortKey = 'nome' | 'empresa';
 type SortDirection = 'asc' | 'desc';
 
-const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit }) => {
+const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteCategory,
@@ -111,7 +117,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
+const CategoryTable: React.FC<CategoryTableProps> = ({ categories, canWrite }) => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const { data: profile } = useCurrentUserProfile();
@@ -219,7 +225,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories }) => {
                   </TableCell>
                 )}
                 <TableCell className="text-right">
-                  <CategoryActions category={category} onEdit={handleEdit} />
+                  <CategoryActions category={category} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}
