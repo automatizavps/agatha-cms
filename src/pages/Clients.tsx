@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Users, Search, Building, Trash2 } from "lucide-react";
 import { useClients, deleteClients } from "@/integrations/supabase/clients";
 import { showError, showSuccess } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import ClientTable from "@/components/ClientTable";
 import AddClientSheet from "@/components/AddClientSheet";
@@ -16,10 +15,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import ExportButton from "@/components/ExportButton";
 import { format } from "date-fns";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 
-const ClientsContent = () => {
+const Clients = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const queryClient = useQueryClient();
@@ -30,19 +28,11 @@ const ClientsContent = () => {
   
   // Usando o filtro global do dashboard
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
-
-  // O perfil do usuário logado é obtido dentro do useDashboardFilter, mas precisamos do isSuperAdmin aqui
-  // O isSuperAdmin do useDashboardFilter é a fonte de verdade.
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
-  // Permissões baseadas no perfil customizado
-  const canReadClients = useCanRead('clients');
-  const canWriteClients = useCanWrite('clients');
-
-  if (!canReadClients) {
-    return null; 
-  }
+  // Permissões baseadas no perfil customizado - REMOVIDAS
+  const canWriteClients = true; // FORÇADO TRUE
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -245,12 +235,5 @@ const ClientsContent = () => {
     </DashboardLayout>
   );
 };
-
-const Clients = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <ClientsContent />
-  </PermissionGuard>
-);
 
 export default Clients;

@@ -3,19 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrderReportTab from "@/components/OrderReportTab";
 import ServiceReportTab from "@/components/ServiceReportTab";
-import ClientReportTab from "@/components/ClientReportTab"; // NOVO
-import TeamReportTab from "@/components/TeamReportTab";     // NOVO
-import CompanyReportTab from "@/components/CompanyReportTab"; // NOVO
-import { PermissionGuard } from "@/hooks/use-permission";
-import { useCanRead } from "@/hooks/use-module-permission";
+import ClientReportTab from "@/components/ClientReportTab";
+import TeamReportTab from "@/components/TeamReportTab";
+import CompanyReportTab from "@/components/CompanyReportTab";
 
-const AnalyticsContent = () => {
+const Analytics = () => {
   const { t } = useTranslation();
-  const canReadAnalytics = useCanRead('analytics');
-  
-  if (!canReadAnalytics) {
-    return null;
-  }
   
   return (
     <DashboardLayout>
@@ -58,12 +51,5 @@ const AnalyticsContent = () => {
     </DashboardLayout>
   );
 };
-
-const Analytics = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para acessar relatórios
-  <PermissionGuard allowedProfileIds={[1, 2]}>
-    <AnalyticsContent />
-  </PermissionGuard>
-);
 
 export default Analytics;

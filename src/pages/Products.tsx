@@ -3,26 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Package, Search, Tag, Factory, Building, AlertTriangle } from "lucide-react";
 import { useProductsOnly, Product } from "@/integrations/supabase/products";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import AddProductSheet from "@/components/AddProductSheet";
 import ProductOnlyTable from "@/components/ProductOnlyTable";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import EditProductSheet from "@/components/EditProductSheet";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 
 const LOW_STOCK_THRESHOLD = 10;
 
-const ProductsContent = () => {
+const Products = () => {
   const { t } = useTranslation();
   
   // Usando o filtro global do dashboard
@@ -33,7 +30,7 @@ const ProductsContent = () => {
   const { data: allProducts, isLoading, isError, error, refetch, isRefetching } = useProductsOnly();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all'); // REINTRODUZIDO
+  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
   const [brandFilter, setBrandFilter] = useState<string | 'all'>('all');
   
   const [searchParams] = useSearchParams();
@@ -41,13 +38,8 @@ const ProductsContent = () => {
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
-  // Permissões baseadas no perfil customizado
-  const canReadProducts = useCanRead('products');
-  const canWriteProducts = useCanWrite('products');
-  
-  if (!canReadProducts) {
-    return null;
-  }
+  // Permissões baseadas no perfil customizado - REMOVIDAS
+  const canWriteProducts = true; // FORÇADO TRUE
   
   // Estado para edição automática
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -338,12 +330,5 @@ const ProductsContent = () => {
     </DashboardLayout>
   );
 };
-
-const Products = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <ProductsContent />
-  </PermissionGuard>
-);
 
 export default Products;

@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
 import { useProductById, ProductType } from "@/integrations/supabase/products";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import WeeklySalesChart from "@/components/WeeklySalesChart";
 import { useProductSalesHistory, SaleHistoryItem } from "@/integrations/supabase/productHistory";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import ProductImageCarousel from "@/components/ProductImageCarousel";
 import { Separator } from "@/components/ui/separator";
 
-const ProductHistoryContent = () => {
+const ProductHistory = () => {
   const { productId } = useParams<{ productId: string }>();
   const { t } = useTranslation();
 
@@ -206,12 +205,5 @@ const ProductHistoryContent = () => {
     </DashboardLayout>
   );
 };
-
-const ProductHistory = () => (
-  // Perfis 1 (Super Admin) e 2 (Admin) têm permissão para visualizar histórico
-  <PermissionGuard allowedProfileIds={[1, 2]}>
-    <ProductHistoryContent />
-  </PermissionGuard>
-);
 
 export default ProductHistory;

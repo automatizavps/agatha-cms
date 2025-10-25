@@ -5,17 +5,15 @@ import { useUsers } from "@/integrations/supabase/users";
 import UserTable from "@/components/UserTable";
 import { showError } from "@/utils/toast";
 import AddUserSheet from "@/components/AddUserSheet";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useCanRead } from "@/hooks/use-module-permission"; // Importando hooks de permissão
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
-import { useCompanies } from "@/integrations/supabase/companies"; // Importando useCompanies
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const UsersContent = () => {
+const Users = () => {
   const { data: users, isLoading, isError, error, refetch, isRefetching } = useUsers();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,13 +21,6 @@ const UsersContent = () => {
   
   // Usando o filtro global do dashboard
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
-  
-  // Permissões baseadas no perfil customizado
-  const canReadUsers = useCanRead('users');
-  
-  if (!canReadUsers) {
-    return null;
-  }
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
@@ -153,12 +144,5 @@ const UsersContent = () => {
     </DashboardLayout>
   );
 };
-
-const Users = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <UsersContent />
-  </PermissionGuard>
-);
 
 export default Users;

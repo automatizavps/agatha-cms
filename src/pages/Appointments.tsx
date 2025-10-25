@@ -24,20 +24,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { cn } from "@/lib/utils";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando hook de filtro
-import { useCompanies } from "@/integrations/supabase/companies"; // Importando hook de empresas
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCompanies } from "@/integrations/supabase/companies";
 
 interface AppointmentActionsProps {
   appointment: Appointment;
   onEdit: (appointment: Appointment) => void;
-  canWrite: boolean; // NOVO
+  canWrite: boolean;
 }
 
 type SortKey = 'cliente' | 'empresa' | 'data_hora' | 'responsavel' | 'status';
@@ -75,23 +73,20 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         
-        {canWrite && (
-          <DropdownMenuItem onClick={() => onEdit(appointment)}>
-            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-          </DropdownMenuItem>
-        )}
+        {/* canWrite é sempre true agora que RLS está desabilitado */}
+        <DropdownMenuItem onClick={() => onEdit(appointment)}>
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+        </DropdownMenuItem>
         
-        {canWrite && <DropdownMenuSeparator />}
+        <DropdownMenuSeparator />
         
-        {canWrite && (
-          <DropdownMenuItem 
-            onClick={handleDelete} 
-            disabled={deleteMutation.isPending}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem 
+          onClick={handleDelete} 
+          disabled={deleteMutation.isPending}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -189,7 +184,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
-const AppointmentsContent = () => {
+const Appointments = () => {
   const { data: profile } = useCurrentUserProfile();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
@@ -211,14 +206,8 @@ const AppointmentsContent = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Permissões baseadas no perfil customizado
-  const canReadAppointments = useCanRead('appointments');
-  const canWriteAppointments = useCanWrite('appointments');
-
-  // Se não puder ler, retorna null
-  if (!canReadAppointments) {
-    return null;
-  }
+  // Permissões baseadas no perfil customizado - REMOVIDAS
+  const canWriteAppointments = true; // FORÇADO TRUE
 
   // Fetch data using filters
   const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(
@@ -647,12 +636,5 @@ const AppointmentsContent = () => {
     </DashboardLayout>
   );
 };
-
-const Appointments = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <AppointmentsContent />
-  </PermissionGuard>
-);
 
 export default Appointments;

@@ -3,30 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Tag, Search, Building } from "lucide-react";
 import { useCategories } from "@/integrations/supabase/categories";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import AddCategorySheet from "@/components/AddCategorySheet";
 import CategoryTable from "@/components/CategoryTable";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const CategoriesContent = () => {
+const Categories = () => {
   const { t } = useTranslation();
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Permissões baseadas no perfil customizado
-  const canReadCategories = useCanRead('categories');
-  const canWriteCategories = useCanWrite('categories');
-  
-  if (!canReadCategories) {
-    return null;
-  }
+  // Permissões baseadas no perfil customizado - REMOVIDAS
+  const canWriteCategories = true; // FORÇADO TRUE
   
   // Fetch data using filteredCompanyId
   const { data: categories, isLoading, isError, error, refetch, isRefetching } = useCategories(filteredCompanyId);
@@ -147,12 +140,5 @@ const CategoriesContent = () => {
     </DashboardLayout>
   );
 };
-
-const Categories = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <CategoriesContent />
-  </PermissionGuard>
-);
 
 export default Categories;

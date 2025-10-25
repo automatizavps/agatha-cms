@@ -3,13 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Building } from "lucide-react";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import AddCompanySheet from "@/components/AddCompanySheet";
 import CompanyTable from "@/components/CompanyTable";
 import { useTranslation } from "react-i18next";
 
-const CompaniesContent = () => {
+const Companies = () => {
   const { data: companies, isLoading, isError, error, refetch, isRefetching } = useCompanies();
   const { t } = useTranslation();
 
@@ -61,12 +60,5 @@ const CompaniesContent = () => {
     </DashboardLayout>
   );
 };
-
-const Companies = () => (
-  // Apenas Super Admin (Perfil ID 1) pode gerenciar empresas
-  <PermissionGuard allowedProfileIds={[1]}>
-    <CompaniesContent />
-  </PermissionGuard>
-);
 
 export default Companies;

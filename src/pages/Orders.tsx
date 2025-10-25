@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, ShoppingCart, Search, Trash2, CalendarIcon, Building } from "lucide-react";
 import { useOrders, deleteOrders } from "@/integrations/supabase/orders";
 import { showError, showSuccess } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import OrderTable from "@/components/OrderTable";
 import AddOrderSheet from "@/components/AddOrderSheet";
@@ -16,12 +15,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando hook de filtro
-import { useCompanies } from "@/integrations/supabase/companies"; // Importando hook de empresas
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const OrdersContent = () => {
+const Orders = () => {
   // --- Filter States ---
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -34,13 +32,8 @@ const OrdersContent = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Permissões baseadas no perfil customizado
-  const canReadOrders = useCanRead('orders');
-  const canWriteOrders = useCanWrite('orders');
-  
-  if (!canReadOrders) {
-    return null;
-  }
+  // Permissões baseadas no perfil customizado - REMOVIDAS
+  const canWriteOrders = true; // FORÇADO TRUE
   
   // Fetch data using filters
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders(
@@ -256,12 +249,5 @@ const OrdersContent = () => {
     </DashboardLayout>
   );
 };
-
-const Orders = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <OrdersContent />
-  </PermissionGuard>
-);
 
 export default Orders;

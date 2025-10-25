@@ -3,19 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Clock, Search, Building } from "lucide-react";
 import { useServicesOnly } from "@/integrations/supabase/products";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import AddServiceSheet from "@/components/AddServiceSheet";
 import ServiceOnlyTable from "@/components/ServiceOnlyTable";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission"; // Importando hooks de permissão
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
-import { useCompanies } from "@/integrations/supabase/companies"; // Importando useCompanies
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const ServicesContent = () => {
+const Services = () => {
   const { t } = useTranslation();
   
   // Usando o filtro global do dashboard
@@ -27,13 +25,8 @@ const ServicesContent = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Permissões baseadas no perfil customizado
-  const canReadServices = useCanRead('services');
-  const canWriteServices = useCanWrite('services');
-  
-  if (!canReadServices) {
-    return null;
-  }
+  // Permissões baseadas no perfil customizado - REMOVIDAS
+  const canWriteServices = true; // FORÇADO TRUE
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
@@ -168,12 +161,5 @@ const ServicesContent = () => {
     </DashboardLayout>
   );
 };
-
-const Services = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <ServicesContent />
-  </PermissionGuard>
-);
 
 export default Services;

@@ -3,30 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Target, Search, Building } from "lucide-react";
 import { useTeams } from "@/integrations/supabase/teams";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import TeamTable from "@/components/TeamTable";
 import AddTeamSheet from "@/components/AddTeamSheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando hook de filtro
-import { useCompanies } from "@/integrations/supabase/companies"; // Importando hook de empresas
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
+import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCompanies } from "@/integrations/supabase/companies";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const TeamsContent = () => {
+const Teams = () => {
   const { t } = useTranslation();
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Permissões baseadas no perfil customizado
-  const canReadTeams = useCanRead('teams');
-  const canWriteTeams = useCanWrite('teams');
-  
-  if (!canReadTeams) {
-    return null;
-  }
+  // Permissões baseadas no perfil customizado - REMOVIDAS
+  const canWriteTeams = true; // FORÇADO TRUE
   
   // Fetch data using filteredCompanyId
   const { data: teams, isLoading, isError, error, refetch, isRefetching } = useTeams(filteredCompanyId);
@@ -148,12 +141,5 @@ const TeamsContent = () => {
     </DashboardLayout>
   );
 };
-
-const Teams = () => (
-  // Permite acesso se for Super Admin (1) ou se tiver perfil customizado (3)
-  <PermissionGuard allowedProfileIds={[1, 3]}>
-    <TeamsContent />
-  </PermissionGuard>
-);
 
 export default Teams;

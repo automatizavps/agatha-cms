@@ -3,29 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, RefreshCw, Tag, Search, Building } from "lucide-react";
 import { useCustomProfiles } from "@/integrations/supabase/customProfiles";
 import { showError } from "@/utils/toast";
-import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import AddCustomProfileSheet from "@/components/AddCustomProfileSheet";
 import CustomProfileTable from "@/components/CustomProfileTable";
-import { useCanRead } from "@/hooks/use-module-permission";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const CustomProfilesContent = () => {
+const CustomProfiles = () => {
   const { t } = useTranslation();
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
-  
-  // Permissões baseadas no perfil customizado
-  const canReadCustomProfiles = useCanRead('custom_profiles');
-  
-  if (!canReadCustomProfiles) {
-    return null;
-  }
   
   // Fetch data using filteredCompanyId
   const { data: profiles, isLoading, isError, error, refetch, isRefetching } = useCustomProfiles(filteredCompanyId);
@@ -146,12 +137,5 @@ const CustomProfilesContent = () => {
     </DashboardLayout>
   );
 };
-
-const CustomProfiles = () => (
-  // Apenas Super Admin (Perfil ID 1) tem permissão
-  <PermissionGuard allowedProfileIds={[1]}>
-    <CustomProfilesContent />
-  </PermissionGuard>
-);
 
 export default CustomProfiles;

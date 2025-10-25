@@ -10,9 +10,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ExportButton from './ExportButton';
-import { PermissionGuard } from '@/hooks/use-permission';
 
-const CompanyReportTabContent: React.FC = () => {
+const CompanyReportTab = () => {
   const { t } = useTranslation();
   const { isLoadingFilter } = useDashboardFilter();
   
@@ -163,12 +162,5 @@ const CompanyReportTabContent: React.FC = () => {
     </Card>
   );
 };
-
-const CompanyReportTab = () => (
-  // Apenas Super Admin (Perfil ID 1) pode ver o relatório de todas as empresas
-  <PermissionGuard allowedProfileIds={[1]}>
-    <CompanyReportTabContent />
-  </PermissionGuard>
-);
 
 export default CompanyReportTab;
