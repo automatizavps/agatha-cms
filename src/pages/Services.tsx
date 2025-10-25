@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const Services = () => {
   const { t } = useTranslation();
@@ -25,8 +26,8 @@ const Services = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Permissões baseadas no perfil customizado - REMOVIDAS
-  const canWriteServices = true; // FORÇADO TRUE
+  // Permissões reintroduzidas
+  const canWriteServices = useCanWrite('services');
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 

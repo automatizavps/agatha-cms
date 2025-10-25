@@ -7,14 +7,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { inviteUser } from "@/integrations/supabase/users";
 import { showSuccess, showError } from "@/utils/toast";
 import { useTranslation } from "react-i18next";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const AddUserSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  // Permissão de escrita para o módulo 'users' - REMOVIDA
-  const canWriteUsers = true; // FORÇADO TRUE
+  // Permissão de escrita para o módulo 'users'
+  const canWriteUsers = useCanWrite('users');
   
   if (!canWriteUsers) {
     return null;

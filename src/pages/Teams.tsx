@@ -12,14 +12,15 @@ import { useTranslation } from "react-i18next";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const Teams = () => {
   const { t } = useTranslation();
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Permissões baseadas no perfil customizado - REMOVIDAS
-  const canWriteTeams = true; // FORÇADO TRUE
+  // Permissões reintroduzidas
+  const canWriteTeams = useCanWrite('teams');
   
   // Fetch data using filteredCompanyId
   const { data: teams, isLoading, isError, error, refetch, isRefetching } = useTeams(filteredCompanyId);

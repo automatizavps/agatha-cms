@@ -12,11 +12,15 @@ import CustomProfileTable from "@/components/CustomProfileTable";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const CustomProfiles = () => {
   const { t } = useTranslation();
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  
+  // Permissões reintroduzidas
+  const canWriteCustomProfiles = useCanWrite('custom_profiles');
   
   // Fetch data using filteredCompanyId
   const { data: profiles, isLoading, isError, error, refetch, isRefetching } = useCustomProfiles(filteredCompanyId);
@@ -44,7 +48,7 @@ const CustomProfiles = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_custom_profiles')}</h1>
-        <AddCustomProfileSheet />
+        {canWriteCustomProfiles && <AddCustomProfileSheet />}
       </div>
       
       <Card className="mt-4">

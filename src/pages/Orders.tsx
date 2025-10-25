@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const Orders = () => {
   // --- Filter States ---
@@ -32,8 +33,8 @@ const Orders = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Permissões baseadas no perfil customizado - REMOVIDAS
-  const canWriteOrders = true; // FORÇADO TRUE
+  // Permissões reintroduzidas
+  const canWriteOrders = useCanWrite('orders');
   
   // Fetch data using filters
   const { data: orders, isLoading, isError, error, refetch, isRefetching } = useOrders(

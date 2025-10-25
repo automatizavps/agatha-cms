@@ -31,6 +31,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -73,20 +74,23 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         
-        {/* canWrite é sempre true agora que RLS está desabilitado */}
-        <DropdownMenuItem onClick={() => onEdit(appointment)}>
-          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-        </DropdownMenuItem>
+        {canWrite && (
+          <DropdownMenuItem onClick={() => onEdit(appointment)}>
+            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+          </DropdownMenuItem>
+        )}
         
-        <DropdownMenuSeparator />
+        {canWrite && <DropdownMenuSeparator />}
         
-        <DropdownMenuItem 
-          onClick={handleDelete} 
-          disabled={deleteMutation.isPending}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-        </DropdownMenuItem>
+        {canWrite && (
+          <DropdownMenuItem 
+            onClick={handleDelete} 
+            disabled={deleteMutation.isPending}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -197,6 +201,8 @@ const Appointments = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // --- Status Filter State ---
   const [statusFilter, setStatusFilter] = useState<Appointment['status'] | 'all'>('all');
   
   // --- Selection State ---
@@ -206,8 +212,8 @@ const Appointments = () => {
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Permissões baseadas no perfil customizado - REMOVIDAS
-  const canWriteAppointments = true; // FORÇADO TRUE
+  // Permissões reintroduzidas
+  const canWriteAppointments = useCanWrite('appointments');
 
   // Fetch data using filters
   const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(

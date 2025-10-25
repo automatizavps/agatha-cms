@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import React, { useState, useEffect } from "react"; // Importando useState e useEffect
+import { useCanRead } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 interface NavItemProps {
   to: string;
@@ -94,19 +95,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const { t } = useTranslation();
   const location = useLocation();
   
-  // Permissões forçadas para TRUE após a remoção do RLS
-  const canReadAnalytics = true;
-  const canReadOrders = true;
-  const canReadAppointments = true;
-  const canReadClients = true;
-  const canReadProducts = true;
-  const canReadServices = true;
-  const canReadCategories = true;
-  const canReadUsers = true;
-  const canReadTeams = true;
-  const canReadCompanies = true;
-  const canReadNotifications = true;
-  const canReadCustomProfiles = true; 
+  // Permissões reintroduzidas usando o hook
+  const canReadAnalytics = useCanRead('analytics');
+  const canReadOrders = useCanRead('orders');
+  const canReadAppointments = useCanRead('appointments');
+  const canReadClients = useCanRead('clients');
+  const canReadProducts = useCanRead('products');
+  const canReadServices = useCanRead('services');
+  const canReadCategories = useCanRead('categories');
+  const canReadUsers = useCanRead('users');
+  const canReadTeams = useCanRead('teams');
+  const canReadCompanies = useCanRead('companies');
+  const canReadNotifications = useCanRead('notifications');
+  const canReadCustomProfiles = useCanRead('custom_profiles'); 
 
   const isSuperAdmin = profile?.is_super_admin;
 

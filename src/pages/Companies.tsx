@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button";
 import AddCompanySheet from "@/components/AddCompanySheet";
 import CompanyTable from "@/components/CompanyTable";
 import { useTranslation } from "react-i18next";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const Companies = () => {
   const { data: companies, isLoading, isError, error, refetch, isRefetching } = useCompanies();
   const { t } = useTranslation();
+  
+  // Permissões reintroduzidas
+  const canWriteCompanies = useCanWrite('companies');
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -20,7 +24,7 @@ const Companies = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_companies')}</h1>
-        <AddCompanySheet />
+        {canWriteCompanies && <AddCompanySheet />}
       </div>
       
       <Card className="mt-4">

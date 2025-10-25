@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import EditProductSheet from "@/components/EditProductSheet";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -38,8 +39,8 @@ const Products = () => {
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
-  // Permissões baseadas no perfil customizado - REMOVIDAS
-  const canWriteProducts = true; // FORÇADO TRUE
+  // Permissões reintroduzidas
+  const canWriteProducts = useCanWrite('products');
   
   // Estado para edição automática
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);

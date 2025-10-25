@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import ExportButton from "@/components/ExportButton";
 import { format } from "date-fns";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const Clients = () => {
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClients();
@@ -31,8 +32,8 @@ const Clients = () => {
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
-  // Permissões baseadas no perfil customizado - REMOVIDAS
-  const canWriteClients = true; // FORÇADO TRUE
+  // Permissões reintroduzidas
+  const canWriteClients = useCanWrite('clients');
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);

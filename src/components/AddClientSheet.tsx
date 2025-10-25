@@ -7,11 +7,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/integrations/supabase/clients";
 import { showSuccess, showError } from "@/utils/toast";
 import { useTranslation } from "react-i18next";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const AddClientSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  // Permissão de escrita para o módulo 'clients'
+  const canWriteClients = useCanWrite('clients');
+  
+  if (!canWriteClients) {
+    return null;
+  }
 
   const mutation = useMutation({
     mutationFn: createClient,

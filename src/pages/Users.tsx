@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const Users = () => {
   const { data: users, isLoading, isError, error, refetch, isRefetching } = useUsers();
@@ -21,6 +22,9 @@ const Users = () => {
   
   // Usando o filtro global do dashboard
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
+  
+  // Permissões reintroduzidas
+  const canWriteUsers = useCanWrite('users');
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
@@ -53,7 +57,7 @@ const Users = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_users')}</h1>
-        <AddUserSheet />
+        {canWriteUsers && <AddUserSheet />}
       </div>
       
       <Card className="mt-4">
