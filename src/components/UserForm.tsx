@@ -149,6 +149,11 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
         }
     }
     
+    // 3. Filtra o perfil 'Super Admin (Antigo)' (ID '1') na CRIAÇÃO, pois convites devem ser para perfis customizados
+    if (!isEditing) {
+        return combined.filter(p => p.id !== '1');
+    }
+    
     return combined;
   }, [customProfiles, selectedCompanyId, isEditing, defaultValues, t]);
 
