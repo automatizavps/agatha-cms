@@ -41,7 +41,7 @@ serve(async (req) => {
       },
     );
     
-    // Decodificar o token para obter o ID do usuário logado
+    // Decodificar o token para obter o ID do usuário logado (Admin/Editor)
     const { data: { user: adminUser }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
 
     if (userError || !adminUser) {
@@ -49,10 +49,7 @@ serve(async (req) => {
     }
     
     // 3. Verificar se o usuário logado é Super Admin usando a função RPC
-    // Nota: O cliente Admin não pode usar RPCs que dependem de auth.uid(),
-    // mas podemos usar o cliente anon (que é o que o createClient faz por padrão)
-    // e passar o token para que o RLS/RPC funcione.
-    
+    // Usamos o cliente anon com o token do usuário para que o RPC 'is_super_admin' funcione corretamente.
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -82,6 +79,7 @@ serve(async (req) => {
 
     const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id } = data;
 
+    // Validação de campos obrigatórios
     if (!email || !full_name || !perfil_id || !target_empresa_id) {
       return returnError("Missing required fields: email, full_name, perfil_id, or target_empresa_id", 400);
     }
@@ -96,15 +94,6 @@ serve(async (req) => {
     
     // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
     const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
-
-    console.log("Attempting to invite user with metadata:", {
-      email,
-      full_name,
-      perfil_id: meta_perfil_id,
-      telefone,
-      endereco_completo,
-      final_empresa_id,
-    });
 
     // 5. Convidar o usuário usando o Service Role Key
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
@@ -154,6 +143,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("Catastrophic error in invite-user:", e);
+    // Garante que qualquer exceção não tratada retorne 500 com a mensagem de erro
     return returnError(`Internal Server Error: ${e.message}`, 500);
   }
 });

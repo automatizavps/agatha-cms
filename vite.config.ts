@@ -7,9 +7,8 @@ export default defineConfig(() => ({
   server: {
     host: true, // Permite que o servidor escute em todas as interfaces de rede
     port: 8080,
-    hmr: {
-      host: 'localhost', // Garante que o HMR funcione corretamente em ambientes de contêiner
-    }
+    // Removendo a configuração hmr explícita para permitir que o ambiente de execução
+    // defina o host correto para o WebSocket.
   },
   
   // ==========================================================
