@@ -48,7 +48,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => 
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteUser,
+    mutationFn: () => deleteUser(user.id, user.nome_completo, user.empresa_id, queryClient),
     onSuccess: () => {
       showSuccess(`Usuário ${user.nome_completo} excluído com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -60,7 +60,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => 
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
-      deleteMutation.mutate(user.id);
+      deleteMutation.mutate();
     }
   };
 

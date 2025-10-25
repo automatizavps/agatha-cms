@@ -1,6 +1,7 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { useCurrentUserProfile } from "./user-profile"; // Importando para verificar o perfil
+import { createNotification } from "./notifications"; // Importando createNotification
 
 export interface Client {
   id: string;
@@ -125,7 +126,7 @@ export const updateClient = async ({ id, nome, email, telefone, endereco_complet
 
 // --- Delete ---
 
-export const deleteClient = async (id: string) => {
+export const deleteClient = async (id: string, clientName: string, companyId: string, queryClient: useQueryClient) => {
   const { error } = await supabase
     .from("clientes")
     .delete()
@@ -135,10 +136,23 @@ export const deleteClient = async (id: string) => {
     console.error("Error deleting client:", error);
     throw new Error(error.message);
   }
+  
+  // Notificação de exclusão
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: "Cliente Excluído",
+      mensagem: `O cliente '${clientName}' (ID: ${id.slice(0, 8)}) foi excluído.`,
+      link: "/clients",
+      queryClient: queryClient,
+    });
+  }
 };
 
 // --- Bulk Delete ---
-export const deleteClients = async (clientIds: string[]) => {
+export const deleteClients = async (clientIds: string[], clientNames: string[], companyId: string, queryClient: useQueryClient) => {
   const { error } = await supabase
     .from("clientes")
     .delete()
@@ -147,5 +161,18 @@ export const deleteClients = async (clientIds: string[]) => {
   if (error) {
     console.error("Error deleting clients:", error);
     throw new Error(error.message);
+  }
+  
+  // Notificação de exclusão em massa
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: "Exclusão em Massa de Clientes",
+      mensagem: `${clientIds.length} cliente(s) foram excluídos.`,
+      link: "/clients",
+      queryClient: queryClient,
+    });
   }
 };

@@ -49,7 +49,7 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit, canWri
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteProduct,
+    mutationFn: () => deleteProduct(service.id, service.nome, service.tipo, service.empresa_id, queryClient),
     onSuccess: () => {
       showSuccess(`Serviço ${service.nome} excluído com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["services_only"] });
@@ -61,7 +61,7 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit, canWri
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
-      deleteMutation.mutate(service.id);
+      deleteMutation.mutate();
     }
   };
 

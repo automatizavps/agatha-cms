@@ -47,7 +47,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, onEdit, canWri
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteCustomProfile,
+    mutationFn: () => deleteCustomProfile(profile.id, profile.nome, profile.empresa_id, queryClient),
     onSuccess: () => {
       showSuccess(t('profile_deleted_success', { name: profile.nome }));
       queryClient.invalidateQueries({ queryKey: ["customProfiles"] });
@@ -59,7 +59,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, onEdit, canWri
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
-      deleteMutation.mutate(profile.id);
+      deleteMutation.mutate();
     }
   };
 

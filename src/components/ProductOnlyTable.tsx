@@ -51,7 +51,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit, canWri
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteProduct,
+    mutationFn: () => deleteProduct(product.id, product.nome, product.tipo, product.empresa_id, queryClient),
     onSuccess: () => {
       showSuccess(`Produto ${product.nome} excluído com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["products_only"] });
@@ -63,7 +63,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit, canWri
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
-      deleteMutation.mutate(product.id);
+      deleteMutation.mutate();
     }
   };
 

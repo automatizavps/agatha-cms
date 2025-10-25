@@ -1,5 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { createNotification } from "./notifications"; // Importando createNotification
+import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
 
 export interface Category {
   id: string;
@@ -151,7 +153,7 @@ export const updateCategory = async ({ id, nome }: UpdateCategoryParams) => {
 
 // --- Delete ---
 
-export const deleteCategory = async (id: string) => {
+export const deleteCategory = async (id: string, categoryName: string, companyId: string, queryClient: QueryClient) => {
   const { error } = await supabase
     .from("categorias")
     .delete()
@@ -160,5 +162,18 @@ export const deleteCategory = async (id: string) => {
   if (error) {
     console.error("Error deleting category:", error);
     throw new Error(error.message);
+  }
+  
+  // Notificação de exclusão
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: "Categoria Excluída",
+      mensagem: `A categoria '${categoryName}' (ID: ${id.slice(0, 8)}) foi excluída.`,
+      link: "/products/categories",
+      queryClient: queryClient,
+    });
   }
 };

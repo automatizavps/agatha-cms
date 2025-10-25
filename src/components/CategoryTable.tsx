@@ -48,7 +48,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit, can
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteCategory,
+    mutationFn: () => deleteCategory(category.id, category.nome, category.empresa_id, queryClient),
     onSuccess: () => {
       showSuccess(t('category_deleted_success', { name: category.nome }));
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -60,7 +60,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit, can
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
-      deleteMutation.mutate(category.id);
+      deleteMutation.mutate();
     }
   };
 

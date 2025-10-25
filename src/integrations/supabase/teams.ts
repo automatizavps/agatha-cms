@@ -1,5 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { createNotification } from "./notifications"; // Importando createNotification
+import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
 
 export interface Team {
   id: string;
@@ -165,7 +167,7 @@ export const updateTeam = async ({ id, nome, meta_mensal_valor, meta_mensal_quan
 
 // --- Delete Team ---
 
-export const deleteTeam = async (id: string) => {
+export const deleteTeam = async (id: string, teamName: string, companyId: string, queryClient: QueryClient) => {
   const { error } = await supabase
     .from("equipes")
     .delete()
@@ -174,6 +176,19 @@ export const deleteTeam = async (id: string) => {
   if (error) {
     console.error("Error deleting team:", error);
     throw new Error(error.message);
+  }
+  
+  // Notificação de exclusão
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: "Equipe Excluída",
+      mensagem: `A equipe '${teamName}' (ID: ${id.slice(0, 8)}) foi excluída.`,
+      link: "/teams",
+      queryClient: queryClient,
+    });
   }
 };
 

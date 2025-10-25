@@ -50,7 +50,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteCompany,
+    mutationFn: () => deleteCompany(company.id, company.nome, queryClient),
     onSuccess: () => {
       showSuccess(`Empresa ${company.nome} excluída com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["companies"] });
@@ -93,7 +93,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
     const confirmationMessage = `ATENÇÃO! Ao excluir a empresa ${company.nome}, TODOS os dados relacionados (usuários, clientes, pedidos, agendamentos, produtos, etc.) serão PERMANENTEMENTE excluídos. Esta ação não pode ser desfeita. Confirma a exclusão?`;
     
     if (window.confirm(confirmationMessage)) {
-      deleteMutation.mutate(company.id);
+      deleteMutation.mutate();
     }
   };
   

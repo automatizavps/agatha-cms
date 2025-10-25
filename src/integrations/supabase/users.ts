@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { createNotification } from "./notifications"; // Importando createNotification
+import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
 
 export interface UserProfile {
   id: string;
@@ -123,7 +125,7 @@ export const updateUser = async ({ userIdToUpdate, full_name, perfil_id, telefon
   return data;
 };
 
-export const deleteUser = async (userIdToDelete: string) => {
+export const deleteUser = async (userIdToDelete: string, userName: string, companyId: string | null, queryClient: QueryClient) => {
   const { data, error } = await supabase.functions.invoke("delete-user", {
     body: { userIdToDelete },
     headers: {
@@ -138,6 +140,19 @@ export const deleteUser = async (userIdToDelete: string) => {
 
   if (data.error) {
     throw new Error(data.error);
+  }
+  
+  // Notificação de exclusão (após sucesso da Edge Function)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: "Usuário Excluído",
+      mensagem: `O usuário '${userName}' (ID: ${userIdToDelete.slice(0, 8)}) foi excluído.`,
+      link: "/users",
+      queryClient: queryClient,
+    });
   }
 
   return data;

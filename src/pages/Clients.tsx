@@ -28,7 +28,7 @@ const Clients = () => {
   const { t } = useTranslation();
   
   // Usando o filtro global do dashboard
-  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
   
@@ -77,7 +77,15 @@ const Clients = () => {
   
   // Mutação para exclusão em massa
   const bulkDeleteMutation = useMutation({
-    mutationFn: deleteClients,
+    mutationFn: (ids: string[]) => {
+      // Encontra os nomes dos clientes selecionados
+      const selectedClients = clients?.filter(c => ids.includes(c.id)) || [];
+      const clientNames = selectedClients.map(c => c.nome);
+      // Usa o ID da empresa do primeiro cliente ou o ID filtrado (se houver)
+      const companyId = filteredCompanyId || selectedClients[0]?.empresa_id || ''; 
+      
+      return deleteClients(ids, clientNames, companyId, queryClient);
+    },
     onSuccess: () => {
       showSuccess(t('clients_deleted_success', { count: selectedClientIds.size }));
       setSelectedClientIds(new Set()); // Limpa a seleção

@@ -50,7 +50,7 @@ const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit, canWrite }) => 
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteTeam,
+    mutationFn: () => deleteTeam(team.id, team.nome, team.empresa_id, queryClient),
     onSuccess: () => {
       showSuccess(t('team_deleted_success', { name: team.nome }));
       queryClient.invalidateQueries({ queryKey: ["teams"] });
@@ -62,7 +62,7 @@ const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit, canWrite }) => 
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
-      deleteMutation.mutate(team.id);
+      deleteMutation.mutate();
     }
   };
 

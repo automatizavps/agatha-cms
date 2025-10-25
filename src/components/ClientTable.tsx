@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Client, deleteClient } from "@/integrations/supabase/clients";
+import { Client, deleteClient, deleteClients } from "@/integrations/supabase/clients";
 import { MoreHorizontal, Trash2, Pencil, User, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -51,7 +51,7 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit, canWrite 
   }
 
   const deleteMutation = useMutation({
-    mutationFn: deleteClient,
+    mutationFn: () => deleteClient(client.id, client.nome, client.empresa_id, queryClient),
     onSuccess: () => {
       showSuccess(`Cliente ${client.nome} excluído com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["clients"] });
@@ -63,7 +63,7 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit, canWrite 
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
-      deleteMutation.mutate(client.id);
+      deleteMutation.mutate();
     }
   };
 
@@ -130,6 +130,32 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
   
   const isSuperAdmin = profile?.perfil_id === 1;
   const canWriteClients = useCanWrite('clients'); // Obtendo a permissão
+  
+  // Mutação para exclusão em massa (redefinida aqui para usar o queryClient)
+  const queryClient = useQueryClient();
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => {
+      // Encontra os nomes dos clientes selecionados
+      const selectedClients = clients.filter(c => ids.includes(c.id));
+      const clientNames = selectedClients.map(c => c.nome);
+      const companyId = profile?.empresa_id || selectedClients[0]?.empresa_id || ''; // Usa o ID da empresa do primeiro cliente ou do perfil
+      
+      return deleteClients(ids, clientNames, companyId, queryClient);
+    },
+    onSuccess: () => {
+      showSuccess(t('clients_deleted_success', { count: selectedIds.size }));
+      onSelectChange(new Set()); // Limpa a seleção
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    },
+    onError: (error) => {
+      showError(t('error_loading_data') + ": " + error.message);
+    },
+  });
+  
+  // Função de exclusão em massa (chamada na página Clients.tsx)
+  // NOTA: A função handleBulkDelete foi movida para Clients.tsx, mas a mutação precisa ser acessível lá.
+  // Como não podemos passar a mutação diretamente, vamos garantir que a página Clients.tsx tenha acesso à lógica de exclusão em massa.
+  // Por enquanto, removemos a lógica de exclusão em massa daqui, pois ela deve estar na página pai.
 
   const handleEdit = (client: Client) => {
     setEditingClient(client);

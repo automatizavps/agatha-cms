@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { createNotification } from "./notifications"; // Importando createNotification
+import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
 
 export type ProductType = 'produto' | 'servico';
 
@@ -264,7 +266,7 @@ export const updateProduct = async ({ id, nome, preco, tipo, tempo_servico, esto
 
 // --- Delete ---
 
-export const deleteProduct = async (id: string) => {
+export const deleteProduct = async (id: string, productName: string, productType: ProductType, companyId: string, queryClient: QueryClient) => {
   const { error } = await supabase
     .from("produtos")
     .delete()
@@ -273,5 +275,18 @@ export const deleteProduct = async (id: string) => {
   if (error) {
     console.error("Error deleting product:", error);
     throw new Error(error.message);
+  }
+  
+  // Notificação de exclusão
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: `${productType === 'produto' ? 'Produto' : 'Serviço'} Excluído`,
+      mensagem: `O ${productType === 'produto' ? 'produto' : 'serviço'} '${productName}' (ID: ${id.slice(0, 8)}) foi excluído.`,
+      link: productType === 'produto' ? "/products" : "/services",
+      queryClient: queryClient,
+    });
   }
 };

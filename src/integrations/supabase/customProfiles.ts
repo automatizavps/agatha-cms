@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { createNotification } from "./notifications"; // Importando createNotification
+import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
 
 export type AccessType = 'leitura' | 'escrita' | 'sem_acesso';
 
@@ -204,7 +206,7 @@ export const updateCustomProfile = async ({ id, nome, permissions }: UpdateProfi
 
 // --- Delete Profile ---
 
-export const deleteCustomProfile = async (id: string) => {
+export const deleteCustomProfile = async (id: string, profileName: string, companyId: string, queryClient: QueryClient) => {
   // A exclusão em cascata cuidará das permissões
   const { error } = await supabase
     .from("perfis_customizados")
@@ -214,5 +216,18 @@ export const deleteCustomProfile = async (id: string) => {
   if (error) {
     console.error("Error deleting custom profile:", error);
     throw new Error(error.message);
+  }
+  
+  // Notificação de exclusão
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: "Perfil Customizado Excluído",
+      mensagem: `O perfil '${profileName}' (ID: ${id.slice(0, 8)}) foi excluído.`,
+      link: "/companies/profiles",
+      queryClient: queryClient,
+    });
   }
 };

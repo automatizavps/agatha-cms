@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { useSession } from "./auth"; // Importando useSession
+import { createNotification } from "./notifications"; // Importando createNotification
+import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
 
 export interface Company {
   id: string;
@@ -124,7 +126,7 @@ export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_complet
 
 // --- Delete (Agora usa Edge Function) ---
 
-export const deleteCompany = async (companyIdToDelete: string) => {
+export const deleteCompany = async (companyIdToDelete: string, companyName: string, queryClient: QueryClient) => {
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   
@@ -146,6 +148,19 @@ export const deleteCompany = async (companyIdToDelete: string) => {
 
   if (data.error) {
     throw new Error(data.error);
+  }
+  
+  // Notificação de exclusão (após sucesso da Edge Function)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: null, // Empresa excluída, notificação global
+      titulo: "Empresa Excluída",
+      mensagem: `A empresa '${companyName}' (ID: ${companyIdToDelete.slice(0, 8)}) foi excluída permanentemente.`,
+      link: "/companies",
+      queryClient: queryClient,
+    });
   }
 
   return data;
