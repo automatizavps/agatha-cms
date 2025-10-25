@@ -109,13 +109,9 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-        
-        {/* Ação de Edição (Visível apenas para Super Admin) */}
-        {isSuperAdmin && (
-          <DropdownMenuItem onClick={() => onEdit(company)}>
-            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={() => onEdit(company)}>
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+        </DropdownMenuItem>
         
         {isSuperAdmin && (
           <>
@@ -151,13 +147,6 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
               {t('delete')} Empresa
             </DropdownMenuItem>
           </>
-        )}
-        
-        {/* Se não for Super Admin, exibe apenas o label de ações, mas sem itens */}
-        {!isSuperAdmin && (
-          <DropdownMenuItem disabled className="text-muted-foreground">
-            {t('no_actions_available')}
-          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -325,10 +314,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
               >
                 Status
               </SortableHeader>
-              {/* A coluna de Ações só é exibida para Super Admin */}
-              {isSuperAdmin && (
-                <TableHead className="text-right">{t('actions')}</TableHead>
-              )}
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -352,11 +338,9 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies }) => {
                     <Badge variant="destructive">Inativa</Badge>
                   )}
                 </TableCell>
-                {isSuperAdmin && (
-                  <TableCell className="text-right">
-                    <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} />
-                  </TableCell>
-                )}
+                <TableCell className="text-right">
+                  <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Users from "./pages/Users";
 import Login from "./pages/Login";
 import Appointments from "./pages/Appointments";
 import Clients from "./pages/Clients";
@@ -20,12 +21,10 @@ import Notifications from "./pages/Notifications";
 import ProductHistory from "./pages/ProductHistory";
 import CustomProfiles from "./pages/CustomProfiles";
 import Categories from "./pages/Categories"; // IMPORTADO
-import Users from "./pages/Users"; // IMPORTADO
 import { SessionContextProvider, ProtectedRoute, PublicRoute, useSession } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
 import React, { useState, useEffect } from "react";
 import ForcePasswordChangeDialog from "./components/ForcePasswordChangeDialog"; // Importando o modal
-import { supabase } from "./integrations/supabase/client"; // Importado para refresh da sessão
 
 const queryClient = new QueryClient();
 
@@ -39,12 +38,12 @@ const RouteContentWrapper: React.FC = () => {
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={<Index />} />
       <Route path="/analytics" element={<Analytics />} />
-      <Route path="/users" element={<Users />} /> {/* ROTA RE-ADICIONADA */}
+      <Route path="/users" element={<Users />} />
       <Route path="/appointments" element={<Appointments />} />
       <Route path="/clients" element={<Clients />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:productId" element={<ProductHistory />} />
-      <Route path="/products/categories" element={<Categories />} />
+      <Route path="/products/categories" element={<Categories />} /> {/* ROTA ADICIONADA */}
       <Route path="/services" element={<Services />} />
       <Route path="/orders" element={<Orders />} />
       <Route path="/teams" element={<Teams />} />

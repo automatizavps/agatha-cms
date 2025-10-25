@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Order, deleteOrder, OrderStatus } from "@/integrations/supabase/orders";
-import { MoreHorizontal, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Package } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,6 @@ import { ptBR } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Importando Tooltip
 
 interface OrderTableProps {
   orders: Order[];
@@ -38,14 +37,14 @@ interface OrderTableProps {
 interface OrderActionsProps {
   order: Order;
   onEditStatus: (order: Order) => void;
-  t: (key: string) => string; // Passando t para as ações
 }
 
 type SortKey = 'id' | 'cliente' | 'data' | 'valor_total' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, t }) => {
+const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const deleteMutation = useMutation({
     mutationFn: deleteOrder,
@@ -90,53 +89,39 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, t }) =
   );
 };
 
-// Componente auxiliar para exibir a lista de itens
-const OrderItemsDisplay: React.FC<{ order: Order, t: (key: string) => string }> = ({ order, t }) => {
-  
-  const totalItems = useMemo(() => {
-    return order.pedido_itens.reduce((sum, item) => sum + item.quantidade, 0);
-  }, [order.pedido_itens]);
-  
-  if (order.pedido_itens.length === 0) {
-    return <span className="text-muted-foreground">N/A</span>;
+const getStatusBadge = (status: OrderStatus) => {
+  const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
+  switch (status) {
+    case 'entregue':
+      // Verde Escuro (Fundo) e Verde Claro (Texto)
+      return (
+        <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>
+          Entregue
+        </span>
+      );
+    case 'cancelado':
+      // Vermelho Escuro (Fundo) e Vermelho Claro (Texto)
+      return (
+        <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>
+          Cancelado
+        </span>
+      );
+    case 'pendente_entrega':
+    default:
+      // Marrom/Ouro Escuro (Fundo) e Amarelo/Ouro Claro (Texto)
+      return (
+        <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>
+          {status.replace('_', ' ')}
+        </span>
+      );
   }
-  
-  const firstItem = order.pedido_itens[0];
-  const itemName = firstItem.produtos?.nome || t('unknown_item');
-  
-  const tooltipContent = (
-    <div className="space-y-1 text-sm">
-      <p className="font-semibold mb-1">{t('order_list_title')}:</p>
-      {order.pedido_itens.map((item, index) => (
-        <div key={index} className="flex justify-between gap-4">
-          <span className="truncate max-w-[150px]">{item.produtos?.nome || t('unknown_item')}</span>
-          <span className="text-muted-foreground">x{item.quantidade}</span>
-        </div>
-      ))}
-      <div className="pt-1 border-t mt-1 font-bold flex justify-between">
-        <span>{t('quantity')}:</span>
-        <span>{totalItems}</span>
-      </div>
-    </div>
-  );
+};
 
-  return (
-    <Tooltip delayDuration={100}>
-      <TooltipTrigger asChild>
-        <div className="flex flex-col items-start cursor-default">
-          <span className="font-medium truncate max-w-[150px]">{itemName}</span>
-          {order.pedido_itens.length > 1 && (
-            <span className="text-xs text-muted-foreground">
-              + {order.pedido_itens.length - 1} {t('items')}
-            </span>
-          )}
-        </div>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs">
-        {tooltipContent}
-      </TooltipContent>
-    </Tooltip>
-  );
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
 };
 
 interface SortableHeaderProps {
@@ -176,47 +161,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('data');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const { t } = useTranslation(); // Hook de tradução
-
-  // Mover getStatusBadge para dentro do componente para acessar 't'
-  const getStatusBadge = (status: OrderStatus) => {
-    const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
-    switch (status) {
-      case 'entregue':
-        // Verde Escuro (Fundo) e Verde Claro (Texto)
-        return (
-          <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>
-            {t('entregue')}
-          </span>
-        );
-      case 'cancelado':
-        // Vermelho Escuro (Fundo) e Vermelho Claro (Texto)
-        return (
-          <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>
-            {t('cancelado')}
-          </span>
-        );
-      case 'pendente_entrega':
-      default:
-        // Marrom/Ouro Escuro (Fundo) e Amarelo/Ouro Claro (Texto)
-        return (
-          <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>
-            {t('pendente_entrega')}
-          </span>
-        );
-    }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-  
-  const calculateTotalQuantity = (order: Order) => {
-    return order.pedido_itens.reduce((sum, item) => sum + item.quantidade, 0);
-  };
+  const { t } = useTranslation();
 
   const handleEditStatus = (order: Order) => {
     setEditingOrder(order);
@@ -336,10 +281,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               >
                 {t('order_table_header_client')}
               </SortableHeader>
-              {/* Coluna de Itens */}
-              <TableHead className="hidden sm:table-cell">
-                {t('nav_products_services')}
-              </TableHead>
               <SortableHeader 
                 sortKey="data" 
                 currentSortKey={sortKey} 
@@ -349,10 +290,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               >
                 {t('order_table_header_date')}
               </SortableHeader>
-              {/* NOVO: Coluna de Quantidade Total */}
-              <TableHead className="text-right hidden lg:table-cell">
-                {t('quantity')}
-              </TableHead>
               <SortableHeader 
                 sortKey="valor_total" 
                 currentSortKey={sortKey} 
@@ -367,7 +304,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-center"
+                className="text-center" // Adicionando text-center ao cabeçalho
               >
                 {t('order_table_header_status')}
               </SortableHeader>
@@ -395,25 +332,17 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 <TableCell className="font-medium">
                   {order.clientes?.nome || t('no_data_found')}
                 </TableCell>
-                {/* Itens do Pedido */}
-                <TableCell className="hidden sm:table-cell">
-                  <OrderItemsDisplay order={order} t={t} />
-                </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                </TableCell>
-                {/* NOVO: Quantidade Total */}
-                <TableCell className="text-right hidden lg:table-cell font-medium">
-                  {calculateTotalQuantity(order)}
                 </TableCell>
                 <TableCell className="text-right font-semibold">
                   {formatCurrency(order.valor_total)}
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
                   {getStatusBadge(order.status)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <OrderActions order={order} onEditStatus={handleEditStatus} t={t} />
+                  <OrderActions order={order} onEditStatus={handleEditStatus} />
                 </TableCell>
               </TableRow>
             ))}

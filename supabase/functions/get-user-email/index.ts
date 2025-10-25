@@ -43,7 +43,7 @@ serve(async (req) => {
   
   const adminUserId = userResponse.user.id;
 
-  // Check if the user is Super Admin OR belongs to a company (Admin/Manager role is assumed by frontend)
+  // Check if the user is Super Admin OR belongs to a company
   const { data: profileData, error: profileError } = await supabaseAdmin
     .from("usuarios")
     .select("empresa_id, perfil_customizado_id")
@@ -76,52 +76,36 @@ serve(async (req) => {
     return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
   }
 
-  const { userIdToDelete } = data;
+  const { userId } = data;
 
-  if (!userIdToDelete) {
-    return new Response("Missing required field: userIdToDelete", {
+  if (!userId) {
+    return new Response("Missing required field: userId", {
       status: 400,
       headers: corsHeaders,
     });
   }
   
-  // Prevenção: Administradores não podem excluir a si mesmos
-  if (userIdToDelete === adminUserId) {
-    return new Response("Forbidden: Cannot delete your own account via this endpoint", {
-      status: 403,
-      headers: corsHeaders,
-    });
-  }
-  
-  // Additional check: Non-SA users can only delete users in their own company
-  if (isCompanyUser && !isSuperAdmin) {
-      const { data: targetUserData, error: targetUserError } = await supabaseAdmin
-        .from("usuarios")
-        .select("empresa_id")
-        .eq("id", userIdToDelete)
-        .single();
-        
-      if (targetUserError || targetUserData.empresa_id !== profileData.empresa_id) {
-          return new Response("Forbidden: Cannot delete user outside your company", {
-              status: 403,
-              headers: corsHeaders,
-          });
-      }
-  }
+  // 3. Buscar o email do usuário alvo usando o Service Role Key
+  const { data: userData, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(userId);
 
-
-  // 3. Excluir o usuário usando o Service Role Key
-  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userIdToDelete);
-
-  if (deleteError) {
-    console.error("Supabase Delete User Error:", deleteError);
-    return new Response(JSON.stringify({ error: deleteError.message }), {
+  if (fetchError) {
+    console.error("Supabase Fetch User Error:", fetchError);
+    return new Response(JSON.stringify({ error: fetchError.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  
+  const email = userData.user?.email;
 
-  return new Response(JSON.stringify({ message: "User deleted successfully" }), {
+  if (!email) {
+    return new Response(JSON.stringify({ error: "Email not found for user." }), {
+      status: 404,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  return new Response(JSON.stringify({ email: email }), {
     status: 200,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });

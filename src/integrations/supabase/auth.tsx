@@ -26,20 +26,17 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
-      console.log("Initial Session Loaded:", session ? 'Authenticated' : 'Unauthenticated');
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth Event:", event, "Session:", session ? 'Present' : 'Absent');
-      
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
 
       if (event === 'SIGNED_OUT') {
         // Redireciona para a página de login quando o evento SIGNED_OUT é disparado
-        navigate('/login', { replace: true }); // Usando replace: true
+        navigate('/login');
       }
     });
 

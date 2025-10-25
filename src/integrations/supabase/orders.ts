@@ -31,7 +31,7 @@ export interface Order {
   } | null;
   
   // Itens do pedido (carregados separadamente ou via join)
-  pedido_itens: OrderItem[]; // INCLUÍDO AQUI
+  pedido_itens: OrderItem[];
 }
 
 // --- Fetch ---
@@ -42,7 +42,7 @@ interface OrderFilters {
 }
 
 const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Promise<Order[]> => {
-  // Buscamos pedidos, o nome/email do cliente E os itens do pedido
+  // Buscamos pedidos e o nome/email do cliente
   let query = supabase
     .from("pedidos")
     .select(`
@@ -52,14 +52,7 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
       valor_total,
       status,
       created_at,
-      clientes (nome, email),
-      pedido_itens (
-        id,
-        produto_id,
-        quantidade,
-        preco_unitario,
-        produtos (nome, tipo)
-      )
+      clientes (nome, email)
     `);
     
   // 1. Filtrar por Empresa
@@ -96,7 +89,7 @@ export const useOrders = (companyId?: string, filters: OrderFilters = {}) => {
   });
 };
 
-// --- Fetch Order Items (Mantido, mas pode ser redundante para a tabela) ---
+// --- Fetch Order Items ---
 
 const fetchOrderItems = async (orderId: string): Promise<OrderItem[]> => {
   const { data, error } = await supabase
@@ -253,20 +246,6 @@ export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrder
       queryClient: queryClient,
     });
   }
-  
-  // 3. Invalida queries de estoque e produtos se o status for 'cancelado' OU se for reativado
-  if (status === 'cancelado' || status === 'entregue' || status === 'pendente_entrega') {
-    // Invalida queries de produtos (para atualizar o estoque_total)
-    queryClient.invalidateQueries({ queryKey: ["products_only"] });
-    queryClient.invalidateQueries({ queryKey: ["latest_products_only"] });
-    queryClient.invalidateQueries({ queryKey: ["productCount"] });
-  }
-  
-  // 4. Invalida queries de métricas diárias se o status for 'entregue' (ou 'cancelado' se for re-entregue)
-  const currentDate = new Date().toISOString().slice(0, 10);
-  queryClient.invalidateQueries({ queryKey: ["dailyOrderCountByHour", data.empresa_id, currentDate] });
-  queryClient.invalidateQueries({ queryKey: ["revenueMetrics"] });
-
 
   return data;
 };

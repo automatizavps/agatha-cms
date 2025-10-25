@@ -8,7 +8,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserProfile, deleteUser } from "@/integrations/supabase/users";
-import { MoreHorizontal, Trash2, Pencil, User, Building, ArrowUpDown, ArrowUp, ArrowDown, Mail, Phone } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,10 +22,8 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditUserSheet from "./EditUserSheet";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 interface UserTableProps {
   users: UserProfile[];
@@ -33,14 +32,12 @@ interface UserTableProps {
 interface UserActionsProps {
   user: UserProfile;
   onEdit: (user: UserProfile) => void;
-  canWrite: boolean;
-  isCurrentUser: boolean;
 }
 
-type SortKey = 'nome_completo' | 'empresa' | 'email' | 'perfil';
+type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil';
 type SortDirection = 'asc' | 'desc';
 
-const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite, isCurrentUser }) => {
+const UserActions: React.FC<UserActionsProps> = ({ user, onEdit }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -64,44 +61,24 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite, isCur
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={!canWrite}>
+        <Button variant="ghost" className="h-8 w-8 p-0">
           <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-        
-        {canWrite && (
-          <DropdownMenuItem onClick={() => onEdit(user)}>
-            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-          </DropdownMenuItem>
-        )}
-        
-        {canWrite && !isCurrentUser && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={handleDelete} 
-              disabled={deleteMutation.isPending}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-            </DropdownMenuItem>
-          </>
-        )}
-        
-        {isCurrentUser && (
-          <DropdownMenuItem disabled className="text-muted-foreground">
-            {t('cannot_delete_self')}
-          </DropdownMenuItem>
-        )}
-        
-        {!canWrite && (
-          <DropdownMenuItem disabled className="text-muted-foreground">
-            {t('no_actions_available')}
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={() => onEdit(user)}>
+          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          onClick={handleDelete} 
+          disabled={deleteMutation.isPending}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -137,16 +114,9 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 const UserTable: React.FC<UserTableProps> = ({ users }) => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const { data: profile } = useCurrentUserProfile();
   const [sortKey, setSortKey] = useState<SortKey>('nome_completo');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
-  
-  const isSuperAdmin = profile?.is_super_admin;
-  const currentUserId = profile?.id;
-  
-  // Permissão de escrita no módulo 'users'
-  const canWriteUsers = profile?.permissions['users'] === 'escrita' || isSuperAdmin;
 
   const handleEdit = (user: UserProfile) => {
     setEditingUser(user);
@@ -173,6 +143,14 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
     if (!users) return [];
     
     const sorted = [...users].sort((a, b) => {
+      // Prioridade 1: Super Admin sempre no topo
+      const isASuperAdmin = a.perfis?.nome === 'Super Admin';
+      const isBSuperAdmin = b.perfis?.nome === 'Super Admin';
+      
+      if (isASuperAdmin && !isBSuperAdmin) return -1;
+      if (!isASuperAdmin && isBSuperAdmin) return 1;
+      
+      // Se ambos são SA ou nenhum é SA, aplica a ordenação normal
       let aValue: any;
       let bValue: any;
       
@@ -185,9 +163,13 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
           aValue = a.empresa?.nome || '';
           bValue = b.empresa?.nome || '';
           break;
-        case 'email':
-          aValue = a.email || '';
-          bValue = b.email || '';
+        case 'telefone':
+          aValue = a.telefone || '';
+          bValue = b.telefone || '';
+          break;
+        case 'endereco_completo':
+          aValue = a.endereco_completo || '';
+          bValue = b.endereco_completo || '';
           break;
         case 'perfil':
           aValue = a.perfis?.nome || '';
@@ -216,6 +198,7 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">Avatar</TableHead>
               <SortableHeader 
                 sortKey="nome_completo" 
                 currentSortKey={sortKey} 
@@ -225,80 +208,86 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 {t('user_table_header_name')}
               </SortableHeader>
               <SortableHeader 
-                sortKey="email" 
+                sortKey="empresa" 
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="hidden sm:table-cell"
+                className="hidden xl:table-cell"
               >
-                {t('profile_email')}
+                {t('user_table_header_company')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="telefone" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden lg:table-cell"
+              >
+                {t('user_table_header_phone')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="endereco_completo" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden xl:table-cell"
+              >
+                {t('user_table_header_address')}
               </SortableHeader>
               <SortableHeader 
                 sortKey="perfil" 
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="hidden md:table-cell"
               >
                 {t('user_table_header_profile')}
               </SortableHeader>
-              {isSuperAdmin && (
-                <SortableHeader 
-                  sortKey="empresa" 
-                  currentSortKey={sortKey} 
-                  currentSortDirection={sortDirection} 
-                  onSort={handleSort}
-                  className="hidden lg:table-cell"
-                >
-                  {t('user_table_header_company')}
-                </SortableHeader>
-              )}
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedUsers.map((user) => {
-              const isCurrentUser = user.id === currentUserId;
-              
-              return (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    {user.nome_completo}
-                    {isCurrentUser && (
-                      <Badge variant="secondary" className="ml-2 text-xs">
-                        {t('nav_profile')}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Mail className="h-3 w-3" />
-                      {user.email}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm font-medium">
-                    {user.perfis?.nome || t('unknown_profile')}
-                  </TableCell>
-                  {isSuperAdmin && (
-                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Building className="h-3 w-3" />
-                        {user.empresa?.nome || 'N/A'}
-                      </div>
-                    </TableCell>
-                  )}
-                  <TableCell className="text-right">
-                    <UserActions 
-                      user={user} 
-                      onEdit={handleEdit} 
-                      canWrite={canWriteUsers}
-                      isCurrentUser={isCurrentUser}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {sortedUsers.map((user) => (
+              <TableRow 
+                key={user.id}
+                // Adiciona destaque visual para o Super Admin
+                className={cn(
+                  user.perfis?.nome === 'Super Admin' && "bg-primary/10 hover:bg-primary/20 transition-colors"
+                )}
+              >
+                <TableCell>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatar_url || undefined} alt={user.nome_completo} />
+                    <AvatarFallback>
+                      {user.nome_completo ? user.nome_completo[0] : <User className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                </TableCell>
+                <TableCell className="font-medium">{user.nome_completo}</TableCell>
+                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Building className="h-3 w-3" />
+                    {/* Exibe o nome da empresa, ou 'Super Admin' se não tiver empresa/perfil customizado */}
+                    {user.empresa?.nome || (user.perfil_customizado_id === null && user.empresa_id === null ? 'Super Admin' : 'N/A')}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    {user.telefone || 'N/A'}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {user.endereco_completo || 'N/A'}
+                  </div>
+                </TableCell>
+                <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
+                <TableCell className="text-right">
+                  <UserActions user={user} onEdit={handleEdit} />
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>

@@ -1,35 +1,31 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Users, Search, Building } from "lucide-react";
+import { Loader2, RefreshCw, Search, Building } from "lucide-react";
 import { useUsers } from "@/integrations/supabase/users";
+import UserTable from "@/components/UserTable";
 import { showError } from "@/utils/toast";
+import AddUserSheet from "@/components/AddUserSheet";
 import { PermissionGuard } from "@/hooks/use-permission";
 import { Button } from "@/components/ui/button";
-import UserTable from "@/components/UserTable";
-import AddUserSheet from "@/components/AddUserSheet";
-import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { useCompanies } from "@/integrations/supabase/companies";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
-import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useCanRead } from "@/hooks/use-module-permission"; // Importando hooks de permissão
+import { useDashboardFilter } from "@/hooks/useDashboardFilter"; // Importando useDashboardFilter
+import { useCompanies } from "@/integrations/supabase/companies"; // Importando useCompanies
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importando Select
 
 const UsersContent = () => {
+  const { data: users, isLoading, isError, error, refetch, isRefetching } = useUsers();
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  const [searchTerm, setSearchTerm] = useState("");
   const { t } = useTranslation();
   
   // Usando o filtro global do dashboard
-  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
-  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
-  
-  // Fetch data (the hook handles filtering based on RLS, but we pass filteredCompanyId for query key)
-  const { data: allUsers, isLoading, isError, error, refetch, isRefetching } = useUsers(filteredCompanyId);
-  
-  const [searchTerm, setSearchTerm] = useState("");
+  const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, isLoadingFilter } = useDashboardFilter();
   
   // Permissões baseadas no perfil customizado
   const canReadUsers = useCanRead('users');
-  const canWriteUsers = useCanWrite('users');
   
   if (!canReadUsers) {
     return null;
@@ -41,32 +37,37 @@ const UsersContent = () => {
     showError(t("error_loading_data") + ": " + error.message);
   }
   
-  // Client-side filtering by search term
   const filteredUsers = useMemo(() => {
-    if (!allUsers) return [];
-    if (!searchTerm) return allUsers;
+    if (!users) return [];
+    let filtered = users;
+    
+    // 1. Filtragem por Empresa (se Super Admin e filtro ativo)
+    if (isSuperAdmin && selectedCompanyId !== 'all') {
+      filtered = filtered.filter(user => user.empresa_id === selectedCompanyId);
+    }
 
-    const lowerCaseSearch = searchTerm.toLowerCase();
-    return allUsers.filter(user => 
-      user.nome_completo.toLowerCase().includes(lowerCaseSearch) ||
-      user.email.toLowerCase().includes(lowerCaseSearch) ||
-      (user.perfis?.nome && user.perfis.nome.toLowerCase().includes(lowerCaseSearch)) ||
-      (user.empresa?.nome && user.empresa.nome.toLowerCase().includes(lowerCaseSearch))
-    );
-  }, [allUsers, searchTerm]);
+    // 2. Filtragem por Termo de Busca
+    if (searchTerm) {
+      const lowerCaseSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(user => 
+        user.nome_completo.toLowerCase().includes(lowerCaseSearch) ||
+        user.perfis?.nome.toLowerCase().includes(lowerCaseSearch)
+      );
+    }
+    
+    return filtered;
+  }, [users, searchTerm, selectedCompanyId, isSuperAdmin]);
 
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_users')}</h1>
-        {canWriteUsers && <AddUserSheet />}
+        <AddUserSheet />
       </div>
       
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Users className="h-5 w-5" /> {t('user_list_title')}
-          </CardTitle>
+          <CardTitle className="text-lg">{t('user_list_title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
@@ -144,7 +145,7 @@ const UsersContent = () => {
             <UserTable users={filteredUsers} />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm ? t('no_data_found') : t('no_users_found')}
+              {searchTerm ? t('no_users_search') : t('no_users_found')}
             </div>
           )}
         </CardContent>

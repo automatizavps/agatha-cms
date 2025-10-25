@@ -15,7 +15,7 @@ import { Loader2 } from "lucide-react";
 import { Product } from "@/integrations/supabase/products";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MultiImageUpload from "./MultiImageUpload";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
@@ -90,23 +90,6 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
       empresa_id: defaultValues?.empresa_id || "", 
     },
   });
-  
-  // Efeito para marcar o formulário como 'dirty' quando as fotos mudam
-  useEffect(() => {
-    // Compara o estado atual das fotos com o valor inicial
-    const initialPhotos = defaultValues?.fotos || null;
-    const currentPhotos = photos;
-    
-    // Verifica se as listas são diferentes (tamanho ou conteúdo)
-    const arePhotosDifferent = 
-      (initialPhotos?.length !== currentPhotos?.length) ||
-      (initialPhotos && currentPhotos && initialPhotos.some((url, index) => url !== currentPhotos[index]));
-      
-    if (arePhotosDifferent) {
-      // Se as fotos mudaram, forçamos a revalidação e marcamos como dirty
-      form.setValue('nome', form.getValues('nome'), { shouldDirty: true, shouldValidate: true });
-    }
-  }, [photos, defaultValues?.fotos, form]);
   
   // Determina o ID da empresa para carregar categorias
   const companyIdForCategories = isSuperAdmin ? form.watch('empresa_id') : currentProfile?.empresa_id;
@@ -299,15 +282,11 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
         
         <MultiImageUpload 
           currentUrls={photos}
-          onUrlsChange={(newUrls) => {
-            setPhotos(newUrls);
-            // Força o formulário a reconhecer a mudança para habilitar o botão Salvar
-            form.setValue('nome', form.getValues('nome'), { shouldDirty: true, shouldValidate: true });
-          }}
+          onUrlsChange={setPhotos}
           disabled={isSubmitting}
         />
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || !form.formState.isDirty}>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (

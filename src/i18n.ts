@@ -30,9 +30,6 @@ const resources = {
       "cancel": "Cancelar",
       "delete_confirm": "Sim, Excluir",
       "optional": "Opcional", // NOVO
-      "stock_exceeded": "A quantidade de {{name}} excede o estoque disponível ({{stock}}).", // NOVO
-      "items": "itens", // NOVO
-      "no_actions_available": "Nenhuma ação disponível", // NOVO
 
       // Navegação
       "nav_home": "Home",
@@ -51,6 +48,7 @@ const resources = {
       "nav_operational": "Operacional",
       "nav_config": "Configurações",
       "nav_products_services": "Produtos & Serviços",
+      // "nav_categories": "Categorias", // REMOVIDO
       "nav_notifications": "Notificações",
 
       // Dashboard
@@ -89,24 +87,26 @@ const resources = {
       "chart_error": "Erro ao carregar dados do gráfico.",
       "analytics_placeholder": "Outros relatórios e métricas virão aqui.",
       
-      "page_title_users": "Gestão de Usuários", // RE-ADICIONADO
-      "user_list_title": "Lista de Usuários", // RE-ADICIONADO
-      "user_search_placeholder": "Buscar por nome, email ou perfil...", // RE-ADICIONADO
-      "invite_user": "Convidar Usuário", // NOVO
-      "user_invited_success": "Convite enviado com sucesso para {{email}}.", // NOVO
-      "user_updated_success": "Usuário {{name}} atualizado com sucesso.", // NOVO
-      "no_users_found": "Nenhum usuário encontrado para esta empresa.", // RE-ADICIONADO
+      "page_title_users": "Gestão de Usuários",
+      "user_list_title": "Lista de Usuários",
+      "user_search_placeholder": "Buscar por nome ou perfil...",
+      "add_new_user": "Adicionar Novo Usuário",
+      "no_users_found": "Nenhum usuário encontrado para esta empresa.",
+      "no_users_search": "Nenhum usuário encontrado com o termo de busca.",
       "user_table_header_name": "Nome",
       "user_table_header_company": "Empresa",
       "user_table_header_phone": "Telefone",
       "user_table_header_address": "Endereço",
       "user_table_header_profile": "Perfil",
-      "edit_user": "Editar Usuário", // NOVO
-      "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.", // NOVO
-      "loading_user_data": "Carregando Dados do Usuário...", // NOVO
+      "edit_user": "Editar Usuário",
+      "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.",
+      "loading_user_data": "Carregando Dados do Usuário...",
+      "loading_user_data_description": "Aguarde enquanto carregamos as informações do usuário.",
+      "only_super_admin_can_invite": "Apenas Super Admin pode convidar novos usuários.", // NOVO
+      "loading_profiles": "Carregando perfis...", // NOVO
+      "select_profile": "Selecione um perfil", // NOVO
+      "select_company_to_load_profiles": "Selecione uma empresa para carregar os perfis customizados.", // NOVO
       "unknown_profile": "Perfil Desconhecido", // NOVO
-      "cannot_delete_self": "Não é possível excluir sua própria conta.", // NOVO
-      "invite_user_description": "Envie um convite por email para um novo usuário se cadastrar.", // NOVO
       
       "page_title_companies": "Gestão de Empresas",
       "company_list_title": "Lista de Empresas",

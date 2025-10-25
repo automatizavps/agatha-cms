@@ -1,10 +1,14 @@
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import UserForm from "./UserForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateUserProfileByAdmin, UserProfile } from "@/integrations/supabase/users";
+import { updateUser, UserProfile } from "@/integrations/supabase/users";
 import { showSuccess, showError } from "@/utils/toast";
+import { useUserEmail } from "@/integrations/supabase/useUserEmail";
+import { Loader2, Key } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil atual
+import ResetPasswordDialog from "./ResetPasswordDialog"; // Importando o novo componente
 
 interface EditUserSheetProps {
   user: UserProfile;
@@ -15,85 +19,85 @@ interface EditUserSheetProps {
 const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { data: currentProfile } = useCurrentUserProfile();
   
-  const isSuperAdmin = currentProfile?.is_super_admin;
+  // Perfil do usuário logado
+  const { data: currentProfile } = useCurrentUserProfile();
+  const isSuperAdmin = currentProfile?.is_super_admin; // Usando a nova flag
+  
+  // Busca o email real do usuário que está sendo editado
+  const { data: userEmail, isLoading: isLoadingEmail } = useUserEmail(user.id);
 
   const mutation = useMutation({
-    mutationFn: updateUserProfileByAdmin,
-    onSuccess: (data) => {
-      showSuccess(t('user_updated_success', { name: data.nome_completo }));
+    mutationFn: updateUser,
+    onSuccess: () => {
+      showSuccess(`Usuário ${user.nome_completo} atualizado com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      // Se o usuário editado for o próprio Admin, invalida o perfil atual
-      if (data.id === currentProfile?.id) {
-        queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
-      }
       onOpenChange(false);
     },
     onError: (error) => {
-      showError(t("error_loading_data") + ": " + error.message);
+      showError("Falha ao atualizar usuário: " + error.message);
     },
   });
 
   const handleSubmit = (values: { 
+    full_name: string; 
     email: string; 
-    nome_completo: string; 
+    perfil_id: string; // UUID ou '1'
     telefone: string | null; 
-    endereco_completo: string | null; 
-    perfil_id: string; 
-    empresa_id: string; 
+    endereco_completo: string | null;
+    empresa_id?: string | null;
   }) => {
-    // Determina o perfil customizado ID ou null para Admin/SA
-    let perfil_customizado_id: string | null = values.perfil_id;
-    if (values.perfil_id === '1' || values.perfil_id === '2') {
-      perfil_customizado_id = null;
-    }
-    
-    // Apenas Super Admin pode mudar a empresa_id
-    const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
-
+    // O email não é editável neste formulário, mas é passado no UserFormValues.
     mutation.mutate({
-      id: user.id,
-      nome_completo: values.nome_completo,
+      userIdToUpdate: user.id,
+      full_name: values.full_name,
+      perfil_id: values.perfil_id, // Passa como string (UUID ou '1')
       telefone: values.telefone,
       endereco_completo: values.endereco_completo,
-      perfil_customizado_id: perfil_customizado_id,
-      empresa_id: empresa_id === user.empresa_id ? undefined : empresa_id, // Só envia se for diferente
+      empresa_id: values.empresa_id,
     });
   };
 
-  // Mapeia o perfil de volta para o ID de seleção do formulário
-  const getProfileIdForForm = () => {
-    if (user.perfil_customizado_id) {
-      return user.perfil_customizado_id;
-    }
-    if (user.perfis?.nome === 'Super Admin') {
-      return '1';
-    }
-    if (user.perfis?.nome === 'Admin') {
-      return '2';
-    }
-    return '';
-  };
-
+  // Determina o ID do perfil a ser usado no formulário
+  // Se perfil_customizado_id for NULL, verifica se é SA (empresa_id NULL). Se for, usa '1'. Caso contrário, usa '' (para forçar seleção).
+  const profileIdForForm = user.perfil_customizado_id || (user.empresa_id === null ? '1' : ''); 
+  
   // Valores iniciais para o formulário de edição
   const initialValues = {
-    id: user.id,
-    email: user.email, // Não editável no form, mas necessário para defaultValues
-    nome_completo: user.nome_completo,
+    full_name: user.nome_completo,
+    email: userEmail || 'Carregando...', // Usa o email carregado
+    perfil_id: profileIdForForm,
     telefone: user.telefone,
     endereco_completo: user.endereco_completo,
-    perfil_id: getProfileIdForForm(),
-    empresa_id: user.empresa_id || "",
+    empresa_id: user.empresa_id,
+    perfis: user.perfis, // Passa o nome do perfil para o UserForm usar no fallback
   };
+  
+  if (isLoadingEmail) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
+        <SheetContent className="sm:max-w-lg flex flex-col">
+          <SheetHeader>
+            <SheetTitle>{t('loading_user_data')}</SheetTitle>
+            <SheetDescription className="sr-only">
+              {t('loading_user_data_description')}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4 flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-xl flex flex-col">
+      <SheetContent className="sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('edit_user')}: {user.nome_completo}</SheetTitle>
           <SheetDescription className="sr-only">
-            {t('edit_user_description', { defaultValue: 'Atualize os dados e o perfil de acesso do usuário.' })}
+            {t('edit_user_description')}
           </SheetDescription>
         </SheetHeader>
         <div className="py-4 flex-1 overflow-y-auto">
@@ -103,6 +107,20 @@ const EditUserSheet: React.FC<EditUserSheetProps> = ({ user, isOpen, onOpenChang
             defaultValues={initialValues}
             isEditing={true}
           />
+          
+          {/* Opção de Redefinir Senha (Apenas Super Admin) */}
+          {isSuperAdmin && (
+            <div className="pt-6 border-t mt-6">
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Key className="h-5 w-5 text-muted-foreground" />
+                {t('reset_password_title')}
+              </h3>
+              <ResetPasswordDialog 
+                userIdToUpdate={user.id} 
+                userName={user.nome_completo} 
+              />
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
