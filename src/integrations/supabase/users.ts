@@ -10,8 +10,7 @@ export interface UserProfile {
   telefone: string | null;
   endereco_completo: string | null;
   email: string; 
-  perfil_customizado_id: string | null;
-  perfis: {
+  perfil_customizado: { // CORRIGIDO: Renomeado para perfis_customizados
     nome: string;
   } | null;
   empresa: {
@@ -21,13 +20,21 @@ export interface UserProfile {
 
 // --- Fetch Users ---
 
-const fetchUsers = async (): Promise<UserProfile[]> => {
+const fetchUsers = async (companyId?: string): Promise<UserProfile[]> => {
   // RLS should handle filtering by company_id automatically for non-Super Admins.
   // Super Admins see all users.
-  const { data, error } = await supabase
+  let query = supabase
     .from("usuarios")
     .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, perfis:perfis_customizados (nome), empresa:empresas (nome)")
     .order("nome_completo", { ascending: true });
+    
+  // Se um companyId for fornecido (apenas Super Admin pode fazer isso), aplicamos o filtro.
+  // Para Admin/Funcionário, o RLS já restringe ao seu empresa_id.
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching users:", error);
@@ -79,7 +86,7 @@ export const useUsers = (companyId?: string) => {
   // Adiciona companyId na queryKey para forçar o refetch se o Super Admin mudar o filtro
   return useQuery<UserProfile[], Error>({
     queryKey: ["users", companyId],
-    queryFn: fetchUsers,
+    queryFn: () => fetchUsers(companyId),
     enabled: true,
   });
 };
