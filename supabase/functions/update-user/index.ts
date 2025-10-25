@@ -10,6 +10,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Função auxiliar para retornar erro JSON
   const returnError = (message: string, status: number) => {
+    console.error(`Returning error ${status}: ${message}`);
     return new Response(JSON.stringify({ error: message }), {
       status: status,
       headers: corsHeaders,
@@ -50,34 +51,40 @@ serve(async (req) => {
     
     const adminUserId = adminUser.id;
 
-    // Check if the user is Super Admin OR belongs to a company
+    // 3. Verificar permissões usando RPC (para Super Admin) e perfil (para Admin de Empresa)
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
+    
+    const { data: isSaData } = await supabaseClient.rpc('is_super_admin');
+    const isSuperAdmin = isSaData === true;
+    
+    // Buscar perfil para verificar se é Admin de Empresa
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from("usuarios")
-      .select("empresa_id, perfil_customizado_id, perfis_customizados (nome)")
+      .select("empresa_id")
       .eq("id", adminUserId)
       .single();
 
     if (profileError || !profileData) {
-      return returnError("Forbidden: User profile not found", 403);
+      return returnError("Forbidden: User profile not found for permission check", 403);
     }
     
-    // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL (OLD SA)
-    const isOldSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
-    
-    // New SA check: perfil_customizado_id is 'Super Admin' AND empresa_id is NOT NULL (NEW SA)
-    const isNewSuperAdmin = 
-      profileData.empresa_id !== null && 
-      profileData.perfil_customizado_id !== null && 
-      profileData.perfis_customizados?.nome === 'Super Admin';
-      
-    const isSuperAdmin = isOldSuperAdmin || isNewSuperAdmin;
     const isCompanyAdmin = profileData.empresa_id !== null; 
 
     if (!isSuperAdmin && !isCompanyAdmin) {
       return returnError("Forbidden: User does not have administrative privileges", 403);
     }
 
-    // 3. Processar o corpo da requisição
+    // 4. Processar o corpo da requisição
     let data;
     try {
       data = await req.json();

@@ -10,6 +10,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Função auxiliar para retornar erro JSON com CORS
   const returnError = (message: string, status: number) => {
+    console.error(`Returning error ${status}: ${message}`);
     return new Response(JSON.stringify({ error: message }), {
       status: status,
       headers: corsHeaders,
@@ -50,22 +51,43 @@ serve(async (req) => {
     
     const adminUserId = adminUser.id;
 
-    // 3. Verificar se o usuário logado tem permissão (Admin de Empresa ou Super Admin)
-    const { data: profileData, error: profileError } = await supabaseAdmin
-      .from("usuarios")
-      .select("empresa_id, perfil_customizado_id, perfis_customizados (nome)")
-      .eq("id", adminUserId)
-      .single();
-
-    if (profileError || !profileData) {
-      return returnError("Forbidden: User profile not found", 403);
-    }
+    // 3. Verificar se o usuário logado tem permissão (Super Admin ou Admin de Empresa)
+    // Usamos o RPC is_super_admin para a verificação mais precisa
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
     
-    // Permissão simplificada: Super Admin OU qualquer usuário com empresa_id
-    const isSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
-    const isCompanyUser = profileData.empresa_id !== null;
+    const { data: isSaData, error: isSaError } = await supabaseClient.rpc('is_super_admin');
+    
+    // Se a verificação de SA falhar, tentamos verificar se é um Admin de Empresa
+    let isSuperAdmin = isSaData === true;
+    let isCompanyAdmin = false;
+    
+    if (!isSuperAdmin) {
+        const { data: profileData, error: profileError } = await supabaseAdmin
+            .from("usuarios")
+            .select("empresa_id")
+            .eq("id", adminUserId)
+            .single();
+            
+        if (profileError || !profileData) {
+            console.error("Profile fetch failed for permission check:", profileError);
+            return returnError("Forbidden: User profile not found for permission check", 403);
+        }
+        
+        // Se tiver empresa_id, é pelo menos um Admin/Funcionário
+        isCompanyAdmin = profileData.empresa_id !== null;
+    }
 
-    if (!isSuperAdmin && !isCompanyUser) {
+    if (!isSuperAdmin && !isCompanyAdmin) {
       return returnError("Forbidden: User does not have administrative privileges", 403);
     }
 
