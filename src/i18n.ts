@@ -51,7 +51,6 @@ const resources = {
       "nav_operational": "Operacional",
       "nav_config": "Configurações",
       "nav_products_services": "Produtos & Serviços",
-      // "nav_categories": "Categorias", // REMOVIDO
       "nav_notifications": "Notificações",
 
       // Dashboard
@@ -90,22 +89,22 @@ const resources = {
       "chart_error": "Erro ao carregar dados do gráfico.",
       "analytics_placeholder": "Outros relatórios e métricas virão aqui.",
       
-      "page_title_users": "Gestão de Usuários",
-      "user_list_title": "Lista de Usuários",
-      "user_search_placeholder": "Buscar por nome ou perfil...",
-      "add_new_user": "Adicionar Novo Usuário",
-      "no_users_found": "Nenhum usuário encontrado para esta empresa.",
-      "no_users_search": "Nenhum usuário encontrado com o termo de busca.",
+      // REMOVIDO: "page_title_users": "Gestão de Usuários",
+      // REMOVIDO: "user_list_title": "Lista de Usuários",
+      // REMOVIDO: "user_search_placeholder": "Buscar por nome ou perfil...",
+      // REMOVIDO: "add_new_user": "Adicionar Novo Usuário",
+      // REMOVIDO: "no_users_found": "Nenhum usuário encontrado para esta empresa.",
+      // REMOVIDO: "no_users_search": "Nenhum usuário encontrado com o termo de busca.",
       "user_table_header_name": "Nome",
       "user_table_header_company": "Empresa",
       "user_table_header_phone": "Telefone",
       "user_table_header_address": "Endereço",
       "user_table_header_profile": "Perfil",
-      "edit_user": "Editar Usuário",
-      "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.",
-      "loading_user_data": "Carregando Dados do Usuário...",
-      "loading_user_data_description": "Aguarde enquanto carregamos as informações do usuário.",
-      "only_super_admin_can_invite": "Apenas Super Admin pode convidar novos usuários.", // NOVO
+      // REMOVIDO: "edit_user": "Editar Usuário",
+      // REMOVIDO: "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.",
+      // REMOVIDO: "loading_user_data": "Carregando Dados do Usuário...",
+      // REMOVIDO: "loading_user_data_description": "Aguarde enquanto carregamos as informações do usuário.",
+      // REMOVIDO: "only_super_admin_can_invite": "Apenas Super Admin pode convidar novos usuários.", // NOVO
       "loading_profiles": "Carregando perfis...", // NOVO
       "select_profile": "Selecione um perfil", // NOVO
       "select_company_to_load_profiles": "Selecione uma empresa para carregar os perfis customizados.", // NOVO

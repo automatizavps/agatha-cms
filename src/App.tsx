@@ -7,7 +7,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
-import Users from "./pages/Users";
 import Login from "./pages/Login";
 import Appointments from "./pages/Appointments";
 import Clients from "./pages/Clients";
@@ -25,6 +24,7 @@ import { SessionContextProvider, ProtectedRoute, PublicRoute, useSession } from 
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
 import React, { useState, useEffect } from "react";
 import ForcePasswordChangeDialog from "./components/ForcePasswordChangeDialog"; // Importando o modal
+import { supabase } from "./integrations/supabase/client"; // Importado para refresh da sessão
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,7 @@ const RouteContentWrapper: React.FC = () => {
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={<Index />} />
       <Route path="/analytics" element={<Analytics />} />
-      <Route path="/users" element={<Users />} />
+      {/* <Route path="/users" element={<Users />} /> REMOVIDO */}
       <Route path="/appointments" element={<Appointments />} />
       <Route path="/clients" element={<Clients />} />
       <Route path="/products" element={<Products />} />
