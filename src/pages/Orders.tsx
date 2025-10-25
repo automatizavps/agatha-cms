@@ -239,6 +239,7 @@ const Orders = () => {
               orders={filteredOrders} 
               selectedIds={selectedOrderIds}
               onSelectChange={setSelectedOrderIds}
+              canWrite={canWriteOrders}
             />
           ) : (
             <div className="text-center p-4 text-muted-foreground">

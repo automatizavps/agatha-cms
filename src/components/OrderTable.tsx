@@ -32,19 +32,26 @@ interface OrderTableProps {
   orders: Order[];
   selectedIds: Set<string>; // NOVO
   onSelectChange: (newSelectedIds: Set<string>) => void; // NOVO
+  canWrite: boolean; // NOVO: Permissão de escrita
 }
 
 interface OrderActionsProps {
   order: Order;
   onEditStatus: (order: Order) => void;
+  canWrite: boolean; // NOVO: Permissão de escrita
 }
 
 type SortKey = 'id' | 'cliente' | 'data' | 'valor_total' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus }) => {
+const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  // Se o usuário não tiver permissão de escrita, não mostramos o menu de ações.
+  if (!canWrite) {
+    return null;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: deleteOrder,
@@ -156,7 +163,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectChange }) => {
+const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectChange, canWrite }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('data');
@@ -263,6 +270,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                   checked={isAllSelected || isIndeterminate}
                   onCheckedChange={(checked) => handleSelectAll(!!checked)}
                   aria-label={t('select_all')}
+                  disabled={!canWrite}
                 />
               </TableHead>
               <SortableHeader 
@@ -324,6 +332,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                   <Checkbox
                     checked={selectedIds.has(order.id)}
                     onCheckedChange={(checked) => handleSelectRow(order.id, !!checked)}
+                    disabled={!canWrite}
                   />
                 </TableCell>
                 <TableCell className="font-medium text-xs text-muted-foreground">
@@ -342,7 +351,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                   {getStatusBadge(order.status)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <OrderActions order={order} onEditStatus={handleEditStatus} />
+                  <OrderActions order={order} onEditStatus={handleEditStatus} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}
