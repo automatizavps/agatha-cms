@@ -103,16 +103,16 @@ const SidebarGroup: React.FC<SidebarGroupProps> = ({ icon, label, isCollapsed, c
   const isRouteActive = location.pathname.startsWith(basePath) || 
                        additionalActivePaths.some(path => location.pathname.startsWith(path));
   
-  // HOOKS MOVIDOS PARA O TOPO (incondicionalmente)
+  // NOVO: Inicializa o estado aberto com base na rota ativa, mas não usa useEffect para sincronização
   const [isOpen, setIsOpen] = useState(isRouteActive);
   
-  // Sync internal state with active route when expanded
+  // Se o estado de colapso mudar, redefinimos o estado interno para refletir a rota ativa
   useEffect(() => {
     if (!isCollapsed) {
       setIsOpen(isRouteActive);
     }
-  }, [isRouteActive, isCollapsed]);
-  
+  }, [isCollapsed, isRouteActive]); // Depende apenas de isCollapsed e isRouteActive
+
   // Helper para verificar se algum subitem está ativo (para o destaque do ícone no modo colapsado)
   const isAnySubItemActive = isRouteActive;
 
