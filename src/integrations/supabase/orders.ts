@@ -247,6 +247,16 @@ export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrder
     });
   }
 
+  // 3. Invalida a query de métricas diárias se o status for 'entregue' ou se mudar de 'entregue'
+  // Isso garante que o dashboard seja atualizado quando o estoque é consumido/devolvido.
+  if (status === 'entregue' || data.status === 'entregue') {
+    const currentDate = new Date().toISOString().slice(0, 10);
+    // Invalida a query que alimenta o gráfico de pedidos por hora
+    queryClient.invalidateQueries({ queryKey: ["dailyOrderCountByHour", data.empresa_id, currentDate] });
+    // Invalida a query de métricas de receita (diária, semanal, mensal)
+    queryClient.invalidateQueries({ queryKey: ["revenueMetrics", data.empresa_id, currentDate] });
+  }
+
   return data;
 };
 

@@ -270,11 +270,14 @@ export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_h
     });
   }
   
-  // 3. Invalida a query de métricas diárias se o status for 'concluido'
-  if (status === 'concluido') {
+  // 3. Invalida a query de métricas diárias se o status for 'concluido' ou se mudar de 'concluido'
+  // Isso garante que o dashboard seja atualizado quando o estoque é consumido/devolvido.
+  if (status === 'concluido' || data.status === 'concluido') {
     const currentDate = new Date().toISOString().slice(0, 10);
     // Invalida a query que alimenta o gráfico de serviços por hora
     queryClient.invalidateQueries({ queryKey: ["dailyServiceByHour", data.empresa_id, currentDate] });
+    // Invalida a query de métricas de receita (diária, semanal, mensal)
+    queryClient.invalidateQueries({ queryKey: ["revenueMetrics", data.empresa_id, currentDate] });
   }
 
 
