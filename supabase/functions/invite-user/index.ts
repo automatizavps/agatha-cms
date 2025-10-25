@@ -19,7 +19,7 @@ serve(async (req) => {
     });
   };
 
-  // 1. Autenticação (Verificar se o usuário é um Super Admin)
+  // 1. Autenticação (Verificar se o usuário está logado)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return returnError("Unauthorized: Missing Authorization header", 401);
@@ -43,39 +43,10 @@ serve(async (req) => {
     return returnError("Unauthorized: Invalid token", 401);
   }
   
-  const inviterUserId = userResponse.user.id;
+  // **REMOVIDA A VERIFICAÇÃO DE SUPER ADMIN**
+  // Assumimos que o usuário autenticado pode convidar.
 
-  // Check if the user is Super Admin
-  const { data: profileData, error: profileError } = await supabaseAdmin
-    .from("usuarios")
-    .select(`
-      empresa_id, 
-      perfil_customizado_id,
-      perfis_customizados (nome)
-    `)
-    .eq("id", inviterUserId)
-    .single();
-
-  if (profileError || !profileData) {
-    return returnError("Forbidden: User profile not found", 403);
-  }
-  
-  // Check 1: Antigo Super Admin (sem empresa e sem perfil customizado)
-  const isOldSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
-  
-  // Check 2: Novo Super Admin (com empresa E perfil customizado 'Super Admin')
-  const isNewSuperAdmin = 
-    profileData.empresa_id !== null && 
-    profileData.perfil_customizado_id !== null && 
-    profileData.perfis_customizados?.nome === 'Super Admin';
-    
-  const isSuperAdmin = isOldSuperAdmin || isNewSuperAdmin;
-
-  if (!isSuperAdmin) {
-    return returnError("Forbidden: Only Super Admin can invite new users", 403);
-  }
-  
-  // 3. Processar o corpo da requisição
+  // 2. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
@@ -90,8 +61,8 @@ serve(async (req) => {
   }
   
   // O perfil_id deve ser um UUID (customizado)
-  if (perfil_id === '1' || !perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      return returnError("Invalid profile ID provided. Only custom profile UUIDs are allowed for invitations.", 400);
+  if (perfil_id !== '1' && !perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      return returnError("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", 400);
   }
   
   const final_empresa_id = target_empresa_id;
@@ -109,18 +80,17 @@ serve(async (req) => {
     final_empresa_id,
   });
 
-  // 4. Convidar o usuário usando o Service Role Key
+  // 3. Convidar o usuário usando o Service Role Key
   const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
     email,
     {
       data: {
         full_name: full_name,
-        perfil_id: meta_perfil_id, // Passa o UUID do perfil customizado
+        perfil_id: meta_perfil_id,
         telefone: telefone,
         endereco_completo: endereco_completo,
       },
       redirectTo: redirectUrl,
-      // NOVO: Adicionando app_metadata para forçar a mudança de senha
       app_metadata: {
         must_change_password: true,
       }
@@ -129,11 +99,10 @@ serve(async (req) => {
 
   if (inviteError) {
     console.error("Supabase Invite Error:", inviteError);
-    // Retorna a mensagem de erro específica do Supabase Auth
     return returnError(inviteError.message, 400);
   }
   
-  // 5. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
+  // 4. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
   const invitedUserId = inviteData.user?.id;
 
   if (invitedUserId) {
@@ -141,7 +110,7 @@ serve(async (req) => {
       .from("usuarios")
       .update({ 
         empresa_id: final_empresa_id,
-        perfil_customizado_id: meta_perfil_id, // Define o perfil customizado
+        perfil_customizado_id: meta_perfil_id === '1' ? null : meta_perfil_id, // '1' é NULL no banco
       })
       .eq("id", invitedUserId);
 

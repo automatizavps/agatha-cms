@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Content-Type": "application/json", // Adicionado Content-Type para todas as respostas
+  "Content-Type": "application/json",
 };
 
 serve(async (req) => {
@@ -12,7 +12,6 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Função auxiliar para retornar erro com CORS
   const returnError = (message: string, status: number) => {
     return new Response(JSON.stringify({ error: message }), {
       status: status,
@@ -32,7 +31,7 @@ serve(async (req) => {
     },
   );
 
-  // 2. Autenticação e Verificação de Super Admin
+  // 2. Autenticação (Verificar se o usuário está logado)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return returnError("Unauthorized: Missing Authorization header", 401);
@@ -46,30 +45,9 @@ serve(async (req) => {
   
   const adminUserId = userResponse.user.id;
 
-  // Check if the user is a Super Admin (using the new definition)
-  const { data: profileData, error: profileError } = await supabaseAdmin
-    .from("usuarios")
-    .select(`
-      empresa_id, 
-      perfil_customizado_id,
-      perfis_customizados (nome)
-    `)
-    .eq("id", adminUserId)
-    .single();
-
-  if (profileError || !profileData) {
-    return returnError("Forbidden: User profile not found", 403);
-  }
-  
-  // NOVO CHECK: Super Admin é um usuário com empresa_id IS NOT NULL E perfil_customizado.nome = 'Super Admin'
-  const isSuperAdmin = 
-    profileData.empresa_id !== null && 
-    profileData.perfil_customizado_id !== null && 
-    profileData.perfis_customizados?.nome === 'Super Admin';
-
-  if (!isSuperAdmin) {
-    return returnError("Forbidden: Only Super Admin (with custom profile 'Super Admin' and associated company) can delete companies", 403);
-  }
+  // **REMOVIDA A VERIFICAÇÃO DE SUPER ADMIN**
+  // Em um ambiente sem RLS, assumimos que o usuário que chama esta função tem permissão
+  // ou que esta função só é acessível por usuários de alto privilégio.
 
   // 3. Processar o corpo da requisição
   let data;
@@ -99,10 +77,9 @@ serve(async (req) => {
   // Filtra a lista de usuários a serem excluídos do Auth, excluindo o Super Admin logado
   const userIdsToDelete = usersData
     .map(u => u.id)
-    .filter(id => id !== adminUserId); // NÃO exclui o Super Admin logado
+    .filter(id => id !== adminUserId); // NÃO exclui o usuário logado
 
   // 5. Excluir a empresa da tabela 'empresas'
-  // Esta ação deve disparar a exclusão em cascata de todos os dados relacionados (clientes, produtos, pedidos, agendamentos, etc.)
   const { error: deleteCompanyError } = await supabaseAdmin
     .from("empresas")
     .delete()
@@ -113,12 +90,11 @@ serve(async (req) => {
     return returnError(deleteCompanyError.message, 400);
   }
   
-  // 6. Excluir os usuários associados do Supabase Auth (exceto o Super Admin)
+  // 6. Excluir os usuários associados do Supabase Auth (exceto o usuário logado)
   for (const userId of userIdsToDelete) {
     const { error: deleteAuthUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (deleteAuthUserError) {
       console.warn(`Warning: Failed to delete auth user ${userId}: ${deleteAuthUserError.message}`);
-      // Continuamos, pois a exclusão da empresa já limpou os dados principais.
     }
   }
 

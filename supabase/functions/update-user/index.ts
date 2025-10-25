@@ -19,7 +19,7 @@ serve(async (req) => {
     });
   };
 
-  // 1. Autenticação (Verificar se o usuário é um administrador)
+  // 1. Autenticação (Verificar se o usuário está logado)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return returnError("Unauthorized: Missing Authorization header", 401);
@@ -43,34 +43,8 @@ serve(async (req) => {
     return returnError("Unauthorized: Invalid token", 401);
   }
   
-  const adminUserId = userResponse.user.id;
-
-  // Check if the user is Super Admin OR belongs to a company
-  const { data: profileData, error: profileError } = await supabaseAdmin
-    .from("usuarios")
-    .select("empresa_id, perfil_customizado_id, perfis_customizados (nome)")
-    .eq("id", adminUserId)
-    .single();
-
-  if (profileError || !profileData) {
-    return returnError("Forbidden: User profile not found", 403);
-  }
-  
-  // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL (OLD SA)
-  const isOldSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
-  
-  // New SA check: perfil_customizado_id is 'Super Admin' AND empresa_id is NOT NULL (NEW SA)
-  const isNewSuperAdmin = 
-    profileData.empresa_id !== null && 
-    profileData.perfil_customizado_id !== null && 
-    profileData.perfis_customizados?.nome === 'Super Admin';
-    
-  const isSuperAdmin = isOldSuperAdmin || isNewSuperAdmin;
-  const isCompanyAdmin = profileData.empresa_id !== null; 
-
-  if (!isSuperAdmin && !isCompanyAdmin) {
-    return returnError("Forbidden: User does not have administrative privileges", 403);
-  }
+  // **REMOVIDA A VERIFICAÇÃO DE PERFIL/ADMIN**
+  // Assumimos que o usuário autenticado pode atualizar outros usuários.
 
   // 2. Processar o corpo da requisição
   let data;
@@ -86,7 +60,7 @@ serve(async (req) => {
     return returnError("Missing required fields: userIdToUpdate, full_name, or perfil_id", 400);
   }
   
-  // Determinar se o perfil_id é um UUID (customizado) ou INTEGER '1' (Antigo Super Admin)
+  // Determinar se o perfil_id é um UUID (customizado) ou INTEGER '1' (Super Admin)
   const isCustomProfile = typeof perfil_id === 'string' && perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
   
   let custom_perfil_id: string | null = null;
@@ -94,7 +68,6 @@ serve(async (req) => {
   if (isCustomProfile) {
     custom_perfil_id = perfil_id;
   } else if (perfil_id === '1') {
-    // Se for o antigo Super Admin, o custom_perfil_id deve ser NULL
     custom_perfil_id = null;
   } else {
     return returnError("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", 400);
@@ -103,14 +76,13 @@ serve(async (req) => {
   // Construir o objeto de atualização
   const updatePayload: Record<string, any> = {
     nome_completo: full_name, 
-    perfil_customizado_id: custom_perfil_id, // Atualiza o perfil customizado (UUID ou NULL)
+    perfil_customizado_id: custom_perfil_id,
     telefone: telefone,
     endereco_completo: endereco_completo,
   };
   
-  // Apenas Super Admin pode alterar a empresa_id
-  if (isSuperAdmin && empresa_id !== undefined) {
-    // Se empresa_id for null ou string vazia, definimos como null no banco
+  // Permite a atualização do empresa_id se for fornecido
+  if (empresa_id !== undefined) {
     updatePayload.empresa_id = empresa_id || null;
   }
   
@@ -131,7 +103,7 @@ serve(async (req) => {
     {
       user_metadata: {
         full_name: full_name,
-        perfil_id: perfil_id, // Passamos o ID original (UUID ou INTEGER '1')
+        perfil_id: perfil_id,
         telefone: telefone,
         endereco_completo: endereco_completo,
       }

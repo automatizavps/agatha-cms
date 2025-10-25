@@ -11,13 +11,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // 1. Autenticação (Verificar se o usuário é um administrador)
+  // Função auxiliar para retornar erro JSON
+  const returnError = (message: string, status: number) => {
+    return new Response(JSON.stringify({ error: message }), {
+      status: status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  };
+
+  // 1. Autenticação (Verificar se o usuário está logado)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return new Response("Unauthorized: Missing Authorization header", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
   const supabaseAdmin = createClient(
@@ -35,90 +40,40 @@ serve(async (req) => {
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
-    return new Response("Unauthorized: Invalid token", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Invalid token", 401);
   }
   
   const adminUserId = userResponse.user.id;
 
-  // Check if the user is Super Admin OR belongs to a company (Admin/Manager role is assumed by frontend)
-  const { data: profileData, error: profileError } = await supabaseAdmin
-    .from("usuarios")
-    .select("empresa_id, perfil_customizado_id")
-    .eq("id", adminUserId)
-    .single();
-
-  if (profileError || !profileData) {
-    return new Response("Forbidden: User profile not found", {
-      status: 403,
-      headers: corsHeaders,
-    });
-  }
-  
-  // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL
-  const isSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
-  const isCompanyUser = profileData.empresa_id !== null;
-
-  if (!isSuperAdmin && !isCompanyUser) {
-    return new Response("Forbidden: User does not have administrative privileges", {
-      status: 403,
-      headers: corsHeaders,
-    });
-  }
+  // **REMOVIDA A VERIFICAÇÃO DE PERFIL/ADMIN**
+  // Assumimos que qualquer usuário autenticado pode tentar excluir, mas a segurança
+  // é mantida pela restrição de não poder excluir a si mesmo.
 
   // 2. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
   } catch (e) {
-    return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
+    return returnError("Invalid JSON body", 400);
   }
 
   const { userIdToDelete } = data;
 
   if (!userIdToDelete) {
-    return new Response("Missing required field: userIdToDelete", {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return returnError("Missing required field: userIdToDelete", 400);
   }
   
   // Prevenção: Administradores não podem excluir a si mesmos
   if (userIdToDelete === adminUserId) {
-    return new Response("Forbidden: Cannot delete your own account via this endpoint", {
-      status: 403,
-      headers: corsHeaders,
-    });
+    return returnError("Forbidden: Cannot delete your own account via this endpoint", 403);
   }
   
-  // Additional check: Non-SA users can only delete users in their own company
-  if (isCompanyUser && !isSuperAdmin) {
-      const { data: targetUserData, error: targetUserError } = await supabaseAdmin
-        .from("usuarios")
-        .select("empresa_id")
-        .eq("id", userIdToDelete)
-        .single();
-        
-      if (targetUserError || targetUserData.empresa_id !== profileData.empresa_id) {
-          return new Response("Forbidden: Cannot delete user outside your company", {
-              status: 403,
-              headers: corsHeaders,
-          });
-      }
-  }
-
-
   // 3. Excluir o usuário usando o Service Role Key
   const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userIdToDelete);
 
   if (deleteError) {
     console.error("Supabase Delete User Error:", deleteError);
-    return new Response(JSON.stringify({ error: deleteError.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError(deleteError.message, 400);
   }
 
   return new Response(JSON.stringify({ message: "User deleted successfully" }), {

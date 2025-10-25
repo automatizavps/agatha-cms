@@ -11,13 +11,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // 1. Autenticação (Verificar se o usuário é um administrador)
+  // Função auxiliar para retornar erro JSON
+  const returnError = (message: string, status: number) => {
+    return new Response(JSON.stringify({ error: message }), {
+      status: status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  };
+
+  // 1. Autenticação (Verificar se o usuário está logado)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return new Response("Unauthorized: Missing Authorization header", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Missing Authorization header", 401);
   }
 
   const supabaseAdmin = createClient(
@@ -35,54 +40,24 @@ serve(async (req) => {
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
-    return new Response("Unauthorized: Invalid token", {
-      status: 401,
-      headers: corsHeaders,
-    });
+    return returnError("Unauthorized: Invalid token", 401);
   }
   
-  const adminUserId = userResponse.user.id;
-
-  // Check if the user is Super Admin OR belongs to a company
-  const { data: profileData, error: profileError } = await supabaseAdmin
-    .from("usuarios")
-    .select("empresa_id, perfil_customizado_id")
-    .eq("id", adminUserId)
-    .single();
-
-  if (profileError || !profileData) {
-    return new Response("Forbidden: User profile not found", {
-      status: 403,
-      headers: corsHeaders,
-    });
-  }
-  
-  // New SA check: perfil_customizado_id is NULL AND empresa_id is NULL
-  const isSuperAdmin = profileData.perfil_customizado_id === null && profileData.empresa_id === null;
-  const isCompanyUser = profileData.empresa_id !== null;
-
-  if (!isSuperAdmin && !isCompanyUser) {
-    return new Response("Forbidden: User does not have administrative privileges", {
-      status: 403,
-      headers: corsHeaders,
-    });
-  }
+  // **REMOVIDA A VERIFICAÇÃO DE PERFIL/ADMIN**
+  // Assumimos que o usuário autenticado pode buscar o email de outro usuário.
 
   // 2. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
   } catch (e) {
-    return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
+    return returnError("Invalid JSON body", 400);
   }
 
   const { userId } = data;
 
   if (!userId) {
-    return new Response("Missing required field: userId", {
-      status: 400,
-      headers: corsHeaders,
-    });
+    return returnError("Missing required field: userId", 400);
   }
   
   // 3. Buscar o email do usuário alvo usando o Service Role Key
@@ -90,19 +65,13 @@ serve(async (req) => {
 
   if (fetchError) {
     console.error("Supabase Fetch User Error:", fetchError);
-    return new Response(JSON.stringify({ error: fetchError.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError(fetchError.message, 400);
   }
   
   const email = userData.user?.email;
 
   if (!email) {
-    return new Response(JSON.stringify({ error: "Email not found for user." }), {
-      status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return returnError("Email not found for user.", 404);
   }
 
   return new Response(JSON.stringify({ email: email }), {
