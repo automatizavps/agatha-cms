@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import React, { useState, useEffect } from "react";
-import { useCanRead } from "@/hooks/use-module-permission";
+// import { useCanRead } from "@/hooks/use-module-permission"; // REMOVIDO
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -234,26 +234,12 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
-  const { data: profile, isLoading } = useCurrentUserProfile();
   const { t } = useTranslation();
   
-  // Permissões baseadas no novo hook - MANTIDAS, MAS IGNORADAS ABAIXO
-  const canReadAnalytics = useCanRead('analytics');
-  const canReadOrders = useCanRead('orders');
-  const canReadAppointments = useCanRead('appointments');
-  const canReadClients = useCanRead('clients');
-  const canReadProducts = useCanRead('products');
-  const canReadServices = useCanRead('services');
-  const canReadCategories = useCanRead('categories');
-  const canReadUsers = useCanRead('users'); 
-  const canReadTeams = useCanRead('teams');
-  const canReadCompanies = useCanRead('companies');
-  const canReadNotifications = useCanRead('notifications');
-  const canReadCustomProfiles = useCanRead('custom_profiles'); 
-
+  // Permissões removidas. Todos os itens são exibidos.
   const navItemProps = { isCollapsed, onClick: onNavigate };
   
-  // FORÇANDO A EXIBIÇÃO DE TODOS OS GRUPOS PARA TESTE
+  // Todos os grupos são exibidos
   const showProductsServicesGroup = true;
   const showCompaniesGroup = true;
 
@@ -282,15 +268,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         )}
         <NavItem to="/" icon={<Home className="h-5 w-5" />} label={t('nav_home')} {...navItemProps} />
         
-        {/* FORÇANDO A EXIBIÇÃO */}
-        {true && (
-          <NavItem
-            to="/analytics"
-            icon={<BarChart3 className="h-5 w-5" />}
-            label={t('nav_analytics')}
-            {...navItemProps}
-          />
-        )}
+        {/* Analytics */}
+        <NavItem
+          to="/analytics"
+          icon={<BarChart3 className="h-5 w-5" />}
+          label={t('nav_analytics')}
+          {...navItemProps}
+        />
         
         <Separator className={cn("my-2 bg-sidebar-border", isCollapsed && "mx-auto w-1/2")} />
 
@@ -299,45 +283,37 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_operational')}</div>
         )}
         
-        {/* FORÇANDO A EXIBIÇÃO */}
-        {true && (
-          <NavItem
-            to="/notifications"
-            icon={<Bell className="h-5 w-5" />}
-            label={t('page_title_notifications')}
-            {...navItemProps}
-          />
-        )}
+        {/* Notificações */}
+        <NavItem
+          to="/notifications"
+          icon={<Bell className="h-5 w-5" />}
+          label={t('page_title_notifications')}
+          {...navItemProps}
+        />
         
-        {/* FORÇANDO A EXIBIÇÃO */}
-        {true && (
-          <NavItem
-            to="/orders"
-            icon={<ShoppingCart className="h-5 w-5" />}
-            label={t('nav_orders')}
-            {...navItemProps}
-          />
-        )}
+        {/* Pedidos */}
+        <NavItem
+          to="/orders"
+          icon={<ShoppingCart className="h-5 w-5" />}
+          label={t('nav_orders')}
+          {...navItemProps}
+        />
         
-        {/* FORÇANDO A EXIBIÇÃO */}
-        {true && (
-          <NavItem
-            to="/appointments"
-            icon={<Calendar className="h-5 w-5" />}
-            label={t('nav_appointments')}
-            {...navItemProps}
-          />
-        )}
+        {/* Agendamentos */}
+        <NavItem
+          to="/appointments"
+          icon={<Calendar className="h-5 w-5" />}
+          label={t('nav_appointments')}
+          {...navItemProps}
+        />
 
-        {/* FORÇANDO A EXIBIÇÃO */}
-        {true && (
-          <NavItem
-            to="/clients"
-            icon={<Briefcase className="h-5 w-5" />}
-            label={t('nav_clients')}
-            {...navItemProps}
-          />
-        )}
+        {/* Clientes */}
+        <NavItem
+          to="/clients"
+          icon={<Briefcase className="h-5 w-5" />}
+          label={t('nav_clients')}
+          {...navItemProps}
+        />
 
         {showProductsServicesGroup && (
           <SidebarGroup
@@ -348,58 +324,48 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             basePath="/products"
             additionalActivePaths={['/services']}
           >
-            {true && (
-              <NavItem
-                to="/products"
-                icon={<Package className="h-5 w-5" />}
-                label={t('nav_products')}
-                isSubItem
-                isCollapsed={false}
-                onClick={onNavigate}
-              />
-            )}
-            {true && (
-              <NavItem
-                to="/services"
-                icon={<Clock className="h-5 w-5" />}
-                label={t('nav_services')}
-                isSubItem
-                isCollapsed={false}
-                onClick={onNavigate}
-              />
-            )}
-            {true && (
-              <NavItem
-                to="/products/categories"
-                icon={<Tag className="h-5 w-5" />}
-                label={t('page_title_categories')}
-                isSubItem
-                isCollapsed={false}
-                onClick={onNavigate}
-              />
-            )}
+            <NavItem
+              to="/products"
+              icon={<Package className="h-5 w-5" />}
+              label={t('nav_products')}
+              isSubItem
+              isCollapsed={false}
+              onClick={onNavigate}
+            />
+            <NavItem
+              to="/services"
+              icon={<Clock className="h-5 w-5" />}
+              label={t('nav_services')}
+              isSubItem
+              isCollapsed={false}
+              onClick={onNavigate}
+            />
+            <NavItem
+              to="/products/categories"
+              icon={<Tag className="h-5 w-5" />}
+              label={t('page_title_categories')}
+              isSubItem
+              isCollapsed={false}
+              onClick={onNavigate}
+            />
           </SidebarGroup>
         )}
         
-        {/* RE-ADICIONADO E FORÇANDO A EXIBIÇÃO */}
-        {true && (
-          <NavItem
-            to="/users"
-            icon={<Users className="h-5 w-5" />}
-            label={t('nav_users')}
-            {...navItemProps}
-          />
-        )}
+        {/* Usuários */}
+        <NavItem
+          to="/users"
+          icon={<Users className="h-5 w-5" />}
+          label={t('nav_users')}
+          {...navItemProps}
+        />
         
-        {/* FORÇANDO A EXIBIÇÃO */}
-        {true && (
-          <NavItem
-            to="/teams"
-            icon={<Target className="h-5 w-5" />}
-            label={t('nav_teams')}
-            {...navItemProps}
-          />
-        )}
+        {/* Equipes */}
+        <NavItem
+          to="/teams"
+          icon={<Target className="h-5 w-5" />}
+          label={t('nav_teams')}
+          {...navItemProps}
+        />
         
         {showCompaniesGroup && (
           <SidebarGroup
@@ -409,26 +375,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             onNavigate={onNavigate}
             basePath="/companies"
           >
-            {true && (
-              <NavItem
-                to="/companies"
-                icon={<Building className="h-5 w-5" />}
-                label={t('company_list_title')}
-                isSubItem
-                isCollapsed={false}
-                onClick={onNavigate}
-              />
-            )}
-            {true && (
-              <NavItem
-                to="/companies/profiles"
-                icon={<UserCheck className="h-5 w-5" />}
-                label={t('page_title_custom_profiles')}
-                isSubItem
-                isCollapsed={false}
-                onClick={onNavigate}
-              />
-            )}
+            <NavItem
+              to="/companies"
+              icon={<Building className="h-5 w-5" />}
+              label={t('company_list_title')}
+              isSubItem
+              isCollapsed={false}
+              onClick={onNavigate}
+            />
+            <NavItem
+              to="/companies/profiles"
+              icon={<UserCheck className="h-5 w-5" />}
+              label={t('page_title_custom_profiles')}
+              isSubItem
+              isCollapsed={false}
+              onClick={onNavigate}
+            />
           </SidebarGroup>
         )}
         
