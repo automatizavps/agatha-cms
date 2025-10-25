@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTranslation } from "react-i18next";
 import { useCustomProfiles } from "@/integrations/supabase/customProfiles";
 import { UserProfile } from "@/integrations/supabase/users";
+import { useMemo } from "react"; // Importando useMemo
 
 // Definimos o esquema base
 const baseFormSchema = z.object({
@@ -61,24 +62,27 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.is_super_admin;
-  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
-  
-  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
-  const companyIdForProfiles = isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id;
-  const isCompanySelected = !!companyIdForProfiles;
-  
-  // Carrega perfis customizados filtrados pela empresa selecionada
-  const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(companyIdForProfiles || undefined);
   
   // Ajusta o schema dinamicamente: email é opcional na edição, empresa_id é obrigatório na CRIAÇÃO para SA
-  const formSchema = baseFormSchema.extend({
-    email: isEditing ? baseFormSchema.shape.email.optional() : baseFormSchema.shape.email,
-    empresa_id: isSuperAdmin && !isEditing
-      ? z.string().uuid({
+  const formSchema = useMemo(() => {
+    let schema = baseFormSchema;
+    
+    if (isEditing) {
+      schema = schema.extend({
+        email: baseFormSchema.shape.email.optional(),
+      });
+    }
+    
+    if (isSuperAdmin && !isEditing) {
+      schema = schema.extend({
+        empresa_id: z.string().uuid({
           message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") })
-      : baseFormSchema.shape.empresa_id,
-  });
+        }).min(1, { message: t("company_required_super_admin") }),
+      });
+    }
+    return schema;
+  }, [isEditing, isSuperAdmin, t]);
+
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(formSchema),
@@ -92,6 +96,21 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     },
   });
   
+  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
+  // Deve ser chamado após useForm
+  const watchedEmpresaId = form.watch('empresa_id');
+  
+  const selectedCompanyId = isEditing 
+    ? defaultValues?.empresa_id 
+    : (isSuperAdmin ? watchedEmpresaId : profile?.empresa_id);
+    
+  const isCompanySelected = !!selectedCompanyId;
+  
+  // Carrega perfis customizados filtrados pela empresa selecionada
+  const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(selectedCompanyId || undefined);
+  
+  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+
   // Opções de perfil disponíveis
   const profileOptions = useMemo(() => {
     if (!customProfiles) return [];
@@ -111,11 +130,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     return options;
   }, [customProfiles, isSuperAdmin, isCompanySelected]);
   
-  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
-  const selectedCompanyId = isEditing 
-    ? defaultValues?.empresa_id 
-    : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
-    
+  
   const companyName = companies?.find(c => c.id === selectedCompanyId)?.nome;
   
   // Determina se o campo empresa deve ser exibido
