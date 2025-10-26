@@ -74,33 +74,27 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   
   if (isEditing) {
     finalFormSchema = finalFormSchema.extend({
-      // Email é opcional na edição
-      email: z.string().optional(),
-      // Na edição, se for Super Admin, empresa_id é opcional (pode ser null)
-      empresa_id: isSuperAdmin 
-        ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
-        : z.string().optional().nullable(),
+      // Email é opcional na edição (usamos .optional() para permitir que seja omitido, mas mantemos o tipo string)
+      email: z.string().email({ message: "Insira um email válido." }).optional(),
+      // Na edição, empresa_id pode ser null ou um UUID
+      empresa_id: z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable(),
       // Na edição, o perfil pode ser '1' (antigo SA) ou um UUID
       perfil_id: z.string().min(1, { message: t("select_profile") }),
     });
   } else if (isSuperAdmin) {
-    // Na criação, Super Admin deve selecionar a empresa
+    // Na criação, Super Admin deve selecionar a empresa (não pode ser nulo na validação, mas pode ser string vazia no formulário)
     finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }).nullable(), // Deve ser nullable para o defaultValues
+        }).min(1, { message: t("company_required_super_admin") }).nullable(),
       });
   } else {
-    // Se não for Super Admin, o convite não deveria ser possível
-    // Mas se for Admin de Empresa, ele pode convidar, mas a empresa_id é fixa.
-    // Como o UserForm é usado apenas pelo AddUserSheet (que verifica canWriteUsers),
-    // e canWriteUsers é true apenas para SA e Admin, e Admin não precisa selecionar empresa,
-    // esta lógica é simplificada.
+    // Para Admin de Empresa, o email é obrigatório na criação
   }
 
 
   const form = useForm<UserFormValues>({
-    resolver: zodResolver(finalFormSchema),
+    resolver: zodResolver(finalFormSchema as any), // Usando 'as any' para contornar a complexidade do Zod extend
     defaultValues: {
       full_name: defaultValues?.full_name || "",
       email: defaultValues?.email || "", 
@@ -180,7 +174,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
 
     onSubmit({
       full_name: values.full_name,
-      email: values.email,
+      email: values.email || "", // Email é opcional na edição, mas o onSubmit espera string
       perfil_id: values.perfil_id, // Passa o UUID ou '1'
       telefone: telefone,
       endereco_completo: endereco_completo,
