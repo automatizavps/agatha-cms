@@ -99,7 +99,7 @@ const LatestAppointmentsCarousel: React.FC<LatestAppointmentsCarouselProps> = ({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between p-4 pb-0"> {/* ALTERADO: p-4 pb-0 */}
         <CardTitle className="text-lg flex items-center gap-2">
           <CalendarCheck className="h-5 w-5" /> {t('latest_appointments_title')}
         </CardTitle>
