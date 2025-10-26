@@ -12,7 +12,13 @@ const fetchLatestOrders = async (companyId: string | undefined): Promise<Order[]
       valor_total,
       status,
       created_at,
-      clientes (nome)
+      clientes (nome),
+      pedido_itens (
+        id,
+        produto_id,
+        quantidade,
+        produtos (nome)
+      )
     `);
     
   if (companyId) {

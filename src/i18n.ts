@@ -30,6 +30,7 @@ const resources = {
       "cancel": "Cancelar",
       "delete_confirm": "Sim, Excluir",
       "optional": "Opcional", // NOVO
+      "items": "itens", // NOVO
 
       // Navegação
       "nav_home": "Home",

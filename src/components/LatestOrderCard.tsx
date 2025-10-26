@@ -1,7 +1,7 @@
 import React from 'react';
 import { Order } from '@/integrations/supabase/orders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building } from 'lucide-react';
+import { User, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building, Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -38,6 +38,11 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
       currency: 'BRL',
     }).format(value);
   };
+  
+  // Lógica para exibir os itens
+  const items = order.pedido_itens || [];
+  const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
+  const otherItemsCount = items.length > 1 ? items.length - 1 : 0;
 
   return (
     <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
@@ -52,9 +57,20 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-2 text-sm flex-1">
         
-        {/* Valor Total (Sem ícone DollarSign) */}
+        {/* Valor Total */}
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="text-sm font-medium text-primary">{formatCurrency(order.valor_total)}</span>
+        </div>
+        
+        {/* Item Principal */}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Package className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm truncate font-medium text-foreground">
+            {mainItemName}
+            {otherItemsCount > 0 && (
+              <span className="text-xs text-muted-foreground ml-1"> (+{otherItemsCount} {t('items')})</span>
+            )}
+          </span>
         </div>
         
         {/* Data do Pedido */}
