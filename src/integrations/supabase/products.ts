@@ -41,7 +41,11 @@ const fetchAllProducts = async (): Promise<Product[]> => {
     throw new Error("Failed to fetch products");
   }
 
-  return data as Product[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(product => ({
+    ...product,
+    empresa: Array.isArray(product.empresa) ? product.empresa[0] : product.empresa,
+  })) as Product[];
 };
 
 export const useProducts = () => {
@@ -65,7 +69,11 @@ const fetchProductsOnly = async (): Promise<Product[]> => {
     throw new Error("Failed to fetch products");
   }
 
-  return data as Product[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(product => ({
+    ...product,
+    empresa: Array.isArray(product.empresa) ? product.empresa[0] : product.empresa,
+  })) as Product[];
 };
 
 export const useProductsOnly = () => {
@@ -89,7 +97,11 @@ const fetchServicesOnly = async (): Promise<Product[]> => {
     throw new Error("Failed to fetch services");
   }
 
-  return data as Product[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(product => ({
+    ...product,
+    empresa: Array.isArray(product.empresa) ? product.empresa[0] : product.empresa,
+  })) as Product[];
 };
 
 export const useServicesOnly = () => {
@@ -120,7 +132,11 @@ const fetchLatestProductsOnly = async (companyId: string | undefined): Promise<P
     throw new Error("Failed to fetch latest products");
   }
 
-  return data as Product[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(product => ({
+    ...product,
+    empresa: Array.isArray(product.empresa) ? product.empresa[0] : product.empresa,
+  })) as Product[];
 };
 
 export const useLatestProductsOnly = (companyId: string | undefined) => {
@@ -145,7 +161,13 @@ const fetchProductById = async (productId: string): Promise<Product | null> => {
     throw new Error("Failed to fetch product details");
   }
 
-  return data as Product;
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  const product = data as any;
+  
+  return {
+    ...product,
+    empresa: Array.isArray(product.empresa) ? product.empresa[0] : product.empresa,
+  } as Product;
 };
 
 export const useProductById = (productId: string) => {

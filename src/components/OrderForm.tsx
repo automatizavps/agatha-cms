@@ -29,7 +29,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
 
-const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
+const statusOptions: [OrderStatus, ...OrderStatus[]] = ['pendente_entrega', 'entregue', 'cancelado'];
 
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
@@ -87,7 +87,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     : baseFormSchema;
 
   const form = useForm<OrderFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema as any), // Usando 'as any' para contornar a complexidade do Zod extend
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
       items: defaultValues?.items || [],
@@ -172,7 +172,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         quantidade: item.quantidade,
         preco_unitario: item.preco_unitario,
       })),
-      status: values.status,
+      status: values.status as OrderStatus, // CORREÇÃO: Forçando o tipo
       empresa_id: empresa_id,
     });
   };

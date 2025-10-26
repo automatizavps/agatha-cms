@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { createNotification } from "./notifications"; // Importando createNotification
 import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
@@ -73,7 +73,11 @@ const fetchCustomProfiles = async (companyId?: string): Promise<CustomProfile[]>
     throw new Error("Failed to fetch custom profiles");
   }
 
-  return data as CustomProfile[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(profile => ({
+    ...profile,
+    empresas: Array.isArray(profile.empresas) ? profile.empresas[0] : profile.empresas,
+  })) as CustomProfile[];
 };
 
 export const useCustomProfiles = (companyId?: string) => {
@@ -100,7 +104,11 @@ const fetchProfilePermissions = async (profileId: string): Promise<Permission[]>
     throw new Error("Failed to fetch profile permissions");
   }
 
-  return data as Permission[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map((permission: any) => ({
+    ...permission,
+    modulos: Array.isArray(permission.modulos) ? permission.modulos[0] : permission.modulos,
+  })) as Permission[];
 };
 
 export const useProfilePermissions = (profileId: string) => {
@@ -124,7 +132,7 @@ export const createCustomProfile = async ({ empresa_id, nome, permissions }: Cre
   const { data: profileData, error: profileError } = await supabase
     .from("perfis_customizados")
     .insert({ empresa_id, nome })
-    .select("id")
+    .select("id, nome") // Seleciona o nome para o onSuccess
     .single();
 
   if (profileError || !profileData) {
@@ -164,14 +172,16 @@ interface UpdateProfileParams {
 
 export const updateCustomProfile = async ({ id, nome, permissions }: UpdateProfileParams) => {
   // 1. Atualizar o nome do perfil
-  const { error: profileError } = await supabase
+  const { data: profileData, error: profileError } = await supabase
     .from("perfis_customizados")
     .update({ nome })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id, nome")
+    .single();
 
-  if (profileError) {
+  if (profileError || !profileData) {
     console.error("Error updating custom profile:", profileError);
-    throw new Error(profileError.message);
+    throw new Error(profileError?.message || "Falha ao atualizar perfil customizado.");
   }
 
   // 2. Deletar permissões antigas
@@ -201,7 +211,7 @@ export const updateCustomProfile = async ({ id, nome, permissions }: UpdateProfi
     throw new Error("Falha ao inserir novas permissões: " + insertError.message);
   }
 
-  return { id, nome };
+  return profileData;
 };
 
 // --- Delete Profile ---

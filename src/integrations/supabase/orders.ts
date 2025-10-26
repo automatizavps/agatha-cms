@@ -28,6 +28,8 @@ export interface Order {
   clientes: {
     nome: string;
     email: string | null;
+    telefone: string | null; // Adicionado
+    endereco_completo: string | null; // Adicionado
   } | null;
   
   // Itens do pedido (carregados separadamente ou via join)
@@ -52,7 +54,7 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
       valor_total,
       status,
       created_at,
-      clientes (nome, email)
+      clientes (nome, email, telefone, endereco_completo)
     `);
     
   // 1. Filtrar por Empresa
@@ -78,7 +80,12 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
     throw new Error("Failed to fetch orders");
   }
 
-  return data as Order[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(order => ({
+    ...order,
+    clientes: Array.isArray(order.clientes) ? order.clientes[0] : order.clientes,
+    pedido_itens: [], // Inicializa vazio, pois não estamos buscando aqui
+  })) as Order[];
 };
 
 export const useOrders = (companyId?: string, filters: OrderFilters = {}) => {
@@ -108,7 +115,11 @@ const fetchOrderItems = async (orderId: string): Promise<OrderItem[]> => {
     throw new Error("Failed to fetch order items");
   }
 
-  return data as OrderItem[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map((item: any) => ({
+    ...item,
+    produtos: Array.isArray(item.produtos) ? item.produtos[0] : item.produtos,
+  })) as OrderItem[];
 };
 
 export const useOrderItems = (orderId: string) => {

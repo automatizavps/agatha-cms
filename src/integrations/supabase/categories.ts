@@ -31,7 +31,11 @@ const fetchCategories = async (companyId?: string): Promise<Category[]> => {
     throw new Error("Failed to fetch categories");
   }
 
-  return data as Category[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(category => ({
+    ...category,
+    empresas: Array.isArray(category.empresas) ? category.empresas[0] : category.empresas,
+  })) as Category[];
 };
 
 export const useCategories = (companyId?: string) => {
@@ -105,7 +109,7 @@ export const createCategory = async ({ nome, empresa_id: provided_empresa_id }: 
       empresa_id: empresa_id,
       nome: nome,
     })
-    .select()
+    .select("id, nome") // Seleciona o nome para o onSuccess
     .single();
 
   if (error) {

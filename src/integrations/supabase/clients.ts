@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { useCurrentUserProfile } from "./user-profile"; // Importando para verificar o perfil
 import { createNotification } from "./notifications"; // Importando createNotification
@@ -29,7 +29,11 @@ const fetchClients = async (): Promise<Client[]> => {
     throw new Error("Failed to fetch clients");
   }
 
-  return data as Client[];
+  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
+  return data.map(client => ({
+    ...client,
+    empresa: Array.isArray(client.empresa) ? client.empresa[0] : client.empresa,
+  })) as Client[];
 };
 
 export const useClients = () => {
@@ -126,7 +130,7 @@ export const updateClient = async ({ id, nome, email, telefone, endereco_complet
 
 // --- Delete ---
 
-export const deleteClient = async (id: string, clientName: string, companyId: string, queryClient: useQueryClient) => {
+export const deleteClient = async (id: string, clientName: string, companyId: string, queryClient: QueryClient) => {
   const { error } = await supabase
     .from("clientes")
     .delete()
@@ -152,7 +156,7 @@ export const deleteClient = async (id: string, clientName: string, companyId: st
 };
 
 // --- Bulk Delete ---
-export const deleteClients = async (clientIds: string[], clientNames: string[], companyId: string, queryClient: useQueryClient) => {
+export const deleteClients = async (clientIds: string[], clientNames: string[], companyId: string, queryClient: QueryClient) => {
   const { error } = await supabase
     .from("clientes")
     .delete()

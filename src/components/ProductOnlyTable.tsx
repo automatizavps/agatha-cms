@@ -141,7 +141,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  const isSuperAdmin = profile?.is_super_admin;
 
   const handleEdit = (product: Product) => {
     if (onEditProp) {

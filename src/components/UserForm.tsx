@@ -34,11 +34,12 @@ const baseFormSchema = z.object({
   email: z.string().email({
     message: "Insira um email válido.",
   }),
-  perfil_id: z.string().min(1, { // Agora é o UUID
+  perfil_id: z.string().min(1, { // Agora é o UUID ou '1'
     message: "Selecione um perfil.",
   }),
   telefone: z.string().optional().nullable(),
   endereco_completo: z.string().optional().nullable(),
+  // empresa_id é opcional no base, mas será estendido para ser obrigatório na criação para SA
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional().nullable(),
@@ -73,6 +74,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   
   if (isEditing) {
     finalFormSchema = finalFormSchema.extend({
+      // Email é opcional na edição
       email: z.string().optional(),
       // Na edição, se for Super Admin, empresa_id é opcional (pode ser null)
       empresa_id: isSuperAdmin 
@@ -86,11 +88,14 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
+        }).min(1, { message: t("company_required_super_admin") }).nullable(), // Deve ser nullable para o defaultValues
       });
   } else {
     // Se não for Super Admin, o convite não deveria ser possível
-    return <p className="text-destructive">{t("only_super_admin_can_invite")}</p>;
+    // Mas se for Admin de Empresa, ele pode convidar, mas a empresa_id é fixa.
+    // Como o UserForm é usado apenas pelo AddUserSheet (que verifica canWriteUsers),
+    // e canWriteUsers é true apenas para SA e Admin, e Admin não precisa selecionar empresa,
+    // esta lógica é simplificada.
   }
 
 
@@ -129,12 +134,17 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
       combined.push(...mappedCustomProfiles);
     }
     
-    // 2. Na edição, se o perfil atual for o antigo SA ('1') ou um perfil customizado que não está na lista,
+    // 2. Adicionar perfil Super Admin (ID '1') se for Super Admin logado
+    if (isSuperAdmin) {
+        combined.push({ id: '1', nome: 'Super Admin' });
+    }
+    
+    // 3. Na edição, se o perfil atual for o antigo SA ('1') ou um perfil customizado que não está na lista,
     // precisamos garantir que ele apareça.
     if (isEditing && defaultValues?.perfil_id) {
         const currentProfileId = String(defaultValues.perfil_id);
         
-        // Caso 1: Antigo Super Admin (ID '1')
+        // Caso 1: Antigo Super Admin (ID '1') - Já adicionado se for SA logado, mas garantimos se for edição
         if (currentProfileId === '1' && !combined.some(p => p.id === '1')) {
             combined.push({ id: '1', nome: 'Super Admin (Antigo)' });
         }
@@ -150,7 +160,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     }
     
     return combined;
-  }, [customProfiles, selectedCompanyId, isEditing, defaultValues, t]);
+  }, [customProfiles, selectedCompanyId, isEditing, defaultValues, isSuperAdmin, t]);
 
 
   const handleSubmit = (values: UserFormValues) => {
@@ -162,11 +172,9 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
-      // Na criação, values.empresa_id é garantido ser uma string UUID
       empresa_id = values.empresa_id || null;
     } else {
-      // Se não for Super Admin, o convite não deveria ser possível, mas se for edição,
-      // o empresa_id é o do usuário logado (que não é usado na mutação de edição, mas é bom ter).
+      // Se não for Super Admin, o empresa_id é o do usuário logado (fixo)
       empresa_id = currentProfile?.empresa_id || null;
     }
 

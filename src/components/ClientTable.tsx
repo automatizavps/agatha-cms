@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditClientSheet from "./EditClientSheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
@@ -51,7 +51,7 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit, canWrite 
   }
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteClient(client.id, client.nome, client.empresa_id, queryClient),
+    mutationFn: () => deleteClient(client.id, client.nome, client.empresa_id, queryClient as QueryClient),
     onSuccess: () => {
       showSuccess(`Cliente ${client.nome} excluído com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ["clients"] });
@@ -128,7 +128,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  const isSuperAdmin = profile?.is_super_admin;
   const canWriteClients = useCanWrite('clients'); // Obtendo a permissão
   
   // Mutação para exclusão em massa (redefinida aqui para usar o queryClient)
@@ -140,7 +140,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
       const clientNames = selectedClients.map(c => c.nome);
       const companyId = profile?.empresa_id || selectedClients[0]?.empresa_id || ''; // Usa o ID da empresa do primeiro cliente ou do perfil
       
-      return deleteClients(ids, clientNames, companyId, queryClient);
+      return deleteClients(ids, clientNames, companyId, queryClient as QueryClient);
     },
     onSuccess: () => {
       showSuccess(t('clients_deleted_success', { count: selectedIds.size }));
@@ -154,7 +154,6 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
   
   // Função de exclusão em massa (chamada na página Clients.tsx)
   // NOTA: A função handleBulkDelete foi movida para Clients.tsx, mas a mutação precisa ser acessível lá.
-  // Como não podemos passar a mutação diretamente, vamos garantir que a página Clients.tsx tenha acesso à lógica de exclusão em massa.
   // Por enquanto, removemos a lógica de exclusão em massa daqui, pois ela deve estar na página pai.
 
   const handleEdit = (client: Client) => {

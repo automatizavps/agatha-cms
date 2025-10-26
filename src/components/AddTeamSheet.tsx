@@ -4,18 +4,26 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import TeamForm from "./TeamForm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTeam, updateTeamMembers } from "@/integrations/supabase/teams";
+import { createTeam, updateTeamMembers, CreateTeamParams } from "@/integrations/supabase/teams";
 import { showSuccess, showError } from "@/utils/toast";
 import { useTranslation } from "react-i18next";
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const AddTeamSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
+  // Permissão de escrita para o módulo 'teams'
+  const canWriteTeams = useCanWrite('teams');
+  
+  if (!canWriteTeams) {
+    return null;
+  }
+
   const createTeamMutation = useMutation({
     mutationFn: createTeam,
-    onSuccess: async (newTeam, variables) => {
+    onSuccess: async (newTeam, variables: CreateTeamParams & { member_ids: string[] }) => { // CORREÇÃO: Tipando 'variables'
       // 2. Atualizar membros após a criação da equipe
       if (variables.member_ids && variables.member_ids.length > 0) {
         try {
