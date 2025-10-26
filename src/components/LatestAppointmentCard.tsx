@@ -1,11 +1,12 @@
 import React from 'react';
 import { Appointment } from '@/integrations/supabase/appointments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Clock, Calendar, CheckCircle, XCircle, AlertTriangle, Building } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, AlertTriangle, Building } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Importando Avatar
 
 interface LatestAppointmentCardProps {
   appointment: Appointment;
@@ -34,6 +35,10 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
   const appointmentDate = new Date(appointment.data_hora);
   const formattedDate = format(appointmentDate, 'dd/MM/yyyy', { locale: ptBR });
   const formattedTime = format(appointmentDate, 'HH:mm');
+  
+  const responsibleName = appointment.responsavel?.nome_completo || t('responsible');
+  const responsibleAvatarUrl = appointment.responsavel?.avatar_url;
+  const initials = responsibleName.slice(0, 2).toUpperCase();
 
   return (
     <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
@@ -56,10 +61,13 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
           <span className="text-sm font-medium">{formattedTime}</span>
         </div>
         
-        {/* Responsável */}
+        {/* Responsável (Agora com Avatar) */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          <User className="h-4 w-4 flex-shrink-0" />
-          <span className="text-sm truncate">{appointment.responsavel?.nome_completo || t('responsible')}</span>
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={responsibleAvatarUrl || undefined} alt={responsibleName} />
+            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          </Avatar>
+          <span className="text-sm truncate">{responsibleName}</span>
         </div>
         
         {/* Empresa (Apenas se for Super Admin ou se precisar mostrar) */}

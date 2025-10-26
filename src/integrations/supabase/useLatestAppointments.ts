@@ -13,7 +13,7 @@ const fetchLatestAppointments = async (companyId: string | undefined): Promise<A
       status,
       responsavel_id,
       created_at,
-      responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
+      responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo, avatar_url),
       clientes (nome),
       empresas (nome)
     `);
