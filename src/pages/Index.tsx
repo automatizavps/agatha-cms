@@ -132,26 +132,28 @@ const Index = () => {
           </div>
         )}
         
-        {/* Seção 0: Últimos Agendamentos (NOVA POSIÇÃO) */}
+        {/* NOVO: Card de Faturamento Diário (Primeira Posição) */}
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20 col-span-1")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
+              <DollarSign className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
+              <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos hoje</p>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Seção 0: Últimos Agendamentos */}
         <LatestAppointmentsCarousel companyId={filteredCompanyId} />
         
-        {/* Seção 1: Métricas de Agendamento e Faturamento */}
+        {/* Seção 1: Métricas de Agendamento e Faturamento (Restantes) */}
         <div className="flex flex-col gap-4">
           
-          {/* Linha 1: 4 Colunas (Faturamento) */}
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            
-            {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
-            <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
-                <DollarSign className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                {renderMetricValue(revenueMetrics?.daily_revenue || 0, true)}
-                <p className="text-xs text-muted-foreground">Pedidos e Serviços concluídos hoje</p>
-              </CardContent>
-            </Card>
+          {/* Linha 1: 3 Colunas (Faturamento Semanal, Mensal, Total Agendamentos) */}
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
             
             {/* Card 2: Faturamento Semanal */}
             <Card>
@@ -231,7 +233,7 @@ const Index = () => {
           </div>
         </div>
         
-        {/* NOVO: Seção 1.5: Últimos Pedidos (NOVA POSIÇÃO) */}
+        {/* Seção 1.5: Últimos Pedidos */}
         <LatestOrdersCarousel companyId={filteredCompanyId} />
         
         {/* Seção 2: Metas das Equipes */}
