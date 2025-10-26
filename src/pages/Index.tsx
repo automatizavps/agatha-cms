@@ -132,8 +132,8 @@ const Index = () => {
           </div>
         )}
         
-        {/* Seção 0: Últimos Pedidos (NOVA POSIÇÃO) */}
-        <LatestOrdersCarousel companyId={filteredCompanyId} />
+        {/* Seção 0: Últimos Agendamentos (NOVA POSIÇÃO) */}
+        <LatestAppointmentsCarousel companyId={filteredCompanyId} />
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
         <div className="flex flex-col gap-4">
@@ -231,8 +231,8 @@ const Index = () => {
           </div>
         </div>
         
-        {/* NOVO: Seção 1.5: Últimos Agendamentos (NOVA POSIÇÃO) */}
-        <LatestAppointmentsCarousel companyId={filteredCompanyId} />
+        {/* NOVO: Seção 1.5: Últimos Pedidos (NOVA POSIÇÃO) */}
+        <LatestOrdersCarousel companyId={filteredCompanyId} />
         
         {/* Seção 2: Metas das Equipes */}
         {/* Exibe metas apenas se uma empresa específica estiver selecionada */}
