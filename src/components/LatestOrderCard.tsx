@@ -1,7 +1,7 @@
 import React from 'react';
 import { Order } from '@/integrations/supabase/orders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, DollarSign, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building } from 'lucide-react';
+import { User, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -52,9 +52,8 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-2 text-sm flex-1">
         
-        {/* Valor Total */}
+        {/* Valor Total (Sem ícone DollarSign) */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          <DollarSign className="h-4 w-4 flex-shrink-0" />
           <span className="text-sm font-medium text-primary">{formatCurrency(order.valor_total)}</span>
         </div>
         
