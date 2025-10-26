@@ -1,7 +1,7 @@
 import React from 'react';
 import { Appointment } from '@/integrations/supabase/appointments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock, Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -39,6 +39,9 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
   const responsibleName = appointment.responsavel?.nome_completo || t('responsible');
   const responsibleAvatarUrl = appointment.responsavel?.avatar_url;
   const initials = responsibleName.slice(0, 2).toUpperCase();
+  
+  // Extrai o nome do primeiro item
+  const mainItemName = appointment.agendamento_itens?.[0]?.produtos?.nome || t('no_data_found');
 
   return (
     <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
@@ -61,7 +64,7 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
           <span className="text-sm font-medium">{formattedTime}</span>
         </div>
         
-        {/* Responsável (Agora com Avatar) */}
+        {/* Responsável */}
         <div className="flex items-center gap-2 text-muted-foreground">
           <Avatar className="h-6 w-6">
             <AvatarImage src={responsibleAvatarUrl || undefined} alt={responsibleName} />
@@ -70,7 +73,13 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
           <span className="text-sm truncate">{responsibleName}</span>
         </div>
         
-        {/* Empresa (Apenas se for Super Admin ou se precisar mostrar) */}
+        {/* Serviço/Produto Principal (NOVO) */}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Package className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm truncate font-medium text-foreground">{mainItemName}</span>
+        </div>
+        
+        {/* Empresa */}
         {appointment.empresas?.nome && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Building className="h-4 w-4 flex-shrink-0" />
