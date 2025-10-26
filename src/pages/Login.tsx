@@ -69,7 +69,7 @@ function Login() {
                     inputBackground: 'hsl(var(--input))',
                     inputBorder: 'hsl(var(--border))',
                     inputBorderHover: 'hsl(var(--ring))',
-                    // inputFocus: 'hsl(var(--ring))', // Removido
+                    inputFocus: 'hsl(var(--ring))',
                     defaultButtonBackground: 'hsl(var(--primary))',
                     defaultButtonBackgroundHover: 'hsl(var(--primary)/0.9)',
                     defaultButtonText: 'hsl(var(--primary-foreground))',
@@ -78,8 +78,8 @@ function Login() {
                   },
                   fontSizes: {
                     baseButtonSize: '16px',
-                    // inputLabel: '14px', // Removido
-                    // inputPlaceholder: '16px', // Removido
+                    inputLabel: '14px',
+                    inputPlaceholder: '16px',
                   }
                 },
               },

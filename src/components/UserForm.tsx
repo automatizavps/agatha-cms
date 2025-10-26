@@ -73,8 +73,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   
   if (isEditing) {
     finalFormSchema = finalFormSchema.extend({
-      // Email é opcional na edição (não é enviado)
-      email: z.string().optional(), 
+      email: z.string().optional(),
       // Na edição, se for Super Admin, empresa_id é opcional (pode ser null)
       empresa_id: isSuperAdmin 
         ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
@@ -173,7 +172,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
 
     onSubmit({
       full_name: values.full_name,
-      email: values.email!, // Email é obrigatório na criação, opcional na edição
+      email: values.email,
       perfil_id: values.perfil_id, // Passa o UUID ou '1'
       telefone: telefone,
       endereco_completo: endereco_completo,

@@ -10,7 +10,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ExportButton from './ExportButton';
-import { showError } from '@/utils/toast'; // Importado
 
 const TeamReportTab: React.FC = () => {
   const { t } = useTranslation();

@@ -28,8 +28,6 @@ export interface Order {
   clientes: {
     nome: string;
     email: string | null;
-    telefone: string | null; // Adicionado
-    endereco_completo: string | null; // Adicionado
   } | null;
   
   // Itens do pedido (carregados separadamente ou via join)
@@ -54,7 +52,7 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
       valor_total,
       status,
       created_at,
-      clientes (nome, email, telefone, endereco_completo)
+      clientes (nome, email)
     `);
     
   // 1. Filtrar por Empresa
@@ -80,12 +78,7 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
     throw new Error("Failed to fetch orders");
   }
 
-  // Mapeamento para corrigir a tipagem do relacionamento 'clientes'
-  return data.map(order => ({
-    ...order,
-    clientes: order.clientes?.[0] || null,
-    pedido_itens: [], // Inicializa vazio, pois não estamos buscando aqui
-  })) as Order[];
+  return data as Order[];
 };
 
 export const useOrders = (companyId?: string, filters: OrderFilters = {}) => {
@@ -115,11 +108,7 @@ const fetchOrderItems = async (orderId: string): Promise<OrderItem[]> => {
     throw new Error("Failed to fetch order items");
   }
 
-  // Mapeamento para corrigir a tipagem do relacionamento 'produtos'
-  return data.map(item => ({
-    ...item,
-    produtos: item.produtos?.[0] || null,
-  })) as OrderItem[];
+  return data as OrderItem[];
 };
 
 export const useOrderItems = (orderId: string) => {

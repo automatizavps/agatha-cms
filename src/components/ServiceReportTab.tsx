@@ -15,7 +15,6 @@ import { Calendar } from '@/components/ui/calendar';
 import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Appointment } from '@/integrations/supabase/appointments';
-import { showError } from '@/utils/toast'; // Importado
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -88,9 +87,9 @@ const ServiceReportTab: React.FC = () => {
       Data_Hora: format(new Date(app.data_hora), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       Status: app.status.toUpperCase(),
       Cliente_Nome: app.clientes?.nome || 'N/A',
-      Cliente_Email: app.clientes?.email || 'N/A', // Corrigido
-      Cliente_Telefone: app.clientes?.telefone || 'N/A', // Corrigido
-      Cliente_Endereco: app.clientes?.endereco_completo || 'N/A', // Corrigido
+      Cliente_Email: app.clientes?.email || 'N/A',
+      Cliente_Telefone: app.clientes?.telefone || 'N/A',
+      Cliente_Endereco: app.clientes?.endereco_completo || 'N/A',
       Responsavel: app.responsavel?.nome_completo || 'N/A',
       Itens: app.agendamento_itens.map(item => 
         `${item.produtos?.nome || 'N/A'} (x${item.quantidade} @ R$ ${item.preco_unitario})`

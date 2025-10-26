@@ -29,7 +29,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
 
-const statusOptions: ['pendente_entrega', 'entregue', 'cancelado'] = ['pendente_entrega', 'entregue', 'cancelado'];
+const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
@@ -172,7 +172,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         quantidade: item.quantidade,
         preco_unitario: item.preco_unitario,
       })),
-      status: values.status as OrderStatus, // Corrigido o cast
+      status: values.status,
       empresa_id: empresa_id,
     });
   };

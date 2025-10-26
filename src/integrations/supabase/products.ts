@@ -28,15 +28,6 @@ export interface Product {
   } | null;
 }
 
-// Função auxiliar para mapear o relacionamento de empresa
-const mapProductData = (data: any[]): Product[] => {
-  return data.map(item => ({
-    ...item,
-    // Supabase retorna array para relacionamentos, pegamos o primeiro ou null
-    empresa: item.empresa?.[0] || null, 
-  })) as Product[];
-};
-
 // --- Fetch Geral (mantido para compatibilidade, mas não será usado nas novas páginas) ---
 
 const fetchAllProducts = async (): Promise<Product[]> => {
@@ -50,7 +41,7 @@ const fetchAllProducts = async (): Promise<Product[]> => {
     throw new Error("Failed to fetch products");
   }
 
-  return mapProductData(data);
+  return data as Product[];
 };
 
 export const useProducts = () => {
@@ -74,7 +65,7 @@ const fetchProductsOnly = async (): Promise<Product[]> => {
     throw new Error("Failed to fetch products");
   }
 
-  return mapProductData(data);
+  return data as Product[];
 };
 
 export const useProductsOnly = () => {
@@ -98,7 +89,7 @@ const fetchServicesOnly = async (): Promise<Product[]> => {
     throw new Error("Failed to fetch services");
   }
 
-  return mapProductData(data);
+  return data as Product[];
 };
 
 export const useServicesOnly = () => {
@@ -129,7 +120,7 @@ const fetchLatestProductsOnly = async (companyId: string | undefined): Promise<P
     throw new Error("Failed to fetch latest products");
   }
 
-  return mapProductData(data);
+  return data as Product[];
 };
 
 export const useLatestProductsOnly = (companyId: string | undefined) => {
@@ -154,13 +145,7 @@ const fetchProductById = async (productId: string): Promise<Product | null> => {
     throw new Error("Failed to fetch product details");
   }
 
-  // Mapeamento para corrigir a tipagem do relacionamento 'empresa'
-  const productData = data ? {
-    ...data,
-    empresa: data.empresa?.[0] || null,
-  } : null;
-
-  return productData as Product | null;
+  return data as Product;
 };
 
 export const useProductById = (productId: string) => {
