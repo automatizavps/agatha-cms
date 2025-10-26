@@ -132,8 +132,8 @@ const Index = () => {
           </div>
         )}
         
-        {/* Seção 0: Últimos Agendamentos (Carousel) */}
-        <LatestAppointmentsCarousel companyId={filteredCompanyId} />
+        {/* Seção 0: Últimos Pedidos (NOVA POSIÇÃO) */}
+        <LatestOrdersCarousel companyId={filteredCompanyId} />
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
         <div className="flex flex-col gap-4">
@@ -231,8 +231,8 @@ const Index = () => {
           </div>
         </div>
         
-        {/* NOVO: Seção 1.5: Últimos Pedidos (Carousel) */}
-        <LatestOrdersCarousel companyId={filteredCompanyId} />
+        {/* NOVO: Seção 1.5: Últimos Agendamentos (NOVA POSIÇÃO) */}
+        <LatestAppointmentsCarousel companyId={filteredCompanyId} />
         
         {/* Seção 2: Metas das Equipes */}
         {/* Exibe metas apenas se uma empresa específica estiver selecionada */}
@@ -269,7 +269,7 @@ const Index = () => {
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <Target className="h-6 w-6 text-muted-foreground" />
               {t('team_goals_section_title')}
-            </h2>
+            </h2 >
             <Card>
               <CardContent className="p-4 text-muted-foreground">
                 {t("select_company_for_metrics")}
