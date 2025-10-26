@@ -225,6 +225,7 @@ export const updateTeamMembers = async ({ teamId, memberIds }: ManageMembersPara
   const membersToAdd = memberIds.filter(id => !currentMemberIds.includes(id));
   const membersToRemove = currentMemberIds.filter(id => !memberIds.includes(id));
 
+  // Usamos Promise<any> para satisfazer o Promise.all
   const mutations: Promise<any>[] = [];
 
   // Adicionar novos membros
@@ -233,20 +234,20 @@ export const updateTeamMembers = async ({ teamId, memberIds }: ManageMembersPara
       equipe_id: teamId,
       usuario_id: usuario_id,
     }));
-    // CORREÇÃO: Adicionando .then() para transformar PostgrestFilterBuilder em Promise<any>
+    // CORREÇÃO: Envolvemos a chamada do Supabase em Promise.resolve() para garantir o tipo Promise<any>
     mutations.push(
-      supabase.from("equipe_membros").insert(insertPayload).then(res => res)
+      Promise.resolve(supabase.from("equipe_membros").insert(insertPayload))
     );
   }
 
   // Remover membros
   if (membersToRemove.length > 0) {
-    // CORREÇÃO: Adicionando .then() para transformar PostgrestFilterBuilder em Promise<any>
+    // CORREÇÃO: Envolvemos a chamada do Supabase em Promise.resolve() para garantir o tipo Promise<any>
     mutations.push(
-      supabase.from("equipe_membros")
+      Promise.resolve(supabase.from("equipe_membros")
         .delete()
         .eq("equipe_id", teamId)
-        .in("usuario_id", membersToRemove).then(res => res)
+        .in("usuario_id", membersToRemove))
     );
   }
 
