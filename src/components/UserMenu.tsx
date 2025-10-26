@@ -1,4 +1,4 @@
-import { LogOut, User, Settings, Building } from "lucide-react";
+import { LogOut, User, Settings, Building, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,12 +14,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from "@/utils/toast";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link, useNavigate } from "react-router-dom"; // Importando useNavigate
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next"; // Importando useTranslation
 
 export function UserMenu() {
   const { user, session } = useSession();
   const { data: profile, isLoading: isProfileLoading } = useCurrentUserProfile();
-  const navigate = useNavigate(); // Usando useNavigate
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation(); // Usando i18n para mudar o idioma
 
   const handleLogout = async () => {
     let logoutSuccessful = false;
@@ -46,11 +48,15 @@ export function UserMenu() {
       navigate('/login');
     }
   };
+  
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
-  const userEmail = user?.email || "Usuário";
+  const userEmail = user?.email || "N/A";
   const userName = profile?.nome_completo || userEmail;
-  const userRole = profile?.perfis?.nome || "Carregando...";
-  const companyName = profile?.empresas?.nome; // Novo: Nome da empresa
+  const userRole = profile?.perfis?.nome || t("loading");
+  const companyName = profile?.empresas?.nome;
   const initials = userName.slice(0, 2).toUpperCase();
 
   return (
@@ -82,14 +88,14 @@ export function UserMenu() {
         
         {/* Exibe o Perfil */}
         <DropdownMenuItem className="text-xs text-muted-foreground">
-          Perfil: {isProfileLoading ? "..." : userRole}
+          {t('profile_role')}: {isProfileLoading ? "..." : userRole}
         </DropdownMenuItem>
         
         {/* Exibe a Empresa (se não for Super Admin ou se houver nome de empresa) */}
         {companyName && (
           <DropdownMenuItem className="text-xs text-muted-foreground flex items-center gap-2">
             <Building className="h-3 w-3" />
-            Empresa: {isProfileLoading ? "..." : companyName}
+            {t('user_table_header_company')}: {isProfileLoading ? "..." : companyName}
           </DropdownMenuItem>
         )}
         
@@ -98,21 +104,41 @@ export function UserMenu() {
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link to="/profile">
             <User className="mr-2 h-4 w-4" />
-            <span>Meu Perfil</span>
+            <span>{t('nav_profile')}</span>
           </Link>
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link to="/settings">
             <Settings className="mr-2 h-4 w-4" />
-            <span>Configurações</span>
+            <span>{t('nav_settings')}</span>
           </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
+        {/* Seletor de Idioma */}
+        <DropdownMenuLabel className="flex items-center gap-2">
+          <Globe className="h-4 w-4" />
+          {t('language', { defaultValue: 'Idioma' })}
+        </DropdownMenuLabel>
+        <DropdownMenuItem 
+          onClick={() => changeLanguage('pt-BR')} 
+          className={i18n.language === 'pt-BR' ? "font-bold bg-accent" : ""}
+        >
+          Português (BR)
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => changeLanguage('en-US')}
+          className={i18n.language === 'en-US' ? "font-bold bg-accent" : ""}
+        >
+          English (US)
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Sair</span>
+          <span>{t('logout', { defaultValue: 'Sair' })}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

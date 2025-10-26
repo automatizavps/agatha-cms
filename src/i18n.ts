@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 // Recursos de tradução
 const resources = {
@@ -29,8 +30,10 @@ const resources = {
       "selected_items_count": "{{count}} item(ns) selecionado(s)",
       "cancel": "Cancelar",
       "delete_confirm": "Sim, Excluir",
-      "optional": "Opcional", // NOVO
-      "items": "itens", // NOVO
+      "optional": "Opcional",
+      "items": "itens",
+      "language": "Idioma", // NOVO
+      "logout": "Sair", // NOVO
 
       // Navegação
       "nav_home": "Home",
@@ -49,14 +52,13 @@ const resources = {
       "nav_operational": "Operacional",
       "nav_config": "Configurações",
       "nav_products_services": "Produtos & Serviços",
-      // "nav_categories": "Categorias", // REMOVIDO
       "nav_notifications": "Notificações",
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
       "total_appointments": "Total de Agendamentos",
       "confirmed_appointments": "Confirmados",
-      "pending_appointments": "Agendamentos Pendentes", // ALTERADO AQUI
+      "pending_appointments": "Agendamentos Pendentes",
       "appointments_overview": "Visão geral de todos os agendamentos",
       "confirmed_status": "Agendamentos com status 'confirmado'",
       "pending_status": "Aguardando confirmação",
@@ -79,9 +81,9 @@ const resources = {
       "top_selling_services_title": "Top 10 Serviços Mais Realizados",
       "total_sold": "Total Vendido",
       "total_realized": "Total Realizado",
-      "latest_appointments_title": "Últimos Agendamentos", // NOVO
-      "latest_orders_title": "Últimos Pedidos", // NOVO
-      "no_appointments_found": "Nenhum agendamento recente encontrado.", // NOVO
+      "latest_appointments_title": "Últimos Agendamentos",
+      "latest_orders_title": "Últimos Pedidos",
+      "no_appointments_found": "Nenhum agendamento recente encontrado.",
       
       // Páginas
       "page_title_analytics": "Analytics",
@@ -106,17 +108,17 @@ const resources = {
       "edit_user_description": "Atualize os dados e o perfil de acesso do usuário.",
       "loading_user_data": "Carregando Dados do Usuário...",
       "loading_user_data_description": "Aguarde enquanto carregamos as informações do usuário.",
-      "only_super_admin_can_invite": "Apenas Super Admin pode convidar novos usuários.", // NOVO
-      "loading_profiles": "Carregando perfis...", // NOVO
-      "select_profile": "Selecione um perfil", // NOVO
-      "select_company_to_load_profiles": "Selecione uma empresa para carregar os perfis customizados.", // NOVO
-      "unknown_profile": "Perfil Desconhecido", // NOVO
+      "only_super_admin_can_invite": "Apenas Super Admin pode convidar novos usuários.",
+      "loading_profiles": "Carregando perfis...",
+      "select_profile": "Selecione um perfil",
+      "select_company_to_load_profiles": "Selecione uma empresa para carregar os perfis customizados.",
+      "unknown_profile": "Perfil Desconhecido",
       
       "page_title_companies": "Gestão de Empresas",
       "company_list_title": "Lista de Empresas",
       "add_new_company": "Nova Empresa",
       "no_companies_found": "Nenhuma empresa cadastrada.",
-      "company_form_description": "Preencha os detalhes para cadastrar uma nova empresa.", // NOVO
+      "company_form_description": "Preencha os detalhes para cadastrar uma nova empresa.",
       
       "page_title_clients": "Gestão de Clientes",
       "client_list_title": "Lista de Clientes",
@@ -126,14 +128,14 @@ const resources = {
       "no_clients_found": "Nenhum cliente encontrado com os filtros aplicados.",
       "client_table_header_address": "Endereço",
       "clients_deleted_success": "{{count}} cliente(s) excluído(s) com sucesso.",
-      "client_name": "Nome do Cliente", // NOVO
-      "client_name_placeholder": "Nome completo do cliente", // NOVO
+      "client_name": "Nome do Cliente",
+      "client_name_placeholder": "Nome completo do cliente",
       
       "page_title_products": "Gestão de Produtos",
       "product_list_title": "Lista de Produtos",
       "add_new_product": "Novo Produto",
       "product_search_placeholder": "Buscar por nome, categoria ou marca...",
-      "filter_all_categories": "Todas as Categorias", // ADICIONADO
+      "filter_all_categories": "Todas as Categorias",
       "filter_all_brands": "Todas as Marcas",
       "low_stock_alert_title": "Atenção: Estoque Baixo!",
       "low_stock_alert_description": "Os seguintes produtos estão com estoque abaixo de {{threshold}} unidades:",
@@ -171,7 +173,7 @@ const resources = {
       "category_updated_success": "Categoria {{name}} atualizada com sucesso!",
       "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
       "category_name_exists": "Já existe uma categoria com este nome nesta empresa.",
-      "select_category_placeholder": "Selecione ou deixe vazio", // NOVO
+      "select_category_placeholder": "Selecione ou deixe vazio",
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -364,69 +366,437 @@ const resources = {
       "auth_error_invalid_password": "Senha inválida.",
       "auth_error_user_already_exists": "Usuário já existe.",
       "auth_error_default": "Ocorreu um erro. Tente novamente.",
+    },
+  },
+  'en-US': {
+    translation: {
+      // General
+      "app_name": "AGATHA IA",
+      "loading": "Loading...",
+      "actions": "Actions",
+      "save_changes": "Save Changes",
+      "try_again": "Try Again",
+      "not_found": "Page not found",
+      "error_loading_data": "Failed to load data.",
+      "no_data_found": "No data found.",
+      "search_placeholder": "Search...",
+      "add_new": "Add New",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirm_delete": "Are you sure you want to delete?",
+      "achieved": "achieved",
+      "units": "units",
+      "none": "None",
+      "minutes": "minutes",
+      "rows_per_page": "Rows per page",
+      "page_info": "Showing {{start}}-{{end}} of {{count}}",
+      "pagination_disabled_filter": "Pagination disabled when filtering by company.",
+      "selected_items_count": "{{count}} item(s) selected",
+      "cancel": "Cancel",
+      "delete_confirm": "Yes, Delete",
+      "optional": "Optional",
+      "items": "items",
+      "language": "Language", // NOVO
+      "logout": "Logout", // NOVO
+
+      // Navigation
+      "nav_home": "Home",
+      "nav_analytics": "Analytics",
+      "nav_users": "Users",
+      "nav_appointments": "Appointments",
+      "nav_clients": "Clients",
+      "nav_products": "Products",
+      "nav_services": "Services",
+      "nav_orders": "Orders",
+      "nav_teams": "Teams",
+      "nav_companies": "Companies",
+      "nav_settings": "Settings",
+      "nav_profile": "My Profile",
+      "nav_general": "General",
+      "nav_operational": "Operational",
+      "nav_config": "Settings",
+      "nav_products_services": "Products & Services",
+      "nav_notifications": "Notifications",
+
+      // Dashboard
+      "dashboard_title": "Dashboard Overview",
+      "total_appointments": "Total Appointments",
+      "confirmed_appointments": "Confirmed",
+      "pending_appointments": "Pending Appointments",
+      "appointments_overview": "Overview of all appointments",
+      "confirmed_status": "Appointments with 'confirmed' status",
+      "pending_status": "Awaiting confirmation",
+      "team_goals_section_title": "Team Goals",
+      "team_goals_progress_placeholder": "Progress towards the goal will be displayed here.",
       
-      // Histórico de Vendas do Produto
-      "sales_history_title": "Histórico de Vendas: {{name}}",
-      "sales_history_subtitle": "Detalhes e histórico de vendas/serviços realizados para este {{type}}.",
-      "sales_history_table_title": "Transações Concluídas",
-      "no_sales_history_found": "Nenhuma transação concluída encontrada para este item.",
-      "weekly_sales_history": "Vendas Semanais (Últimos 7 dias)",
-      "type": "Tipo",
+      // New Dashboard Metrics
+      "daily_revenue": "Daily Revenue",
+      "daily_revenue_overview": "Orders and Services completed today",
+      "weekly_revenue": "Weekly Revenue",
+      "weekly_revenue_overview": "Orders and Services completed this week",
+      "monthly_revenue": "Monthly Revenue",
+      "monthly_revenue_overview": "Orders and Services completed this month",
+      "total_products": "Total Products",
+      "total_products_overview": "Products registered in the company",
+      "total_clients": "Total Clients",
+      "total_clients_overview": "Clients registered in the company",
+      "latest_products_title": "Latest Registered Products",
+      "top_selling_items_title": "Top 10 Best Selling Products (Units)",
+      "top_selling_services_title": "Top 10 Most Performed Services",
+      "total_sold": "Total Sold",
+      "total_realized": "Total Performed",
+      "latest_appointments_title": "Latest Appointments",
+      "latest_orders_title": "Latest Orders",
+      "no_appointments_found": "No recent appointments found.",
       
-      // Status da Empresa
-      "company_status_active": "Ativa",
-      "company_status_inactive": "Inativa",
+      // Pages
+      "page_title_analytics": "Analytics",
+      "page_subtitle_analytics": "Detailed reports and data visualizations.",
+      "chart_title_appointment_status": "Appointment Status (Today)",
+      "chart_no_data": "No appointment data to display.",
+      "chart_error": "Error loading chart data.",
+      "analytics_placeholder": "Other reports and metrics will come here.",
       
-      // Perfis Customizados
-      "page_title_custom_profiles": "Perfis Customizados",
-      "custom_profile_list_title": "Perfis por Empresa",
-      "add_new_profile": "Novo Perfil Customizado",
-      "no_custom_profiles_found": "Nenhum perfil customizado encontrado.",
-      "custom_profile_search_placeholder": "Buscar por nome do perfil ou empresa...",
-      "profile_name": "Nome do Perfil",
-      "profile_name_placeholder": "Ex: Gerente de Loja, Vendedor Júnior",
-      "profile_details": "Detalhes do Perfil",
-      "module_permissions": "Permissões por Módulo",
-      "create_profile": "Criar Perfil",
-      "edit_profile": "Editar Perfil",
-      "profile_created_success": "Perfil {{name}} criado com sucesso!",
-      "profile_updated_success": "Perfil {{name}} atualizado com sucesso!",
-      "profile_deleted_success": "Perfil {{name}} excluído com sucesso!",
-      "loading_profile_data": "Carregando dados do perfil...",
-      "grant_full_admin_access": "Conceder Acesso Total (Admin)",
-      "grant_full_admin_access_description": "Marque para conceder permissão de Leitura e Gravação em todos os módulos. Isso ignora as configurações individuais abaixo.",
+      "page_title_users": "User Management",
+      "user_list_title": "User List",
+      "user_search_placeholder": "Search by name or profile...",
+      "add_new_user": "Add New User",
+      "no_users_found": "No users found for this company.",
+      "no_users_search": "No users found matching the search term.",
+      "user_table_header_name": "Name",
+      "user_table_header_company": "Company",
+      "user_table_header_phone": "Phone",
+      "user_table_header_address": "Address",
+      "user_table_header_profile": "Profile",
+      "edit_user": "Edit User",
+      "edit_user_description": "Update user data and access profile.",
+      "loading_user_data": "Loading User Data...",
+      "loading_user_data_description": "Please wait while we load user information.",
+      "only_super_admin_can_invite": "Only Super Admin can invite new users.",
+      "loading_profiles": "Loading profiles...",
+      "select_profile": "Select a profile",
+      "select_company_to_load_profiles": "Select a company to load custom profiles.",
+      "unknown_profile": "Unknown Profile",
       
-      // Permissões
-      "access_read": "Leitura",
-      "access_write": "Leitura e Gravação",
-      "access_none": "Sem Acesso",
+      "page_title_companies": "Company Management",
+      "company_list_title": "Company List",
+      "add_new_company": "New Company",
+      "no_companies_found": "No companies registered.",
+      "company_form_description": "Fill in the details to register a new company.",
       
-      // Módulos (para tradução)
-      "users": "Usuários",
-      "clients": "Clientes",
-      "products": "Produtos",
-      "services": "Serviços",
-      "orders": "Pedidos",
-      "appointments": "Agendamentos",
-      "teams": "Equipes",
+      "page_title_clients": "Client Management",
+      "client_list_title": "Client List",
+      "add_new_client": "New Client",
+      "client_search_placeholder": "Search by name, email, phone, or address...",
+      "filter_all_companies": "All Companies",
+      "no_clients_found": "No clients found with the applied filters.",
+      "client_table_header_address": "Address",
+      "clients_deleted_success": "{{count}} client(s) deleted successfully.",
+      "client_name": "Client Name",
+      "client_name_placeholder": "Client full name",
+      
+      "page_title_products": "Product Management",
+      "product_list_title": "Product List",
+      "add_new_product": "New Product",
+      "product_search_placeholder": "Search by name, category, or brand...",
+      "filter_all_categories": "All Categories",
+      "filter_all_brands": "All Brands",
+      "low_stock_alert_title": "Attention: Low Stock!",
+      "low_stock_alert_description": "The following products are below {{threshold}} units in stock:",
+      "product_table_header_stock": "Stock",
+      "product_table_header_price": "Price",
+      "product_table_header_brand": "Brand",
+      "product_table_header_category": "Category",
+      "no_products_found": "No products found with the applied filters.",
+      "product_name": "Product Name",
+      "product_name_placeholder": "Product name",
+      "create_product": "Register Product",
+      "stock_quantity_placeholder": "Stock quantity",
+      
+      "page_title_services": "Service Management",
+      "service_list_title": "Service List",
+      "add_new_service": "New Service",
+      "service_search_placeholder": "Search by name or category...",
+      "service_table_header_duration": "Duration",
+      "no_services_found": "No services registered.",
+      "service_name": "Service Name",
+      "service_name_placeholder": "Service name",
+      "create_service": "Register Service",
+      
+      // Categories
+      "page_title_categories": "Category Management",
+      "category_list_title": "Category List",
+      "add_new_category": "New Category",
+      "no_categories_found": "No categories found.",
+      "category_search_placeholder": "Search by category name...",
+      "category_name": "Category Name",
+      "category_name_placeholder": "Ex: Shampoos, Haircuts",
+      "create_category": "Create Category",
+      "edit_category": "Edit Category",
+      "category_created_success": "Category {{name}} created successfully!",
+      "category_updated_success": "Category {{name}} updated successfully!",
+      "category_deleted_success": "Category {{name}} deleted successfully!",
+      "category_name_exists": "A category with this name already exists in this company.",
+      "select_category_placeholder": "Select or leave empty",
+      
+      "page_title_orders": "Order Management",
+      "order_list_title": "Order List",
+      "add_new_order": "New Order",
+      "order_search_placeholder": "Search by client, status, or ID...",
+      "order_table_header_id": "Order #",
+      "order_table_header_client": "Client",
+      "order_table_header_date": "Date",
+      "order_table_header_total": "Total Value",
+      "order_table_header_status": "Status",
+      "no_orders_found": "No orders registered.",
+      "create_order": "Create Order",
+      "update_order_button": "Update Order",
+      "orders_deleted_success": "{{count}} order(s) deleted successfully.",
+      
+      "page_title_appointments": "Appointment Management",
+      "appointments_deleted_success": "{{count}} appointment(s) deleted successfully.",
+      
+      "page_title_settings": "Settings",
+      "page_subtitle_settings": "Manage your account and company settings.",
+      "settings_user_title": "Account Settings",
+      "settings_company_title": "Company Details",
+      
+      "page_title_profile": "My Profile",
+      "page_subtitle_profile": "View and manage your account information.",
+      "profile_personal_info": "Personal Information",
+      "profile_full_name": "Full Name",
+      "profile_email": "Email",
+      "profile_role": "Access Profile",
+      "profile_company_id": "Company ID",
+      
+      "not_found_title": "404",
+      "not_found_message": "Oops! Page not found",
+      "not_found_return": "Return to Home",
+      
+      // Teams
+      "page_title_teams": "Team Management",
+      "team_list_title": "Team List",
+      "add_new_team": "New Team",
+      "no_teams_found": "No teams registered.",
+      "team_search_placeholder": "Search by team name or company...",
+      "team_name": "Team Name",
+      "team_name_placeholder": "Ex: Sales Team, Maintenance",
+      "team_meta_value": "Monthly Goal (Value)",
+      "team_meta_quantity": "Monthly Goal (Quantity)",
+      "team_members": "Team Members",
+      "select_members": "Select members",
+      "members_selected": "{{count}} member(s) selected",
+      "no_members": "No members",
+      "create_team": "Create Team",
+      "edit_team": "Edit Team",
+      "loading_team_data": "Loading team data...",
+      "team_created_success": "Team {{name}} created successfully!",
+      "team_updated_success": "Team {{name}} updated successfully!",
+      "team_deleted_success": "Team {{name}} deleted successfully!",
+      "team_members_update_error": "Error updating team members: ",
+      "select_valid_company": "Select a valid company.",
+      "company_required_super_admin": "Company is required for Super Admin.",
+      "loading_companies": "Loading companies...",
+      "select_company": "Select company",
+      "search_user": "Search user...",
+      "company_not_found": "Company not found",
+      
+      // Notifications
+      "page_title_notifications": "Notifications",
+      "notification_list_title": "Notification History",
+      "notifications_marked_read": "All notifications marked as read.",
+      "mark_all_read": "Mark All as Read",
+      "no_notifications_found": "No recent notifications.",
+      "notification_table_header_status": "Status",
+      "notification_table_header_title": "Title",
+      "notification_table_header_message": "Message",
+      "notification_table_header_time": "Time",
+      "read": "Read",
+      "unread": "Unread",
+      "mark_as_read": "Mark as Read",
+      "view_details": "View Details",
+      "notification_deleted_success": "Notification deleted.",
+      "view_all_notifications": "View all notifications",
+      "select_all": "Select all",
+      "notifications_deleted_success": "{{count}} notification(s) deleted successfully.",
+      "confirm_delete_single": "Are you sure you want to delete this notification?",
+      "confirm_delete_bulk": "Are you sure you want to delete {{count}} notifications?",
+      "delete_read_notifications": "Delete Read",
+      "confirm_delete_read_title": "Confirm Deletion of Read Notifications",
+      "confirm_delete_read_message": "This action will permanently delete all notifications you have marked as read. This action cannot be undone.",
+      "delete_read_success": "All read notifications deleted successfully.",
+      
+      // Password
+      "change_password": "Change Password",
+      "new_password": "New Password",
+      "confirm_new_password": "Confirm New Password",
+      "update_password_button": "Update Password",
+      "reset_password": "Reset Password",
+      "reset_password_title": "Reset User Password",
+      "reset_password_description": "Set a new password for {{name}}. The user can change it later.",
+      "your_account": "your account",
+      "must_change_password_warning": "You must change your password to access the platform.",
+      
+      // Daily Service Chart
+      "chart_title_daily_services": "Completed Services by Hour (Today)",
+      "chart_no_data_today": "No completed services to display today.",
+      "services_completed": "Completed Services",
+      
+      // Daily Order Chart
+      "chart_title_daily_orders": "Delivered Orders by Hour (Today)",
+      "chart_no_data_today_orders": "No delivered orders to display today.",
+      "orders_delivered": "Delivered Orders",
+      "chart_title_order_status": "Order Status (Today)",
+      "select_company_for_metrics": "Select a company to view detailed metrics.",
+      
+      "count": "Count",
+      
+      // Appointment
+      "responsible": "Responsible",
+      "select_responsible": "Select responsible",
+      "select_date": "Select a date",
+      "time": "Time",
+      "service_product": "Service/Product",
+      "add_item": "Add Item",
+      "select_item": "Select item",
+      "loading_items": "Loading items...",
+      "quantity": "Quantity",
+      "unit_price": "Unit Price",
+      "schedule": "Schedule",
+      "unknown_item": "Unknown Item",
+      "add_services_or_products": "Add services or products to the appointment.",
+      "item_editing_not_allowed": "Item editing is not allowed after appointment creation.",
+      "select_client": "Select client",
+      "loading_clients": "Loading clients...",
+      "search_client": "Search client...",
+      "item": "Item",
+      "select_company_to_load_data": "Select a company to load clients, users, and items.",
+      "add_new_appointment": "New Appointment",
+      
+      // Reports
+      "select_date_range": "Select date range",
+      "filter_all_status": "All Status",
+      "export_data": "Export Data",
+      "export_select_format": "Select Format",
+      "export_success": "Data exported successfully to {{format}}!",
+      "export_error": "Error exporting data: ",
+      "export_no_data": "No data to export.",
+      "export_sheet_name": "Report",
+      "report_total_revenue": "Total Revenue (Delivered)",
+      "report_total_completed_services": "Total Completed Services",
+      "appointment_search_placeholder": "Search by client or responsible...",
+      
+      // Status
+      "pendente_entrega": "Pending Delivery",
+      "entregue": "Delivered",
+      "cancelado": "Canceled",
+      "pendente": "Pending",
+      "confirmado": "Confirmed",
+      "concluido": "Completed",
+      
+      // Auth UI Keys
+      "login_hero_title": "Manage your business efficiently and stylishly.",
+      "login_hero_subtitle": "Simplify appointments, orders, and inventory on a single intuitive platform.",
+      "login_welcome": "Welcome back!",
+      "email_label": "Email",
+      "password_label": "Password",
+      "email_placeholder": "Your email",
+      "password_placeholder": "••••••••",
+      "sign_in_button": "Sign In",
+      "signing_in": "Signing in...",
+      "sign_in_link": "Already have an account? Sign in",
+      "sign_up_button": "Sign Up",
+      "signing_up": "Signing up...",
+      "sign_up_link": "Don't have an account? Sign up",
+      "forgot_password_link": "Forgot your password?",
+      "send_reset_link": "Send reset link",
+      "sending_reset_link": "Sending...",
+      "new_password_label": "New Password",
+      "new_password_placeholder": "Your new password",
+      "update_password_button": "Update Password",
+      "updating_password": "Updating...",
+      "magic_link_link": "Sign in with magic link",
+      "send_magic_link": "Send magic link",
+      "sending_magic_link": "Sending link...",
+      
+      // Auth UI Alert Messages
+      "auth_success_email_sent": "Check your email for the password reset link.",
+      "auth_success_confirmation_text": "Check your email for the confirmation link.",
+      "auth_success_no_session": "Session started successfully.",
+      "auth_success_password_reset": "Your password has been reset successfully.",
+      "auth_success_update_user": "User updated successfully.",
+      "auth_error_email_not_found": "Email not found.",
+      "auth_error_invalid_email": "Invalid email.",
+      "auth_error_invalid_password": "Invalid password.",
+      "auth_error_user_already_exists": "User already exists.",
+      "auth_error_default": "An error occurred. Please try again.",
+      
+      // Product Sales History
+      "sales_history_title": "Sales History: {{name}}",
+      "sales_history_subtitle": "Details and history of sales/services performed for this {{type}}.",
+      "sales_history_table_title": "Completed Transactions",
+      "no_sales_history_found": "No completed transactions found for this item.",
+      "weekly_sales_history": "Weekly Sales (Last 7 days)",
+      "type": "Type",
+      
+      // Company Status
+      "company_status_active": "Active",
+      "company_status_inactive": "Inactive",
+      
+      // Custom Profiles
+      "page_title_custom_profiles": "Custom Profiles",
+      "custom_profile_list_title": "Profiles by Company",
+      "add_new_profile": "New Custom Profile",
+      "no_custom_profiles_found": "No custom profiles found.",
+      "custom_profile_search_placeholder": "Search by profile name or company...",
+      "profile_name": "Profile Name",
+      "profile_name_placeholder": "Ex: Store Manager, Junior Salesperson",
+      "profile_details": "Profile Details",
+      "module_permissions": "Module Permissions",
+      "create_profile": "Create Profile",
+      "edit_profile": "Edit Profile",
+      "profile_created_success": "Profile {{name}} created successfully!",
+      "profile_updated_success": "Profile {{name}} updated successfully!",
+      "profile_deleted_success": "Profile {{name}} deleted successfully!",
+      "loading_profile_data": "Loading profile data...",
+      "grant_full_admin_access": "Grant Full Admin Access",
+      "grant_full_admin_access_description": "Check to grant Read and Write permission to all modules. This overrides individual settings below.",
+      
+      // Permissions
+      "access_read": "Read",
+      "access_write": "Read and Write",
+      "access_none": "No Access",
+      
+      // Modules
+      "users": "Users",
+      "clients": "Clients",
+      "products": "Products",
+      "services": "Services",
+      "orders": "Orders",
+      "appointments": "Appointments",
+      "teams": "Teams",
       "analytics": "Analytics",
-      "companies": "Empresas",
-      "notifications": "Notificações",
-      "custom_profiles": "Perfis Customizados", // ADICIONADO
-      "categories": "Categorias", // ADICIONADO
+      "companies": "Companies",
+      "notifications": "Notifications",
+      "custom_profiles": "Custom Profiles",
+      "categories": "Categories",
     },
   },
 };
 
 i18n
+  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'pt-BR', // Idioma padrão
-    fallbackLng: 'pt-BR', // Fallback para pt-BR
+    fallbackLng: 'pt-BR',
     interpolation: {
-      escapeValue: false, // React já protege contra XSS
+      escapeValue: false,
     },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
+    }
   });
 
 export default i18n;
