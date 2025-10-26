@@ -99,7 +99,7 @@ const LatestOrdersCarousel: React.FC<LatestOrdersCarouselProps> = ({ companyId }
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between p-4 pb-0"> {/* ALTERADO: p-4 pb-0 */}
         <CardTitle className="text-lg flex items-center gap-2">
           <ShoppingCart className="h-5 w-5" /> {t('latest_orders_title')}
         </CardTitle>
