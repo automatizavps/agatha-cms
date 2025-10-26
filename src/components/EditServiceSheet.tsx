@@ -53,8 +53,8 @@ const EditServiceSheet: React.FC<EditServiceSheetProps> = ({ service, isOpen, on
   // Valores iniciais para o formulário de edição
   const initialValues = {
     nome: service.nome,
-    preco: String(service.preco), // CORREÇÃO: Convertendo number para string
-    tempo_servico: service.tempo_servico !== null ? String(service.tempo_servico) : null, // CORREÇÃO: Convertendo number para string
+    preco: service.preco,
+    tempo_servico: service.tempo_servico,
     fotos: service.fotos,
     categoria: service.categoria,
     empresa_id: service.empresa_id,

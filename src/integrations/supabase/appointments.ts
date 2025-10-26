@@ -56,17 +56,9 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
       status,
       responsavel_id,
       created_at,
-      created_by,
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
       clientes (nome),
-      empresas (nome),
-      agendamento_itens (
-        id,
-        produto_id,
-        quantidade,
-        preco_unitario,
-        produtos (nome, tipo)
-      )
+      empresas (nome)
     `);
     
   // 1. Filtrar por Empresa
@@ -97,17 +89,7 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
     throw new Error("Failed to fetch appointments");
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
-  return data.map(app => ({
-    ...app,
-    responsavel: Array.isArray(app.responsavel) ? app.responsavel[0] : app.responsavel,
-    clientes: Array.isArray(app.clientes) ? app.clientes[0] : app.clientes,
-    empresas: Array.isArray(app.empresas) ? app.empresas[0] : app.empresas,
-    agendamento_itens: app.agendamento_itens.map((item: any) => ({
-      ...item,
-      produtos: Array.isArray(item.produtos) ? item.produtos[0] : item.produtos,
-    })),
-  })) as Appointment[];
+  return data as Appointment[];
 };
 
 export const useAppointments = (companyId?: string, filters: AppointmentFilters = {}) => {
@@ -137,11 +119,7 @@ const fetchAppointmentItems = async (appointmentId: string): Promise<Appointment
     throw new Error("Failed to fetch appointment items");
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
-  return data.map((item: any) => ({
-    ...item,
-    produtos: Array.isArray(item.produtos) ? item.produtos[0] : item.produtos,
-  })) as AppointmentItem[];
+  return data as AppointmentItem[];
 };
 
 export const useAppointmentItems = (appointmentId: string) => {

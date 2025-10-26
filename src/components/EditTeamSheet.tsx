@@ -25,7 +25,7 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
     onSuccess: (data) => {
       showSuccess(t('team_updated_success', { name: data.nome }));
       queryClient.invalidateQueries({ queryKey: ["teams"] });
-      // Não fecha aqui, espera a mutação de membros
+      onOpenChange(false);
     },
     onError: (error) => {
       showError(t("error_loading_data") + ": " + error.message);
@@ -37,7 +37,6 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamMembers", team.id] });
       queryClient.invalidateQueries({ queryKey: ["teams"] }); // Invalida a lista principal
-      onOpenChange(false); // Fecha após a atualização dos membros
     },
     onError: (error) => {
       showError(t("team_members_update_error") + error.message);
@@ -75,8 +74,8 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
   // Valores iniciais para o formulário de edição
   const initialValues = {
     nome: team.nome,
-    meta_mensal_valor: String(team.meta_mensal_valor), // CORREÇÃO: Convertendo number para string
-    meta_mensal_quantidade: String(team.meta_mensal_quantidade), // CORREÇÃO: Convertendo number para string
+    meta_mensal_valor: team.meta_mensal_valor,
+    meta_mensal_quantidade: team.meta_mensal_quantidade,
     empresa_id: team.empresa_id,
     // Popula os IDs dos membros carregados
     member_ids: members?.map(m => m.usuario_id) || [],

@@ -35,11 +35,7 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
   
   // Mapeamos os dados, definindo o email como 'N/A' na lista
   return data.map(user => {
-    // Corrigindo acesso a relacionamentos 1:1 que retornam array
-    const profileCustomData = Array.isArray(user.perfis) ? user.perfis[0] : user.perfis;
-    const companyData = Array.isArray(user.empresa) ? user.empresa[0] : user.empresa;
-    
-    let profileName = profileCustomData?.nome;
+    let profileName = user.perfis?.nome;
     
     // Se não houver perfil customizado, determinamos o perfil global
     if (!user.perfil_customizado_id) {
@@ -60,7 +56,6 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
       email: 'N/A', // O email real será buscado no EditUserSheet
       // Mapeia o nome do perfil
       perfis: { nome: profileName || 'N/A' },
-      empresa: companyData,
     };
   }) as UserProfile[];
 };

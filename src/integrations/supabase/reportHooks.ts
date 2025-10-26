@@ -15,8 +15,7 @@ interface DateRange {
 
 // --- Fetch de Pedidos para Relatório ---
 
-interface OrderReport extends Omit<Order, 'pedido_itens' | 'clientes'> {
-  clientes: (Client & { nome: string; email: string | null }) | null;
+interface OrderReport extends Omit<Order, 'pedido_itens'> {
   pedido_itens: OrderItem[];
 }
 
@@ -63,15 +62,7 @@ const fetchOrderReport = async (companyId: string | undefined, filters: DateRang
     throw new Error("Failed to fetch order report: " + error.message);
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 e 1:N
-  return data.map(order => ({
-    ...order,
-    clientes: Array.isArray(order.clientes) ? order.clientes[0] : order.clientes,
-    pedido_itens: order.pedido_itens.map((item: any) => ({
-      ...item,
-      produtos: Array.isArray(item.produtos) ? item.produtos[0] : item.produtos,
-    })),
-  })) as OrderReport[];
+  return data as OrderReport[];
 };
 
 export const useOrderReport = (companyId: string | undefined, filters: DateRange) => {
@@ -85,10 +76,7 @@ export const useOrderReport = (companyId: string | undefined, filters: DateRange
 
 // --- Fetch de Agendamentos para Relatório ---
 
-interface AppointmentReport extends Omit<Appointment, 'agendamento_itens' | 'clientes' | 'responsavel' | 'empresas'> {
-  clientes: (Client & { nome: string }) | null;
-  responsavel: { nome_completo: string } | null;
-  empresas: { nome: string } | null;
+interface AppointmentReport extends Omit<Appointment, 'agendamento_itens'> {
   agendamento_itens: AppointmentItem[];
 }
 
@@ -103,10 +91,8 @@ const fetchAppointmentReport = async (companyId: string | undefined, filters: Da
       data_hora,
       status,
       created_at,
-      created_by,
       clientes (nome, email, telefone, endereco_completo),
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
-      empresas (nome),
       agendamento_itens (
         id,
         produto_id,
@@ -139,17 +125,7 @@ const fetchAppointmentReport = async (companyId: string | undefined, filters: Da
     throw new Error("Failed to fetch appointment report: " + error.message);
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 e 1:N
-  return data.map(app => ({
-    ...app,
-    clientes: Array.isArray(app.clientes) ? app.clientes[0] : app.clientes,
-    responsavel: Array.isArray(app.responsavel) ? app.responsavel[0] : app.responsavel,
-    empresas: Array.isArray(app.empresas) ? app.empresas[0] : app.empresas,
-    agendamento_itens: app.agendamento_itens.map((item: any) => ({
-      ...item,
-      produtos: Array.isArray(item.produtos) ? item.produtos[0] : item.produtos,
-    })),
-  })) as AppointmentReport[];
+  return data as AppointmentReport[];
 };
 
 export const useAppointmentReport = (companyId: string | undefined, filters: DateRange) => {
@@ -191,11 +167,7 @@ const fetchClientReport = async (companyId: string | undefined): Promise<ClientR
     throw new Error("Failed to fetch client report: " + error.message);
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
-  return data.map(client => ({
-    ...client,
-    empresa: Array.isArray(client.empresa) ? client.empresa[0] : client.empresa,
-  })) as ClientReport[];
+  return data as ClientReport[];
 };
 
 export const useClientReport = (companyId: string | undefined) => {
@@ -241,13 +213,12 @@ const fetchTeamReport = async (companyId: string | undefined): Promise<TeamRepor
     throw new Error("Failed to fetch team report: " + error.message);
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 e 1:N
+  // Mapeamos para garantir que a estrutura de membros seja plana para exportação
   return data.map(team => ({
     ...team,
-    empresas: Array.isArray(team.empresas) ? team.empresas[0] : team.empresas,
     membros: team.membros.map((m: any) => ({
       usuario_id: m.usuario_id,
-      usuarios: Array.isArray(m.usuarios) ? m.usuarios[0] : m.usuarios,
+      usuarios: m.usuarios,
     })),
   })) as TeamReport[];
 };

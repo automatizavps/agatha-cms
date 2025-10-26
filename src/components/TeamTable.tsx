@@ -185,7 +185,7 @@ const TeamTable: React.FC<TeamTableProps> = ({ teams, canWrite }) => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.is_super_admin;
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   const handleEdit = (team: Team) => {
     setEditingTeam(team);
@@ -212,14 +212,6 @@ const TeamTable: React.FC<TeamTableProps> = ({ teams, canWrite }) => {
     if (!teams) return [];
     
     const sorted = [...teams].sort((a, b) => {
-      // Prioridade 1: Super Admin sempre no topo
-      const isASuperAdmin = a.empresas?.nome === 'Super Admin';
-      const isBSuperAdmin = b.empresas?.nome === 'Super Admin';
-      
-      if (isASuperAdmin && !isBSuperAdmin) return -1;
-      if (!isASuperAdmin && isBSuperAdmin) return 1;
-      
-      // Se ambos são SA ou nenhum é SA, aplica a ordenação normal
       let aValue: any;
       let bValue: any;
       

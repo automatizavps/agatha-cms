@@ -34,12 +34,11 @@ const baseFormSchema = z.object({
   email: z.string().email({
     message: "Insira um email válido.",
   }),
-  perfil_id: z.string().min(1, { // Agora é o UUID ou '1'
+  perfil_id: z.string().min(1, { // Agora é o UUID
     message: "Selecione um perfil.",
   }),
   telefone: z.string().optional().nullable(),
   endereco_completo: z.string().optional().nullable(),
-  // empresa_id é opcional no base, mas será estendido para ser obrigatório na criação para SA
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional().nullable(),
@@ -74,27 +73,29 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   
   if (isEditing) {
     finalFormSchema = finalFormSchema.extend({
-      // Email é opcional na edição (usamos .optional() para permitir que seja omitido, mas mantemos o tipo string)
-      email: z.string().email({ message: "Insira um email válido." }).optional(),
-      // Na edição, empresa_id pode ser null ou um UUID
-      empresa_id: z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable(),
+      email: z.string().optional(),
+      // Na edição, se for Super Admin, empresa_id é opcional (pode ser null)
+      empresa_id: isSuperAdmin 
+        ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
+        : z.string().optional().nullable(),
       // Na edição, o perfil pode ser '1' (antigo SA) ou um UUID
       perfil_id: z.string().min(1, { message: t("select_profile") }),
     });
   } else if (isSuperAdmin) {
-    // Na criação, Super Admin deve selecionar a empresa (não pode ser nulo na validação, mas pode ser string vazia no formulário)
+    // Na criação, Super Admin deve selecionar a empresa
     finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }).nullable(),
+        }).min(1, { message: t("company_required_super_admin") }),
       });
   } else {
-    // Para Admin de Empresa, o email é obrigatório na criação
+    // Se não for Super Admin, o convite não deveria ser possível
+    return <p className="text-destructive">{t("only_super_admin_can_invite")}</p>;
   }
 
 
   const form = useForm<UserFormValues>({
-    resolver: zodResolver(finalFormSchema as any), // Usando 'as any' para contornar a complexidade do Zod extend
+    resolver: zodResolver(finalFormSchema),
     defaultValues: {
       full_name: defaultValues?.full_name || "",
       email: defaultValues?.email || "", 
@@ -128,17 +129,12 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
       combined.push(...mappedCustomProfiles);
     }
     
-    // 2. Adicionar perfil Super Admin (ID '1') se for Super Admin logado
-    if (isSuperAdmin) {
-        combined.push({ id: '1', nome: 'Super Admin' });
-    }
-    
-    // 3. Na edição, se o perfil atual for o antigo SA ('1') ou um perfil customizado que não está na lista,
+    // 2. Na edição, se o perfil atual for o antigo SA ('1') ou um perfil customizado que não está na lista,
     // precisamos garantir que ele apareça.
     if (isEditing && defaultValues?.perfil_id) {
         const currentProfileId = String(defaultValues.perfil_id);
         
-        // Caso 1: Antigo Super Admin (ID '1') - Já adicionado se for SA logado, mas garantimos se for edição
+        // Caso 1: Antigo Super Admin (ID '1')
         if (currentProfileId === '1' && !combined.some(p => p.id === '1')) {
             combined.push({ id: '1', nome: 'Super Admin (Antigo)' });
         }
@@ -154,7 +150,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     }
     
     return combined;
-  }, [customProfiles, selectedCompanyId, isEditing, defaultValues, isSuperAdmin, t]);
+  }, [customProfiles, selectedCompanyId, isEditing, defaultValues, t]);
 
 
   const handleSubmit = (values: UserFormValues) => {
@@ -166,15 +162,17 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
+      // Na criação, values.empresa_id é garantido ser uma string UUID
       empresa_id = values.empresa_id || null;
     } else {
-      // Se não for Super Admin, o empresa_id é o do usuário logado (fixo)
+      // Se não for Super Admin, o convite não deveria ser possível, mas se for edição,
+      // o empresa_id é o do usuário logado (que não é usado na mutação de edição, mas é bom ter).
       empresa_id = currentProfile?.empresa_id || null;
     }
 
     onSubmit({
       full_name: values.full_name,
-      email: values.email || "", // Email é opcional na edição, mas o onSubmit espera string
+      email: values.email,
       perfil_id: values.perfil_id, // Passa o UUID ou '1'
       telefone: telefone,
       endereco_completo: endereco_completo,

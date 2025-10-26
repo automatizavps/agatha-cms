@@ -69,7 +69,7 @@ function Login() {
                     inputBackground: 'hsl(var(--input))',
                     inputBorder: 'hsl(var(--border))',
                     inputBorderHover: 'hsl(var(--ring))',
-                    // inputFocus não existe no ThemeSupa, removido
+                    inputFocus: 'hsl(var(--ring))',
                     defaultButtonBackground: 'hsl(var(--primary))',
                     defaultButtonBackgroundHover: 'hsl(var(--primary)/0.9)',
                     defaultButtonText: 'hsl(var(--primary-foreground))',
@@ -78,7 +78,7 @@ function Login() {
                   },
                   fontSizes: {
                     baseButtonSize: '16px',
-                    // inputLabel não existe no ThemeSupa, removido
+                    inputLabel: '14px',
                     inputPlaceholder: '16px',
                   }
                 },
@@ -125,14 +125,15 @@ function Login() {
                   button_label: t('send_magic_link'),
                   loading_button_label: t('sending_magic_link'),
                 },
-                // Adicionando traduções para mensagens de alerta (usando chaves existentes)
-                // O Auth UI usa 'message' para todas as mensagens de sucesso/erro
-                message: {
+                // Adicionando traduções para mensagens de alerta
+                success: {
                   email_sent: t('auth_success_email_sent'),
                   confirmation_text: t('auth_success_confirmation_text'),
                   no_session: t('auth_success_no_session'),
                   password_reset: t('auth_success_password_reset'),
                   update_user: t('auth_success_update_user'),
+                },
+                error: {
                   email_not_found: t('auth_error_email_not_found'),
                   invalid_email: t('auth_error_invalid_email'),
                   invalid_password: t('auth_error_invalid_password'),

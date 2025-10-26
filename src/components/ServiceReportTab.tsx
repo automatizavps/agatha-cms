@@ -15,7 +15,6 @@ import { Calendar } from '@/components/ui/calendar';
 import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Appointment } from '@/integrations/supabase/appointments';
-import { showError } from '@/utils/toast'; // Importado
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 

@@ -16,7 +16,6 @@ import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OrderStatus } from '@/integrations/supabase/orders';
 import { useCompanies } from '@/integrations/supabase/companies'; // Importado
-import { showError } from '@/utils/toast'; // Importado
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 

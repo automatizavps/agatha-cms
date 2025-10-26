@@ -55,11 +55,7 @@ const fetchTeams = async (companyId?: string): Promise<Team[]> => {
     throw new Error("Failed to fetch teams");
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
-  return data.map(team => ({
-    ...team,
-    empresas: Array.isArray(team.empresas) ? team.empresas[0] : team.empresas,
-  })) as Team[];
+  return data as Team[];
 };
 
 export const useTeams = (companyId?: string) => {
@@ -85,11 +81,7 @@ const fetchTeamMembers = async (teamId: string): Promise<TeamMember[]> => {
     throw new Error("Failed to fetch team members");
   }
 
-  // Mapeamento para corrigir a tipagem de relacionamentos 1:1 que retornam array
-  return data.map((member: any) => ({
-    ...member,
-    usuarios: Array.isArray(member.usuarios) ? member.usuarios[0] : member.usuarios,
-  })) as TeamMember[];
+  return data as TeamMember[];
 };
 
 export const useTeamMembers = (teamId: string) => {
@@ -107,7 +99,6 @@ interface CreateTeamParams {
   meta_mensal_valor: number;
   meta_mensal_quantidade: number;
   empresa_id?: string; // Apenas para Super Admin
-  member_ids?: string[]; // Adicionado para a mutação de criação
 }
 
 export const createTeam = async ({ nome, meta_mensal_valor, meta_mensal_quantidade, empresa_id: provided_empresa_id }: CreateTeamParams) => {
@@ -225,7 +216,6 @@ export const updateTeamMembers = async ({ teamId, memberIds }: ManageMembersPara
   const membersToAdd = memberIds.filter(id => !currentMemberIds.includes(id));
   const membersToRemove = currentMemberIds.filter(id => !memberIds.includes(id));
 
-  // Usamos Promise<any> para satisfazer o Promise.all
   const mutations: Promise<any>[] = [];
 
   // Adicionar novos membros
@@ -234,20 +224,18 @@ export const updateTeamMembers = async ({ teamId, memberIds }: ManageMembersPara
       equipe_id: teamId,
       usuario_id: usuario_id,
     }));
-    // CORREÇÃO: Envolvemos a chamada do Supabase em Promise.resolve() para garantir o tipo Promise<any>
     mutations.push(
-      Promise.resolve(supabase.from("equipe_membros").insert(insertPayload))
+      supabase.from("equipe_membros").insert(insertPayload)
     );
   }
 
   // Remover membros
   if (membersToRemove.length > 0) {
-    // CORREÇÃO: Envolvemos a chamada do Supabase em Promise.resolve() para garantir o tipo Promise<any>
     mutations.push(
-      Promise.resolve(supabase.from("equipe_membros")
+      supabase.from("equipe_membros")
         .delete()
         .eq("equipe_id", teamId)
-        .in("usuario_id", membersToRemove))
+        .in("usuario_id", membersToRemove)
     );
   }
 

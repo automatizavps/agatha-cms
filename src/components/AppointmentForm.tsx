@@ -36,7 +36,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
 
-const statusOptions: [Appointment['status'], ...Appointment['status'][]] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
+const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
@@ -106,7 +106,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     : baseFormSchema;
 
   const form = useForm<AppointmentFormValues>({
-    resolver: zodResolver(formSchema as any), // Usando 'as any' para contornar a complexidade do Zod extend
+    resolver: zodResolver(formSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
       responsavel_id: defaultValues?.responsavel_id || "",
@@ -210,7 +210,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         quantidade: item.quantidade,
         preco_unitario: item.preco_unitario,
       })),
-      status: values.status as Appointment['status'], // CORREÇÃO: Forçando o tipo
+      status: values.status,
       empresa_id: empresa_id,
     });
   };
