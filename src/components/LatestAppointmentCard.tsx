@@ -64,7 +64,7 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
           <span className="text-sm font-medium">{formattedTime}</span>
         </div>
         
-        {/* Responsável */}
+        {/* Responsável (Agora com Avatar) */}
         <div className="flex items-center gap-2 text-muted-foreground">
           <Avatar className="h-6 w-6">
             <AvatarImage src={responsibleAvatarUrl || undefined} alt={responsibleName} />
@@ -75,7 +75,8 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
         
         {/* Serviço/Produto Principal (NOVO) */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Package className="h-4 w-4 flex-shrink-0" />
+          {/* Usando Clock para representar o serviço/agendamento */}
+          <Clock className="h-4 w-4 flex-shrink-0" /> 
           <span className="text-sm truncate font-medium text-foreground">{mainItemName}</span>
         </div>
         
