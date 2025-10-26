@@ -1,7 +1,7 @@
 import React from 'react';
 import { Appointment } from '@/integrations/supabase/appointments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, CheckCircle, XCircle, AlertTriangle, Building } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
