@@ -16,6 +16,7 @@ export interface CurrentUserProfile {
   } | null;
   empresas: {
     nome: string;
+    is_active: boolean; // Adicionado is_active aqui
   } | null;
   // Permissões removidas, mas mantemos o tipo para evitar quebra em outros lugares
   permissions: {}; 
@@ -28,17 +29,19 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
     .from("usuarios")
     .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active, nome), perfis_customizados (nome)")
     .eq("id", userId)
-    .limit(1); 
+    .limit(1)
+    .single(); // Adicionado .single() para retornar um objeto, não um array
 
   if (error) {
     console.error("Error fetching current user profile:", error);
     throw new Error("Failed to fetch user profile");
   }
 
-  const userProfile = data?.[0];
+  const userProfile = data;
   
   if (!userProfile) return null;
   
+  // Acessando diretamente as propriedades do objeto userProfile.empresas
   const is_company_active = userProfile.empresas ? userProfile.empresas.is_active : true;
   
   let is_super_admin = false;
@@ -54,6 +57,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   if (is_super_admin) {
     profileName = "Super Admin";
   } else if (userProfile.perfil_customizado_id) {
+    // Acessando diretamente a propriedade nome do objeto userProfile.perfis_customizados
     profileName = userProfile.perfis_customizados?.nome || "Perfil Customizado";
   } else if (userProfile.empresa_id) {
     profileName = "Admin";

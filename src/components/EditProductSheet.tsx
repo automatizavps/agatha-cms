@@ -53,8 +53,8 @@ const EditProductSheet: React.FC<EditProductSheetProps> = ({ product, isOpen, on
   // Valores iniciais para o formulário de edição
   const initialValues = {
     nome: product.nome,
-    preco: product.preco,
-    estoque_total: product.estoque_total,
+    preco: String(product.preco), // Convertido para string
+    estoque_total: product.estoque_total !== null ? String(product.estoque_total) : null, // Convertido para string
     fotos: product.fotos,
     marca: product.marca,
     categoria: product.categoria,

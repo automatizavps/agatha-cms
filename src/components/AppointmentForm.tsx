@@ -36,7 +36,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
 
-const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
+const statusOptions: ['pendente', 'confirmado', 'cancelado', 'concluido'] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
@@ -210,7 +210,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         quantidade: item.quantidade,
         preco_unitario: item.preco_unitario,
       })),
-      status: values.status,
+      status: values.status as Appointment['status'], // Corrigido o cast
       empresa_id: empresa_id,
     });
   };

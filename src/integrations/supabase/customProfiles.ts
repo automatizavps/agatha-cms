@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { createNotification } from "./notifications"; // Importando createNotification
 import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
@@ -14,7 +14,7 @@ export interface Module {
 export interface Permission {
   modulo_id: string;
   acesso: AccessType;
-  modulos: Module;
+  modulos: Module | null; // Corrigido para objeto único ou null
 }
 
 export interface CustomProfile {
@@ -73,7 +73,11 @@ const fetchCustomProfiles = async (companyId?: string): Promise<CustomProfile[]>
     throw new Error("Failed to fetch custom profiles");
   }
 
-  return data as CustomProfile[];
+  // Mapeamento para corrigir a tipagem do relacionamento 'empresas'
+  return data.map(profile => ({
+    ...profile,
+    empresas: profile.empresas?.[0] || null,
+  })) as CustomProfile[];
 };
 
 export const useCustomProfiles = (companyId?: string) => {
@@ -100,7 +104,11 @@ const fetchProfilePermissions = async (profileId: string): Promise<Permission[]>
     throw new Error("Failed to fetch profile permissions");
   }
 
-  return data as Permission[];
+  // Mapeamento para corrigir a tipagem do relacionamento 'modulos'
+  return data.map(permission => ({
+    ...permission,
+    modulos: permission.modulos?.[0] || null,
+  })) as Permission[];
 };
 
 export const useProfilePermissions = (profileId: string) => {
@@ -124,7 +132,7 @@ export const createCustomProfile = async ({ empresa_id, nome, permissions }: Cre
   const { data: profileData, error: profileError } = await supabase
     .from("perfis_customizados")
     .insert({ empresa_id, nome })
-    .select("id")
+    .select("id, nome") // Selecionar nome para o onSuccess
     .single();
 
   if (profileError || !profileData) {

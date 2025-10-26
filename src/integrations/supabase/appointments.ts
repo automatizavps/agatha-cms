@@ -55,6 +55,7 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
       data_hora,
       status,
       responsavel_id,
+      created_by,
       created_at,
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
       clientes (nome),
@@ -89,6 +90,8 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
     throw new Error("Failed to fetch appointments");
   }
 
+  // O cast é seguro se a query for bem-sucedida, mas precisamos garantir que os campos ausentes (agendamento_itens) sejam tratados.
+  // Como agendamento_itens é carregado separadamente na página, o tipo Appointment é usado para a lista principal.
   return data as Appointment[];
 };
 
@@ -119,6 +122,7 @@ const fetchAppointmentItems = async (appointmentId: string): Promise<Appointment
     throw new Error("Failed to fetch appointment items");
   }
 
+  // O cast é seguro, pois a estrutura de retorno corresponde à interface AppointmentItem
   return data as AppointmentItem[];
 };
 

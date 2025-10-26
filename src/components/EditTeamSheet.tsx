@@ -74,8 +74,8 @@ const EditTeamSheet: React.FC<EditTeamSheetProps> = ({ team, isOpen, onOpenChang
   // Valores iniciais para o formulário de edição
   const initialValues = {
     nome: team.nome,
-    meta_mensal_valor: team.meta_mensal_valor,
-    meta_mensal_quantidade: team.meta_mensal_quantidade,
+    meta_mensal_valor: String(team.meta_mensal_valor), // Convertido para string
+    meta_mensal_quantidade: String(team.meta_mensal_quantidade), // Convertido para string
     empresa_id: team.empresa_id,
     // Popula os IDs dos membros carregados
     member_ids: members?.map(m => m.usuario_id) || [],

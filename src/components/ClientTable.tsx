@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditClientSheet from "./EditClientSheet";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
@@ -128,7 +128,8 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.perfil_id === 1;
+  // CORRIGIDO: Usando a flag is_super_admin
+  const isSuperAdmin = profile?.is_super_admin;
   const canWriteClients = useCanWrite('clients'); // Obtendo a permissão
   
   // Mutação para exclusão em massa (redefinida aqui para usar o queryClient)

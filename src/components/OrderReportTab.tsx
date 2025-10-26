@@ -16,6 +16,7 @@ import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OrderStatus } from '@/integrations/supabase/orders';
 import { useCompanies } from '@/integrations/supabase/companies'; // Importado
+import { showError } from '@/utils/toast'; // Importado
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -104,8 +105,8 @@ const OrderReportTab: React.FC = () => {
       Valor_Total: order.valor_total,
       Cliente_Nome: order.clientes?.nome || 'N/A',
       Cliente_Email: order.clientes?.email || 'N/A',
-      Cliente_Telefone: order.clientes?.telefone || 'N/A',
-      Cliente_Endereco: order.clientes?.endereco_completo || 'N/A',
+      Cliente_Telefone: order.clientes?.telefone || 'N/A', // Corrigido
+      Cliente_Endereco: order.clientes?.endereco_completo || 'N/A', // Corrigido
       Itens: order.pedido_itens.map(item => 
         `${item.produtos?.nome || 'N/A'} (x${item.quantidade} @ ${formatCurrency(item.preco_unitario)})`
       ).join('; '),

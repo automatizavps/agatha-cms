@@ -33,9 +33,9 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
     throw new Error("Failed to fetch users: " + error.message);
   }
   
-  // Mapeamos os dados, definindo o email como 'N/A' na lista
+  // Mapeamos os dados, definindo o email como 'N/A' na lista e corrigindo a tipagem dos relacionamentos
   return data.map(user => {
-    let profileName = user.perfis?.nome;
+    let profileName = user.perfis_customizados?.[0]?.nome; // Acessando o nome do perfil customizado
     
     // Se não houver perfil customizado, determinamos o perfil global
     if (!user.perfil_customizado_id) {
@@ -56,6 +56,7 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
       email: 'N/A', // O email real será buscado no EditUserSheet
       // Mapeia o nome do perfil
       perfis: { nome: profileName || 'N/A' },
+      empresa: user.empresa?.[0] || null, // Corrigindo o relacionamento da empresa
     };
   }) as UserProfile[];
 };

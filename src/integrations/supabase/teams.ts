@@ -55,7 +55,11 @@ const fetchTeams = async (companyId?: string): Promise<Team[]> => {
     throw new Error("Failed to fetch teams");
   }
 
-  return data as Team[];
+  // Mapeamento para corrigir a tipagem do relacionamento 'empresas'
+  return data.map(team => ({
+    ...team,
+    empresas: team.empresas?.[0] || null, // Supabase retorna array, pegamos o primeiro ou null
+  })) as Team[];
 };
 
 export const useTeams = (companyId?: string) => {
@@ -81,7 +85,11 @@ const fetchTeamMembers = async (teamId: string): Promise<TeamMember[]> => {
     throw new Error("Failed to fetch team members");
   }
 
-  return data as TeamMember[];
+  // Mapeamento para corrigir a tipagem do relacionamento 'usuarios'
+  return data.map(member => ({
+    ...member,
+    usuarios: member.usuarios?.[0] || null, // Supabase retorna array, pegamos o primeiro ou null
+  })) as TeamMember[];
 };
 
 export const useTeamMembers = (teamId: string) => {
@@ -99,6 +107,7 @@ interface CreateTeamParams {
   meta_mensal_valor: number;
   meta_mensal_quantidade: number;
   empresa_id?: string; // Apenas para Super Admin
+  member_ids?: string[]; // Adicionado para a mutação
 }
 
 export const createTeam = async ({ nome, meta_mensal_valor, meta_mensal_quantidade, empresa_id: provided_empresa_id }: CreateTeamParams) => {
@@ -224,18 +233,21 @@ export const updateTeamMembers = async ({ teamId, memberIds }: ManageMembersPara
       equipe_id: teamId,
       usuario_id: usuario_id,
     }));
+    // Adicionado .then() para garantir que o retorno seja uma Promise
     mutations.push(
-      supabase.from("equipe_membros").insert(insertPayload)
+      supabase.from("equipe_membros").insert(insertPayload).then(res => res)
     );
   }
 
   // Remover membros
   if (membersToRemove.length > 0) {
+    // Adicionado .then() para garantir que o retorno seja uma Promise
     mutations.push(
       supabase.from("equipe_membros")
         .delete()
         .eq("equipe_id", teamId)
         .in("usuario_id", membersToRemove)
+        .then(res => res)
     );
   }
 

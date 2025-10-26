@@ -16,8 +16,8 @@ const CompanyProfileSettings = () => {
   const isLoading = isLoadingCompanies || isLoadingProfile;
   const company = companies?.[0]; // Para Admin, será a única empresa.
   
-  // Permite edição para Super Admin (1) e Admin (2)
-  const isAllowedToEdit = profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+  // Permite edição para Super Admin (is_super_admin) e Admin de Empresa (empresa_id != null e perfil_customizado_id == null)
+  const isAllowedToEdit = profile && (profile.is_super_admin || (profile.empresa_id && !profile.perfil_customizado_id));
 
   const mutation = useMutation({
     mutationFn: updateCompany,
