@@ -78,6 +78,8 @@ const resources = {
       "top_selling_services_title": "Top 10 Serviços Mais Realizados",
       "total_sold": "Total Vendido",
       "total_realized": "Total Realizado",
+      "latest_appointments_title": "Últimos Agendamentos", // NOVO
+      "no_appointments_found": "Nenhum agendamento recente encontrado.", // NOVO
       
       // Páginas
       "page_title_analytics": "Analytics",

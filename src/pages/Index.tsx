@@ -18,6 +18,7 @@ import DailyOrderByHourChart from "@/components/DailyOrderByHourChart"; // NOVO
 import OrderStatusChart from "@/components/OrderStatusChart"; // NOVO
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
+import LatestAppointmentsCarousel from "@/components/LatestAppointmentsCarousel"; // NOVO IMPORT
 
 const Index = () => {
   const { t } = useTranslation();
@@ -129,6 +130,9 @@ const Index = () => {
             </Select>
           </div>
         )}
+        
+        {/* NOVO: Seção 0: Últimos Agendamentos (Carousel) */}
+        <LatestAppointmentsCarousel companyId={filteredCompanyId} />
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
         <div className="flex flex-col gap-4">
