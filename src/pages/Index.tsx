@@ -19,6 +19,7 @@ import OrderStatusChart from "@/components/OrderStatusChart"; // NOVO
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
 import LatestAppointmentsCarousel from "@/components/LatestAppointmentsCarousel"; // NOVO IMPORT
+import LatestOrdersCarousel from "@/components/LatestOrdersCarousel"; // NOVO IMPORT
 
 const Index = () => {
   const { t } = useTranslation();
@@ -131,7 +132,7 @@ const Index = () => {
           </div>
         )}
         
-        {/* NOVO: Seção 0: Últimos Agendamentos (Carousel) */}
+        {/* Seção 0: Últimos Agendamentos (Carousel) */}
         <LatestAppointmentsCarousel companyId={filteredCompanyId} />
         
         {/* Seção 1: Métricas de Agendamento e Faturamento */}
@@ -229,6 +230,9 @@ const Index = () => {
             </Card>
           </div>
         </div>
+        
+        {/* NOVO: Seção 1.5: Últimos Pedidos (Carousel) */}
+        <LatestOrdersCarousel companyId={filteredCompanyId} />
         
         {/* Seção 2: Metas das Equipes */}
         {/* Exibe metas apenas se uma empresa específica estiver selecionada */}

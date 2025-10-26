@@ -79,6 +79,7 @@ const resources = {
       "total_sold": "Total Vendido",
       "total_realized": "Total Realizado",
       "latest_appointments_title": "Últimos Agendamentos", // NOVO
+      "latest_orders_title": "Últimos Pedidos", // NOVO
       "no_appointments_found": "Nenhum agendamento recente encontrado.", // NOVO
       
       // Páginas
