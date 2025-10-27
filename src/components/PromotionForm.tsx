@@ -36,6 +36,7 @@ import { useProductsOnly, useServicesOnly, Product } from "@/integrations/supaba
 import { Switch } from "@/components/ui/switch";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form as ShadcnForm } from "@/components/ui/form";
 type RuleType = 'categoria' | 'produto' | 'servico';
 
 const ruleSchema = z.object({
@@ -211,7 +212,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
   }
 
   return (
-    <Form {...form}>
+    <ShadcnForm {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
         {/* Campo Empresa */}
@@ -556,7 +557,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
           )}
         </Button>
       </form>
-    </ShadcnForm>
+    </Form>
   );
 };
 
