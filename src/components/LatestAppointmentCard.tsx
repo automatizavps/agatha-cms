@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; //
 
 interface LatestAppointmentCardProps {
   appointment: Appointment;
+  onClick: (appointment: Appointment) => void; // NOVO: Propriedade de clique
 }
 
 // Cores e classes baseadas no status
@@ -27,7 +28,7 @@ const statusIcons: Record<Appointment['status'], React.ReactNode> = {
   concluido: <CheckCircle className="h-4 w-4 text-primary" />,
 };
 
-const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointment }) => {
+const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointment, onClick }) => {
   const { t } = useTranslation();
   const statusClass = statusColors[appointment.status] || 'border-muted bg-muted/50';
   const statusIcon = statusIcons[appointment.status];
@@ -65,7 +66,13 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
   };
 
   return (
-    <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
+    <Card 
+      className={cn(
+        "w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg cursor-pointer", 
+        statusClass
+      )}
+      onClick={() => onClick(appointment)} // Adicionando o manipulador de clique
+    >
       <CardHeader className="p-3 pb-1 flex-row items-center justify-between">
         {/* Cliente e Avatar no topo */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -88,7 +95,6 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
         
         {/* Valor Total (NOVO) */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          {/* Ícone DollarSign removido */}
           <span className="text-sm font-medium text-primary">{formatCurrency(totalValue)}</span>
         </div>
         
