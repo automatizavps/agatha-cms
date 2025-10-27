@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { createNotification } from "./notifications";
+import { Product } from "./products"; // Importando Product para tipagem
+import { Category } from "./categories"; // Importando Category para tipagem
 
 export interface PromotionRule {
   id: string;
@@ -45,7 +47,8 @@ const fetchPromotions = async (companyId?: string): Promise<Promotion[]> => {
       data_fim,
       desconto_percentual,
       created_at,
-      empresas (nome)
+      empresas (nome),
+      is_active
     `);
     
   if (companyId) {
@@ -59,19 +62,8 @@ const fetchPromotions = async (companyId?: string): Promise<Promotion[]> => {
     throw new Error("Failed to fetch promotions");
   }
   
-  // Adiciona o campo is_active (assumindo que a tabela não tem, mas o tipo precisa)
-  // Para simplificar, vamos assumir que a tabela 'promocoes' tem a coluna 'is_active' (que não está no schema, mas vamos adicionar no update)
-  // Por enquanto, vamos simular o status ativo/inativo com base na data_fim e um novo campo que vamos adicionar.
-  
-  // Como o schema fornecido não tem 'is_active', vamos assumir que a promoção está ativa se a data_fim for futura.
-  // Para permitir o controle manual de suspensão, vamos adicionar o campo 'is_active' na tabela.
-  
-  // Se a coluna 'is_active' não existir, o Supabase a ignora. Vamos forçar a adição da coluna no próximo passo.
-  
   return data.map(p => ({
     ...p,
-    // Simulação temporária de is_active (será corrigido com a coluna real)
-    is_active: new Date(p.data_fim) > new Date(),
     desconto_percentual: parseFloat(String(p.desconto_percentual)) || 0,
   })) as Promotion[];
 };
@@ -93,9 +85,8 @@ const fetchPromotionRules = async (promotionId: string): Promise<PromotionRule[]
       promocao_id,
       tipo_regra,
       entidade_id,
-      created_at,
-      entidade:produtos (nome)
-    `)
+      created_at
+    `) // Removido o join direto com 'produtos'
     .eq('promocao_id', promotionId);
 
   if (error) {
@@ -103,12 +94,39 @@ const fetchPromotionRules = async (promotionId: string): Promise<PromotionRule[]
     throw new Error("Failed to fetch promotion rules");
   }
 
-  return data.map(rule => ({
-    ...rule,
-    // Se a regra for de categoria, precisamos buscar o nome da categoria separadamente
-    // Por enquanto, vamos assumir que o nome da entidade é o nome do produto/serviço
-    entidade: rule.entidade || null,
-  })) as PromotionRule[];
+  // Agora, para cada regra, precisamos buscar o nome da entidade separadamente
+  const rulesWithEntityNames = await Promise.all(data.map(async (rule) => {
+    let entityName: string | null = null;
+    if (rule.tipo_regra === 'produto' || rule.tipo_regra === 'servico') {
+      const { data: productData, error: productError } = await supabase
+        .from('produtos')
+        .select('nome')
+        .eq('id', rule.entidade_id)
+        .single();
+      if (productData) {
+        entityName = productData.nome;
+      } else if (productError) {
+        console.warn(`Could not fetch product/service name for ID ${rule.entidade_id}:`, productError.message);
+      }
+    } else if (rule.tipo_regra === 'categoria') {
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categorias')
+        .select('nome')
+        .eq('id', rule.entidade_id)
+        .single();
+      if (categoryData) {
+        entityName = categoryData.nome;
+      } else if (categoryError) {
+        console.warn(`Could not fetch category name for ID ${rule.entidade_id}:`, categoryError.message);
+      }
+    }
+    return {
+      ...rule,
+      entidade: entityName ? { nome: entityName } : null,
+    };
+  }));
+
+  return rulesWithEntityNames as PromotionRule[];
 };
 
 export const usePromotionRules = (promotionId: string) => {
