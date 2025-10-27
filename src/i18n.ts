@@ -91,6 +91,11 @@ const resources = {
       "latest_orders_title": "Últimos Pedidos",
       "no_appointments_found": "Nenhum agendamento recente encontrado.",
       
+      // Top Clients (NOVO)
+      "top_clients_section_title": "Top Clientes",
+      "top_clients_orders_title": "Top 10 Clientes por Pedidos (Valor)",
+      "top_clients_appointments_title": "Top 10 Clientes por Agendamentos (Concluídos)",
+      
       // Páginas
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Relatórios detalhados e visualizações de dados.",
@@ -136,6 +141,13 @@ const resources = {
       "clients_deleted_success": "{{count}} cliente(s) excluído(s) com sucesso.",
       "client_name": "Nome do Cliente",
       "client_name_placeholder": "Nome completo do cliente",
+      "avatar": "Avatar",
+      "avatar_upload_note": "O avatar só será salvo após o cadastro do cliente.",
+      "click_upload_to_save": "Clique em Upload para salvar a nova imagem.",
+      "avatar_updated_success": "Avatar atualizado com sucesso!",
+      "upload_failed": "Falha no upload: ",
+      "avatar_removed_success": "Avatar removido com sucesso!",
+      "remove_avatar_failed": "Falha ao remover avatar: ",
       
       "page_title_products": "Gestão de Produtos",
       "product_list_title": "Lista de Produtos",
@@ -511,6 +523,11 @@ const resources = {
       "latest_orders_title": "Latest Orders",
       "no_appointments_found": "No recent appointments found.",
       
+      // Top Clients (NEW)
+      "top_clients_section_title": "Top Clients",
+      "top_clients_orders_title": "Top 10 Clients by Orders (Value)",
+      "top_clients_appointments_title": "Top 10 Clients by Appointments (Completed)",
+      
       // Pages
       "page_title_analytics": "Analytics",
       "page_subtitle_analytics": "Detailed reports and data visualizations.",
@@ -556,6 +573,13 @@ const resources = {
       "clients_deleted_success": "{{count}} client(s) deleted successfully.",
       "client_name": "Client Name",
       "client_name_placeholder": "Client full name",
+      "avatar": "Avatar",
+      "avatar_upload_note": "The avatar will only be saved after client registration.",
+      "click_upload_to_save": "Click Upload to save the new image.",
+      "avatar_updated_success": "Avatar updated successfully!",
+      "upload_failed": "Upload failed: ",
+      "avatar_removed_success": "Avatar removed successfully!",
+      "remove_avatar_failed": "Failed to remove avatar: ",
       
       "page_title_products": "Product Management",
       "product_list_title": "Product List",
@@ -735,7 +759,7 @@ const resources = {
       "select_company_to_load_data": "Select a company to load clients, users, and items.",
       "add_new_appointment": "New Appointment",
       
-      // Reports
+      // Relatórios
       "select_date_range": "Select date range",
       "filter_all_status": "All Status",
       "export_data": "Export Data",

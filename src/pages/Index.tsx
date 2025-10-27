@@ -20,6 +20,8 @@ import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // Importando perfil
 import LatestAppointmentsCarousel from "@/components/LatestAppointmentsCarousel"; // NOVO IMPORT
 import LatestOrdersCarousel from "@/components/LatestOrdersCarousel"; // NOVO IMPORT
+import TopClientsByOrdersCard from "@/components/TopClientsByOrdersCard"; // NOVO IMPORT
+import TopClientsByAppointmentsCard from "@/components/TopClientsByAppointmentsCard"; // NOVO IMPORT
 
 const Index = () => {
   const { t } = useTranslation();
@@ -244,8 +246,10 @@ const Index = () => {
             </h2>
             
             {isLoadingTeams ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 h-40">
+                <div className="flex justify-center items-center col-span-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
               </div>
             ) : isTeamsError || !teams || teams.length === 0 ? (
               <Card>
@@ -307,7 +311,19 @@ const Index = () => {
         {/* Seção 5: Últimos Produtos Cadastrados (Carousel) */}
         <LatestProductsCarousel companyId={filteredCompanyId} />
         
-        {/* Seção 6: Top 10 Produtos e Serviços Mais Vendidos */}
+        {/* Seção 6: Top 10 Clientes (Pedidos e Agendamentos) - NOVO */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Users className="h-6 w-6 text-muted-foreground" />
+            {t('top_clients_section_title', { defaultValue: 'Top Clientes' })}
+          </h2>
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+            <TopClientsByOrdersCard companyId={filteredCompanyId} />
+            <TopClientsByAppointmentsCard companyId={filteredCompanyId} />
+          </div>
+        </div>
+        
+        {/* Seção 7: Top 10 Produtos e Serviços Mais Vendidos */}
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
           <TopSellingItemsCard companyId={filteredCompanyId} />
           <TopSellingServicesCard companyId={filteredCompanyId} />
