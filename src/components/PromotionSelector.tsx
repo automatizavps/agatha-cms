@@ -8,11 +8,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Tag, Percent, XCircle, Building } from 'lucide-react'; // Adicionado Building
+import { Loader2, Tag, Percent, XCircle, Building } from 'lucide-react';
 import { useActivePromotions } from '@/integrations/supabase/promotions';
 import { Promotion } from '@/integrations/supabase/promotions';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'; // Importando Tooltip
 
 interface PromotionSelectorProps {
   companyId: string | undefined;
