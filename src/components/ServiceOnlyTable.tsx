@@ -44,10 +44,7 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit, canWri
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // CHAME TODOS OS HOOKS NO TOPO
   const deleteMutation = useMutation({
     mutationFn: () => deleteProduct(service.id, service.nome, service.tipo, service.empresa_id, queryClient),
     onSuccess: () => {
@@ -58,6 +55,11 @@ const ServiceActions: React.FC<ServiceActionsProps> = ({ service, onEdit, canWri
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+
+  // RETORNO CONDICIONAL DEPOIS DOS HOOKS
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {

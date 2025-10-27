@@ -46,10 +46,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit, canWri
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // CHAME TODOS OS HOOKS NO TOPO
   const deleteMutation = useMutation({
     mutationFn: () => deleteProduct(product.id, product.nome, product.tipo, product.empresa_id, queryClient),
     onSuccess: () => {
@@ -60,6 +57,11 @@ const ProductActions: React.FC<ProductActionsProps> = ({ product, onEdit, canWri
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+
+  // RETORNO CONDICIONAL DEPOIS DOS HOOKS
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
@@ -275,7 +277,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="text-center" // ALTERADO para text-center
+                className="text-center"
               >
                 {t('product_table_header_stock')}
               </SortableHeader>
@@ -321,7 +323,7 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                     {product.marca || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell className="text-center font-semibold"> {/* ALTERADO para text-center */}
+                <TableCell className="text-center font-semibold">
                   <Badge variant={product.estoque_total && product.estoque_total > 10 ? 'default' : 'destructive'}>
                     {product.estoque_total !== null ? product.estoque_total : 'N/A'}
                   </Badge>
