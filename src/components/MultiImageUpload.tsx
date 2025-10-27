@@ -1,16 +1,17 @@
 import React, { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSession } from '@/integrations/supabase/auth';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { showSuccess, showError } from '@/utils/toast';
 import { Card, CardContent } from '@/components/ui/card';
-import { useSession } from '@/integrations/supabase/auth';
 
 interface MultiImageUploadProps {
   currentUrls: string[] | null;
   onUrlsChange: (newUrls: string[] | null) => void;
   disabled?: boolean;
+  companyId?: string; // Adicionado para consistência, embora não usado diretamente aqui
 }
 
 const MultiImageUpload: React.FC<MultiImageUploadProps> = ({ currentUrls = [], onUrlsChange, disabled = false }) => {
@@ -76,21 +77,25 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({ currentUrls = [], o
   const handleRemove = useCallback(async (urlToRemove: string) => {
     if (!userId) return;
     
-    // 1. Remover do Supabase Storage
+    // 1. Remover da lista local IMEDIATAMENTE para evitar re-renderização do formulário pai
+    const updatedUrls = currentUrls?.filter(url => url !== urlToRemove) || null;
+    onUrlsChange(updatedUrls);
+    showSuccess("Imagem removida.");
+    
+    // 2. Remover do Supabase Storage (operação assíncrona em segundo plano)
     const pathMatch = urlToRemove.match(/product_images\/(.*)/);
     if (pathMatch && pathMatch[1]) {
       const pathToDelete = pathMatch[1];
       
-      // Não precisamos de setUploading aqui, pois a remoção é rápida e não bloqueia o formulário principal
-      await supabase.storage
+      const { error: deleteError } = await supabase.storage
         .from(bucketName)
         .remove([pathToDelete]);
+        
+      if (deleteError) {
+        console.error("Storage delete error (non-critical for UI):", deleteError);
+        // Poderíamos mostrar um erro, mas o estado local já foi atualizado.
+      }
     }
-    
-    // 2. Remover da lista local
-    const updatedUrls = currentUrls?.filter(url => url !== urlToRemove) || null;
-    onUrlsChange(updatedUrls);
-    showSuccess("Imagem removida.");
     
   }, [userId, currentUrls, onUrlsChange]);
 
