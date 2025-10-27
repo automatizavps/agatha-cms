@@ -88,7 +88,7 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
         
         {/* Valor Total (NOVO) */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          <DollarSign className="h-4 w-4 flex-shrink-0" />
+          {/* Ícone DollarSign removido */}
           <span className="text-sm font-medium text-primary">{formatCurrency(totalValue)}</span>
         </div>
         
