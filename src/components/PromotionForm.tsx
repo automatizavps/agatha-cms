@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,21 +60,20 @@ const baseFormSchema = z.object({
   }),
   is_active: z.boolean(),
   rules: z.array(ruleSchema).min(1, { message: "A promoção deve ter pelo menos uma regra." }),
-});
-
-// Esquema para Super Admin (com empresa_id obrigatório)
-const superAdminFormSchema = baseFormSchema.extend({
+  
+  // Campo Empresa (opcional no base)
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
-  }).min(1, { message: "A empresa é obrigatória." }),
-});
-
-// Esquema para outros usuários (sem empresa_id)
-const nonSuperAdminFormSchema = baseFormSchema.extend({
-  empresa_id: z.string().optional(),
+  }).or(z.literal("")).optional(), 
 });
 
 type PromotionFormValues = z.infer<typeof baseFormSchema>;
+
+interface ItemToCreate {
+  produto_id: string;
+  quantidade: number;
+  preco_unitario: number;
+}
 
 interface PromotionFormProps {
   onSubmit: (values: { 
@@ -91,18 +90,24 @@ interface PromotionFormProps {
   isEditing?: boolean;
 }
 
+const NONE_VALUE = "__NONE__";
+
 const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, defaultPromotion, isEditing = false }) => {
-  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { data: profile, isLoading: isLoadingCurrentProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.is_super_admin;
-  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
   const formSchema = isSuperAdmin && !isEditing
-    ? superAdminFormSchema
-    : nonSuperAdminFormSchema;
+    ? baseFormSchema.extend({
+        empresa_id: z.string().uuid({
+          message: t("select_valid_company"),
+        }).min(1, { message: t("company_required_super_admin") }),
+      })
+    : baseFormSchema;
 
   const form = useForm<PromotionFormValues>({
     resolver: zodResolver(formSchema),
@@ -126,7 +131,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
     name: "rules",
   });
   
-  // Observa o ID da empresa selecionada
+  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
   const selectedCompanyId = isEditing 
     ? defaultPromotion?.empresa_id 
     : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
@@ -313,7 +318,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal h-8",
                           !field.value && "text-muted-foreground"
                         )}
                         disabled={isSubmitting}
@@ -350,7 +355,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal h-8",
                           !field.value && "text-muted-foreground"
                         )}
                         disabled={isSubmitting}
@@ -546,7 +551,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || !isCompanySelected}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
