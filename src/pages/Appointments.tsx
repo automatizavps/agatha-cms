@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react"; // Importando useEffect
 import EditAppointmentSheet from "@/components/EditAppointmentSheet";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -31,7 +31,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
-import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
+import { useCanWrite } from "@/hooks/use-module-permission";
+import { useSearchParams, useNavigate } from "react-router-dom"; // Importando useSearchParams e useNavigate
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -215,6 +216,10 @@ const Appointments = () => {
   
   // Permissões reintroduzidas
   const canWriteAppointments = useCanWrite('appointments');
+  
+  // URL Params para edição automática
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Fetch data using filters
   const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(
@@ -232,15 +237,34 @@ const Appointments = () => {
     showError(t("error_loading_data") + ": " + error.message);
   }
   
+  // Efeito para verificar o parâmetro 'editId' na URL e abrir o sheet
+  useEffect(() => {
+    const editId = searchParams.get('editId');
+    if (editId && appointments && !editingAppointment) {
+      const appointmentToEdit = appointments.find(a => a.id === editId);
+      if (appointmentToEdit) {
+        setEditingAppointment(appointmentToEdit);
+        setIsEditSheetOpen(true);
+      } else if (!isLoading) {
+        // Se o agendamento não for encontrado, limpa o parâmetro da URL
+        navigate('/appointments', { replace: true });
+      }
+    }
+  }, [searchParams, appointments, isLoading, navigate, editingAppointment]);
+  
   const handleEdit = (appointment: Appointment) => {
     setEditingAppointment(appointment);
     setIsEditSheetOpen(true);
+    // Adiciona o ID na URL para persistência e recarregamento
+    navigate(`/appointments?editId=${appointment.id}`, { replace: true });
   };
 
   const handleCloseEditSheet = (open: boolean) => {
     setIsEditSheetOpen(open);
     if (!open) {
       setEditingAppointment(null);
+      // Limpa o parâmetro de busca da URL ao fechar
+      navigate('/appointments', { replace: true });
     }
   };
   
