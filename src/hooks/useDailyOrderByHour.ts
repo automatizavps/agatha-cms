@@ -7,7 +7,7 @@ export type DailyOrderCount = {
   count: number;
 };
 
-const fetchDailyOrderCountByHour = async (companyId: string | undefined): Promise<DailyOrderCount[]> => {
+const fetchDailyOrderCountByHour = async (companyId: string | undefined, targetDate: string | undefined): Promise<DailyOrderCount[]> => {
   let rpcName = 'get_daily_order_count_by_hour';
   let rpcArgs: Record<string, any> = {};
   
@@ -16,6 +16,11 @@ const fetchDailyOrderCountByHour = async (companyId: string | undefined): Promis
   } else {
     // Se companyId for undefined, usamos a versão ALL
     rpcName = 'get_daily_order_count_by_hour_all';
+  }
+  
+  // Adiciona a data alvo se fornecida
+  if (targetDate) {
+    rpcArgs.target_date = targetDate;
   }
   
   const { data, error } = await supabase.rpc(rpcName, rpcArgs);
@@ -31,18 +36,18 @@ const fetchDailyOrderCountByHour = async (companyId: string | undefined): Promis
   }));
 };
 
-export const useDailyOrderByHour = () => {
+export const useDailyOrderByHour = (targetDate?: string) => {
   const { filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   
-  // Use a data atual como parte da chave para garantir que os dados sejam atualizados diariamente
-  const currentDate = new Date().toISOString().slice(0, 10); 
+  // Use a data alvo como parte da chave para garantir que os dados sejam atualizados
+  const queryDateKey = targetDate || new Date().toISOString().slice(0, 10); 
 
   // Habilitado sempre, pois a função agora lida com companyId opcional
   const isEnabled = !isLoadingFilter;
 
   return useQuery<DailyOrderCount[], Error>({
-    queryKey: ['dailyOrderCountByHour', filteredCompanyId, currentDate],
-    queryFn: () => fetchDailyOrderCountByHour(filteredCompanyId),
+    queryKey: ['dailyOrderCountByHour', filteredCompanyId, queryDateKey],
+    queryFn: () => fetchDailyOrderCountByHour(filteredCompanyId, targetDate),
     enabled: isEnabled,
     refetchOnWindowFocus: true, 
     staleTime: 1000 * 60 * 5, // 5 minutos de validade

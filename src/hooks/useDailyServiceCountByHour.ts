@@ -7,7 +7,7 @@ export type DailyServiceCount = {
   count: number;
 };
 
-const fetchDailyServiceCountByHour = async (companyId: string | undefined): Promise<DailyServiceCount[]> => {
+const fetchDailyServiceCountByHour = async (companyId: string | undefined, targetDate: string | undefined): Promise<DailyServiceCount[]> => {
   let rpcName = 'get_daily_service_count_by_hour';
   let rpcArgs: Record<string, any> = {};
   
@@ -16,6 +16,11 @@ const fetchDailyServiceCountByHour = async (companyId: string | undefined): Prom
   } else {
     // Se companyId for undefined, usamos a versão ALL
     rpcName = 'get_daily_service_count_by_hour_all';
+  }
+  
+  // Adiciona a data alvo se fornecida
+  if (targetDate) {
+    rpcArgs.target_date = targetDate;
   }
   
   const { data, error } = await supabase.rpc(rpcName, rpcArgs);
@@ -34,17 +39,17 @@ const fetchDailyServiceCountByHour = async (companyId: string | undefined): Prom
   }));
 };
 
-export const useDailyServiceCountByHour = () => {
+export const useDailyServiceCountByHour = (targetDate?: string) => {
   const { filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   
-  // Use a data atual como parte da chave para garantir que os dados sejam atualizados diariamente
-  const currentDate = new Date().toISOString().slice(0, 10); 
+  // Use a data alvo como parte da chave para garantir que os dados sejam atualizados
+  const queryDateKey = targetDate || new Date().toISOString().slice(0, 10); 
 
   const isEnabled = !isLoadingFilter;
 
   return useQuery<DailyServiceCount[], Error>({
-    queryKey: ['dailyServiceCountByHour', filteredCompanyId, currentDate],
-    queryFn: () => fetchDailyServiceCountByHour(filteredCompanyId),
+    queryKey: ['dailyServiceCountByHour', filteredCompanyId, queryDateKey],
+    queryFn: () => fetchDailyServiceCountByHour(filteredCompanyId, targetDate),
     enabled: isEnabled,
   });
 };

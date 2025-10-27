@@ -3,9 +3,16 @@
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDailyOrderByHour, DailyOrderCount } from "@/hooks/useDailyOrderByHour";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
+import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 // Função auxiliar para formatar o rótulo do eixo X (hora)
 const formatHour = (tick: number) => {
@@ -27,14 +34,23 @@ const CustomTooltip = ({ active, payload, label, t }: any) => {
 
 export default function DailyOrderByHourChart() {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useDailyOrderByHour();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
+  // Formata a data para YYYY-MM-DD para o hook
+  const targetDateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined;
+  
+  const { data, isLoading, isError } = useDailyOrderByHour(targetDateString);
   const { filteredCompanyId, isSuperAdmin } = useDashboardFilter();
+
+  const chartTitle = selectedDate 
+    ? `${t('chart_title_daily_orders')} (${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })})`
+    : t('chart_title_daily_orders');
 
   if (isLoading) {
     return (
       <Card className="h-64">
         <CardHeader>
-          <CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle>
+          <CardTitle className="text-lg">{chartTitle}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center items-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -43,14 +59,14 @@ export default function DailyOrderByHourChart() {
     );
   }
   
-  // Se for Super Admin e estiver em 'Todas as Empresas', mas não houver dados, 
-  // exibimos a mensagem de 'sem dados' em vez de 'selecione uma empresa'.
-  // A verificação `!filteredCompanyId` foi removida, pois o hook agora lida com a agregação.
-  if (isError || !data || data.length === 0 || data.every(d => d.count === 0)) {
+  const hasData = data && data.length > 0 && data.some(d => d.count > 0);
+
+  if (isError || !hasData) {
     return (
       <Card className="h-64">
-        <CardHeader>
-          <CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg">{chartTitle}</CardTitle>
+          <DateFilter selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
         </CardHeader>
         <CardContent className="h-full flex items-center justify-center text-center text-sm text-muted-foreground">
           {isError ? t("chart_error") : t("chart_no_data_today_orders")}
@@ -63,8 +79,9 @@ export default function DailyOrderByHourChart() {
 
   return (
     <Card className="h-64">
-      <CardHeader>
-        <CardTitle className="text-lg">{t('chart_title_daily_orders')}</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">{chartTitle}</CardTitle>
+        <DateFilter selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
       </CardHeader>
       <CardContent className="h-[calc(100%-4rem)]">
         <ResponsiveContainer width="100%" height="100%">
@@ -110,3 +127,43 @@ export default function DailyOrderByHourChart() {
     </Card>
   );
 }
+
+// Componente auxiliar para o filtro de data
+interface DateFilterProps {
+  selectedDate: Date | undefined;
+  setSelectedDate: (date: Date | undefined) => void;
+}
+
+const DateFilter: React.FC<DateFilterProps> = ({ selectedDate, setSelectedDate }) => {
+  const { t } = useTranslation();
+  
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant={"outline"}
+          className={cn(
+            "w-[150px] justify-start text-left font-normal h-8",
+            !selectedDate && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {selectedDate ? (
+            format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })
+          ) : (
+            <span>{t('select_date')}</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="end">
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={setSelectedDate}
+          initialFocus
+          locale={ptBR}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+};
