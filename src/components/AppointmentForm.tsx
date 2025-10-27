@@ -38,6 +38,7 @@ import PromotionSelector from "./PromotionSelector";
 import { Promotion, usePromotionRules } from "@/integrations/supabase/promotions";
 import { useUsers } from "@/integrations/supabase/users";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client"; // Importando supabase para buscar promoção
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -82,7 +83,7 @@ interface ItemToCreate {
 interface AppointmentFormProps {
   onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: ItemToCreate[]; status?: Appointment['status']; empresa_id?: string; promocao_id?: string | null }) => void;
   isSubmitting: boolean;
-  defaultValues?: Partial<AppointmentFormValues & { items: ItemToCreate[] }>;
+  defaultValues?: Partial<AppointmentFormValues & { items: ItemToCreate }>;
   isEditing?: boolean;
 }
 
@@ -170,6 +171,26 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
 
   const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
   const { data: promotionRules, isLoading: isLoadingPromotionRules } = usePromotionRules(activePromotion?.id || '');
+
+  // Sincroniza a promoção inicial na edição
+  useEffect(() => {
+    if (isEditing && defaultValues?.promocao_id && !activePromotion) {
+      // Busca a promoção pelo ID para preencher o activePromotion
+      const fetchInitialPromotion = async () => {
+        const { data: promoData } = await supabase
+          .from('promocoes')
+          .select('*')
+          .eq('id', defaultValues.promocao_id)
+          .single();
+        if (promoData) {
+          setActivePromotion(promoData as Promotion);
+        }
+      };
+      fetchInitialPromotion();
+    } else if (!isEditing) {
+      setActivePromotion(null); // Limpa a promoção ao criar um novo
+    }
+  }, [isEditing, defaultValues?.promocao_id]);
 
   // Validação da promoção
   const isPromotionValid = useMemo(() => {
@@ -587,27 +608,25 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           </CardContent>
         </Card>
 
-        {!isEditing && (
-          <FormField
-            control={form.control}
-            name="promocao_id"
-            render={({ field }) => (
-              <FormItem>
-                <PromotionSelector
-                  companyId={selectedCompanyId}
-                  selectedPromotionId={field.value || null}
-                  onPromotionChange={(promo) => {
-                    field.onChange(promo?.id || null);
-                    setActivePromotion(promo);
-                  }}
-                  disabled={isSubmitting || !isCompanySelected}
-                  label={t('promotion', { defaultValue: 'Promoção' })}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="promocao_id"
+          render={({ field }) => (
+            <FormItem>
+              <PromotionSelector
+                companyId={selectedCompanyId}
+                selectedPromotionId={field.value || null}
+                onPromotionChange={(promo) => {
+                  field.onChange(promo?.id || null);
+                  setActivePromotion(promo);
+                }}
+                disabled={isSubmitting || !isCompanySelected}
+                label={t('promotion', { defaultValue: 'Promoção' })}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         {!isPromotionValid && activePromotion && (
           <Alert variant="destructive">
