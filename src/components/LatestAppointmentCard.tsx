@@ -6,8 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Link } from 'react-router-dom'; // Importando Link
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Importando Avatar
 
 interface LatestAppointmentCardProps {
   appointment: Appointment;
@@ -51,68 +50,63 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
   const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
 
   return (
-    <Link 
-      to={`/appointments?editId=${appointment.id}`} 
-      className="block h-full"
-    >
-      <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg hover:shadow-primary/20 cursor-pointer", statusClass)}>
-        <CardHeader className="p-3 pb-1 flex-row items-center justify-between">
-          {/* Cliente e Avatar no topo */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarImage src={clientAvatarUrl || undefined} alt={clientName} className="object-cover" />
-              <AvatarFallback className="text-sm">{clientInitials}</AvatarFallback>
-            </Avatar>
-            <CardTitle className="text-base truncate font-semibold">
-              {clientName}
-            </CardTitle>
-          </div>
-          
-          {/* Status */}
-          <div className="flex items-center gap-1 text-xs font-medium capitalize flex-shrink-0 ml-2">
-            {statusIcon}
-            <span className="text-muted-foreground">{t(appointment.status)}</span>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 pt-1 space-y-2 text-sm flex-1">
-          
-          {/* Data e Hora */}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-medium">{formattedDate}</span>
-            <Clock className="h-4 w-4 flex-shrink-0 ml-2" />
-            <span className="text-sm font-medium">{formattedTime}</span>
-          </div>
-          
-          {/* Responsável (Agora com Avatar) */}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={responsibleAvatarUrl || undefined} alt={responsibleName} />
-              <AvatarFallback className="text-xs">{responsibleInitials}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm truncate">{responsibleName}</span>
-          </div>
-          
-          {/* Serviço/Produto Principal */}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Package className="h-4 w-4 flex-shrink-0" /> 
-            <span className="text-sm truncate font-medium text-foreground">{mainItemName}</span>
-            {items.length > 1 && (
-              <span className="text-xs text-muted-foreground ml-1"> (+{items.length - 1} {t('items')})</span>
-            )}
-          </div>
-          
-          {/* Empresa */}
-          {appointment.empresas?.nome && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Building className="h-4 w-4 flex-shrink-0" />
-              <span className="text-xs truncate">{appointment.empresas.nome}</span>
-            </div>
+    <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
+      <CardHeader className="p-3 pb-1 flex-row items-center justify-between">
+        {/* Cliente e Avatar no topo */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarImage src={clientAvatarUrl || undefined} alt={clientName} className="object-cover" />
+            <AvatarFallback className="text-sm">{clientInitials}</AvatarFallback>
+          </Avatar>
+          <CardTitle className="text-base truncate font-semibold">
+            {clientName}
+          </CardTitle>
+        </div>
+        
+        {/* Status */}
+        <div className="flex items-center gap-1 text-xs font-medium capitalize flex-shrink-0 ml-2">
+          {statusIcon}
+          <span className="text-muted-foreground">{t(appointment.status)}</span>
+        </div>
+      </CardHeader>
+      <CardContent className="p-3 pt-1 space-y-2 text-sm flex-1">
+        
+        {/* Data e Hora */}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Calendar className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm font-medium">{formattedDate}</span>
+          <Clock className="h-4 w-4 flex-shrink-0 ml-2" />
+          <span className="text-sm font-medium">{formattedTime}</span>
+        </div>
+        
+        {/* Responsável (Agora com Avatar) */}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={responsibleAvatarUrl || undefined} alt={responsibleName} />
+            <AvatarFallback className="text-xs">{responsibleInitials}</AvatarFallback>
+          </Avatar>
+          <span className="text-sm truncate">{responsibleName}</span>
+        </div>
+        
+        {/* Serviço/Produto Principal */}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Package className="h-4 w-4 flex-shrink-0" /> 
+          <span className="text-sm truncate font-medium text-foreground">{mainItemName}</span>
+          {items.length > 1 && (
+            <span className="text-xs text-muted-foreground ml-1"> (+{items.length - 1} {t('items')})</span>
           )}
-          
-        </CardContent>
-      </Card>
-    </Link>
+        </div>
+        
+        {/* Empresa */}
+        {appointment.empresas?.nome && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Building className="h-4 w-4 flex-shrink-0" />
+            <span className="text-xs truncate">{appointment.empresas.nome}</span>
+          </div>
+        )}
+        
+      </CardContent>
+    </Card>
   );
 };
 
