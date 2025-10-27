@@ -99,19 +99,19 @@ const LatestOrdersCarousel: React.FC<LatestOrdersCarouselProps> = ({ companyId }
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between p-4 pb-0"> {/* ALTERADO: p-4 pb-0 */}
+      <CardHeader className="flex flex-row items-center justify-between p-4 pb-0">
         <CardTitle className="text-lg flex items-center gap-2">
           <ShoppingCart className="h-5 w-5" /> {t('latest_orders_title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0" ref={containerRef}>
-        <div className="embla overflow-hidden" ref={emblaRef}>
-          <div className="embla__container flex touch-pan-y">
+        <div className="embla overflow-hidden pl-6 pr-6" ref={emblaRef}> {/* Adicionado pl-6 e pr-6 aqui */}
+          <div className="embla__container flex touch-pan-y gap-6"> {/* Adicionado gap-6 aqui */}
             {slides.map((order) => (
               <div 
                 key={order.id} 
                 className={cn(
-                  "embla__slide flex-none min-w-0 pl-6 py-4",
+                  "embla__slide flex-none min-w-0 py-4", // Removido pl-6
                   // Mobile: 1 card (w-full), Tablet: 3 cards (sm:w-1/3), Desktop: 4 cards (md:w-1/4)
                   "w-full sm:w-1/3 md:w-1/4" 
                 )}
@@ -119,8 +119,7 @@ const LatestOrdersCarousel: React.FC<LatestOrdersCarouselProps> = ({ companyId }
                 <LatestOrderCard order={order} />
               </div>
             ))}
-            {/* Adiciona padding no final */}
-            <div className="flex-none w-6"></div> 
+            {/* Removido o div de padding extra */}
           </div>
         </div>
       </CardContent>
