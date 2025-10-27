@@ -128,12 +128,6 @@ export function UserMenu() {
         >
           Português (BR)
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => changeLanguage('en-US')}
-          className={i18n.language === 'en-US' ? "font-bold bg-accent" : ""}
-        >
-          English (US)
-        </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">

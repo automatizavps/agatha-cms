@@ -492,6 +492,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
+    lng: 'pt-BR', // Define o idioma inicial como pt-BR
     fallbackLng: 'pt-BR',
     interpolation: {
       escapeValue: false,
