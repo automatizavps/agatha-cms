@@ -24,12 +24,12 @@ import { useProductsOnly, useServicesOnly, Product } from "@/integrations/supaba
 import { OrderStatus } from "@/integrations/supabase/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react"; // Adicionado useState
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
-import PromotionSelector from "./PromotionSelector"; // NOVO IMPORT
-import { Promotion } from "@/integrations/supabase/promotions"; // NOVO IMPORT
+import PromotionSelector from "./PromotionSelector";
+import { Promotion } from "@/integrations/supabase/promotions";
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -51,7 +51,7 @@ const baseFormSchema = z.object({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional(),
-  promocao_id: z.string().uuid().nullable().optional(), // NOVO: promocao_id
+  promocao_id: z.string().uuid().nullable().optional(),
 });
 
 type OrderFormValues = z.infer<typeof baseFormSchema>;
@@ -77,7 +77,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.is_super_admin; // Usando a flag correta
+  const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
@@ -96,7 +96,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
       empresa_id: defaultValues?.empresa_id || "",
-      promocao_id: defaultValues?.promocao_id || null, // NOVO: default promocao_id
+      promocao_id: defaultValues?.promocao_id || null,
     },
   });
   
@@ -163,7 +163,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       total = total * (1 - activePromotion.desconto_percentual / 100);
     }
     return total;
-  }, [form.watch("items"), activePromotion]); // Recalcula quando os itens ou a promoção mudam
+  }, [form.watch("items"), activePromotion]);
   
   const handleAddItem = () => {
     append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
@@ -198,7 +198,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       })),
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: activePromotion?.id || null, // NOVO: Passa o ID da promoção
+      promocao_id: activePromotion?.id || null,
     });
   };
   
@@ -242,7 +242,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                       // Limpa campos dependentes ao mudar a empresa
                       form.setValue('cliente_id', '');
                       form.setValue('items', []);
-                      form.setValue('promocao_id', null); // Limpa promoção
+                      form.setValue('promocao_id', null);
                       setActivePromotion(null);
                     }} 
                     value={field.value} 
@@ -500,7 +500,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            t('update_order_button') // <-- CORRIGIDO
+            t('update_order_button')
           ) : (
             t('create_order')
           )}

@@ -27,16 +27,16 @@ import { ptBR } from "date-fns/locale";
 import { Appointment } from "@/integrations/supabase/appointments";
 import { useClients } from "@/integrations/supabase/clients";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react"; // Adicionado useState
 import { useServicesOnly, useProductsOnly } from "@/integrations/supabase/products";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
-import PromotionSelector from "./PromotionSelector"; // NOVO IMPORT
-import { Promotion } from "@/integrations/supabase/promotions"; // NOVO IMPORT
-import { useUsers } from "@/integrations/supabase/users"; // Importando useUsers
+import PromotionSelector from "./PromotionSelector";
+import { Promotion } from "@/integrations/supabase/promotions";
+import { useUsers } from "@/integrations/supabase/users";
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -69,7 +69,7 @@ const baseFormSchema = z.object({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional(),
-  promocao_id: z.string().uuid().nullable().optional(), // NOVO: promocao_id
+  promocao_id: z.string().uuid().nullable().optional(),
 });
 
 type AppointmentFormValues = z.infer<typeof baseFormSchema>;
@@ -117,8 +117,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       time: defaultValues?.time || "09:00",
       status: defaultValues?.status || 'pendente',
       items: defaultValues?.items || [],
-      empresa_id: defaultValues?.empresa_id || "", // Inicializa com o valor padrão
-      promocao_id: defaultValues?.promocao_id || null, // NOVO: default promocao_id
+      empresa_id: defaultValues?.empresa_id || "",
+      promocao_id: defaultValues?.promocao_id || null,
     },
   });
   
@@ -171,7 +171,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           status: defaultValues.status || 'pendente',
           items: defaultValues.items,
           empresa_id: defaultValues.empresa_id,
-          promocao_id: defaultValues.promocao_id || null, // NOVO: promocao_id
+          promocao_id: defaultValues.promocao_id || null,
         });
       }
     }
@@ -200,7 +200,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       total = total * (1 - activePromotion.desconto_percentual / 100);
     }
     return total;
-  }, [form.watch("items"), activePromotion]); // Recalcula quando os itens ou a promoção mudam
+  }, [form.watch("items"), activePromotion]);
   
   const handleAddItem = () => {
     append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
@@ -241,7 +241,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       })),
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: activePromotion?.id || null, // NOVO: Passa o ID da promoção
+      promocao_id: activePromotion?.id || null,
     });
   };
   
@@ -286,7 +286,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                       form.setValue('cliente_id', '');
                       form.setValue('responsavel_id', '');
                       form.setValue('items', []);
-                      form.setValue('promocao_id', null); // Limpa promoção
+                      form.setValue('promocao_id', null);
                       setActivePromotion(null);
                     }} 
                     value={field.value} 
