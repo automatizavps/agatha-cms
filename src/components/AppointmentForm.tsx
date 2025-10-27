@@ -159,7 +159,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           cliente_id: defaultValues.cliente_id || "",
           responsavel_id: defaultValues.responsavel_id || "",
           date: defaultValues.date,
-          time: defaultValues.time || "09:00",
+          time: defaultValues.time || "HH:mm",
           status: defaultValues.status || 'pendente',
           items: defaultValues.items,
           empresa_id: defaultValues.empresa_id,
@@ -207,6 +207,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       return promotionRules.some(rule => {
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
+        // CORREÇÃO AQUI: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         return false;
       });
@@ -633,7 +634,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             <Tag className="h-4 w-4" />
             <AlertTitle>{t('promotion_not_applicable_title', { defaultValue: 'Promoção Não Aplicável' })}</AlertTitle>
             <AlertDescription>
-              {t('promotion_not_applicable_description', { defaultValue: 'Os itens selecionados não se qualificam para a promoção "{{promoName}}". Por favor, revise os itens ou selecione outra promoção.', promoName: activePromotion.nome })}
+              {t('promotion_not_applicable_description', { promoName: activePromotion.nome })}
             </AlertDescription>
           </Alert>
         )}

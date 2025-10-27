@@ -36,8 +36,10 @@ const formSchema = z.object({
   }).optional().nullable(),
   
   marca: z.string().optional().nullable(),
-  // Categoria agora é um Select, mas ainda armazena o nome como string
-  categoria: z.string().optional().nullable(), 
+  // Categoria agora armazena o ID da categoria (UUID)
+  categoria: z.string().uuid({
+    message: "Selecione uma categoria válida.",
+  }).or(z.literal("")).optional().nullable(), 
   
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
@@ -55,7 +57,7 @@ interface ProductOnlyFormProps {
     estoque_total: number | null;
     fotos: string[] | null;
     marca: string | null;
-    categoria: string | null;
+    categoria: string | null; // Agora é o ID da categoria
     empresa_id?: string;
   }) => void;
   isSubmitting: boolean;
@@ -91,6 +93,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
       preco: defaultValues?.preco ? String(defaultValues.preco) : "",
       estoque_total: defaultValues?.estoque_total ? String(defaultValues.estoque_total) : "",
       marca: defaultValues?.marca || "",
+      // O valor padrão agora é o ID da categoria (se existir)
       categoria: defaultValues?.categoria || "",
       empresa_id: defaultValues?.empresa_id || "", 
     },
@@ -123,7 +126,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
     
     // Normaliza campos vazios para null
     const marca = values.marca ? values.marca : null;
-    // Categoria: Se for string vazia, é null
+    // Categoria: Se for NONE_VALUE ou string vazia, é null. Caso contrário, é o ID.
     const categoria = values.categoria && values.categoria !== NONE_VALUE ? values.categoria : null;
 
     onSubmit({
@@ -134,7 +137,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
       estoque_total: estoque_total,
       fotos: photos,
       marca: marca,
-      categoria: categoria,
+      categoria: categoria, // Passando o ID da categoria (ou null)
       empresa_id: empresa_id,
     });
   };
@@ -231,11 +234,13 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           )}
         />
         
-        {/* Categoria (Select) */}
+        {/* Categoria (Select - Agora usa ID) */}
         <FormField
           control={form.control}
           name="categoria"
-          render={({ field }) => (
+          render={({ field }) => {
+            const selectedCategory = categories?.find(c => c.id === field.value);
+            return (
             <FormItem>
               <FormLabel>{t('product_table_header_category')} ({t('optional')})</FormLabel>
               <Select 
@@ -245,7 +250,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={isLoadingCategories ? t("loading") : t("select_category_placeholder")} />
+                    <SelectValue placeholder={isLoadingCategories ? t("loading") : selectedCategory?.nome || t("select_category_placeholder")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -254,7 +259,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
                     {t('none')}
                   </SelectItem>
                   {categories?.filter(c => c.nome && c.nome.trim() !== '').map((category) => (
-                    <SelectItem key={category.id} value={category.nome}>
+                    <SelectItem key={category.id} value={category.id}>
                       {category.nome}
                     </SelectItem>
                   ))}
@@ -262,7 +267,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
               </Select>
               <FormMessage />
             </FormItem>
-          )}
+          )}}
         />
         
         {/* Marca */}

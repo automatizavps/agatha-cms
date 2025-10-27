@@ -121,7 +121,8 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
       rules: defaultPromotion?.regras?.map(r => ({
         tipo_regra: r.tipo_regra,
         entidade_id: r.entidade_id,
-        entidade_nome: r.entidade?.nome || r.entidade_id,
+        // O nome da entidade é buscado no EditPromotionSheet, mas aqui usamos o fallback
+        entidade_nome: r.entidade?.nome || r.entidade_id, 
       })) || [],
       empresa_id: defaultPromotion?.empresa_id || "",
     },
@@ -458,6 +459,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       let icon = <Tag className="h-4 w-4" />;
                       
                       if (ruleType === 'categoria') {
+                        // Usamos o ID da categoria
                         options = categories?.map(c => ({ id: c.id, name: c.nome })) || [];
                         placeholder = t('select_category_placeholder', { defaultValue: 'Selecione a categoria' });
                         icon = <Tag className="h-4 w-4" />;

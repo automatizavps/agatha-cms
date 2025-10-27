@@ -31,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import PromotionSelector from "./PromotionSelector";
 import { Promotion, usePromotionRules } from "@/integrations/supabase/promotions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -176,6 +177,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       return promotionRules.some(rule => {
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
+        // CORREÇÃO AQUI: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         return false;
       });
@@ -499,7 +501,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             <Tag className="h-4 w-4" />
             <AlertTitle>{t('promotion_not_applicable_title', { defaultValue: 'Promoção Não Aplicável' })}</AlertTitle>
             <AlertDescription>
-              {t('promotion_not_applicable_description', { defaultValue: 'Os itens selecionados não se qualificam para a promoção "{{promoName}}". Por favor, revise os itens ou selecione outra promoção.', promoName: activePromotion.nome })}
+              {t('promotion_not_applicable_description', { promoName: activePromotion.nome })}
             </AlertDescription>
           </Alert>
         )}
