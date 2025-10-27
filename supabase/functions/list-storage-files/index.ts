@@ -42,13 +42,6 @@ serve(async (req) => {
     return returnError("Unauthorized: Invalid token", 401);
   }
   
-  // Note: We rely on the client-side check for Super Admin, but for security, 
-  // we should ideally check the user's profile in the DB here using the service role.
-  // Since the current user profile logic is complex, we will rely on the client 
-  // ensuring only SA calls this, and the service role key grants the necessary power.
-  // For simplicity and speed, we skip the explicit SA check inside the function, 
-  // trusting the client to only expose this to SA.
-
   // 3. Processar o corpo da requisição
   let data;
   try {
@@ -63,44 +56,60 @@ serve(async (req) => {
     return returnError("Missing required field: bucketName", 400);
   }
   
-  // 4. Listar arquivos recursivamente
+  // 4. Listar arquivos recursivamente (com tratamento de paginação implícito)
   const listAllFiles = async (path: string = ''): Promise<any[]> => {
-    const { data: files, error } = await supabaseAdmin.storage
-      .from(bucketName)
-      .list(path, {
-        limit: 100, // Max limit per call
-        offset: 0,
-        sortBy: { column: 'name', order: 'asc' },
-      });
-
-    if (error) {
-      console.error(`Error listing files in ${bucketName}/${path}:`, error);
-      throw new Error(error.message);
-    }
-
     let allFiles: any[] = [];
-    
-    for (const file of files) {
-      const fullPath = path ? `${path}/${file.name}` : file.name;
-      
-      if (file.id === null) { // É uma pasta
-        // Recursivamente lista o conteúdo da pasta
-        const subFiles = await listAllFiles(fullPath);
-        allFiles = allFiles.concat(subFiles);
-      } else {
-        // É um arquivo, adiciona o caminho completo
-        allFiles.push({
-          ...file,
-          fullPath: fullPath,
-          publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
+    let offset = 0;
+    const limit = 100; // Max limit per call
+
+    while (true) {
+      const { data: files, error } = await supabaseAdmin.storage
+        .from(bucketName)
+        .list(path, {
+          limit: limit,
+          offset: offset,
+          sortBy: { column: 'name', order: 'asc' },
         });
+
+      if (error) {
+        console.error(`Error listing files in ${bucketName}/${path}:`, error);
+        throw new Error(error.message);
       }
+      
+      if (!files || files.length === 0) {
+        break; // Sai do loop se não houver mais arquivos
+      }
+
+      for (const file of files) {
+        const fullPath = path ? `${path}/${file.name}` : file.name;
+        
+        if (file.id === null) { // É uma pasta
+          // Recursivamente lista o conteúdo da pasta
+          const subFiles = await listAllFiles(fullPath);
+          allFiles = allFiles.concat(subFiles);
+        } else {
+          // É um arquivo, adiciona o caminho completo e a URL pública
+          allFiles.push({
+            ...file,
+            fullPath: fullPath,
+            publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
+          });
+        }
+      }
+      
+      // Se o número de arquivos retornados for menor que o limite, terminamos.
+      if (files.length < limit) {
+        break;
+      }
+      
+      offset += limit;
     }
     
     return allFiles;
   };
   
   try {
+    // Começa a listagem a partir da raiz do bucket
     const files = await listAllFiles();
     
     return new Response(JSON.stringify({ files }), {
