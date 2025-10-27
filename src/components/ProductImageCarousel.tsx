@@ -55,8 +55,7 @@ const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({ photos, alt
               <img 
                 src={url} 
                 alt={`${alt} - Foto ${index + 1}`} 
-                // ALTERADO: Usando object-contain para manter a proporção e evitar corte
-                className="h-full w-full object-contain object-center" 
+                className="h-full w-full object-cover" 
               />
             </div>
           ))}

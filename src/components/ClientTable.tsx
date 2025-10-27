@@ -26,7 +26,6 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
 import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // NOVO IMPORT
 
 interface ClientTableProps {
   clients: Client[];
@@ -262,7 +261,6 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
                   disabled={!canWriteClients}
                 />
               </TableHead>
-              <TableHead className="w-[50px]">Avatar</TableHead> {/* NOVO CABEÇALHO */}
               <SortableHeader 
                 sortKey="nome" 
                 currentSortKey={sortKey} 
@@ -328,16 +326,10 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
                     disabled={!canWriteClients}
                   />
                 </TableCell>
-                {/* Avatar Cell */}
-                <TableCell>
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={client.avatar_url || undefined} alt={client.nome} />
-                    <AvatarFallback>
-                      {client.nome ? client.nome[0] : <User className="h-4 w-4" />}
-                    </AvatarFallback>
-                  </Avatar>
+                <TableCell className="font-medium flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  {client.nome}
                 </TableCell>
-                <TableCell className="font-medium">{client.nome}</TableCell>
                 {isSuperAdmin && (
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">

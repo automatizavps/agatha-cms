@@ -59,20 +59,6 @@ const resources = {
       "image_gallery_title": "Gestão de Arquivos de Storage",
       "select_bucket": "Selecione o Bucket",
       "no_files_found": "Nenhum arquivo encontrado neste bucket.",
-      "client_avatar": "Foto do Cliente", // NOVO
-      "image_uploaded_success": "Avatar atualizado com sucesso!", // NOVO
-      "image_removed_success": "Avatar removido com sucesso!", // NOVO
-      "upload_failed": "Falha no upload", // NOVO
-      "remove_failed": "Falha ao remover avatar", // NOVO
-      "click_upload_to_save": "Clique em Upload para salvar a nova imagem.", // NOVO
-      "image_removed_from_list": "Imagem removida da lista.", // NOVO
-      "product_image_gallery_title": "Galeria de Imagens do Produto/Serviço", // NOVO
-      "selected_images": "Imagens Selecionadas", // NOVO
-      "existing_images": "Imagens Existentes da Empresa", // NOVO
-      "no_existing_images": "Nenhuma imagem existente encontrada.", // NOVO
-      "upload_new_images": "Fazer Upload de Novas Imagens", // NOVO
-      "upload_count_images": "Upload {{count}} Imagem(ns)", // NOVO
-      "select_files_to_upload": "Selecione arquivos para fazer upload.", // NOVO
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
@@ -330,112 +316,112 @@ const resources = {
       "add_new_appointment": "Novo Agendamento",
       
       // Relatórios (Reports)
-      "select_date_range": "Select date range",
-      "filter_all_status": "All Status",
-      "export_data": "Export Data",
-      "export_select_format": "Select Format",
-      "export_success": "Data exported successfully to {{format}}!",
-      "export_error": "Error exporting data: ",
-      "export_no_data": "No data to export.",
-      "export_sheet_name": "Report",
-      "report_total_revenue": "Total Revenue (Delivered)",
-      "report_total_completed_services": "Total Completed Services",
-      "appointment_search_placeholder": "Search by client or responsible...",
+      "select_date_range": "Selecione o intervalo de datas",
+      "filter_all_status": "Todos os Status",
+      "export_data": "Exportar Dados",
+      "export_select_format": "Selecione o Formato",
+      "export_success": "Dados exportados com sucesso para {{format}}!",
+      "export_error": "Erro ao exportar dados: ",
+      "export_no_data": "Não há dados para exportar.",
+      "export_sheet_name": "Relatório",
+      "report_total_revenue": "Faturamento Total (Entregues)",
+      "report_total_completed_services": "Total de Serviços Concluídos",
+      "appointment_search_placeholder": "Buscar por cliente ou responsável...",
       
-      // Status
-      "pendente_entrega": "Pending Delivery",
-      "entregue": "Delivered",
-      "cancelado": "Canceled",
-      "pendente": "Pending",
-      "confirmado": "Confirmed",
-      "concluido": "Completed",
+      // Status (para tradução nos relatórios)
+      "pendente_entrega": "Pendente Entrega",
+      "entregue": "Entregue",
+      "cancelado": "Cancelado",
+      "pendente": "Pendente",
+      "confirmado": "Confirmado",
+      "concluido": "Concluído",
       
-      // Auth UI Keys
-      "login_hero_title": "Manage your business efficiently and stylishly.",
-      "login_hero_subtitle": "Simplify appointments, orders, and inventory on a single intuitive platform.",
-      "login_welcome": "Welcome back!",
+      // Chaves de Login (Auth UI)
+      "login_hero_title": "Gerencie seu negócio com eficiência e estilo.",
+      "login_hero_subtitle": "Simplifique agendamentos, pedidos e estoque em uma única plataforma intuitiva.",
+      "login_welcome": "Bem-vindo de volta!",
       "email_label": "Email",
-      "password_label": "Password",
-      "email_placeholder": "Your email",
+      "password_label": "Senha",
+      "email_placeholder": "Seu email",
       "password_placeholder": "••••••••",
-      "sign_in_button": "Sign In",
-      "signing_in": "Signing in...",
-      "sign_in_link": "Already have an account? Sign in",
-      "sign_up_button": "Sign Up",
-      "signing_up": "Signing up...",
-      "sign_up_link": "Don't have an account? Sign up",
-      "forgot_password_link": "Forgot your password?",
-      "send_reset_link": "Send reset link",
-      "sending_reset_link": "Sending...",
-      "new_password_label": "New Password",
-      "new_password_placeholder": "Your new password",
-      "update_password_button": "Update Password",
-      "updating_password": "Updating...",
-      "magic_link_link": "Sign in with magic link",
-      "send_magic_link": "Send magic link",
-      "sending_magic_link": "Sending link...",
+      "sign_in_button": "Entrar",
+      "signing_in": "Entrando...",
+      "sign_in_link": "Já tem uma conta? Faça login",
+      "sign_up_button": "Cadastrar",
+      "signing_up": "Cadastrando...",
+      "sign_up_link": "Não tem uma conta? Cadastre-se",
+      "forgot_password_link": "Esqueceu sua senha?",
+      "send_reset_link": "Enviar link de redefinição",
+      "sending_reset_link": "Enviando...",
+      "new_password_label": "Nova Senha",
+      "new_password_placeholder": "Sua nova senha",
+      "update_password_button": "Atualizar Senha",
+      "updating_password": "Atualizando...",
+      "magic_link_link": "Entrar com link mágico",
+      "send_magic_link": "Enviar link mágico",
+      "sending_magic_link": "Enviando link...",
       
-      // Auth UI Alert Messages
-      "auth_success_email_sent": "Check your email for the password reset link.",
-      "auth_success_confirmation_text": "Check your email for the confirmation link.",
-      "auth_success_no_session": "Session started successfully.",
-      "auth_success_password_reset": "Your password has been reset successfully.",
-      "auth_success_update_user": "User updated successfully.",
-      "auth_error_email_not_found": "Email not found.",
-      "auth_error_invalid_email": "Invalid email.",
-      "auth_error_invalid_password": "Invalid password.",
-      "auth_error_user_already_exists": "User already exists.",
-      "auth_error_default": "An error occurred. Please try again.",
+      // Mensagens de Alerta do Auth UI
+      "auth_success_email_sent": "Verifique seu email para o link de redefinição de senha.",
+      "auth_success_confirmation_text": "Verifique seu email para o link de confirmação.",
+      "auth_success_no_session": "Sessão iniciada com sucesso.",
+      "auth_success_password_reset": "Sua senha foi redefinida com sucesso.",
+      "auth_success_update_user": "Usuário atualizado com sucesso.",
+      "auth_error_email_not_found": "Email não encontrado.",
+      "auth_error_invalid_email": "Email inválido.",
+      "auth_error_invalid_password": "Senha inválida.",
+      "auth_error_user_already_exists": "Usuário já existe.",
+      "auth_error_default": "Ocorreu um erro. Tente novamente.",
       
       // Product Sales History
-      "sales_history_title": "Sales History: {{name}}",
-      "sales_history_subtitle": "Details and history of sales/services performed for this {{type}}.",
-      "sales_history_table_title": "Completed Transactions",
-      "no_sales_history_found": "No completed transactions found for this item.",
-      "weekly_sales_history": "Weekly Sales (Last 7 days)",
-      "type": "Type",
+      "sales_history_title": "Histórico de Vendas: {{name}}",
+      "sales_history_subtitle": "Detalhes e histórico de vendas/serviços realizados para este {{type}}.",
+      "sales_history_table_title": "Transações Concluídas",
+      "no_sales_history_found": "Nenhuma transação concluída encontrada para este item.",
+      "weekly_sales_history": "Vendas Semanais (Últimos 7 dias)",
+      "type": "Tipo",
       
       // Company Status
-      "company_status_active": "Active",
-      "company_status_inactive": "Inactive",
+      "company_status_active": "Ativa",
+      "company_status_inactive": "Inativa",
       
       // Custom Profiles
-      "page_title_custom_profiles": "Custom Profiles",
-      "custom_profile_list_title": "Profiles by Company",
-      "add_new_profile": "New Custom Profile",
-      "no_custom_profiles_found": "No custom profiles found.",
-      "custom_profile_search_placeholder": "Search by profile name or company...",
-      "profile_name": "Profile Name",
-      "profile_name_placeholder": "Ex: Store Manager, Junior Salesperson",
-      "profile_details": "Profile Details",
-      "module_permissions": "Module Permissions",
-      "create_profile": "Create Profile",
-      "edit_profile": "Edit Profile",
-      "profile_created_success": "Profile {{name}} created successfully!",
-      "profile_updated_success": "Profile {{name}} updated successfully!",
-      "profile_deleted_success": "Profile {{name}} deleted successfully!",
-      "loading_profile_data": "Loading profile data...",
-      "grant_full_admin_access": "Grant Full Admin Access",
-      "grant_full_admin_access_description": "Check to grant Read and Write permission to all modules. This overrides individual settings below.",
+      "page_title_custom_profiles": "Perfis Customizados",
+      "custom_profile_list_title": "Perfis por Empresa",
+      "add_new_profile": "Novo Perfil Customizado",
+      "no_custom_profiles_found": "Nenhum perfil customizado encontrado.",
+      "custom_profile_search_placeholder": "Buscar por nome do perfil ou empresa...",
+      "profile_name": "Nome do Perfil",
+      "profile_name_placeholder": "Ex: Gerente de Loja, Vendedor Júnior",
+      "profile_details": "Detalhes do Perfil",
+      "module_permissions": "Permissões de Módulo",
+      "create_profile": "Criar Perfil",
+      "edit_profile": "Editar Perfil",
+      "profile_created_success": "Perfil {{name}} criado com sucesso!",
+      "profile_updated_success": "Perfil {{name}} atualizado com sucesso!",
+      "profile_deleted_success": "Perfil {{name}} excluído com sucesso!",
+      "loading_profile_data": "Carregando dados do perfil...",
+      "grant_full_admin_access": "Conceder Acesso Total (Admin)",
+      "grant_full_admin_access_description": "Marque para conceder permissão de Leitura e Escrita a todos os módulos. Isso anula as configurações individuais abaixo.",
       
       // Permissions
-      "access_read": "Read",
-      "access_write": "Read and Write",
-      "access_none": "No Access",
+      "access_read": "Leitura",
+      "access_write": "Leitura e Escrita",
+      "access_none": "Sem Acesso",
       
       // Modules
-      "users": "Users",
-      "clients": "Clients",
-      "products": "Products",
-      "services": "Services",
-      "orders": "Orders",
-      "appointments": "Appointments",
-      "teams": "Teams",
+      "users": "Usuários",
+      "clients": "Clientes",
+      "products": "Produtos",
+      "services": "Serviços",
+      "orders": "Pedidos",
+      "appointments": "Agendamentos",
+      "teams": "Equipes",
       "analytics": "Analytics",
-      "companies": "Companies",
-      "notifications": "Notifications",
-      "custom_profiles": "Custom Profiles",
-      "categories": "Categories",
+      "companies": "Empresas",
+      "notifications": "Notificações",
+      "custom_profiles": "Perfis Customizados",
+      "categories": "Categorias",
     },
   },
   'en-US': {
@@ -493,20 +479,6 @@ const resources = {
       "image_gallery_title": "Storage File Management",
       "select_bucket": "Select Bucket",
       "no_files_found": "No files found in this bucket.",
-      "client_avatar": "Client Photo", // NOVO
-      "image_uploaded_success": "Avatar updated successfully!", // NOVO
-      "image_removed_success": "Avatar removed successfully!", // NOVO
-      "upload_failed": "Upload failed", // NOVO
-      "remove_failed": "Failed to remove avatar", // NOVO
-      "click_upload_to_save": "Click Upload to save the new image.", // NOVO
-      "image_removed_from_list": "Image removed from list.", // NOVO
-      "product_image_gallery_title": "Product/Service Image Gallery", // NOVO
-      "selected_images": "Selected Images", // NOVO
-      "existing_images": "Existing Company Images", // NOVO
-      "no_existing_images": "No existing images found.", // NOVO
-      "upload_new_images": "Upload New Images", // NOVO
-      "upload_count_images": "Upload {{count}} Image(s)", // NOVO
-      "select_files_to_upload": "Select files to upload.", // NOVO
 
       // Dashboard
       "dashboard_title": "Dashboard Overview",
