@@ -24,6 +24,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditUserSheet from "./EditUserSheet";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // IMPORTAÇÃO ADICIONADA
 
 interface UserTableProps {
   users: UserProfile[];
