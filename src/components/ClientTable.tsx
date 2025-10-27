@@ -46,10 +46,7 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit, canWrite 
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // MOVIDO: Chamar hooks incondicionalmente no topo
   const deleteMutation = useMutation({
     mutationFn: () => deleteClient(client.id, client.nome, client.empresa_id, queryClient),
     onSuccess: () => {
@@ -60,6 +57,10 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit, canWrite 
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {

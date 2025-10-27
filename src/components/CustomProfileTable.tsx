@@ -42,10 +42,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, onEdit, canWri
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // MOVIDO: Chamar hooks incondicionalmente no topo
   const deleteMutation = useMutation({
     mutationFn: () => deleteCustomProfile(profile.id, profile.nome, profile.empresa_id, queryClient),
     onSuccess: () => {
@@ -56,6 +53,10 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ profile, onEdit, canWri
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+  
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {

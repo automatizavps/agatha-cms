@@ -45,10 +45,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // MOVIDO: Chamar hooks incondicionalmente no topo
   const deleteMutation = useMutation({
     mutationFn: () => deleteCompany(company.id, company.nome, queryClient),
     onSuccess: () => {
@@ -85,6 +82,10 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (!isSuperAdmin) return;
