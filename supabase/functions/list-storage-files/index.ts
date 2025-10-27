@@ -50,7 +50,7 @@ serve(async (req) => {
     return returnError("Invalid JSON body", 400);
   }
 
-  const { bucketName } = data;
+  const { bucketName, pathPrefix } = data; // Recebendo pathPrefix
 
   if (!bucketName) {
     return returnError("Missing required field: bucketName", 400);
@@ -109,8 +109,11 @@ serve(async (req) => {
   };
   
   try {
-    // Começa a listagem a partir da raiz do bucket
-    const files = await listAllFiles();
+    // Se pathPrefix for fornecido, começamos a listagem a partir desse prefixo.
+    // Caso contrário, listamos a partir da raiz ('').
+    const startPath = pathPrefix || '';
+    
+    const files = await listAllFiles(startPath);
     
     return new Response(JSON.stringify({ files }), {
       status: 200,

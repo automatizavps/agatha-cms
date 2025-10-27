@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCompanies } from "@/integrations/supabase/companies"; // Importando useCompanies
 
 const BUCKETS = [
   { name: 'avatars', label: 'Avatares (Perfis de Usuário)' },
@@ -20,16 +21,28 @@ const BUCKETS = [
 
 const ImageGallery: React.FC = () => {
   const { t } = useTranslation();
-  const { isSuperAdmin, isLoadingFilter } = useDashboardFilter();
-  const [selectedBucket, setSelectedBucket] = useState(BUCKETS[0].name);
+  const { 
+    isSuperAdmin, 
+    isLoadingFilter, 
+    selectedCompanyId, 
+    setSelectedCompanyId, 
+    filteredCompanyId 
+  } = useDashboardFilter();
   
-  // Hook de dados
-  const { data: files, isLoading, isError, error, refetch, isRefetching } = useStorageImages(selectedBucket);
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  
+  const [selectedBucket, setSelectedBucket] = useState(BUCKETS[1].name); // Padrão para product_images
+  
+  // O pathPrefix é o ID da empresa se estiver filtrado, ou undefined se for 'all'
+  const pathPrefix = filteredCompanyId; 
+  
+  // Hook de dados - Passando o pathPrefix
+  const { data: files, isLoading, isError, error, refetch, isRefetching } = useStorageImages(selectedBucket, pathPrefix);
   
   // Mutação de exclusão
   const deleteMutation = useDeleteStorageFile();
 
-  const isChecking = isLoading || isLoadingFilter;
+  const isChecking = isLoading || isLoadingFilter || isLoadingCompanies;
 
   if (!isSuperAdmin) {
     return (
@@ -95,13 +108,35 @@ const ImageGallery: React.FC = () => {
                 disabled={isChecking}
               >
                 <SelectTrigger className="w-full">
-                  <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder={t('select_bucket', { defaultValue: 'Selecione o Bucket' })} />
                 </SelectTrigger>
                 <SelectContent>
                   {BUCKETS.map((bucket) => (
                     <SelectItem key={bucket.name} value={bucket.name}>
                       {bucket.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Filtro de Empresa (Apenas para Super Admin) */}
+            <div className="w-full md:w-64">
+              <Select 
+                onValueChange={setSelectedCompanyId} 
+                value={selectedCompanyId} 
+                disabled={isLoadingCompanies || isChecking}
+              >
+                <SelectTrigger className="w-full">
+                  <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder={t('filter_all_companies')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                  {companies?.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
