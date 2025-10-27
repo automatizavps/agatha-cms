@@ -12,6 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from 'react-router-dom';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Importando Avatar
+import { Image as ImageIcon } from 'lucide-react'; // Importando ImageIcon
 
 interface TopSellingItemsCardProps {
   companyId: string | undefined;
@@ -69,20 +71,29 @@ const TopSellingItemsCard: React.FC<TopSellingItemsCardProps> = ({ companyId }) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.filter(item => item.tipo_produto === 'produto').map((item, index) => (
-                <TableRow key={item.produto_id}>
-                  <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
-                  <TableCell>
-                    <Link to="/products" className="flex items-center gap-2 hover:underline">
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                      {item.nome_produto}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {item.total_vendido} {t('units')}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {items.filter(item => item.tipo_produto === 'produto').map((item, index) => {
+                const firstPhotoUrl = item.fotos?.[0];
+                
+                return (
+                  <TableRow key={item.produto_id}>
+                    <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
+                    <TableCell>
+                      <Link to="/products" className="flex items-center gap-2 hover:underline">
+                        <Avatar className="h-6 w-6 rounded-md">
+                          <AvatarImage src={firstPhotoUrl} alt={item.nome_produto} />
+                          <AvatarFallback className="rounded-md bg-muted/50">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                          </AvatarFallback>
+                        </Avatar>
+                        {item.nome_produto}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {item.total_vendido} {t('units')}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

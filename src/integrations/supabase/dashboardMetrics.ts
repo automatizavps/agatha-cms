@@ -15,6 +15,7 @@ export interface TopSellingItem {
   nome_produto: string;
   tipo_produto: 'produto' | 'servico'; // Adicionado
   total_vendido: number;
+  fotos: string[] | null; // NOVO: Array de URLs de fotos
 }
 
 /**
@@ -128,6 +129,8 @@ const fetchTopSellingItems = async (companyId: string | undefined): Promise<TopS
   return data.map(item => ({
     ...item,
     total_vendido: parseInt(item.total_vendido) || 0,
+    // O campo 'fotos' já vem como array de strings (text[])
+    fotos: item.fotos || null, 
   })) as TopSellingItem[];
 };
 
