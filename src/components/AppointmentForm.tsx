@@ -653,6 +653,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           <span className="text-2xl font-bold text-primary flex items-center gap-1">
             <DollarSign className="h-5 w-5" />
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
+            {isPromotionValid && activePromotion && activePromotion.desconto_percentual > 0 && (
+              <span className="text-base text-green-500 ml-2">
+                (-{activePromotion.desconto_percentual}%)
+              </span>
+            )}
           </span>
         </div>
 
