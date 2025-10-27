@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Appointment } from '@/integrations/supabase/appointments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock, Package, DollarSign, Percent } from 'lucide-react'; // Adicionado Percent
@@ -8,6 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Importando Avatar
 import { usePromotionById } from '@/integrations/supabase/promotions'; // NOVO IMPORT
+import { Loader2 } from 'lucide-react';
 
 interface LatestAppointmentCardProps {
   appointment: Appointment;
