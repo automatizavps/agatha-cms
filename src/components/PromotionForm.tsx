@@ -98,19 +98,23 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
 
   // Define o esquema Zod dinamicamente dentro do componente
   const formSchema = useMemo(() => {
+    let currentSchema = baseFormSchema;
+
     if (isSuperAdmin && !isEditing) {
-      return baseFormSchema.extend({
+      currentSchema = currentSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
         }).min(1, { message: t("company_required_super_admin") }),
       });
+    } else {
+      // Se não for Super Admin ou estiver editando, empresa_id é opcional
+      currentSchema = currentSchema.extend({
+        empresa_id: z.string().uuid({
+          message: t("select_valid_company"),
+        }).or(z.literal("")).optional(),
+      });
     }
-    // Se não for Super Admin ou estiver editando, empresa_id é opcional
-    return baseFormSchema.extend({
-      empresa_id: z.string().uuid({
-        message: t("select_valid_company"),
-      }).or(z.literal("")).optional(),
-    });
+    return currentSchema;
   }, [isSuperAdmin, isEditing, t]);
 
 
@@ -202,33 +206,28 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
   
   // Componente auxiliar para renderizar o seletor de entidade
   const EntitySelector: React.FC<{ index: number, ruleType: RuleType }> = ({ index, ruleType }) => {
-    const field = form.control._fields.rules?.['name'] as any;
+    // Removido o acesso direto a `form.control._fields.rules?.['name']` pois não é necessário e pode causar problemas.
     const currentValue = form.watch(`rules.${index}.entidade_id`);
     
     let data: Product[] | { id: string; nome: string }[] | undefined;
     let placeholderKey: string;
-    let icon: React.ReactNode;
     
     switch (ruleType) {
       case 'produto':
         data = filteredProducts;
         placeholderKey = 'select_product';
-        icon = <Package className="mr-2 h-4 w-4" />;
         break;
       case 'servico':
         data = filteredServices;
         placeholderKey = 'select_service';
-        icon = <Clock className="mr-2 h-4 w-4" />;
         break;
       case 'categoria':
         data = filteredCategories;
         placeholderKey = 'select_category';
-        icon = <Tag className="mr-2 h-4 w-4" />;
         break;
       case 'cliente':
         data = filteredClients;
         placeholderKey = 'select_client';
-        icon = <Users className="mr-2 h-4 w-4" />;
         break;
       default:
         return <Input value={t('unknown_rule_type')} disabled />;
