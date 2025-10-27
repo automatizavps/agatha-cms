@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Trash2, DollarSign, Building } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, DollarSign, Building, Tag } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -24,12 +24,13 @@ import { useProductsOnly, useServicesOnly, Product } from "@/integrations/supaba
 import { OrderStatus } from "@/integrations/supabase/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import React, { useMemo, useEffect, useState } from "react"; // Adicionado useState
+import React, { useMemo, useEffect, useState } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
 import PromotionSelector from "./PromotionSelector";
-import { Promotion } from "@/integrations/supabase/promotions";
+import { Promotion, usePromotionRules } from "@/integrations/supabase/promotions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -39,7 +40,6 @@ const itemSchema = z.object({
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
 });
 
-// Definimos o esquema base
 const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
@@ -80,7 +80,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
-  // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
   const formSchema = isSuperAdmin && !isEditing
     ? baseFormSchema.extend({
         empresa_id: z.string().uuid({
@@ -105,15 +104,12 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     name: "items",
   });
   
-  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
-  // Se estiver editando, usamos o valor inicial da empresa, que é fixo.
   const selectedCompanyId = isEditing 
     ? defaultValues?.empresa_id 
     : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
     
   const isCompanySelected = !!selectedCompanyId;
   
-  // Filtra Clientes e Itens com base na empresa selecionada
   const filteredClients = useMemo(() => {
     if (!clients || !isCompanySelected) return [];
     return clients.filter(client => client.empresa_id === selectedCompanyId);
@@ -121,7 +117,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
 
   const allItems = useMemo(() => {
     if (!isCompanySelected) return [];
-    // Filtramos os itens que pertencem à empresa selecionada
     const all = [...(services || []), ...(products || [])];
     return all
       .filter(item => item.empresa_id === selectedCompanyId)
@@ -130,7 +125,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
-  // Sincroniza os itens padrão se eles mudarem (útil para o EditSheet carregar os dados)
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
       form.reset({
@@ -140,30 +134,41 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     }
   }, [defaultValues?.items, fields.length, form, isEditing]);
 
-  // NOVO: Observa a promoção selecionada
-  const selectedPromotion = form.watch('promocao_id');
   const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
+  const { data: promotionRules, isLoading: isLoadingPromotionRules } = usePromotionRules(activePromotion?.id || '');
 
-  useEffect(() => {
-    if (selectedPromotion) {
-      // Aqui você precisaria buscar os detalhes da promoção pelo ID
-      // Por simplicidade, vamos assumir que o PromotionSelector já nos deu o objeto completo
-      // e que o `onPromotionChange` já atualiza `activePromotion`
-    } else {
-      setActivePromotion(null);
-    }
-  }, [selectedPromotion]);
+  // Validação da promoção
+  const isPromotionValid = useMemo(() => {
+    if (!activePromotion || !promotionRules || promotionRules.length === 0) return true; // Sem promoção ou sem regras = válido
+    if (isLoadingPromotionRules) return true; // Ainda carregando, assume válido temporariamente
+
+    const currentItems = form.getValues("items");
+    if (currentItems.length === 0) return false; // Não há itens para aplicar a promoção
+
+    // Verifica se pelo menos um item do pedido se encaixa em alguma regra da promoção
+    return currentItems.some(orderItem => {
+      const productDetails = allItems.find(p => p.id === orderItem.produto_id);
+      if (!productDetails) return false;
+
+      return promotionRules.some(rule => {
+        if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
+        if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
+        if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
+        return false;
+      });
+    });
+  }, [activePromotion, promotionRules, form.watch("items"), allItems, isLoadingPromotionRules]);
 
   const calculateTotal = useMemo(() => {
     let total = form.getValues("items").reduce((sum, item) => {
       return sum + (item.quantidade * item.preco_unitario);
     }, 0);
 
-    if (activePromotion && activePromotion.desconto_percentual > 0) {
+    if (isPromotionValid && activePromotion && activePromotion.desconto_percentual > 0) {
       total = total * (1 - activePromotion.desconto_percentual / 100);
     }
     return total;
-  }, [form.watch("items"), activePromotion]);
+  }, [form.watch("items"), activePromotion, isPromotionValid]);
   
   const handleAddItem = () => {
     append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
@@ -172,18 +177,15 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const handleProductChange = (index: number, productId: string) => {
     const selectedItem = allItems.find(item => item.id === productId);
     if (selectedItem) {
-      // Atualiza o preço unitário automaticamente ao selecionar o produto/serviço
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
     }
   };
   
-  // Função auxiliar para obter o nome do item
   const getItemName = (productId: string) => {
     const item = allItems.find(i => i.id === productId);
     return item ? `${item.nome} (${item.tipo === 'produto' ? t('nav_products') : t('nav_services')})` : t('unknown_item');
   };
-
 
   const handleSubmit = (values: OrderFormValues) => {
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
@@ -198,21 +200,17 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       })),
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: activePromotion?.id || null,
+      promocao_id: isPromotionValid ? activePromotion?.id || null : null, // Só aplica se for válido
     });
   };
   
-  // Determina se o campo empresa deve ser editável (apenas Super Admin na CRIAÇÃO)
   const isCompanyFieldEditable = isSuperAdmin && !isSubmitting && !isEditing;
   
-  // Encontra o nome da empresa para exibição desabilitada
   const companyIdToDisplay = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
   const companyName = companies?.find(c => c.id === companyIdToDisplay)?.nome;
   
-  // Determina se o campo empresa deve ser exibido (Super Admin ou se estiver editando)
   const shouldShowCompanyField = isSuperAdmin || isEditing;
   
-  // Determina se o aviso deve ser exibido (Apenas Super Admin E empresa não selecionada)
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
 
   if (isCheckingPermissions) {
@@ -227,7 +225,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* Campo Empresa (Apenas Super Admin ou Edição) */}
         {shouldShowCompanyField && (
           <FormField
             control={form.control}
@@ -239,7 +236,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // Limpa campos dependentes ao mudar a empresa
                       form.setValue('cliente_id', '');
                       form.setValue('items', []);
                       form.setValue('promocao_id', null);
@@ -264,7 +260,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                 ) : (
                   <FormControl>
                     <Input 
-                      // Exibe o nome da empresa ou 'N/A' se não for encontrado
                       value={companyName || t("company_not_found")} 
                       disabled 
                       className="bg-muted/50"
@@ -277,7 +272,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           />
         )}
         
-        {/* Aviso se a empresa não estiver selecionada (Apenas Super Admin na CRIAÇÃO) */}
         {shouldShowWarning && (
           <div className="p-3 bg-yellow-100/50 dark:bg-yellow-900/20 border border-yellow-400/50 rounded-md text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
             <Building className="h-4 w-4" />
@@ -285,7 +279,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           </div>
         )}
 
-        {/* Cliente */}
         <FormField
           control={form.control}
           name="cliente_id"
@@ -311,7 +304,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           )}
         />
         
-        {/* Status (Sempre visível na Edição) */}
         {isEditing && (
           <FormField
             control={form.control}
@@ -339,7 +331,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           />
         )}
 
-        {/* Itens do Pedido */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('order_list_title')}</CardTitle>
@@ -352,7 +343,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
               <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
                 <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
                 
-                {/* Produto/Serviço */}
                 <FormField
                   control={form.control}
                   name={`items.${index}.produto_id`}
@@ -393,7 +383,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                 />
                 
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Quantidade */}
                   <FormField
                     control={form.control}
                     name={`items.${index}.quantidade`}
@@ -415,7 +404,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                     )}
                   />
                   
-                  {/* Preço Unitário */}
                   <FormField
                     control={form.control}
                     name={`items.${index}.preco_unitario`}
@@ -463,8 +451,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           </CardContent>
         </Card>
 
-        {/* NOVO: Seletor de Promoção */}
-        {!isEditing && ( // Promoções só podem ser aplicadas na criação
+        {!isEditing && (
           <FormField
             control={form.control}
             name="promocao_id"
@@ -475,7 +462,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                   selectedPromotionId={field.value || null}
                   onPromotionChange={(promo) => {
                     field.onChange(promo?.id || null);
-                    setActivePromotion(promo); // Atualiza o estado local da promoção
+                    setActivePromotion(promo);
                   }}
                   disabled={isSubmitting || !isCompanySelected}
                   label={t('promotion', { defaultValue: 'Promoção' })}
@@ -484,6 +471,16 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
               </FormItem>
             )}
           />
+        )}
+        
+        {!isPromotionValid && activePromotion && (
+          <Alert variant="destructive">
+            <Tag className="h-4 w-4" />
+            <AlertTitle>{t('promotion_not_applicable_title', { defaultValue: 'Promoção Não Aplicável' })}</AlertTitle>
+            <AlertDescription>
+              {t('promotion_not_applicable_description', { defaultValue: 'Os itens selecionados não se qualificam para a promoção "{{promoName}}". Por favor, revise os itens ou selecione outra promoção.', promoName: activePromotion.nome })}
+            </AlertDescription>
+          </Alert>
         )}
         
         <Separator />
