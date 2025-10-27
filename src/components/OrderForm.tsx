@@ -177,8 +177,10 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       return promotionRules.some(rule => {
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
-        // CORREÇÃO AQUI: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
+        
+        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
+        
         return false;
       });
     });

@@ -207,8 +207,10 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       return promotionRules.some(rule => {
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
-        // CORREÇÃO AQUI: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
+        
+        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
+        
         return false;
       });
     });
@@ -638,38 +640,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             </AlertDescription>
           </Alert>
         )}
-
-        {isEditing && (
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('order_table_header_status')}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('select_status')} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status} value={status} className="capitalize">
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
         
         <Separator />
         
         <div className="flex justify-between items-center pt-2">
-          <span className="lg font-semibold">{t('order_table_header_total')}:</span>
+          <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
           <span className="text-2xl font-bold text-primary flex items-center gap-1">
             <DollarSign className="h-5 w-5" />
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
@@ -680,14 +655,14 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             )}
           </span>
         </div>
-
+        
         <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
-            t('save_changes')
+            t('update_order_button')
           ) : (
-            t('schedule')
+            t('create_order')
           )}
         </Button>
         
@@ -701,4 +676,4 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   );
 };
 
-export default AppointmentForm;
+export default OrderForm;
