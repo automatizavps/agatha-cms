@@ -1,7 +1,7 @@
 import React from 'react';
 import { Order } from '@/integrations/supabase/orders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building, Package, Clock } from 'lucide-react';
+import { User, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building, Package, Clock, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -31,8 +31,9 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
   const statusIcon = statusIcons[order.status];
   
   const orderDate = new Date(order.created_at);
-  // Alterado para incluir HH:mm
-  const formattedDateTime = format(orderDate, 'dd/MM/yyyy HH:mm', { locale: ptBR }); 
+  // Separando data e hora
+  const formattedDate = format(orderDate, 'dd/MM/yyyy', { locale: ptBR });
+  const formattedTime = format(orderDate, 'HH:mm');
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -89,10 +90,12 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
           </span>
         </div>
         
-        {/* Data e Hora do Pedido */}
+        {/* Data e Hora do Pedido (Separados) */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Clock className="h-4 w-4 flex-shrink-0" />
-          <span className="text-sm truncate">{t('order_table_header_date')}: {formattedDateTime}</span>
+          <Calendar className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm font-medium">{formattedDate}</span>
+          <Clock className="h-4 w-4 flex-shrink-0 ml-2" />
+          <span className="text-sm font-medium">{formattedTime}</span>
         </div>
         
         {/* ID do Pedido */}
