@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form"; // ADDED useFieldArray
+import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +35,7 @@ import { useCategories } from "@/integrations/supabase/categories";
 import { useProductsOnly, useServicesOnly, Product } from "@/integrations/supabase/products";
 import { Switch } from "@/components/ui/switch";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 type RuleType = 'categoria' | 'produto' | 'servico';
 
 const ruleSchema = z.object({
@@ -373,9 +373,8 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       locale={ptBR}
                     />
                   </PopoverContent>
-                </Popover>
-              </FormItem>
-            )}
+                </FormField>
+              )}
           />
         </div>
         
@@ -519,36 +518,34 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                                 </CommandGroup>
                               </Command>
                             </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
-                  />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    size="icon" 
+                    className="absolute top-3 right-3 h-6 w-6"
+                    onClick={() => remove(index)}
+                    disabled={isSubmitting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                
-                <Button 
-                  type="button" 
-                  variant="destructive" 
-                  size="icon" 
-                  className="absolute top-3 right-3 h-6 w-6"
-                  onClick={() => remove(index)}
-                  disabled={isSubmitting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            
-            {fields.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground">
-                {t('add_rule_description', { defaultValue: 'Adicione regras para definir onde a promoção será aplicada.' })}
-              </p>
-            )}
-            
-            <FormMessage>{form.formState.errors.rules?.message}</FormMessage>
-          </CardContent>
-        </Card>
+              ))}
+              
+              {fields.length === 0 && (
+                <p className="text-center text-sm text-muted-foreground">
+                  {t('add_rule_description', { defaultValue: 'Adicione regras para definir onde a promoção será aplicada.' })}
+                </p>
+              )}
+              
+              <FormMessage>{form.formState.errors.rules?.message}</FormMessage>
+            </CardContent>
+          </Card>
 
         <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected)}>
           {isSubmitting ? (
