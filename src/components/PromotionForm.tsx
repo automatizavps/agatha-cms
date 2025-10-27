@@ -43,7 +43,7 @@ const ruleSchema = z.object({
   entidade_id: z.string().uuid({ message: "ID de entidade inválido." }),
 });
 
-// Definimos o esquema base
+// Definimos o esquema base (sem o campo empresa_id, que será adicionado condicionalmente)
 const baseFormSchema = z.object({
   nome: z.string().min(2, {
     message: "O nome deve ter pelo menos 2 caracteres.",
@@ -58,16 +58,12 @@ const baseFormSchema = z.object({
     required_error: "A data de fim é obrigatória.",
   }),
   rules: z.array(ruleSchema).optional(),
-  
-  empresa_id: z.string().uuid({
-    message: "Selecione uma empresa válida.",
-  }).or(z.literal("")).optional(),
 }).refine(data => data.data_fim > data.data_inicio, {
   message: "A data de fim deve ser posterior à data de início.",
   path: ['data_fim'],
 });
 
-type PromotionFormValues = z.infer<typeof baseFormSchema>;
+type PromotionFormValues = z.infer<typeof baseFormSchema & { empresa_id?: string }>; // Inclui empresa_id opcionalmente
 
 interface RuleToCreate {
   tipo_regra: RuleType;
@@ -94,20 +90,29 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
   const { data: products, isLoading: isLoadingProducts } = useProductsOnly();
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
-  const { data: clients, isLoading: isLoadingClients } = useClients();
+  const { data: clients } = useClients(); // isLoadingClients não é usado diretamente aqui
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
-  // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
-  const formSchema = isSuperAdmin && !isEditing
-    ? baseFormSchema.extend({
+  // Define o esquema Zod dinamicamente dentro do componente
+  const formSchema = useMemo(() => {
+    if (isSuperAdmin && !isEditing) {
+      return baseFormSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
         }).min(1, { message: t("company_required_super_admin") }),
-      })
-    : baseFormSchema;
+      });
+    }
+    // Se não for Super Admin ou estiver editando, empresa_id é opcional
+    return baseFormSchema.extend({
+      empresa_id: z.string().uuid({
+        message: t("select_valid_company"),
+      }).or(z.literal("")).optional(),
+    });
+  }, [isSuperAdmin, isEditing, t]);
+
 
   const form = useForm<PromotionFormValues>({
     resolver: zodResolver(formSchema),
