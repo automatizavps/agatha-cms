@@ -1,7 +1,7 @@
 import React from 'react';
 import { Appointment } from '@/integrations/supabase/appointments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock, Package } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock, Package, DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -48,6 +48,21 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
   // Extrai o nome do primeiro item
   const items = appointment.agendamento_itens || [];
   const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
+  
+  // Cálculo do Valor Total
+  const totalValue = items.reduce((sum, item) => {
+    // Garantir que preco_unitario e quantidade sejam tratados como números
+    const price = parseFloat(String(item.preco_unitario)) || 0;
+    const quantity = parseInt(String(item.quantidade)) || 0;
+    return sum + (price * quantity);
+  }, 0);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   return (
     <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
@@ -70,6 +85,12 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
         </div>
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-2 text-sm flex-1">
+        
+        {/* Valor Total (NOVO) */}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <DollarSign className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm font-medium text-primary">{formatCurrency(totalValue)}</span>
+        </div>
         
         {/* Data e Hora */}
         <div className="flex items-center gap-2 text-muted-foreground">

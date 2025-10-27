@@ -19,6 +19,8 @@ const fetchLatestAppointments = async (companyId: string | undefined): Promise<A
       agendamento_itens (
         id,
         produto_id,
+        quantidade,
+        preco_unitario,
         produtos (nome)
       )
     `);
