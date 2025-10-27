@@ -10,6 +10,7 @@ export interface Client {
   email: string | null;
   telefone: string | null;
   endereco_completo: string | null; // Novo campo
+  avatar_url: string | null; // NOVO CAMPO
   created_at: string;
   empresa: { // Adicionando o relacionamento com a empresa
     nome: string;
@@ -21,7 +22,7 @@ export interface Client {
 const fetchClients = async (): Promise<Client[]> => {
   const { data, error } = await supabase
     .from("clientes")
-    .select("id, empresa_id, nome, email, telefone, endereco_completo, created_at, empresa:empresas (nome)") // Usando alias 'empresa' para o relacionamento 'empresas'
+    .select("id, empresa_id, nome, email, telefone, endereco_completo, avatar_url, created_at, empresa:empresas (nome)") // Adicionado avatar_url
     .order("nome", { ascending: true });
 
   if (error) {
@@ -46,10 +47,11 @@ interface CreateClientParams {
   email: string | null;
   telefone: string | null;
   endereco_completo: string | null; // Novo campo
+  avatar_url: string | null; // NOVO CAMPO
   empresa_id?: string; // Opcional: Usado apenas pelo Super Admin
 }
 
-export const createClient = async ({ nome, email, telefone, endereco_completo, empresa_id: provided_empresa_id }: CreateClientParams) => {
+export const createClient = async ({ nome, email, telefone, endereco_completo, avatar_url, empresa_id: provided_empresa_id }: CreateClientParams) => {
   let empresa_id: string;
 
   if (provided_empresa_id) {
@@ -81,6 +83,7 @@ export const createClient = async ({ nome, email, telefone, endereco_completo, e
       email: email,
       telefone: telefone,
       endereco_completo: endereco_completo, // Novo campo
+      avatar_url: avatar_url, // NOVO CAMPO
     })
     .select()
     .single();
@@ -101,9 +104,10 @@ interface UpdateClientParams {
   email: string | null;
   telefone: string | null;
   endereco_completo: string | null; // Novo campo
+  avatar_url: string | null; // NOVO CAMPO
 }
 
-export const updateClient = async ({ id, nome, email, telefone, endereco_completo }: UpdateClientParams) => {
+export const updateClient = async ({ id, nome, email, telefone, endereco_completo, avatar_url }: UpdateClientParams) => {
   const { data, error } = await supabase
     .from("clientes")
     .update({
@@ -111,6 +115,7 @@ export const updateClient = async ({ id, nome, email, telefone, endereco_complet
       email: email,
       telefone: telefone,
       endereco_completo: endereco_completo, // Novo campo
+      avatar_url: avatar_url, // NOVO CAMPO
     })
     .eq("id", id)
     .select()

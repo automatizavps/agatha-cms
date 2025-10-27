@@ -11,12 +11,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Building } from "lucide-react";
+import { Loader2, Building, User } from "lucide-react";
 import { Client } from "@/integrations/supabase/clients";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTranslation } from "react-i18next"; // Importando tradução
+import { useTranslation } from "react-i18next";
+import React, { useState, useEffect } from "react";
+import ClientAvatarUpload from "./ClientAvatarUpload"; // NOVO IMPORT
 
 // Definimos o esquema base
 const baseFormSchema = z.object({
@@ -32,14 +34,15 @@ const baseFormSchema = z.object({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional(),
+  // avatar_url não está no esquema do RHF, mas é gerenciado via estado
 });
 
 type ClientFormValues = z.infer<typeof baseFormSchema>;
 
 interface ClientFormProps {
-  onSubmit: (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; empresa_id?: string }) => void;
+  onSubmit: (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; avatar_url: string | null; empresa_id?: string }) => void;
   isSubmitting: boolean;
-  defaultValues?: Partial<ClientFormValues>;
+  defaultValues?: Partial<ClientFormValues & { avatar_url: string | null }>;
   isEditing?: boolean;
 }
 
@@ -47,6 +50,14 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { t } = useTranslation();
+  
+  // Estado para gerenciar a URL do avatar
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(defaultValues?.avatar_url || null);
+  
+  // Sincroniza o avatar_url ao carregar defaultValues
+  useEffect(() => {
+    setAvatarUrl(defaultValues?.avatar_url || null);
+  }, [defaultValues?.avatar_url]);
   
   // Usando a flag correta
   const isSuperAdmin = profile?.is_super_admin;
@@ -71,6 +82,20 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       empresa_id: defaultValues?.empresa_id || "",
     },
   });
+  
+  // Visibilidade: APENAS Super Admin pode ver e interagir com este campo.
+  const shouldShowCompanyField = isSuperAdmin;
+  
+  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
+  const companyIdForData = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
+  const isCompanySelected = !!companyIdForData;
+  
+  // Encontra o nome da empresa para exibição desabilitada
+  const companyName = companies?.find(c => c.id === companyIdForData)?.nome;
+  
+  // Observa o nome do cliente para o componente de upload
+  const clientName = form.watch('nome');
+
 
   const handleSubmit = (values: ClientFormValues) => {
     // Normaliza campos vazios para null antes de enviar ao Supabase
@@ -86,16 +111,10 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       email: email,
       telefone: telefone,
       endereco_completo: endereco_completo,
+      avatar_url: avatarUrl, // NOVO CAMPO
       empresa_id: empresa_id,
     });
   };
-  
-  // Visibilidade: APENAS Super Admin pode ver e interagir com este campo.
-  const shouldShowCompanyField = isSuperAdmin;
-  
-  // Encontra o nome da empresa para exibição desabilitada
-  const companyIdToDisplay = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
-  const companyName = companies?.find(c => c.id === companyIdToDisplay)?.nome;
   
   if (isCheckingPermissions) {
     return (
@@ -140,6 +159,28 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
               </FormItem>
             )}
           />
+        )}
+        
+        {/* Seção de Avatar */}
+        {isCompanySelected ? (
+          <div className="flex flex-col items-center border-b pb-4">
+            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+              <User className="h-5 w-5 text-muted-foreground" />
+              {t('client_avatar', { defaultValue: 'Foto do Cliente' })}
+            </h3>
+            <ClientAvatarUpload 
+              currentAvatarUrl={avatarUrl}
+              clientName={clientName}
+              companyId={companyIdForData!}
+              onUploadComplete={setAvatarUrl}
+              disabled={isSubmitting}
+            />
+          </div>
+        ) : (
+          <div className="p-3 bg-yellow-100/50 dark:bg-yellow-900/20 border border-yellow-400/50 rounded-md text-sm text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            {t('select_company_to_load_data')}
+          </div>
         )}
 
         <FormField
@@ -210,7 +251,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
           )}
         />
         
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
