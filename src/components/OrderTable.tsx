@@ -48,11 +48,7 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, canWri
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  // Se o usuário não tiver permissão de escrita, não mostramos o menu de ações.
-  if (!canWrite) {
-    return null;
-  }
-
+  // CHAME TODOS OS HOOKS NO TOPO
   const deleteMutation = useMutation({
     mutationFn: deleteOrder,
     onSuccess: () => {
@@ -63,6 +59,11 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, canWri
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+
+  // RETORNO CONDICIONAL DEPOIS DOS HOOKS
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
