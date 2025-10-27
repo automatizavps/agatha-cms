@@ -98,8 +98,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
   // Encontra o nome da empresa para exibição desabilitada
   const companyName = companies?.find(c => c.id === companyIdForData)?.nome;
   
-  // ID do cliente (necessário para o upload)
-  const clientId = defaultValues?.id || 'new';
+  // ID do cliente (necessário para o upload) - Usa um UUID temporário para novos clientes
+  const clientId = defaultValues?.id || 'new-client-temp-id';
 
 
   const handleSubmit = (values: ClientFormValues) => {
@@ -133,18 +133,23 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* Seção de Avatar (Apenas na Edição e se a empresa estiver selecionada) */}
-        {isEditing && companyIdForData && (
+        {/* Seção de Avatar (Visível se a empresa estiver selecionada) */}
+        {isCompanySelected && (
           <div className="flex flex-col items-center border-b pb-4">
             <h3 className="text-lg font-semibold mb-2">{t('avatar', { defaultValue: 'Avatar' })}</h3>
             <ClientAvatarUpload 
               currentAvatarUrl={avatarUrl}
               onUploadComplete={setAvatarUrl}
               disabled={isSubmitting}
-              companyId={companyIdForData}
+              companyId={companyIdForData!} // Garantido por isCompanySelected
               clientId={clientId}
               clientName={clientName}
             />
+            {!isEditing && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {t('avatar_upload_note', { defaultValue: 'O avatar só será salvo após o cadastro do cliente.' })}
+              </p>
+            )}
           </div>
         )}
         
@@ -157,7 +162,11 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
               <FormItem>
                 <FormLabel>{t('user_table_header_company')}</FormLabel>
                 <Select 
-                  onValueChange={field.onChange} 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    // Limpa o avatar ao mudar a empresa
+                    setAvatarUrl(null);
+                  }} 
                   value={field.value} 
                   // O campo é editável se for Super Admin e não estiver submetendo
                   disabled={isLoadingCompanies || isSubmitting}
