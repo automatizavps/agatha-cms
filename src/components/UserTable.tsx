@@ -43,10 +43,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => 
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // MOVIDO: Chamar hooks incondicionalmente no topo
   const deleteMutation = useMutation({
     mutationFn: () => deleteUser(user.id, user.nome_completo, user.empresa_id, queryClient),
     onSuccess: () => {
@@ -57,6 +54,10 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => 
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
@@ -120,6 +121,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const { data: profile } = useCurrentUserProfile();
   const [sortKey, setSortKey] = useState<SortKey>('nome_completo');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
