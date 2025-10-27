@@ -437,6 +437,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             <div className="flex justify-between items-center pt-2">
               <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
               <span className="text-2xl font-bold text-primary flex items-center gap-1">
+                <DollarSign className="h-5 w-5" />
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
               </span>
             </div>

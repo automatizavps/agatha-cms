@@ -59,40 +59,6 @@ const resources = {
       "image_gallery_title": "Gestão de Arquivos de Storage",
       "select_bucket": "Selecione o Bucket",
       "no_files_found": "Nenhum arquivo encontrado neste bucket.",
-      
-      // Promoções (NOVO)
-      "page_title_promotions": "Gestão de Promoções",
-      "promotion_list_title": "Lista de Promoções",
-      "add_new_promotion": "Nova Promoção",
-      "no_promotions_found": "Nenhuma promoção cadastrada.",
-      "promotion_search_placeholder": "Buscar por nome da promoção...",
-      "promotion_name": "Nome da Promoção",
-      "promotion_details": "Detalhes da Promoção",
-      "discount_percentage": "Desconto (%)",
-      "start_date": "Data de Início",
-      "end_date": "Data de Fim",
-      "promotion_rules": "Regras de Aplicação",
-      "promotion_rules_description": "A promoção será aplicada a todos os itens que corresponderem a PELO MENOS uma das regras abaixo.",
-      "add_rule": "Adicionar Regra",
-      "rule": "Regra",
-      "rule_type": "Tipo",
-      "select_type": "Selecione o tipo",
-      "entity": "Entidade",
-      "select_entity": "Selecione a entidade",
-      "select_product": "Selecione o produto",
-      "select_service": "Selecione o serviço",
-      "select_category": "Selecione a categoria",
-      "no_entities_found": "Nenhuma entidade encontrada",
-      "add_rule_to_start": "Adicione uma regra para definir onde a promoção se aplica.",
-      "status_finished": "Finalizada",
-      "status_scheduled": "Agendada",
-      "status_active": "Ativa",
-      "no_rules": "Sem Regras",
-      "rules_count": "{{count}} Regras",
-      "promotion_created_success": "Promoção {{name}} criada com sucesso!",
-      "promotion_updated_success": "Promoção {{name}} atualizada com sucesso!",
-      "promotion_deleted_success": "Promoção {{name}} excluída com sucesso!",
-
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
@@ -468,7 +434,6 @@ const resources = {
       "notifications": "Notificações",
       "custom_profiles": "Perfis Customizados",
       "categories": "Categorias",
-      "promotions": "Promoções", // NOVO
     },
   },
   'en-US': {
@@ -526,40 +491,6 @@ const resources = {
       "image_gallery_title": "Storage File Management",
       "select_bucket": "Select Bucket",
       "no_files_found": "No files found in this bucket.",
-      
-      // Promotions (NEW)
-      "page_title_promotions": "Promotion Management",
-      "promotion_list_title": "Promotion List",
-      "add_new_promotion": "New Promotion",
-      "no_promotions_found": "No promotions registered.",
-      "promotion_search_placeholder": "Search by promotion name...",
-      "promotion_name": "Promotion Name",
-      "promotion_details": "Promotion Details",
-      "discount_percentage": "Discount (%)",
-      "start_date": "Start Date",
-      "end_date": "End Date",
-      "promotion_rules": "Application Rules",
-      "promotion_rules_description": "The promotion will apply to all items that match AT LEAST one of the rules below.",
-      "add_rule": "Add Rule",
-      "rule": "Rule",
-      "rule_type": "Type",
-      "select_type": "Select type",
-      "entity": "Entity",
-      "select_entity": "Select entity",
-      "select_product": "Select product",
-      "select_service": "Select service",
-      "select_category": "Select category",
-      "no_entities_found": "No entities found",
-      "add_rule_to_start": "Add a rule to define where the promotion applies.",
-      "status_finished": "Finished",
-      "status_scheduled": "Scheduled",
-      "status_active": "Active",
-      "no_rules": "No Rules",
-      "rules_count": "{{count}} Rules",
-      "promotion_created_success": "Promotion {{name}} created successfully!",
-      "promotion_updated_success": "Promotion {{name}} updated successfully!",
-      "promotion_deleted_success": "Promotion {{name}} deleted successfully!",
-
 
       // Dashboard
       "dashboard_title": "Dashboard Overview",
@@ -592,7 +523,7 @@ const resources = {
       "latest_orders_title": "Latest Orders",
       "no_appointments_found": "No recent appointments found.",
       
-      // Top Clients (NOVO)
+      // Top Clients (NEW)
       "top_clients_section_title": "Top Clients",
       "top_clients_orders_title": "Top 10 Clients by Orders (Value)",
       "top_clients_appointments_title": "Top 10 Clients by Appointments (Completed)",
@@ -935,7 +866,6 @@ const resources = {
       "notifications": "Notifications",
       "custom_profiles": "Custom Profiles",
       "categories": "Categories",
-      "promotions": "Promotions", // NOVO
     },
   },
 };

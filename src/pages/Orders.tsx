@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, ShoppingCart, Search, Trash2, CalendarIcon, Building, Check, ChevronsUpDown } from "lucide-react";
+import { Loader2, RefreshCw, ShoppingCart, Search, Trash2, CalendarIcon, Building } from "lucide-react";
 import { useOrders, deleteOrders } from "@/integrations/supabase/orders";
 import { showError, showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
@@ -18,16 +18,13 @@ import { ptBR } from "date-fns/locale";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCanWrite } from "@/hooks/use-module-permission";
-import { useClients } from "@/integrations/supabase/clients"; // NOVO
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"; // NOVO
+import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 
 const Orders = () => {
   // --- Filter States ---
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
-  const [clientFilter, setClientFilter] = useState<string | 'all'>('all'); // NOVO
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -35,9 +32,6 @@ const Orders = () => {
   // Dashboard Filter Hook
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
-  
-  // Dados de Clientes
-  const { data: clients, isLoading: isLoadingClients } = useClients(); // NOVO
   
   // Permissões reintroduzidas
   const canWriteOrders = useCanWrite('orders');
@@ -51,7 +45,7 @@ const Orders = () => {
     }
   );
 
-  const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies) || isLoadingClients;
+  const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
   if (isError && error) {
     showError(t("error_loading_data") + ": " + error.message);
@@ -59,25 +53,16 @@ const Orders = () => {
   
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
-    let filtered = orders;
-    
-    // 1. Client Filter (NOVO)
-    if (clientFilter !== 'all') {
-      filtered = filtered.filter(order => order.cliente_id === clientFilter);
-    }
+    if (!searchTerm) return orders;
 
-    // 2. Search Term Filter (existing)
-    if (searchTerm) {
-      const lowerCaseSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(order => 
-        order.clientes?.nome.toLowerCase().includes(lowerCaseSearch) ||
-        order.status.toLowerCase().includes(lowerCaseSearch) ||
-        // Adicionando busca pelo prefixo do ID (os 8 primeiros caracteres)
-        order.id.slice(0, 8).toLowerCase().includes(lowerCaseSearch)
-      );
-    }
-    return filtered;
-  }, [orders, searchTerm, clientFilter]);
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return orders.filter(order => 
+      order.clientes?.nome.toLowerCase().includes(lowerCaseSearch) ||
+      order.status.toLowerCase().includes(lowerCaseSearch) ||
+      // Adicionando busca pelo prefixo do ID (os 8 primeiros caracteres)
+      order.id.slice(0, 8).toLowerCase().includes(lowerCaseSearch)
+    );
+  }, [orders, searchTerm]);
   
   // Mutação para exclusão em massa
   const bulkDeleteMutation = useMutation({
@@ -104,20 +89,6 @@ const Orders = () => {
       bulkDeleteMutation.mutate(Array.from(selectedOrderIds));
     }
   };
-  
-  // Filtra clientes pela empresa selecionada (se houver)
-  const clientsByCompany = useMemo(() => {
-    if (!clients) return [];
-    if (filteredCompanyId) {
-      return clients.filter(c => c.empresa_id === filteredCompanyId);
-    }
-    // Se for Super Admin e 'all' estiver selecionado, mostra todos os clientes
-    if (isSuperAdmin && selectedCompanyId === 'all') {
-      return clients;
-    }
-    return [];
-  }, [clients, filteredCompanyId, isSuperAdmin, selectedCompanyId]);
-
 
   return (
     <DashboardLayout>
@@ -139,10 +110,7 @@ const Orders = () => {
             {isSuperAdmin && (
               <div className="w-full md:w-48">
                 <Select 
-                  onValueChange={(value) => {
-                    setSelectedCompanyId(value);
-                    setClientFilter('all'); // Resetar filtro de cliente
-                  }} 
+                  onValueChange={setSelectedCompanyId} 
                   value={selectedCompanyId} 
                   disabled={isLoadingCompanies || isChecking}
                 >
@@ -161,63 +129,6 @@ const Orders = () => {
                 </Select>
               </div>
             )}
-            
-            {/* Filtro de Cliente (NOVO) */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className={cn(
-                    "w-full md:w-[200px] justify-between",
-                    clientFilter === 'all' && "text-muted-foreground"
-                  )}
-                  disabled={isChecking || clientsByCompany.length === 0}
-                >
-                  <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {clientFilter === 'all'
-                    ? t('filter_all_clients', { defaultValue: 'Todos os Clientes' })
-                    : clientsByCompany.find(c => c.id === clientFilter)?.nome || t('select_client')}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                <Command>
-                  <CommandInput placeholder={t('search_client')} />
-                  <CommandEmpty>{t('no_clients_found')}</CommandEmpty>
-                  <CommandGroup>
-                    <CommandItem
-                      key="all"
-                      value={t('filter_all_clients', { defaultValue: 'Todos os Clientes' })}
-                      onSelect={() => setClientFilter('all')}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          clientFilter === 'all' ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {t('filter_all_clients', { defaultValue: 'Todos os Clientes' })}
-                    </CommandItem>
-                    {clientsByCompany.map((client) => (
-                      <CommandItem
-                        key={client.id}
-                        value={client.nome}
-                        onSelect={() => setClientFilter(client.id)}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            client.id === clientFilter ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {client.nome}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
             
             {/* Filtro de Data (Período) */}
             <Popover>
@@ -332,7 +243,7 @@ const Orders = () => {
             />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {searchTerm || clientFilter !== 'all' ? t('no_data_found') : t('no_orders_found')}
+              {searchTerm ? t('no_data_found') : t('no_orders_found')}
             </div>
           )}
         </CardContent>
