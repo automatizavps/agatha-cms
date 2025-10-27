@@ -366,6 +366,56 @@ const resources = {
       "auth_error_invalid_password": "Senha inválida.",
       "auth_error_user_already_exists": "Usuário já existe.",
       "auth_error_default": "Ocorreu um erro. Tente novamente.",
+      
+      // Product Sales History
+      "sales_history_title": "Histórico de Vendas: {{name}}",
+      "sales_history_subtitle": "Detalhes e histórico de vendas/serviços realizados para este {{type}}.",
+      "sales_history_table_title": "Transações Concluídas",
+      "no_sales_history_found": "Nenhuma transação concluída encontrada para este item.",
+      "weekly_sales_history": "Vendas Semanais (Últimos 7 dias)",
+      "type": "Tipo",
+      
+      // Company Status
+      "company_status_active": "Ativa",
+      "company_status_inactive": "Inativa",
+      
+      // Custom Profiles
+      "page_title_custom_profiles": "Perfis Customizados",
+      "custom_profile_list_title": "Perfis por Empresa",
+      "add_new_profile": "Novo Perfil Customizado",
+      "no_custom_profiles_found": "Nenhum perfil customizado encontrado.",
+      "custom_profile_search_placeholder": "Buscar por nome do perfil ou empresa...",
+      "profile_name": "Nome do Perfil",
+      "profile_name_placeholder": "Ex: Gerente de Loja, Vendedor Júnior",
+      "profile_details": "Detalhes do Perfil",
+      "module_permissions": "Permissões de Módulo",
+      "create_profile": "Criar Perfil",
+      "edit_profile": "Editar Perfil",
+      "profile_created_success": "Perfil {{name}} criado com sucesso!",
+      "profile_updated_success": "Perfil {{name}} atualizado com sucesso!",
+      "profile_deleted_success": "Perfil {{name}} excluído com sucesso!",
+      "loading_profile_data": "Carregando dados do perfil...",
+      "grant_full_admin_access": "Conceder Acesso Total (Admin)",
+      "grant_full_admin_access_description": "Marque para conceder permissão de Leitura e Escrita a todos os módulos. Isso anula as configurações individuais abaixo.",
+      
+      // Permissions
+      "access_read": "Leitura",
+      "access_write": "Leitura e Escrita",
+      "access_none": "Sem Acesso",
+      
+      // Modules
+      "users": "Usuários",
+      "clients": "Clientes",
+      "products": "Produtos",
+      "services": "Serviços",
+      "orders": "Pedidos",
+      "appointments": "Agendamentos",
+      "teams": "Equipes",
+      "analytics": "Analytics",
+      "companies": "Empresas",
+      "notifications": "Notificações",
+      "custom_profiles": "Perfis Customizados",
+      "categories": "Categorias",
     },
   },
   'en-US': {
