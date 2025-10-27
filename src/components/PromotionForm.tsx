@@ -211,7 +211,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
   }
 
   return (
-    <ShadcnForm {...form}>
+    <ShadcnForm.Root {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
         {/* Campo Empresa */}
@@ -559,7 +559,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
           )}
         </Button>
       </form>
-    </Form>
+    </ShadcnForm.Root>
   );
 };
 
