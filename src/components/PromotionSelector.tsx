@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Tag, Percent, XCircle } from 'lucide-react';
+import { Loader2, Tag, Percent, XCircle, Building } from 'lucide-react'; // Adicionado Building
 import { useActivePromotions } from '@/integrations/supabase/promotions';
 import { Promotion } from '@/integrations/supabase/promotions';
 import { cn } from '@/lib/utils';
