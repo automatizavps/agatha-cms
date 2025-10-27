@@ -22,7 +22,6 @@ import ProductHistory from "./pages/ProductHistory";
 import CustomProfiles from "./pages/CustomProfiles";
 import Categories from "./pages/Categories"; // IMPORTADO
 import ImageGallery from "./pages/ImageGallery"; // NOVO IMPORT
-import Promotions from "./pages/Promotions"; // NOVO IMPORT
 import { SessionContextProvider, ProtectedRoute, PublicRoute, useSession } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
 import React, { useState, useEffect } from "react";
@@ -55,7 +54,6 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/gallery" element={<ImageGallery />} /> {/* NOVA ROTA */}
-      <Route path="/promotions" element={<Promotions />} /> {/* NOVA ROTA */}
       
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
