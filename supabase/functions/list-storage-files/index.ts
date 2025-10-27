@@ -50,61 +50,44 @@ serve(async (req) => {
     return returnError("Invalid JSON body", 400);
   }
 
-  const { bucketName, pathPrefix } = data; // pathPrefix é o novo campo
+  const { bucketName, pathPrefix } = data;
 
   if (!bucketName) {
     return returnError("Missing required field: bucketName", 400);
   }
   
-  // 4. Listar arquivos recursivamente
-  const listAllFiles = async (path: string = ''): Promise<any[]> => {
+  // O pathPrefix deve ser o caminho da pasta (ID da empresa)
+  const path = pathPrefix || ''; 
+
+  try {
+    // 4. Listar arquivos no caminho especificado (pathPrefix)
     const { data: files, error } = await supabaseAdmin.storage
       .from(bucketName)
       .list(path, {
         limit: 100, 
         offset: 0,
-        sortBy: { column: 'name', order: 'asc' },
+        sortBy: { column: 'created_at', order: 'desc' },
       });
 
     if (error) {
       console.error(`Error listing files in ${bucketName}/${path}:`, error);
       throw new Error(error.message);
     }
+    
+    // 5. Filtrar apenas arquivos (id !== null) e adicionar publicUrl
+    const validFiles = files
+      .filter(file => file.id !== null)
+      .map(file => {
+        const fullPath = path ? `${path}/${file.name}` : file.name;
+        
+        return {
+          ...file,
+          fullPath: fullPath,
+          publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
+        };
+      });
 
-    let allFiles: any[] = [];
-    
-    for (const file of files) {
-      const fullPath = path ? `${path}/${file.name}` : file.name;
-      
-      if (file.id === null) { // É uma pasta
-        // Se estamos filtrando por prefixo e o prefixo não corresponde, pulamos
-        if (pathPrefix && !fullPath.startsWith(pathPrefix) && path === '') {
-             continue;
-        }
-        // Recursivamente lista o conteúdo da pasta
-        const subFiles = await listAllFiles(fullPath);
-        allFiles = allFiles.concat(subFiles);
-      } else {
-        // É um arquivo, verifica se corresponde ao prefixo (se houver)
-        if (!pathPrefix || fullPath.startsWith(pathPrefix)) {
-            allFiles.push({
-              ...file,
-              fullPath: fullPath,
-              publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
-            });
-        }
-      }
-    }
-    
-    return allFiles;
-  };
-  
-  try {
-    // Se pathPrefix for fornecido, começamos a busca a partir dele
-    const initialPath = pathPrefix || '';
-    const files = await listAllFiles(initialPath);
-    
-    return new Response(JSON.stringify({ files }), {
+    return new Response(JSON.stringify({ files: validFiles }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
