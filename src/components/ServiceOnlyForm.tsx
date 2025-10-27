@@ -16,12 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { Product } from "@/integrations/supabase/products";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import MultiImageUpload from "./MultiImageUpload";
 import { useState } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
 import { useCategories } from "@/integrations/supabase/categories"; // Importando useCategories
+import ImageSelectorAndUploader from "./ImageSelectorAndUploader"; // NOVO IMPORT
 
 // Definimos o esquema para SERVIÇO
 const formSchema = z.object({
@@ -93,7 +93,7 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
     },
   });
   
-  // Determina o ID da empresa para carregar categorias e para o MultiImageUpload
+  // Determina o ID da empresa para carregar categorias e para o ImageSelectorAndUploader
   const companyIdForData = isSuperAdmin ? form.watch('empresa_id') : currentProfile?.empresa_id;
   const isCompanySelected = !!companyIdForData;
   
@@ -282,11 +282,11 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
           )}
         />
         
-        <MultiImageUpload 
+        <ImageSelectorAndUploader 
           currentUrls={photos}
           onUrlsChange={setPhotos}
           disabled={isSubmitting}
-          // Passando o ID da empresa para o MultiImageUpload
+          // Passando o ID da empresa para o ImageSelectorAndUploader
           companyId={companyIdForData} 
         />
 
