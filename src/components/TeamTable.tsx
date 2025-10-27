@@ -45,10 +45,7 @@ const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit, canWrite }) => 
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // CHAME TODOS OS HOOKS NO TOPO
   const deleteMutation = useMutation({
     mutationFn: () => deleteTeam(team.id, team.nome, team.empresa_id, queryClient),
     onSuccess: () => {
@@ -65,6 +62,11 @@ const TeamActions: React.FC<TeamActionsProps> = ({ team, onEdit, canWrite }) => 
       deleteMutation.mutate();
     }
   };
+
+  // RETORNO CONDICIONAL DEPOIS DOS HOOKS
+  if (!canWrite) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
