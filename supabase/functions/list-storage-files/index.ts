@@ -42,13 +42,6 @@ serve(async (req) => {
     return returnError("Unauthorized: Invalid token", 401);
   }
   
-  // Note: We rely on the client-side check for Super Admin, but for security, 
-  // we should ideally check the user's profile in the DB here using the service role.
-  // Since the current user profile logic is complex, we will rely on the client 
-  // ensuring only SA calls this, and the service role key grants the necessary power.
-  // For simplicity and speed, we skip the explicit SA check inside the function, 
-  // trusting the client to only expose this to SA.
-
   // 3. Processar o corpo da requisição
   let data;
   try {
@@ -57,7 +50,7 @@ serve(async (req) => {
     return returnError("Invalid JSON body", 400);
   }
 
-  const { bucketName } = data;
+  const { bucketName, pathPrefix } = data; // pathPrefix é o novo campo
 
   if (!bucketName) {
     return returnError("Missing required field: bucketName", 400);
@@ -68,7 +61,7 @@ serve(async (req) => {
     const { data: files, error } = await supabaseAdmin.storage
       .from(bucketName)
       .list(path, {
-        limit: 100, // Max limit per call
+        limit: 100, 
         offset: 0,
         sortBy: { column: 'name', order: 'asc' },
       });
@@ -84,16 +77,22 @@ serve(async (req) => {
       const fullPath = path ? `${path}/${file.name}` : file.name;
       
       if (file.id === null) { // É uma pasta
+        // Se estamos filtrando por prefixo e o prefixo não corresponde, pulamos
+        if (pathPrefix && !fullPath.startsWith(pathPrefix) && path === '') {
+             continue;
+        }
         // Recursivamente lista o conteúdo da pasta
         const subFiles = await listAllFiles(fullPath);
         allFiles = allFiles.concat(subFiles);
       } else {
-        // É um arquivo, adiciona o caminho completo
-        allFiles.push({
-          ...file,
-          fullPath: fullPath,
-          publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
-        });
+        // É um arquivo, verifica se corresponde ao prefixo (se houver)
+        if (!pathPrefix || fullPath.startsWith(pathPrefix)) {
+            allFiles.push({
+              ...file,
+              fullPath: fullPath,
+              publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
+            });
+        }
       }
     }
     
@@ -101,7 +100,9 @@ serve(async (req) => {
   };
   
   try {
-    const files = await listAllFiles();
+    // Se pathPrefix for fornecido, começamos a busca a partir dele
+    const initialPath = pathPrefix || '';
+    const files = await listAllFiles(initialPath);
     
     return new Response(JSON.stringify({ files }), {
       status: 200,
