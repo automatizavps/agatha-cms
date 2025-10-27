@@ -112,8 +112,8 @@ const LatestAppointmentsCarousel: React.FC<LatestAppointmentsCarouselProps> = ({
                 key={appointment.id} 
                 className={cn(
                   "embla__slide flex-none min-w-0 pl-6 py-4",
-                  // 1/2 no mobile, 1/3 no tablet, 1/4 no desktop
-                  "w-1/2 sm:w-1/3 md:w-1/4" 
+                  // Mobile: 1 card (w-full), Tablet: 3 cards (sm:w-1/3), Desktop: 4 cards (md:w-1/4)
+                  "w-full sm:w-1/3 md:w-1/4" 
                 )}
               >
                 <LatestAppointmentCard appointment={appointment} />
