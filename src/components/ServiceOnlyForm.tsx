@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -284,7 +286,8 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
           currentUrls={photos}
           onUrlsChange={setPhotos}
           disabled={isSubmitting}
-          companyId={companyIdForData} {/* PASSANDO companyId */}
+          // Passando o ID da empresa para o MultiImageUpload
+          companyId={companyIdForData} 
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
