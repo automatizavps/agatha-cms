@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
-  Form,
+  Form as ShadcnForm,
   FormControl,
   FormField,
   FormItem,
@@ -211,7 +211,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
   }
 
   return (
-    <Form {...form}>
+    <ShadcnForm {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
         {/* Campo Empresa */}
@@ -337,9 +337,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       locale={ptBR}
                     />
                   </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
+                </FormItem>
             )}
           />
 
