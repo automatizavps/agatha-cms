@@ -91,12 +91,12 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
     },
   });
   
-  // Determina o ID da empresa para carregar categorias e imagens
-  const companyIdForData = isSuperAdmin ? form.watch('empresa_id') : currentProfile?.empresa_id;
-  const isCompanySelected = !!companyIdForData;
+  // Determina o ID da empresa para carregar categorias
+  const companyIdForCategories = isSuperAdmin ? form.watch('empresa_id') : currentProfile?.empresa_id;
+  const isCompanySelected = !!companyIdForCategories;
   
   // Carrega categorias filtradas pela empresa selecionada
-  const { data: categories, isLoading: isLoadingCategories } = useCategories(companyIdForData || undefined);
+  const { data: categories, isLoading: isLoadingCategories } = useCategories(companyIdForCategories || undefined);
   
   // Determina se o campo empresa deve ser exibido
   const shouldShowCompanyField = isSuperAdmin || (isEditing && defaultValues?.empresa_id);
@@ -284,7 +284,6 @@ const ServiceOnlyForm: React.FC<ServiceOnlyFormProps> = ({ onSubmit, isSubmittin
           currentUrls={photos}
           onUrlsChange={setPhotos}
           disabled={isSubmitting}
-          companyId={companyIdForData} {/* PASSANDO O ID DA EMPRESA */}
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>

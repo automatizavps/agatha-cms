@@ -21,9 +21,9 @@ const BUCKETS = ['avatars', 'product_images'];
 
 // --- Fetch All Files in a Bucket (via Edge Function) ---
 
-const fetchStorageFiles = async (bucketName: string, accessToken: string, pathPrefix?: string): Promise<StorageFile[]> => {
+const fetchStorageFiles = async (bucketName: string, accessToken: string): Promise<StorageFile[]> => {
   const { data, error } = await supabase.functions.invoke("list-storage-files", {
-    body: { bucketName, pathPrefix },
+    body: { bucketName },
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -41,13 +41,13 @@ const fetchStorageFiles = async (bucketName: string, accessToken: string, pathPr
   return data.files as StorageFile[];
 };
 
-export const useStorageImages = (bucketName: string, pathPrefix?: string) => {
+export const useStorageImages = (bucketName: string) => {
   const { session } = useSession();
   const accessToken = session?.access_token;
 
   return useQuery<StorageFile[], Error>({
-    queryKey: ["storageImages", bucketName, pathPrefix],
-    queryFn: () => fetchStorageFiles(bucketName, accessToken!, pathPrefix),
+    queryKey: ["storageImages", bucketName],
+    queryFn: () => fetchStorageFiles(bucketName, accessToken!),
     enabled: !!accessToken && BUCKETS.includes(bucketName),
   });
 };
