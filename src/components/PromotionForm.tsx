@@ -211,7 +211,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
   }
 
   return (
-    <ShadcnForm.Root {...form}>
+    <ShadcnForm {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
         {/* Campo Empresa */}
@@ -337,7 +337,8 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       locale={ptBR}
                     />
                   </PopoverContent>
-                </FormItem>
+                </Popover>
+              </FormItem>
             )}
           />
 
@@ -372,8 +373,8 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       locale={ptBR}
                     />
                   </PopoverContent>
-                </FormItem>
-              )}
+                </Popover>
+              </FormItem>
             )}
           />
         </div>
@@ -559,7 +560,7 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
           )}
         </Button>
       </form>
-    </ShadcnForm.Root>
+    </ShadcnForm>
   );
 };
 
