@@ -75,6 +75,94 @@ export const usePromotions = (companyId?: string) => {
   });
 };
 
+// --- Fetch Active Promotions ---
+const fetchActivePromotions = async (companyId: string | undefined): Promise<Promotion[]> => {
+  const now = new Date().toISOString();
+  let query = supabase
+    .from("promocoes")
+    .select(`
+      id,
+      empresa_id,
+      nome,
+      data_inicio,
+      data_fim,
+      desconto_percentual,
+      created_at,
+      is_active,
+      regras:promocao_regras (
+        id,
+        tipo_regra,
+        entidade_id
+      )
+    `)
+    .eq('is_active', true)
+    .lte('data_inicio', now)
+    .gte('data_fim', now);
+
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query.order("nome", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching active promotions:", error);
+    throw new Error("Failed to fetch active promotions: " + error.message);
+  }
+
+  return data.map(p => ({
+    ...p,
+    desconto_percentual: parseFloat(String(p.desconto_percentual)) || 0,
+  })) as Promotion[];
+};
+
+export const useActivePromotions = (companyId: string | undefined) => {
+  return useQuery<Promotion[], Error>({
+    queryKey: ["activePromotions", companyId],
+    queryFn: () => fetchActivePromotions(companyId),
+    enabled: !!companyId, // Só busca se houver companyId
+  });
+};
+
+// --- Fetch Promotion by ID (NOVO) ---
+const fetchPromotionById = async (promotionId: string): Promise<Promotion | null> => {
+  const { data, error } = await supabase
+    .from("promocoes")
+    .select(`
+      id,
+      empresa_id,
+      nome,
+      data_inicio,
+      data_fim,
+      desconto_percentual,
+      created_at,
+      is_active
+    `)
+    .eq('id', promotionId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching promotion by ID:", error);
+    throw new Error("Failed to fetch promotion by ID: " + error.message);
+  }
+
+  if (!data) return null;
+
+  return {
+    ...data,
+    desconto_percentual: parseFloat(String(data.desconto_percentual)) || 0,
+  } as Promotion;
+};
+
+export const usePromotionById = (promotionId: string | undefined) => {
+  return useQuery<Promotion | null, Error>({
+    queryKey: ["promotionById", promotionId],
+    queryFn: () => fetchPromotionById(promotionId!),
+    enabled: !!promotionId,
+  });
+};
+
+
 // --- Fetch Promotion Rules ---
 
 const fetchPromotionRules = async (promotionId: string): Promise<PromotionRule[]> => {
@@ -161,12 +249,11 @@ export const createPromotion = async ({ nome, data_inicio, data_fim, desconto_pe
       throw new Error("Não foi possível determinar a empresa do usuário.");
     }
     empresa_id = companyData;
+    if (!empresa_id) {
+      throw new Error("ID da empresa é obrigatório para criar uma promoção.");
+    }
   }
   
-  if (!empresa_id) {
-     throw new Error("ID da empresa é obrigatório para criar uma promoção.");
-  }
-
   // 1. Inserir a promoção principal
   const { data: promotionData, error: promotionError } = await supabase
     .from("promocoes")

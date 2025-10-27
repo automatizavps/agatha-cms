@@ -23,6 +23,7 @@ export interface Appointment {
   status: 'pendente' | 'confirmado' | 'cancelado' | 'concluido';
   created_by: string | null;
   created_at: string;
+  promocao_id: string | null; // NOVO: promocao_id
   // Relacionamentos
   responsavel: {
     nome_completo: string;
@@ -56,6 +57,7 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
       status,
       responsavel_id,
       created_at,
+      promocao_id,
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
       clientes (nome),
       empresas (nome)
@@ -146,9 +148,10 @@ interface CreateAppointmentParams {
   items: ItemToCreate[]; // Novo campo
   queryClient: QueryClient; // Adicionando QueryClient
   empresa_id?: string; // NOVO: Opcional para Super Admin
+  promocao_id?: string | null; // NOVO: promocao_id
 }
 
-export const createAppointment = async ({ cliente_id, responsavel_id, data_hora, items, queryClient, empresa_id: provided_empresa_id }: CreateAppointmentParams) => {
+export const createAppointment = async ({ cliente_id, responsavel_id, data_hora, items, queryClient, empresa_id: provided_empresa_id, promocao_id }: CreateAppointmentParams) => {
   let empresa_id: string;
 
   if (provided_empresa_id) {
@@ -164,6 +167,10 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora,
     empresa_id = companyData;
   }
   
+  if (!empresa_id) {
+     throw new Error("ID da empresa é obrigatório para criar um agendamento.");
+  }
+
   // 2. Obter o ID do usuário logado (created_by)
   const { data: { user } } = await supabase.auth.getUser();
   const created_by = user?.id;
@@ -182,6 +189,7 @@ export const createAppointment = async ({ cliente_id, responsavel_id, data_hora,
       data_hora: data_hora.toISOString(),
       created_by: created_by,
       status: 'pendente', // Padrão
+      promocao_id: promocao_id, // NOVO: promocao_id
     })
     .select("id")
     .single();
@@ -235,11 +243,12 @@ interface UpdateAppointmentParams {
   responsavel_id: string;
   data_hora: Date;
   status: Appointment['status'];
+  promocao_id: string | null; // NOVO: promocao_id
   queryClient: QueryClient; // Adicionando QueryClient
   // Itens não são atualizados via este endpoint, apenas o status e dados principais
 }
 
-export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_hora, status, queryClient }: UpdateAppointmentParams) => {
+export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_hora, status, promocao_id, queryClient }: UpdateAppointmentParams) => {
   const { data, error } = await supabase
     .from("agendamentos")
     .update({
@@ -247,6 +256,7 @@ export const updateAppointment = async ({ id, cliente_id, responsavel_id, data_h
       responsavel_id: responsavel_id,
       data_hora: data_hora.toISOString(),
       status: status,
+      promocao_id: promocao_id, // NOVO: promocao_id
     })
     .eq("id", id)
     .select()

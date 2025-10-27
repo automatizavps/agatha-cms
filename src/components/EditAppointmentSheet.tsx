@@ -29,7 +29,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
   });
 
   // A edição de agendamentos só permite alterar o status e dados principais neste componente
-  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: any[]; status?: Appointment['status'] }) => {
+  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: any[]; status?: Appointment['status']; promocao_id?: string | null }) => {
     if (!values.status) {
       showError("Status do agendamento é obrigatório.");
       return;
@@ -41,6 +41,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
       responsavel_id: values.responsavel_id,
       data_hora: values.data_hora,
       status: values.status,
+      promocao_id: appointment.promocao_id, // NOVO: Mantém a promoção original (não editável aqui)
       queryClient: queryClient, // Passando o queryClient
     });
   };
@@ -54,6 +55,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     time: format(appointmentDate, "HH:mm"),
     status: appointment.status,
     empresa_id: appointment.empresa_id, // <-- Adicionando empresa_id aqui
+    promocao_id: appointment.promocao_id, // NOVO: promocao_id
     // Mapeamos os itens carregados para o formato esperado pelo AppointmentForm
     items: appointmentItems?.map(item => ({
       produto_id: item.produto_id,

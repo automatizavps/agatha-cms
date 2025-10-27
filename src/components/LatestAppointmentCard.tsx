@@ -1,12 +1,13 @@
 import React from 'react';
 import { Appointment } from '@/integrations/supabase/appointments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock, Package, DollarSign } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, AlertTriangle, Building, Clock, Package, DollarSign, Percent } from 'lucide-react'; // Adicionado Percent
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Importando Avatar
+import { usePromotionById } from '@/integrations/supabase/promotions'; // NOVO IMPORT
 
 interface LatestAppointmentCardProps {
   appointment: Appointment;
@@ -50,13 +51,22 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
   const items = appointment.agendamento_itens || [];
   const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
   
+  // NOVO: Busca detalhes da promoção
+  const { data: promotion, isLoading: isLoadingPromotion } = usePromotionById(appointment.promocao_id || undefined);
+
   // Cálculo do Valor Total
-  const totalValue = items.reduce((sum, item) => {
-    // Garantir que preco_unitario e quantidade sejam tratados como números
-    const price = parseFloat(String(item.preco_unitario)) || 0;
-    const quantity = parseInt(String(item.quantidade)) || 0;
-    return sum + (price * quantity);
-  }, 0);
+  const totalValue = useMemo(() => {
+    let sum = items.reduce((acc, item) => {
+      const price = parseFloat(String(item.preco_unitario)) || 0;
+      const quantity = parseInt(String(item.quantidade)) || 0;
+      return acc + (price * quantity);
+    }, 0);
+
+    if (promotion && promotion.desconto_percentual > 0) {
+      sum = sum * (1 - promotion.desconto_percentual / 100);
+    }
+    return sum;
+  }, [items, promotion]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -93,9 +103,16 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-2 text-sm flex-1">
         
-        {/* Valor Total (NOVO) */}
+        {/* Valor Total */}
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="text-sm font-medium text-primary">{formatCurrency(totalValue)}</span>
+          {isLoadingPromotion ? (
+            <Loader2 className="h-3 w-3 animate-spin ml-1" />
+          ) : promotion && promotion.desconto_percentual > 0 && (
+            <span className="text-xs text-green-500 flex items-center ml-1">
+              <Percent className="h-3 w-3 mr-0.5" /> -{promotion.desconto_percentual}%
+            </span>
+          )}
         </div>
         
         {/* Data e Hora */}

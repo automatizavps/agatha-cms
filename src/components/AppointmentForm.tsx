@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, CalendarIcon, Check, ChevronsUpDown, PlusCircle, Trash2, Building } from "lucide-react";
+import { Loader2, CalendarIcon, Check, ChevronsUpDown, PlusCircle, Trash2, Building, DollarSign } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUsers } from "@/integrations/supabase/users";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -28,13 +27,16 @@ import { ptBR } from "date-fns/locale";
 import { Appointment } from "@/integrations/supabase/appointments";
 import { useClients } from "@/integrations/supabase/clients";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useServicesOnly, useProductsOnly } from "@/integrations/supabase/products";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
+import PromotionSelector from "./PromotionSelector"; // NOVO IMPORT
+import { Promotion } from "@/integrations/supabase/promotions"; // NOVO IMPORT
+import { useUsers } from "@/integrations/supabase/users"; // Importando useUsers
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
@@ -67,6 +69,7 @@ const baseFormSchema = z.object({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional(),
+  promocao_id: z.string().uuid().nullable().optional(), // NOVO: promocao_id
 });
 
 type AppointmentFormValues = z.infer<typeof baseFormSchema>;
@@ -78,7 +81,7 @@ interface ItemToCreate {
 }
 
 interface AppointmentFormProps {
-  onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: ItemToCreate[]; status?: Appointment['status']; empresa_id?: string }) => void;
+  onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: ItemToCreate[]; status?: Appointment['status']; empresa_id?: string; promocao_id?: string | null }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<AppointmentFormValues & { items: ItemToCreate[] }>;
   isEditing?: boolean;
@@ -115,6 +118,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       status: defaultValues?.status || 'pendente',
       items: defaultValues?.items || [],
       empresa_id: defaultValues?.empresa_id || "", // Inicializa com o valor padrão
+      promocao_id: defaultValues?.promocao_id || null, // NOVO: default promocao_id
     },
   });
   
@@ -130,7 +134,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
     
   const isCompanySelected = !!selectedCompanyId;
-
+  
   // Filtra Clientes, Usuários e Itens com base na empresa selecionada
   const filteredClients = useMemo(() => {
     if (!clients || !isCompanySelected) return [];
@@ -153,7 +157,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
-  // Efeito para sincronizar defaultValues (especialmente items e empresa_id)
+  // Sincroniza defaultValues (especialmente items e empresa_id)
   useEffect(() => {
     if (isEditing && defaultValues) {
       // Se os itens foram carregados (indicando que os dados do agendamento estão prontos)
@@ -167,12 +171,37 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           status: defaultValues.status || 'pendente',
           items: defaultValues.items,
           empresa_id: defaultValues.empresa_id,
+          promocao_id: defaultValues.promocao_id || null, // NOVO: promocao_id
         });
       }
     }
   }, [defaultValues, isEditing, form]);
 
+  // NOVO: Observa a promoção selecionada
+  const selectedPromotion = form.watch('promocao_id');
+  const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
 
+  useEffect(() => {
+    if (selectedPromotion) {
+      // Aqui você precisaria buscar os detalhes da promoção pelo ID
+      // Por simplicidade, vamos assumir que o PromotionSelector já nos deu o objeto completo
+      // e que o `onPromotionChange` já atualiza `activePromotion`
+    } else {
+      setActivePromotion(null);
+    }
+  }, [selectedPromotion]);
+
+  const calculateTotal = useMemo(() => {
+    let total = form.getValues("items").reduce((sum, item) => {
+      return sum + (item.quantidade * item.preco_unitario);
+    }, 0);
+
+    if (activePromotion && activePromotion.desconto_percentual > 0) {
+      total = total * (1 - activePromotion.desconto_percentual / 100);
+    }
+    return total;
+  }, [form.watch("items"), activePromotion]); // Recalcula quando os itens ou a promoção mudam
+  
   const handleAddItem = () => {
     append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
   };
@@ -212,6 +241,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       })),
       status: values.status,
       empresa_id: empresa_id,
+      promocao_id: activePromotion?.id || null, // NOVO: Passa o ID da promoção
     });
   };
   
@@ -256,6 +286,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                       form.setValue('cliente_id', '');
                       form.setValue('responsavel_id', '');
                       form.setValue('items', []);
+                      form.setValue('promocao_id', null); // Limpa promoção
+                      setActivePromotion(null);
                     }} 
                     value={field.value} 
                     disabled={isLoadingCompanies || isSubmitting}
@@ -480,7 +512,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         <Select 
                           onValueChange={(val) => handleProductChange(index, val)} 
                           value={itemField.value} 
-                          disabled={isLoadingItems || isSubmitting || !isCompanySelected}
+                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -490,7 +522,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                           <SelectContent>
                             {allItems.map((item) => (
                               <SelectItem key={item.id} value={item.id}>
-                                {item.nome} ({item.tipo === 'servico' ? t('nav_services') : t('nav_products')})
+                                {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -572,6 +604,29 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           </CardContent>
         </Card>
 
+        {/* NOVO: Seletor de Promoção */}
+        {!isEditing && ( // Promoções só podem ser aplicadas na criação
+          <FormField
+            control={form.control}
+            name="promocao_id"
+            render={({ field }) => (
+              <FormItem>
+                <PromotionSelector
+                  companyId={selectedCompanyId}
+                  selectedPromotionId={field.value || null}
+                  onPromotionChange={(promo) => {
+                    field.onChange(promo?.id || null);
+                    setActivePromotion(promo); // Atualiza o estado local da promoção
+                  }}
+                  disabled={isSubmitting || !isCompanySelected}
+                  label={t('promotion', { defaultValue: 'Promoção' })}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         {isEditing && (
           <FormField
             control={form.control}
@@ -598,8 +653,18 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             )}
           />
         )}
+        
+        <Separator />
+        
+        <div className="flex justify-between items-center pt-2">
+          <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
+          <span className="text-2xl font-bold text-primary flex items-center gap-1">
+            <DollarSign className="h-5 w-5" />
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
+          </span>
+        </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected)}>
+        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (

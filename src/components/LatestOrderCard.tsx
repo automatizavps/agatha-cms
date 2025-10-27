@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Order } from '@/integrations/supabase/orders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building, Package, Clock, Calendar } from 'lucide-react';
+import { User, ShoppingCart, CheckCircle, XCircle, AlertTriangle, Building, Package, Clock, Calendar, DollarSign, Percent } from 'lucide-react'; // Adicionado Percent
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // NOVO IMPORT
+import { usePromotionById } from '@/integrations/supabase/promotions'; // NOVO IMPORT
+import { Loader2 } from 'lucide-react';
 
 interface LatestOrderCardProps {
   order: Order;
@@ -36,13 +38,6 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order, onClick }) => 
   const formattedDate = format(orderDate, 'dd/MM/yyyy', { locale: ptBR });
   const formattedTime = format(orderDate, 'HH:mm');
   
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-  
   // Dados do Cliente
   const clientName = order.clientes?.nome || t('no_data_found');
   const clientAvatarUrl = order.clientes?.avatar_url;
@@ -52,6 +47,25 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order, onClick }) => 
   const items = order.pedido_itens || [];
   const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
   const otherItemsCount = items.length > 1 ? items.length - 1 : 0;
+
+  // NOVO: Busca detalhes da promoção
+  const { data: promotion, isLoading: isLoadingPromotion } = usePromotionById(order.promocao_id || undefined);
+
+  // Cálculo do Valor Total com desconto
+  const totalValueWithDiscount = useMemo(() => {
+    let total = order.valor_total;
+    if (promotion && promotion.desconto_percentual > 0) {
+      total = total * (1 - promotion.desconto_percentual / 100);
+    }
+    return total;
+  }, [order.valor_total, promotion]);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   return (
     <Card 
@@ -83,7 +97,14 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order, onClick }) => 
         
         {/* Valor Total */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          <span className="text-sm font-medium text-primary">{formatCurrency(order.valor_total)}</span>
+          <span className="text-sm font-medium text-primary">{formatCurrency(totalValueWithDiscount)}</span>
+          {isLoadingPromotion ? (
+            <Loader2 className="h-3 w-3 animate-spin ml-1" />
+          ) : promotion && promotion.desconto_percentual > 0 && (
+            <span className="text-xs text-green-500 flex items-center ml-1">
+              <Percent className="h-3 w-3 mr-0.5" /> -{promotion.desconto_percentual}%
+            </span>
+          )}
         </div>
         
         {/* Item Principal */}

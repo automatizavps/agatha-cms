@@ -28,6 +28,8 @@ import React, { useMemo, useEffect } from "react";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useTranslation } from "react-i18next";
+import PromotionSelector from "./PromotionSelector"; // NOVO IMPORT
+import { Promotion } from "@/integrations/supabase/promotions"; // NOVO IMPORT
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -49,6 +51,7 @@ const baseFormSchema = z.object({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional(),
+  promocao_id: z.string().uuid().nullable().optional(), // NOVO: promocao_id
 });
 
 type OrderFormValues = z.infer<typeof baseFormSchema>;
@@ -60,7 +63,7 @@ interface ItemToCreate {
 }
 
 interface OrderFormProps {
-  onSubmit: (values: { cliente_id: string; valor_total: number; items: ItemToCreate[]; status?: OrderStatus; empresa_id?: string }) => void;
+  onSubmit: (values: { cliente_id: string; valor_total: number; items: ItemToCreate[]; status?: OrderStatus; empresa_id?: string; promocao_id?: string | null }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<OrderFormValues>; 
   isEditing?: boolean;
@@ -93,6 +96,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
       empresa_id: defaultValues?.empresa_id || "",
+      promocao_id: defaultValues?.promocao_id || null, // NOVO: default promocao_id
     },
   });
   
@@ -136,10 +140,30 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     }
   }, [defaultValues?.items, fields.length, form, isEditing]);
 
+  // NOVO: Observa a promoção selecionada
+  const selectedPromotion = form.watch('promocao_id');
+  const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
 
-  const calculateTotal = form.watch("items").reduce((sum, item) => {
-    return sum + (item.quantidade * item.preco_unitario);
-  }, 0);
+  useEffect(() => {
+    if (selectedPromotion) {
+      // Aqui você precisaria buscar os detalhes da promoção pelo ID
+      // Por simplicidade, vamos assumir que o PromotionSelector já nos deu o objeto completo
+      // e que o `onPromotionChange` já atualiza `activePromotion`
+    } else {
+      setActivePromotion(null);
+    }
+  }, [selectedPromotion]);
+
+  const calculateTotal = useMemo(() => {
+    let total = form.getValues("items").reduce((sum, item) => {
+      return sum + (item.quantidade * item.preco_unitario);
+    }, 0);
+
+    if (activePromotion && activePromotion.desconto_percentual > 0) {
+      total = total * (1 - activePromotion.desconto_percentual / 100);
+    }
+    return total;
+  }, [form.watch("items"), activePromotion]); // Recalcula quando os itens ou a promoção mudam
   
   const handleAddItem = () => {
     append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
@@ -174,6 +198,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       })),
       status: values.status,
       empresa_id: empresa_id,
+      promocao_id: activePromotion?.id || null, // NOVO: Passa o ID da promoção
     });
   };
   
@@ -217,6 +242,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                       // Limpa campos dependentes ao mudar a empresa
                       form.setValue('cliente_id', '');
                       form.setValue('items', []);
+                      form.setValue('promocao_id', null); // Limpa promoção
+                      setActivePromotion(null);
                     }} 
                     value={field.value} 
                     disabled={isLoadingCompanies || isSubmitting || isEditing}
@@ -432,20 +459,43 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
               </p>
             )}
             
-            <Separator />
-            
-            <div className="flex justify-between items-center pt-2">
-              <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
-              <span className="text-2xl font-bold text-primary flex items-center gap-1">
-                <DollarSign className="h-5 w-5" />
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
-              </span>
-            </div>
-            
             <FormMessage>{form.formState.errors.items?.message}</FormMessage>
           </CardContent>
         </Card>
 
+        {/* NOVO: Seletor de Promoção */}
+        {!isEditing && ( // Promoções só podem ser aplicadas na criação
+          <FormField
+            control={form.control}
+            name="promocao_id"
+            render={({ field }) => (
+              <FormItem>
+                <PromotionSelector
+                  companyId={selectedCompanyId}
+                  selectedPromotionId={field.value || null}
+                  onPromotionChange={(promo) => {
+                    field.onChange(promo?.id || null);
+                    setActivePromotion(promo); // Atualiza o estado local da promoção
+                  }}
+                  disabled={isSubmitting || !isCompanySelected}
+                  label={t('promotion', { defaultValue: 'Promoção' })}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
+        <Separator />
+        
+        <div className="flex justify-between items-center pt-2">
+          <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
+          <span className="text-2xl font-bold text-primary flex items-center gap-1">
+            <DollarSign className="h-5 w-5" />
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
+          </span>
+        </div>
+        
         <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
