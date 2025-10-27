@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Image as ImageIcon, Check, Search, AlertTriangle } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Check, Search, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useStorageImages, StorageFile } from '@/integrations/supabase/storage';
 import { cn } from '@/lib/utils';
@@ -35,7 +35,7 @@ const ImageSelectorDialog: React.FC<ImageSelectorDialogProps> = ({
   const pathPrefix = companyId; 
   
   // Busca imagens do bucket 'product_images' filtradas pelo pathPrefix (ID da empresa)
-  const { data: files, isLoading, isError, refetch } = useStorageImages('product_images', pathPrefix);
+  const { data: files, isLoading, isError, refetch, isRefetching } = useStorageImages('product_images', pathPrefix);
   
   const [selectedFiles, setSelectedFiles] = useState<string[]>(currentUrls);
   const [searchTerm, setSearchTerm] = useState('');

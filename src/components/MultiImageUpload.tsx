@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useSession } from '@/integrations/supabase/auth';
 import ImageSelectorDialog from './ImageSelectorDialog'; // Importando o novo componente
 import { useTranslation } from 'react-i18next';
+import { Separator } from '@/components/ui/separator'; // IMPORTADO
 
 interface MultiImageUploadProps {
   currentUrls: string[] | null;
