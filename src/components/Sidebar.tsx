@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, Image as ImageIcon } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, Image as ImageIcon, Percent } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -108,6 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadCompanies = useCanRead('companies');
   const canReadNotifications = useCanRead('notifications');
   const canReadCustomProfiles = useCanRead('custom_profiles'); 
+  const canReadPromotions = useCanRead('promotions'); // NOVO
 
   const isSuperAdmin = profile?.is_super_admin;
 
@@ -297,6 +298,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
         
+        {canReadPromotions && (
+          <NavItem
+            to="/promotions"
+            icon={<Percent className="h-5 w-5" />}
+            label={t('page_title_promotions', { defaultValue: 'Promoções' })}
+            {...navItemProps}
+          />
+        )}
+        
+        <Separator className={cn("my-2 bg-sidebar-border", isCollapsed && "mx-auto w-1/2")} />
+
+        {/* Categoria: Configurações */}
+        {!isCollapsed && (
+          <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_config')}</div>
+        )}
+        
+        {/* Submenu de Empresas/Perfis (Apenas Super Admin) */}
         {showCompaniesGroup && (
           <Collapsible open={isCompaniesOpen} onOpenChange={setIsCompaniesOpen} disabled={isCollapsed}>
             <CollapsibleTrigger 
@@ -334,13 +352,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
               </div>
             </CollapsibleContent>
           </Collapsible>
-        )}
-        
-        <Separator className={cn("my-2 bg-sidebar-border", isCollapsed && "mx-auto w-1/2")} />
-
-        {/* Categoria: Configurações */}
-        {!isCollapsed && (
-          <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_config')}</div>
         )}
         
         {/* NOVO: Galeria de Imagens (Apenas Super Admin) */}
