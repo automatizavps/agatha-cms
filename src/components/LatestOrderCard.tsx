@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; //
 
 interface LatestOrderCardProps {
   order: Order;
+  onClick: (order: Order) => void; // NOVO: Propriedade de clique
 }
 
 // Cores e classes baseadas no status
@@ -25,7 +26,7 @@ const statusIcons: Record<Order['status'], React.ReactNode> = {
   cancelado: <XCircle className="h-4 w-4 text-red-500" />,
 };
 
-const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
+const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order, onClick }) => {
   const { t } = useTranslation();
   const statusClass = statusColors[order.status] || 'border-muted bg-muted/50';
   const statusIcon = statusIcons[order.status];
@@ -53,7 +54,13 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
   const otherItemsCount = items.length > 1 ? items.length - 1 : 0;
 
   return (
-    <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
+    <Card 
+      className={cn(
+        "w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg cursor-pointer", 
+        statusClass
+      )}
+      onClick={() => onClick(order)} // Adicionando o manipulador de clique
+    >
       <CardHeader className="p-3 pb-1 flex-row items-center justify-between">
         {/* Cliente e Avatar no topo */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
