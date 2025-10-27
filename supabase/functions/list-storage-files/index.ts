@@ -32,14 +32,18 @@ serve(async (req) => {
 
   // 2. Autenticação (Verificar se o usuário está logado)
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return returnError("Unauthorized: Missing Authorization header", 401);
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return returnError("Unauthorized: Missing or invalid Authorization header", 401);
   }
+  
+  const token = authHeader.replace("Bearer ", "");
 
-  const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
+  // Usar o token para obter o usuário
+  const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(token);
 
   if (userError || !userResponse.user) {
-    return returnError("Unauthorized: Invalid token", 401);
+    console.error("Authentication failed:", userError?.message);
+    return returnError("Unauthorized: Invalid token or session expired", 401);
   }
   
   // 3. Processar o corpo da requisição
@@ -50,7 +54,7 @@ serve(async (req) => {
     return returnError("Invalid JSON body", 400);
   }
 
-  const { bucketName, pathPrefix } = data; // Recebendo pathPrefix
+  const { bucketName, pathPrefix } = data;
 
   if (!bucketName) {
     return returnError("Missing required field: bucketName", 400);
@@ -63,16 +67,20 @@ serve(async (req) => {
     const limit = 100; // Max limit per call
 
     while (true) {
+      // Se o pathPrefix for fornecido, garantimos que a listagem comece no diretório correto.
+      // Se estivermos em uma chamada recursiva, o 'path' já inclui o prefixo.
+      const currentPath = path || '';
+      
       const { data: files, error } = await supabaseAdmin.storage
         .from(bucketName)
-        .list(path, {
+        .list(currentPath, {
           limit: limit,
           offset: offset,
           sortBy: { column: 'name', order: 'asc' },
         });
 
       if (error) {
-        console.error(`Error listing files in ${bucketName}/${path}:`, error);
+        console.error(`Error listing files in ${bucketName}/${currentPath}:`, error);
         throw new Error(error.message);
       }
       
@@ -81,7 +89,7 @@ serve(async (req) => {
       }
 
       for (const file of files) {
-        const fullPath = path ? `${path}/${file.name}` : file.name;
+        const fullPath = currentPath ? `${currentPath}/${file.name}` : file.name;
         
         if (file.id === null) { // É uma pasta
           // Recursivamente lista o conteúdo da pasta
@@ -110,7 +118,7 @@ serve(async (req) => {
   
   try {
     // Se pathPrefix for fornecido, começamos a listagem a partir desse prefixo.
-    // Caso contrário, listamos a partir da raiz ('').
+    // Se for undefined (Super Admin em 'Todas as Empresas'), listamos a partir da raiz ('').
     const startPath = pathPrefix || '';
     
     const files = await listAllFiles(startPath);
