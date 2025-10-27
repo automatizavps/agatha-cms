@@ -37,48 +37,15 @@ const Index = () => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
-  // Verifica o status de ativação da empresa do usuário logado
-  const isCompanyActive = profile?.is_company_active ?? true; // Assume true se for SA ou se não houver empresa_id
-  
-  // Se a empresa do usuário logado estiver inativa, bloqueia o acesso ao conteúdo
-  if (!isCompanyActive && !isSuperAdmin) {
-    return (
-      <DashboardLayout>
-        <div className="min-h-[calc(100vh-100px)] flex items-center justify-center p-4">
-          <Card className="max-w-lg w-full text-center border-destructive/50 bg-destructive/5">
-            <CardHeader>
-              <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-2" />
-              <CardTitle className="text-2xl text-destructive">Acesso Bloqueado</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-lg">
-                Sua empresa está atualmente **inativa**.
-              </p>
-              <p className="text-muted-foreground">
-                Para reativar o acesso e restaurar seus dados, por favor, entre em contato com o suporte:
-              </p>
-              <a 
-                href="mailto:automatizavps@gmail.com" 
-                className="text-primary font-semibold hover:underline"
-              >
-                automatizavps@gmail.com
-              </a>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
-  
-  // Agora, useAppointmentMetrics também aceita undefined
+  // useAppointmentMetrics now accepts undefined
   const { metrics, isLoading: isLoadingMetrics } = useAppointmentMetrics(filteredCompanyId);
   
-  // useRevenueMetrics agora aceita undefined
+  // useRevenueMetrics now accepts undefined
   const { data: revenueMetrics, isLoading: isLoadingRevenue } = useRevenueMetrics(filteredCompanyId);
   const { data: productCount, isLoading: isLoadingProductCount } = useProductCount(filteredCompanyId);
   const { data: clientCount, isLoading: isLoadingClientCount } = useClientCount(filteredCompanyId); 
   
-  // useTeams agora aceita undefined
+  // useTeams now accepts undefined
   const { data: teams, isLoading: isLoadingTeams, isError: isTeamsError } = useTeams(filteredCompanyId);
 
   const isLoading = isLoadingMetrics || isLoadingTeams || isLoadingRevenue || isLoadingProductCount || isLoadingFilter || isLoadingClientCount || isLoadingProfile;

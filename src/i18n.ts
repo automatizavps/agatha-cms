@@ -35,6 +35,11 @@ const resources = {
       "language": "Idioma", // NOVO
       "logout": "Sair", // NOVO
       "nav_people_management": "Gestão de Pessoas", // NOVO
+      
+      // Bloqueio de Acesso (NOVO)
+      "access_blocked_title": "Acesso Bloqueado",
+      "company_inactive_message": "Sua empresa está atualmente **inativa**.",
+      "contact_support_message": "Para reativar o acesso e restaurar seus dados, por favor, entre em contato com o suporte:",
 
       // Navegação
       "nav_home": "Home",

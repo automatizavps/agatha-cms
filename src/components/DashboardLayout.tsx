@@ -3,13 +3,16 @@ import Sidebar from "./Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronLeft, ChevronRight, Bot } from "lucide-react"; // Importando Bot
+import { Menu, ChevronLeft, ChevronRight, Bot, Loader2, AlertTriangle } from "lucide-react"; // Importando Bot, Loader2, AlertTriangle
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import BreadcrumbNavigation from "./BreadcrumbNavigation";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { NotificationBell } from "./NotificationBell"; // Importando NotificationBell
+import { NotificationBell } from "./NotificationBell";
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // NOVO IMPORT
+import { useLocation } from "react-router-dom"; // NOVO IMPORT
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // NOVO IMPORT
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,6 +24,54 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // Estado para controlar o colapso da sidebar no desktop
   const [isCollapsed, setIsCollapsed] = useState(false); 
   const { t } = useTranslation(); // Usando tradução
+  
+  // NEW: Fetch profile and location
+  const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const location = useLocation();
+  
+  const isCompanyActive = profile?.is_company_active ?? true;
+  const isSuperAdmin = profile?.is_super_admin ?? false;
+  
+  // Check if the current route is the Companies page (where inactive companies should be visible)
+  const isCompaniesPage = location.pathname === '/companies';
+  
+  // Handle Loading State
+  if (isLoadingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Global Block for Inactive Companies (except for Super Admin and Companies page)
+  if (!isCompanyActive && !isSuperAdmin && !isCompaniesPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <Card className="max-w-lg w-full text-center border-destructive/50 bg-destructive/5">
+          <CardHeader>
+            <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-2" />
+            <CardTitle className="text-2xl text-destructive">{t('access_blocked_title', { defaultValue: 'Acesso Bloqueado' })}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-lg">
+              {t('company_inactive_message', { defaultValue: 'Sua empresa está atualmente **inativa**.' })}
+            </p>
+            <p className="text-muted-foreground">
+              {t('contact_support_message', { defaultValue: 'Para reativar o acesso e restaurar seus dados, por favor, entre em contato com o suporte:' })}
+            </p>
+            <a 
+              href="mailto:automatizavps@gmail.com" 
+              className="text-primary font-semibold hover:underline"
+            >
+              automatizavps@gmail.com
+            </a>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
