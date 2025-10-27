@@ -25,22 +25,25 @@ const EditClientSheet: React.FC<EditClientSheetProps> = ({ client, isOpen, onOpe
     },
   });
 
-  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; empresa_id?: string }) => {
+  const handleSubmit = (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; avatar_url: string | null; empresa_id?: string }) => {
     mutation.mutate({
       id: client.id,
       nome: values.nome,
       email: values.email,
       telefone: values.telefone,
       endereco_completo: values.endereco_completo, // Novo campo
+      avatar_url: values.avatar_url, // NOVO CAMPO
     });
   };
 
   // Valores iniciais para o formulário de edição
   const initialValues = {
+    id: client.id, // Passando o ID
     nome: client.nome,
     email: client.email,
     telefone: client.telefone,
     endereco_completo: client.endereco_completo, // Novo campo
+    avatar_url: client.avatar_url, // NOVO CAMPO
     empresa_id: client.empresa_id, 
   };
 

@@ -17,6 +17,8 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next"; // Importando tradução
+import React, { useState, useEffect } from "react";
+import ClientAvatarUpload from "./ClientAvatarUpload"; // NOVO IMPORT
 
 // Definimos o esquema base
 const baseFormSchema = z.object({
@@ -37,9 +39,9 @@ const baseFormSchema = z.object({
 type ClientFormValues = z.infer<typeof baseFormSchema>;
 
 interface ClientFormProps {
-  onSubmit: (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; empresa_id?: string }) => void;
+  onSubmit: (values: { nome: string; email: string | null; telefone: string | null; endereco_completo: string | null; avatar_url: string | null; empresa_id?: string }) => void;
   isSubmitting: boolean;
-  defaultValues?: Partial<ClientFormValues>;
+  defaultValues?: Partial<ClientFormValues & { id?: string; avatar_url?: string | null }>;
   isEditing?: boolean;
 }
 
@@ -47,6 +49,14 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { t } = useTranslation();
+  
+  // Estado para o Avatar
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(defaultValues?.avatar_url || null);
+  
+  // Sincroniza o avatar_url inicial
+  useEffect(() => {
+    setAvatarUrl(defaultValues?.avatar_url || null);
+  }, [defaultValues?.avatar_url]);
   
   // Usando a flag correta
   const isSuperAdmin = profile?.is_super_admin;
@@ -71,6 +81,26 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       empresa_id: defaultValues?.empresa_id || "",
     },
   });
+  
+  // Observa o nome do cliente para o fallback do avatar
+  const clientName = form.watch('nome');
+
+  // Visibilidade: APENAS Super Admin pode ver e interagir com este campo.
+  const shouldShowCompanyField = isSuperAdmin;
+  
+  // Observa o ID da empresa selecionada (ou usa o ID do perfil se não for SA)
+  const companyIdForData = isEditing 
+    ? defaultValues?.empresa_id 
+    : (isSuperAdmin ? form.watch('empresa_id') : profile?.empresa_id);
+    
+  const isCompanySelected = !!companyIdForData;
+  
+  // Encontra o nome da empresa para exibição desabilitada
+  const companyName = companies?.find(c => c.id === companyIdForData)?.nome;
+  
+  // ID do cliente (necessário para o upload)
+  const clientId = defaultValues?.id || 'new';
+
 
   const handleSubmit = (values: ClientFormValues) => {
     // Normaliza campos vazios para null antes de enviar ao Supabase
@@ -86,16 +116,10 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
       email: email,
       telefone: telefone,
       endereco_completo: endereco_completo,
+      avatar_url: avatarUrl, // Inclui o URL do avatar
       empresa_id: empresa_id,
     });
   };
-  
-  // Visibilidade: APENAS Super Admin pode ver e interagir com este campo.
-  const shouldShowCompanyField = isSuperAdmin;
-  
-  // Encontra o nome da empresa para exibição desabilitada
-  const companyIdToDisplay = isEditing ? defaultValues?.empresa_id : form.watch('empresa_id');
-  const companyName = companies?.find(c => c.id === companyIdToDisplay)?.nome;
   
   if (isCheckingPermissions) {
     return (
@@ -108,6 +132,21 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        
+        {/* Seção de Avatar (Apenas na Edição ou se a empresa estiver selecionada) */}
+        {isEditing && companyIdForData && (
+          <div className="flex flex-col items-center border-b pb-4">
+            <h3 className="text-lg font-semibold mb-2">{t('avatar', { defaultValue: 'Avatar' })}</h3>
+            <ClientAvatarUpload 
+              currentAvatarUrl={avatarUrl}
+              onUploadComplete={setAvatarUrl}
+              disabled={isSubmitting}
+              companyId={companyIdForData}
+              clientId={clientId}
+              clientName={clientName}
+            />
+          </div>
+        )}
         
         {/* Campo Empresa (Visível APENAS para Super Admin) */}
         {shouldShowCompanyField && (
