@@ -53,6 +53,12 @@ const resources = {
       "nav_config": "Configurações",
       "nav_products_services": "Produtos & Serviços",
       "nav_notifications": "Notificações",
+      
+      // Galeria de Imagens (NOVO)
+      "page_title_image_gallery": "Galeria de Imagens",
+      "image_gallery_title": "Gestão de Arquivos de Storage",
+      "select_bucket": "Selecione o Bucket",
+      "no_files_found": "Nenhum arquivo encontrado neste bucket.",
 
       // Dashboard
       "dashboard_title": "Visão Geral do Dashboard",
@@ -467,6 +473,12 @@ const resources = {
       "nav_config": "Settings",
       "nav_products_services": "Products & Services",
       "nav_notifications": "Notifications",
+      
+      // Image Gallery (NEW)
+      "page_title_image_gallery": "Image Gallery",
+      "image_gallery_title": "Storage File Management",
+      "select_bucket": "Select Bucket",
+      "no_files_found": "No files found in this bucket.",
 
       // Dashboard
       "dashboard_title": "Dashboard Overview",

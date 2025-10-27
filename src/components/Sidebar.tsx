@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, Image as ImageIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -342,6 +342,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
         {!isCollapsed && (
           <div className="text-xs font-semibold text-muted-foreground uppercase mb-1 px-3">{t('nav_config')}</div>
         )}
+        
+        {/* NOVO: Galeria de Imagens (Apenas Super Admin) */}
+        {isSuperAdmin && (
+          <NavItem
+            to="/gallery"
+            icon={<ImageIcon className="h-5 w-5" />}
+            label={t('page_title_image_gallery', { defaultValue: 'Galeria de Imagens' })}
+            {...navItemProps}
+          />
+        )}
+        
         <NavItem
           to="/settings"
           icon={<Settings className="h-5 w-5" />}
