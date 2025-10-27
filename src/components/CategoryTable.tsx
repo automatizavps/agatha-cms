@@ -43,10 +43,7 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit, can
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  if (!canWrite) {
-    return null;
-  }
-
+  // CHAME TODOS OS HOOKS NO TOPO
   const deleteMutation = useMutation({
     mutationFn: () => deleteCategory(category.id, category.nome, category.empresa_id, queryClient),
     onSuccess: () => {
@@ -57,6 +54,11 @@ const CategoryActions: React.FC<CategoryActionsProps> = ({ category, onEdit, can
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+
+  // RETORNO CONDICIONAL DEPOIS DOS HOOKS
+  if (!canWrite) {
+    return null;
+  }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
@@ -125,7 +127,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ categories, canWrite }) =
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
   
-  const isSuperAdmin = profile?.is_super_admin;
+  const isSuperAdmin = profile?.perfil_id === 1;
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
