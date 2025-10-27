@@ -38,18 +38,33 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
   
   const responsibleName = appointment.responsavel?.nome_completo || t('responsible');
   const responsibleAvatarUrl = appointment.responsavel?.avatar_url;
-  const initials = responsibleName.slice(0, 2).toUpperCase();
+  const responsibleInitials = responsibleName.slice(0, 2).toUpperCase();
+  
+  // Dados do Cliente
+  const clientName = appointment.clientes?.nome || t('no_data_found');
+  const clientAvatarUrl = appointment.clientes?.avatar_url;
+  const clientInitials = clientName.slice(0, 2).toUpperCase();
   
   // Extrai o nome do primeiro item
-  const mainItemName = appointment.agendamento_itens?.[0]?.produtos?.nome || t('no_data_found');
+  const items = appointment.agendamento_itens || [];
+  const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
 
   return (
     <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
       <CardHeader className="p-3 pb-1 flex-row items-center justify-between">
-        <CardTitle className="text-base truncate font-semibold">
-          {appointment.clientes?.nome || t('no_data_found')}
-        </CardTitle>
-        <div className="flex items-center gap-1 text-xs font-medium capitalize">
+        {/* Cliente e Avatar no topo */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarImage src={clientAvatarUrl || undefined} alt={clientName} className="object-cover" />
+            <AvatarFallback className="text-sm">{clientInitials}</AvatarFallback>
+          </Avatar>
+          <CardTitle className="text-base truncate font-semibold">
+            {clientName}
+          </CardTitle>
+        </div>
+        
+        {/* Status */}
+        <div className="flex items-center gap-1 text-xs font-medium capitalize flex-shrink-0 ml-2">
           {statusIcon}
           <span className="text-muted-foreground">{t(appointment.status)}</span>
         </div>
@@ -68,16 +83,18 @@ const LatestAppointmentCard: React.FC<LatestAppointmentCardProps> = ({ appointme
         <div className="flex items-center gap-2 text-muted-foreground">
           <Avatar className="h-6 w-6">
             <AvatarImage src={responsibleAvatarUrl || undefined} alt={responsibleName} />
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+            <AvatarFallback className="text-xs">{responsibleInitials}</AvatarFallback>
           </Avatar>
           <span className="text-sm truncate">{responsibleName}</span>
         </div>
         
-        {/* Serviço/Produto Principal (NOVO) */}
+        {/* Serviço/Produto Principal */}
         <div className="flex items-center gap-2 text-muted-foreground">
-          {/* Usando Clock para representar o serviço/agendamento */}
-          <Clock className="h-4 w-4 flex-shrink-0" /> 
+          <Package className="h-4 w-4 flex-shrink-0" /> 
           <span className="text-sm truncate font-medium text-foreground">{mainItemName}</span>
+          {items.length > 1 && (
+            <span className="text-xs text-muted-foreground ml-1"> (+{items.length - 1} {t('items')})</span>
+          )}
         </div>
         
         {/* Empresa */}
