@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
@@ -42,6 +44,7 @@ const ruleSchema = z.object({
   entidade_nome: z.string().optional(), // Apenas para exibição no formulário
 });
 
+// Definimos o esquema base
 const baseFormSchema = z.object({
   nome: z.string().min(2, {
     message: "O nome deve ter pelo menos 2 caracteres.",
@@ -57,13 +60,18 @@ const baseFormSchema = z.object({
   }),
   is_active: z.boolean(),
   rules: z.array(ruleSchema).min(1, { message: "A promoção deve ter pelo menos uma regra." }),
-  
+});
+
+// Esquema para Super Admin (com empresa_id obrigatório)
+const superAdminFormSchema = baseFormSchema.extend({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
-  }).or(z.literal("")).optional(),
-}).refine(data => data.data_fim > data.data_inicio, {
-  message: "A data final deve ser posterior à data de início.",
-  path: ['data_fim'],
+  }).min(1, { message: "A empresa é obrigatória." }),
+});
+
+// Esquema para outros usuários (sem empresa_id)
+const nonSuperAdminFormSchema = baseFormSchema.extend({
+  empresa_id: z.string().optional(),
 });
 
 type PromotionFormValues = z.infer<typeof baseFormSchema>;
@@ -93,12 +101,8 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
   const formSchema = isSuperAdmin && !isEditing
-    ? baseFormSchema.extend({
-        empresa_id: z.string().uuid({
-          message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
-      })
-    : baseFormSchema;
+    ? superAdminFormSchema
+    : nonSuperAdminFormSchema;
 
   const form = useForm<PromotionFormValues>({
     resolver: zodResolver(formSchema),
@@ -365,9 +369,8 @@ const PromotionForm: React.FC<PromotionFormProps> = ({ onSubmit, isSubmitting, d
                       locale={ptBR}
                     />
                   </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
+                </FormItem>
+              )}
             )}
           />
         </div>
