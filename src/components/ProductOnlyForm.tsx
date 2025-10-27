@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -309,7 +311,7 @@ const ProductOnlyForm: React.FC<ProductOnlyFormProps> = ({ onSubmit, isSubmittin
           currentUrls={photos}
           onUrlsChange={setPhotos}
           disabled={isSubmitting}
-          companyId={companyIdForData} {/* PASSANDO companyId */}
+          companyId={companyIdForData} 
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
