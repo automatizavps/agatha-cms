@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // NOVO IMPORT
 
 interface LatestOrderCardProps {
   order: Order;
@@ -40,6 +41,11 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
     }).format(value);
   };
   
+  // Dados do Cliente
+  const clientName = order.clientes?.nome || t('no_data_found');
+  const clientAvatarUrl = order.clientes?.avatar_url;
+  const clientInitials = clientName.slice(0, 2).toUpperCase();
+  
   // Lógica para exibir os itens
   const items = order.pedido_itens || [];
   const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
@@ -48,10 +54,19 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order }) => {
   return (
     <Card className={cn("w-full flex flex-col h-full border-l-4 transition-shadow hover:shadow-lg", statusClass)}>
       <CardHeader className="p-3 pb-1 flex-row items-center justify-between">
-        <CardTitle className="text-base truncate font-semibold">
-          {order.clientes?.nome || t('no_data_found')}
-        </CardTitle>
-        <div className="flex items-center gap-1 text-xs font-medium capitalize">
+        {/* Cliente e Avatar no topo */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarImage src={clientAvatarUrl || undefined} alt={clientName} className="object-cover" />
+            <AvatarFallback className="text-sm">{clientInitials}</AvatarFallback>
+          </Avatar>
+          <CardTitle className="text-base truncate font-semibold">
+            {clientName}
+          </CardTitle>
+        </div>
+        
+        {/* Status */}
+        <div className="flex items-center gap-1 text-xs font-medium capitalize flex-shrink-0 ml-2">
           {statusIcon}
           <span className="text-muted-foreground">{t(order.status.replace('_', ' '))}</span>
         </div>
