@@ -133,7 +133,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, isSubmitting, default
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         
-        {/* Seção de Avatar (Apenas na Edição ou se a empresa estiver selecionada) */}
+        {/* Seção de Avatar (Apenas na Edição e se a empresa estiver selecionada) */}
         {isEditing && companyIdForData && (
           <div className="flex flex-col items-center border-b pb-4">
             <h3 className="text-lg font-semibold mb-2">{t('avatar', { defaultValue: 'Avatar' })}</h3>
