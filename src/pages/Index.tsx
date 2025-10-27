@@ -132,10 +132,7 @@ const Index = () => {
           </div>
         )}
         
-        {/* 1. Últimos Agendamentos (Carrossel) */}
-        <LatestAppointmentsCarousel companyId={filteredCompanyId} />
-        
-        {/* 2. Métricas de Agendamento e Faturamento */}
+        {/* 1. Métricas de Agendamento e Faturamento (MANTIDO NA POSIÇÃO 2) */}
         <div className="flex flex-col gap-4">
           
           {/* Linha 1: 4 Colunas (Faturamento) */}
@@ -230,6 +227,9 @@ const Index = () => {
             </Card>
           </div>
         </div>
+        
+        {/* 2. Últimos Agendamentos (Carrossel) - MOVIDO PARA AQUI (POSIÇÃO 3) */}
+        <LatestAppointmentsCarousel companyId={filteredCompanyId} />
         
         {/* 3. Últimos Pedidos (Carrossel) */}
         <LatestOrdersCarousel companyId={filteredCompanyId} />
