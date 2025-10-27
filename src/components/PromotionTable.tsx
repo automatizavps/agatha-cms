@@ -120,38 +120,6 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
   );
 };
 
-const getStatusBadge = (promotion: Promotion) => {
-  const now = new Date();
-  const startDate = new Date(promotion.data_inicio);
-  const endDate = new Date(promotion.data_fim);
-  
-  let status: 'active' | 'scheduled' | 'expired' | 'inactive';
-  
-  if (!promotion.is_active) {
-    status = 'inactive';
-  } else if (now >= startDate && now <= endDate) {
-    status = 'active';
-  } else if (now < startDate) {
-    status = 'scheduled';
-  } else {
-    status = 'expired';
-  }
-  
-  const baseClasses = "capitalize px-2 py-0.5 rounded-full text-xs font-semibold";
-  
-  switch (status) {
-    case 'active':
-      return <Badge className={cn(baseClasses, "bg-green-600 hover:bg-green-600/90 text-white")}>{t('status_active', { defaultValue: 'Ativa' })}</Badge>;
-    case 'scheduled':
-      return <Badge className={cn(baseClasses, "bg-blue-600 hover:bg-blue-600/90 text-white")}>{t('status_scheduled', { defaultValue: 'Agendada' })}</Badge>;
-    case 'expired':
-      return <Badge variant="destructive">{t('status_expired', { defaultValue: 'Expirada' })}</Badge>;
-    case 'inactive':
-    default:
-      return <Badge variant="secondary">{t('status_inactive', { defaultValue: 'Inativa' })}</Badge>;
-  }
-};
-
 
 const PromotionTable: React.FC<PromotionTableProps> = ({ promotions, canWrite }) => {
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
@@ -227,6 +195,38 @@ const PromotionTable: React.FC<PromotionTableProps> = ({ promotions, canWrite })
     
     return sorted;
   }, [promotions, sortKey, sortDirection]);
+
+  const getStatusBadge = (promotion: Promotion) => {
+    const now = new Date();
+    const startDate = new Date(promotion.data_inicio);
+    const endDate = new Date(promotion.data_fim);
+    
+    let status: 'active' | 'scheduled' | 'expired' | 'inactive';
+    
+    if (!promotion.is_active) {
+      status = 'inactive';
+    } else if (now >= startDate && now <= endDate) {
+      status = 'active';
+    } else if (now < startDate) {
+      status = 'scheduled';
+    } else {
+      status = 'expired';
+    }
+    
+    const baseClasses = "capitalize px-2 py-0.5 rounded-full text-xs font-semibold";
+    
+    switch (status) {
+      case 'active':
+        return <Badge className={cn(baseClasses, "bg-green-600 hover:bg-green-600/90 text-white")}>{t('status_active', { defaultValue: 'Ativa' })}</Badge>;
+      case 'scheduled':
+        return <Badge className={cn(baseClasses, "bg-blue-600 hover:bg-blue-600/90 text-white")}>{t('status_scheduled', { defaultValue: 'Agendada' })}</Badge>;
+      case 'expired':
+        return <Badge variant="destructive">{t('status_expired', { defaultValue: 'Expirada' })}</Badge>;
+      case 'inactive':
+      default:
+        return <Badge variant="secondary">{t('status_inactive', { defaultValue: 'Inativa' })}</Badge>;
+    }
+  };
 
 
   return (
