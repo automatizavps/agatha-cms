@@ -34,6 +34,7 @@ const resources = {
       "items": "itens",
       "language": "Idioma", // NOVO
       "logout": "Sair", // NOVO
+      "nav_people_management": "Gestão de Pessoas", // NOVO
 
       // Navegação
       "nav_home": "Home",
@@ -192,6 +193,40 @@ const resources = {
       "category_deleted_success": "Categoria {{name}} excluída com sucesso!",
       "category_name_exists": "Já existe uma categoria com este nome nesta empresa.",
       "select_category_placeholder": "Selecione ou deixe vazio",
+      
+      // PROMOÇÕES (NOVO)
+      "page_title_promotions": "Gestão de Promoções",
+      "promotion_list_title": "Lista de Promoções",
+      "add_new_promotion": "Nova Promoção",
+      "no_promotions_found": "Nenhuma promoção encontrada.",
+      "promotion_search_placeholder": "Buscar por nome da promoção...",
+      "promotion_name": "Nome da Promoção",
+      "discount_percentage": "Desconto (%)",
+      "start_date": "Data de Início",
+      "end_date": "Data Final",
+      "promotion_status": "Status da Promoção",
+      "status_active": "Ativa",
+      "status_inactive": "Inativa",
+      "status_scheduled": "Agendada",
+      "status_expired": "Expirada",
+      "create_promotion": "Criar Promoção",
+      "edit_promotion": "Editar Promoção",
+      "promotion_created_success": "Promoção criada com sucesso!",
+      "promotion_updated_success": "Promoção atualizada com sucesso!",
+      "promotion_deleted_success": "Promoção excluída com sucesso!",
+      "promotion_rules": "Regras de Aplicação",
+      "add_rule": "Adicionar Regra",
+      "rule": "Regra",
+      "rule_type": "Tipo",
+      "select_rule_type": "Selecione o tipo",
+      "entity": "Entidade",
+      "select_entity": "Selecione a entidade",
+      "select_product": "Selecione o produto",
+      "select_service": "Selecione o serviço",
+      "select_category": "Selecione a categoria",
+      "search_entity": "Buscar entidade...",
+      "unknown_entity": "Entidade Desconhecida",
+      "add_rule_description": "Adicione regras para definir onde a promoção será aplicada.",
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -434,6 +469,7 @@ const resources = {
       "notifications": "Notificações",
       "custom_profiles": "Perfis Customizados",
       "categories": "Categorias",
+      "promotions": "Promoções", // NOVO
     },
   },
   'en-US': {
@@ -466,6 +502,7 @@ const resources = {
       "items": "items",
       "language": "Language", // NOVO
       "logout": "Logout", // NOVO
+      "nav_people_management": "People Management", // NOVO
 
       // Navigation
       "nav_home": "Home",
@@ -523,7 +560,7 @@ const resources = {
       "latest_orders_title": "Latest Orders",
       "no_appointments_found": "No recent appointments found.",
       
-      // Top Clients (NEW)
+      // Top Clients (NOVO)
       "top_clients_section_title": "Top Clients",
       "top_clients_orders_title": "Top 10 Clients by Orders (Value)",
       "top_clients_appointments_title": "Top 10 Clients by Appointments (Completed)",
@@ -624,6 +661,40 @@ const resources = {
       "category_deleted_success": "Category {{name}} deleted successfully!",
       "category_name_exists": "A category with this name already exists in this company.",
       "select_category_placeholder": "Select or leave empty",
+      
+      // PROMOTIONS (NEW)
+      "page_title_promotions": "Promotion Management",
+      "promotion_list_title": "Promotion List",
+      "add_new_promotion": "New Promotion",
+      "no_promotions_found": "No promotions found.",
+      "promotion_search_placeholder": "Search by promotion name...",
+      "promotion_name": "Promotion Name",
+      "discount_percentage": "Discount (%)",
+      "start_date": "Start Date",
+      "end_date": "End Date",
+      "promotion_status": "Promotion Status",
+      "status_active": "Active",
+      "status_inactive": "Inactive",
+      "status_scheduled": "Scheduled",
+      "status_expired": "Expired",
+      "create_promotion": "Create Promotion",
+      "edit_promotion": "Edit Promotion",
+      "promotion_created_success": "Promotion created successfully!",
+      "promotion_updated_success": "Promotion updated successfully!",
+      "promotion_deleted_success": "Promotion deleted successfully!",
+      "promotion_rules": "Application Rules",
+      "add_rule": "Add Rule",
+      "rule": "Rule",
+      "rule_type": "Type",
+      "select_rule_type": "Select type",
+      "entity": "Entity",
+      "select_entity": "Select entity",
+      "select_product": "Select product",
+      "select_service": "Select service",
+      "select_category": "Select category",
+      "search_entity": "Search entity...",
+      "unknown_entity": "Unknown Entity",
+      "add_rule_description": "Add rules to define where the promotion will be applied.",
       
       "page_title_orders": "Order Management",
       "order_list_title": "Order List",
@@ -866,6 +937,7 @@ const resources = {
       "notifications": "Notifications",
       "custom_profiles": "Custom Profiles",
       "categories": "Categories",
+      "promotions": "Promotions", // NOVO
     },
   },
 };
