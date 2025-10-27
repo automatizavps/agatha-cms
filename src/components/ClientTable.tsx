@@ -262,7 +262,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
                   disabled={!canWriteClients}
                 />
               </TableHead>
-              <TableHead className="w-[50px]">Avatar</TableHead> {/* NOVO CABEÇALHO */}
+              <TableHead className="w-[50px]">Avatar</TableHead>
               <SortableHeader 
                 sortKey="nome" 
                 currentSortKey={sortKey} 
