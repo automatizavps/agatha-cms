@@ -67,7 +67,7 @@ const resources = {
       "no_files_found": "Nenhum arquivo encontrado neste bucket.",
 
       // Dashboard
-      "dashboard_title": "Visão Geral do Dashboard",
+      "dashboard_title": "Dashboard",
       "total_appointments": "Total de Agendamentos",
       "confirmed_appointments": "Confirmados",
       "pending_appointments": "Agendamentos Pendentes",
@@ -217,8 +217,8 @@ const resources = {
       "create_promotion": "Criar Promoção",
       "edit_promotion": "Editar Promoção",
       "promotion_created_success": "Promoção criada com sucesso!",
-      "promotion_updated_success": "Promoção atualizada com sucesso!",
-      "promotion_deleted_success": "Promoção excluída com sucesso!",
+      "promotion_updated_success": "Promoção {{name}} atualizada com sucesso!",
+      "promotion_deleted_success": "Promoção {{name}} excluída com sucesso!",
       "promotion_rules": "Regras de Aplicação",
       "add_rule": "Adicionar Regra",
       "rule": "Regra",
