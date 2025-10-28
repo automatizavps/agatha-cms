@@ -253,7 +253,7 @@ const Index = () => {
         {/* Seção 3: Gráficos de Agendamentos */}
         <div className="grid gap-6 grid-cols-12">
           {/* Gráfico de Serviços por Hora (Linha) */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-8">
+          <div className="col-span-12 md:col-col-span-6 lg:col-span-8">
             <DailyServiceByHourChart />
           </div>
           
