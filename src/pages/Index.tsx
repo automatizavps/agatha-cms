@@ -108,7 +108,8 @@ const Index = () => {
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             
             {/* Card 1: Faturamento Diário - DESTAQUE APLICADO AQUI */}
-            <Card className={cn("border-primary/50 bg-primary/10 dark:bg-primary/20")}>
+            <Card className={cn(
+              "border-primary/50 bg-primary/10 dark:bg-primary/20")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t('daily_revenue')}</CardTitle>
                 <DollarSign className="h-4 w-4 text-primary" />
