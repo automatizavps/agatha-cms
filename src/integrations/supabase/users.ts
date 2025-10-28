@@ -77,8 +77,36 @@ interface InviteUserParams {
 }
 
 export const inviteUser = async ({ email, full_name, perfil_id, telefone, endereco_completo, empresa_id }: InviteUserParams) => {
+  
+  // 1. Determinar o ID da empresa alvo
+  let target_empresa_id: string | undefined = empresa_id;
+  if (!target_empresa_id) {
+    const { data: companyData, error: companyError } = await supabase.rpc('get_user_company_id');
+    if (companyError || !companyData) {
+      throw new Error("Não foi possível determinar a empresa do usuário logado.");
+    }
+    target_empresa_id = companyData;
+  }
+  
+  if (!target_empresa_id) {
+    throw new Error("ID da empresa é obrigatório para convidar um usuário.");
+  }
+  
+  // 2. Verificar o limite de usuários do plano
+  const { data: limitCheck, error: limitError } = await supabase.rpc('check_user_limit', { company_id_input: target_empresa_id });
+  
+  if (limitError) {
+    console.error("Error checking user limit:", limitError);
+    throw new Error("Falha ao verificar o limite de usuários do plano.");
+  }
+  
+  if (limitCheck === false) {
+    throw new Error("Limite de usuários atingido para o plano atual da empresa. Atualize o plano para adicionar mais usuários.");
+  }
+  
+  // 3. Invocar a Edge Function para convite
   const { data, error } = await supabase.functions.invoke("invite-user", {
-    body: { email, full_name, perfil_id, telefone, endereco_completo, empresa_id },
+    body: { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id },
     headers: {
       // O token de sessão é adicionado automaticamente pelo cliente Supabase
     },

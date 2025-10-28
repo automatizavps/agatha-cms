@@ -31,7 +31,9 @@ const BreadcrumbNavigation = () => {
     "/profile": "nav_profile",
     "/products/categories": "nav_categories",
     "/appointments": "nav_appointments",
-    "/promotions": "page_title_promotions", // NOVO
+    "/promotions": "page_title_promotions",
+    "/companies/profiles": "page_title_custom_profiles",
+    "/companies/plans": "page_title_plans", // NOVO
   };
 
   // Se estiver na raiz, não exibe breadcrumbs

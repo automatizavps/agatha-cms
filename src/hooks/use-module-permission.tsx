@@ -11,7 +11,7 @@ type AccessType = 'leitura' | 'escrita';
  * @param requiredAccess O nível de acesso necessário ('leitura' ou 'escrita').
  */
 const fetchAccessCheck = async (moduleName: string, requiredAccess: AccessType): Promise<boolean> => {
-  // A função RPC check_access já lida com a lógica de Super Admin e Admin de Empresa.
+  // A função RPC check_access já lida com a lógica de Super Admin, Admin de Empresa e Plano.
   const { data, error } = await supabase.rpc('check_access', {
     module_name: moduleName,
     required_access: requiredAccess,

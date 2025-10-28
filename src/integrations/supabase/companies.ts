@@ -13,7 +13,11 @@ export interface Company {
   endereco_completo: string | null;
   email: string | null;
   created_at: string;
-  is_active: boolean; // NOVO CAMPO
+  is_active: boolean;
+  plano_id: string | null; // NOVO CAMPO
+  planos: { // NOVO RELACIONAMENTO
+    nome: string;
+  } | null;
 }
 
 // --- Fetch ---
@@ -23,7 +27,7 @@ const fetchCompanies = async (): Promise<Company[]> => {
   // Para o Super Admin (ID 1), a política 'Super Admin pode gerenciar todas as empresas' permite SELECT *.
   const { data, error } = await supabase
     .from("empresas")
-    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at, is_active")
+    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at, is_active, plano_id, planos (nome)") // Incluindo plano_id e relacionamento
     .order("nome", { ascending: true });
 
   if (error) {
@@ -49,15 +53,32 @@ interface CreateCompanyParams {
   telefone: string | null;
   endereco_completo: string | null;
   email: string | null;
+  plano_id?: string | null; // NOVO: Opcional na criação
 }
 
-export const createCompany = async ({ nome, cnpj, telefone, endereco_completo, email }: CreateCompanyParams) => {
+export const createCompany = async ({ nome, cnpj, telefone, endereco_completo, email, plano_id }: CreateCompanyParams) => {
   // O dono_id é o usuário logado (Super Admin)
   const { data: { user } } = await supabase.auth.getUser();
   const dono_id = user?.id;
 
   if (!dono_id) {
     throw new Error("Usuário não autenticado.");
+  }
+  
+  // Se plano_id não for fornecido, busca o plano padrão
+  let final_plano_id = plano_id;
+  if (!final_plano_id) {
+    const { data: defaultPlan, error: planError } = await supabase
+      .from('planos')
+      .select('id')
+      .eq('nome', 'Plano Básico')
+      .single();
+      
+    if (planError || !defaultPlan) {
+      console.warn("Could not find default plan, proceeding without plan_id.");
+    } else {
+      final_plano_id = defaultPlan.id;
+    }
   }
 
   // 2. Inserir a empresa
@@ -71,6 +92,7 @@ export const createCompany = async ({ nome, cnpj, telefone, endereco_completo, e
       endereco_completo: endereco_completo,
       email: email,
       is_active: true, // Sempre ativa na criação
+      plano_id: final_plano_id, // NOVO CAMPO
     })
     .select()
     .single();
@@ -92,10 +114,11 @@ interface UpdateCompanyParams {
   telefone: string | null;
   endereco_completo: string | null;
   email: string | null;
-  is_active?: boolean; // NOVO: Opcional para permitir atualização de outros campos
+  is_active?: boolean;
+  plano_id?: string | null; // NOVO: Opcional na atualização
 }
 
-export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_completo, email, is_active }: UpdateCompanyParams) => {
+export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_completo, email, is_active, plano_id }: UpdateCompanyParams) => {
   const updatePayload: Partial<UpdateCompanyParams> = {
     nome: nome,
     cnpj: cnpj,
@@ -107,6 +130,11 @@ export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_complet
   // Adiciona is_active apenas se for fornecido
   if (is_active !== undefined) {
     updatePayload.is_active = is_active;
+  }
+  
+  // Adiciona plano_id apenas se for fornecido
+  if (plano_id !== undefined) {
+    updatePayload.plano_id = plano_id;
   }
   
   const { data, error } = await supabase

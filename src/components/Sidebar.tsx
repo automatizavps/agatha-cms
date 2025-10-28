@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, Image as ImageIcon, DollarSign } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, Image as ImageIcon, DollarSign, ShieldCheck } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -108,7 +108,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadCompanies = useCanRead('companies');
   const canReadNotifications = useCanRead('notifications');
   const canReadCustomProfiles = useCanRead('custom_profiles'); 
-  const canReadPromotions = useCanRead('promotions'); // NOVO
+  const canReadPromotions = useCanRead('promotions');
+  
+  // NOVO: Permissão para Planos (Apenas Super Admin)
+  const canReadPlans = profile?.is_super_admin;
 
   const isSuperAdmin = profile?.is_super_admin;
 
@@ -148,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const showProductsServicesGroup = canReadProducts || canReadServices || canReadCategories;
   
   // Verifica se o grupo de Empresas deve ser exibido
-  const showCompaniesGroup = canReadCompanies || canReadCustomProfiles;
+  const showCompaniesGroup = canReadCompanies || canReadCustomProfiles || canReadPlans;
 
 
   return (
@@ -344,6 +347,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
                     to="/companies/profiles"
                     icon={<UserCheck className="h-5 w-5" />}
                     label={t('page_title_custom_profiles')}
+                    isSubItem
+                    {...navItemProps}
+                  />
+                )}
+                {/* NOVO: Planos (Apenas Super Admin) */}
+                {canReadPlans && (
+                  <NavItem
+                    to="/companies/plans"
+                    icon={<ShieldCheck className="h-5 w-5" />}
+                    label={t('page_title_plans', { defaultValue: 'Planos' })}
                     isSubItem
                     {...navItemProps}
                   />
