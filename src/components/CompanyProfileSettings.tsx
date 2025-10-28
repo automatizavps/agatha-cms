@@ -17,7 +17,7 @@ const CompanyProfileSettings = () => {
   const company = companies?.[0]; // Para Admin, será a única empresa.
   
   // Permite edição para Super Admin (1) e Admin (2)
-  const isAllowedToEdit = profile && (profile.perfil_id === 1 || profile.perfil_id === 2);
+  const isAllowedToEdit = profile && (profile.is_super_admin || profile.perfil_customizado_id === null); // Admin de Empresa não tem perfil customizado
 
   const mutation = useMutation({
     mutationFn: updateCompany,
@@ -30,7 +30,7 @@ const CompanyProfileSettings = () => {
     },
   });
 
-  const handleSubmit = (values: { nome: string; cnpj: string | null; telefone: string | null; endereco_completo: string | null; email: string | null }) => {
+  const handleSubmit = (values: { nome: string; cnpj: string | null; telefone: string | null; endereco_completo: string | null; email: string | null; plano_id: string | null }) => {
     if (!company) {
       showError("Nenhuma empresa associada encontrada para edição.");
       return;
@@ -91,6 +91,7 @@ const CompanyProfileSettings = () => {
     telefone: company.telefone,
     endereco_completo: company.endereco_completo,
     email: company.email,
+    plano_id: company.plano_id, // NOVO CAMPO
   };
 
   return (

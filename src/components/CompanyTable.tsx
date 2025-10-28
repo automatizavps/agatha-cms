@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany, updateCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +38,7 @@ interface CompanyActionsProps {
   canWrite: boolean; // NOVO
 }
 
-type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj' | 'is_active';
+type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj' | 'is_active' | 'plano';
 type SortDirection = 'asc' | 'desc';
 
 const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSuperAdmin, canWrite }) => {
@@ -69,6 +69,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
       endereco_completo: company.endereco_completo, 
       email: company.email,
       is_active: isActive,
+      plano_id: company.plano_id, // Incluindo plano_id
     }),
     onSuccess: (data) => {
       const status = data.is_active ? "ativada" : "desativada";
@@ -247,6 +248,10 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
           aValue = a.is_active ? 1 : 0;
           bValue = b.is_active ? 1 : 0;
           break;
+        case 'plano':
+          aValue = a.planos?.nome || '';
+          bValue = b.planos?.nome || '';
+          break;
         default:
           return 0;
       }
@@ -285,12 +290,23 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
               >
                 {t('user_table_header_name')}
               </SortableHeader>
+              {isSuperAdmin && (
+                <SortableHeader 
+                  sortKey="plano" 
+                  currentSortKey={sortKey} 
+                  currentSortDirection={sortDirection} 
+                  onSort={handleSort}
+                  className="hidden lg:table-cell"
+                >
+                  {t('plan_name', { defaultValue: 'Plano' })}
+                </SortableHeader>
+              )}
               <SortableHeader 
                 sortKey="email" 
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="hidden lg:table-cell"
+                className="hidden xl:table-cell"
               >
                 {t('profile_email')}
               </SortableHeader>
@@ -331,7 +347,15 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                   <Building className="h-4 w-4 text-muted-foreground" />
                   {company.nome}
                 </TableCell>
-                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                {isSuperAdmin && (
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <ShieldCheck className="h-3 w-3" />
+                      {company.planos?.nome || 'N/A'}
+                    </div>
+                  </TableCell>
+                )}
+                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                   {company.email || 'N/A'}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
