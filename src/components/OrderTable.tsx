@@ -285,7 +285,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                   disabled={!canWrite}
                 />
               </TableHead>
-              <TableHead className="w-[50px]">Avatar</TableHead> {/* NOVO: Coluna para Avatar */}
               <SortableHeader 
                 sortKey="id" 
                 currentSortKey={sortKey} 
@@ -294,6 +293,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               >
                 {t('order_table_header_id')}
               </SortableHeader>
+              <TableHead className="w-[50px]">Avatar</TableHead> {/* MOVIDO: Coluna para Avatar */}
               <SortableHeader 
                 sortKey="cliente" 
                 currentSortKey={sortKey} 
@@ -359,7 +359,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                     disabled={!canWrite}
                   />
                 </TableCell>
-                {/* NOVO: Avatar do Cliente */}
+                <TableCell className="font-medium text-xs text-muted-foreground">
+                  {order.id.slice(0, 8)}
+                </TableCell>
+                {/* MOVIDO: Avatar do Cliente */}
                 <TableCell>
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={order.clientes?.avatar_url || undefined} alt={order.clientes?.nome} className="object-cover" />
@@ -367,9 +370,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                       {order.clientes?.nome ? order.clientes.nome.slice(0, 2).toUpperCase() : 'C'}
                     </AvatarFallback>
                   </Avatar>
-                </TableCell>
-                <TableCell className="font-medium text-xs text-muted-foreground">
-                  {order.id.slice(0, 8)}
                 </TableCell>
                 <TableCell className="font-medium">
                   {order.clientes?.nome || t('no_data_found')}
