@@ -47,12 +47,20 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
     .refine((val, ctx) => {
-      // CORREÇÃO ROBUSTA: Verifica se ctx.parent existe antes de tentar acessar produto_id
-      const parent = ctx.parent as any;
-      const productId = parent?.produto_id as string | undefined;
+      // SOLUÇÃO ROBUSTA: Usar ctx.path para obter o índice do item no array
+      const path = ctx.path;
+      // O path deve ser ['items', index, 'quantidade']
+      if (path.length < 3 || typeof path[1] !== 'number') {
+        // Se a estrutura do path for inesperada, pulamos a validação de estoque
+        return true;
+      }
       
-      // Se o produto_id não for uma string válida ou não estiver presente no contexto,
-      // pulamos a validação de estoque para evitar o erro 'parent' undefined.
+      // Acessamos o produto_id do item atual no array de itens
+      const items = (ctx.formContext as OrderFormValues)?.items;
+      const itemIndex = path[1];
+      const productId = items?.[itemIndex]?.produto_id;
+      
+      // Se o produto_id não for uma string válida, pulamos a validação de estoque
       if (typeof productId !== 'string' || productId.length === 0) {
         return true;
       }
@@ -153,6 +161,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       empresa_id: defaultValues?.empresa_id || "",
       promocao_id: defaultValues?.promocao_id || null,
     },
+    // Passa o contexto do formulário para o Zod usar na validação de array
+    context: form.getValues(), 
   });
   
   const { fields, append, remove } = useFieldArray({
