@@ -69,7 +69,7 @@ serve(async (req) => {
     while (true) {
       const { data: files, error } = await supabaseAdmin.storage
         .from(bucketName)
-        .list(pathPrefix || '', {
+        .list(pathPrefix || '', { // Usa pathPrefix ou string vazia para listar a raiz
           limit: pageSize,
           offset: currentPage * pageSize,
           sortBy: { column: 'name', order: 'asc' },

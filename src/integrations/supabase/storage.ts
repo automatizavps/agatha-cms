@@ -22,8 +22,10 @@ const BUCKETS = ['avatars', 'product_images'];
 // --- Fetch All Files in a Bucket (via Edge Function) ---
 
 const fetchStorageFiles = async (bucketName: string, pathPrefix: string | undefined, accessToken: string): Promise<StorageFile[]> => {
+  // A Edge Function espera `pathPrefix` como o diretório dentro do bucket.
+  // Se `pathPrefix` for undefined, a Edge Function deve listar a raiz do bucket.
   const { data, error } = await supabase.functions.invoke("list-storage-files", {
-    body: { bucketName, pathPrefix }, // PASSANDO pathPrefix
+    body: { bucketName, pathPrefix: pathPrefix || '' }, // Passa string vazia se pathPrefix for undefined
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

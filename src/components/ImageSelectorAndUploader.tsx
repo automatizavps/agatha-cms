@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/integrations/supabase/auth';
@@ -28,8 +30,11 @@ const ImageSelectorAndUploader: React.FC<ImageSelectorAndUploaderProps> = ({ cur
   const [uploading, setUploading] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
   
+  // O pathPrefix para upload e listagem deve ser o companyId
+  const storagePathPrefix = companyId;
+
   // Lista todas as imagens da empresa (pathPrefix = companyId)
-  const { data: existingFiles, isLoading: isLoadingExisting, refetch } = useStorageImages(BUCKET_NAME, companyId);
+  const { data: existingFiles, isLoading: isLoadingExisting, refetch } = useStorageImages(BUCKET_NAME, storagePathPrefix);
   
   // Converte URLs atuais para um Set para busca rápida
   const selectedUrlsSet = useMemo(() => new Set(currentUrls || []), [currentUrls]);
@@ -40,7 +45,7 @@ const ImageSelectorAndUploader: React.FC<ImageSelectorAndUploaderProps> = ({ cur
   };
 
   const handleUpload = useCallback(async () => {
-    if (!userId || !companyId || filesToUpload.length === 0) {
+    if (!userId || !storagePathPrefix || filesToUpload.length === 0) {
       showError("Empresa não selecionada ou arquivos ausentes.");
       return;
     }
@@ -53,8 +58,8 @@ const ImageSelectorAndUploader: React.FC<ImageSelectorAndUploaderProps> = ({ cur
       for (const file of filesToUpload) {
         const fileExt = file.name.split('.').pop();
         
-        // Caminho: companyId/userId/timestamp-random.ext
-        const fileName = `${companyId}/${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+        // Caminho: companyId/timestamp-random.ext (removido userId do path para simplificar)
+        const fileName = `${storagePathPrefix}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from(BUCKET_NAME)
@@ -89,7 +94,7 @@ const ImageSelectorAndUploader: React.FC<ImageSelectorAndUploaderProps> = ({ cur
     } finally {
       setUploading(false);
     }
-  }, [userId, companyId, filesToUpload, currentUrls, onUrlsChange, refetch]);
+  }, [userId, storagePathPrefix, filesToUpload, currentUrls, onUrlsChange, refetch]);
   
   const handleRemoveFromList = useCallback((urlToRemove: string) => {
     const updatedUrls = currentUrls?.filter(url => url !== urlToRemove) || null;
