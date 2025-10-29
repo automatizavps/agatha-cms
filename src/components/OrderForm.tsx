@@ -603,4 +603,4 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   );
 };
 
-export default OrderForm;
+export default AppointmentForm;
