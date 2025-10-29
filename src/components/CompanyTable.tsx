@@ -25,7 +25,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Badge } from "@/components/ui/badge"; // IMPORTAÇÃO CORRIGIDA
-import { format } from "date-fns";
+import { format, isPast, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface CompanyTableProps {
@@ -202,6 +202,33 @@ const formatVigency = (start: string | null, end: string | null) => {
   return `${formattedStart} - ${formattedEnd}`;
 };
 
+// NOVO: Função para obter o status de vigência do plano
+const getPlanVigencyStatus = (company: Company) => {
+  const plan = company.planos;
+  if (!plan || !plan.data_fim) {
+    return null; // Sem plano ou sem data de fim definida
+  }
+  
+  const endDate = new Date(plan.data_fim);
+  const now = new Date();
+  
+  // Se a data de fim for anterior a agora, o plano expirou.
+  if (isPast(endDate)) {
+    return (
+      <Tooltip delayDuration={100}>
+        <TooltipTrigger asChild>
+          <AlertTriangle className="h-4 w-4 text-destructive ml-2 cursor-pointer" />
+        </TooltipTrigger>
+        <TooltipContent className="bg-destructive text-white">
+          {company.is_active ? "Plano Expirado, Empresa Ativa (Aguardando Inativação)" : "Plano Expirado"}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+  
+  return null;
+};
+
 
 const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
@@ -360,7 +387,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                 className="text-center"
               >
                 Status
-              </SortableHeader>
+              </TableHead>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -395,11 +422,15 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">{company.cnpj || 'N/A'}</TableCell>
                 <TableCell className="text-center">
-                  {company.is_active ? (
-                    <Badge className="bg-green-600 hover:bg-green-600/90 text-white">Ativa</Badge>
-                  ) : (
-                    <Badge variant="destructive">Inativa</Badge>
-                  )}
+                  <div className="flex items-center justify-center">
+                    {company.is_active ? (
+                      <Badge className="bg-green-600 hover:bg-green-600/90 text-white">Ativa</Badge>
+                    ) : (
+                      <Badge variant="destructive">Inativa</Badge>
+                    )}
+                    {/* NOVO: Indicador de Plano Expirado */}
+                    {getPlanVigencyStatus(company)}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} canWrite={canWrite} />
