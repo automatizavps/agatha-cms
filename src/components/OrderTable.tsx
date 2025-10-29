@@ -81,10 +81,16 @@ const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, canWri
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onEditStatus(order)}>
-          <Pencil className="mr-2 h-4 w-4" /> {t('edit')} {t('order_table_header_status')}
-        </DropdownMenuItem>
+        
+        {/* Ação de Edição de Status - SÓ APARECE SE canWrite for TRUE */}
+        {canWrite && (
+          <DropdownMenuItem onClick={() => onEditStatus(order)}>
+            <Pencil className="mr-2 h-4 w-4" /> {t('edit')} {t('order_table_header_status')}
+          </DropdownMenuItem>
+        )}
+        
         <DropdownMenuSeparator />
+        
         <DropdownMenuItem 
           onClick={handleDelete} 
           disabled={deleteMutation.isPending}
