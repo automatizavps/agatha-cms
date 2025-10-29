@@ -71,8 +71,6 @@ interface OrderFormProps {
   isEditing?: boolean;
 }
 
-const NONE_VALUE = "__NONE__";
-
 const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
