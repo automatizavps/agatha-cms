@@ -25,27 +25,34 @@ import { useCustomProfiles } from "@/integrations/supabase/customProfiles";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next"; // Importando tradução
 
-// Definimos o esquema base
-const baseFormSchema = z.object({
+// Definimos o esquema base universal (campos que sempre existem)
+const universalSchema = z.object({
   full_name: z.string().min(2, {
     message: "O nome completo deve ter pelo menos 2 caracteres.",
   }),
-  // O email é validado apenas na criação (isEditing = false)
-  email: z.string().email({
-    message: "Insira um email válido.",
-  }),
-  perfil_id: z.string().min(1, { // Agora é o UUID
+  perfil_id: z.string().min(1, { // UUID ou '1'
     message: "Selecione um perfil.",
   }),
   telefone: z.string().optional().nullable(),
   endereco_completo: z.string().optional().nullable(),
+});
+
+// Definimos os campos que variam (email, empresa, senha)
+const variableFields = {
+  email: z.string().email({ message: "Insira um email válido." }),
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional().nullable(),
-  
-  // Novos campos de senha (opcionais no base)
-  password: z.string().optional(),
-  confirmPassword: z.string().optional(),
+  password: z.string(),
+  confirmPassword: z.string(),
+};
+
+// Esquema base para tipagem (inclui todos os campos como opcionais/nulos)
+const baseFormSchema = universalSchema.extend({
+  email: variableFields.email.optional(),
+  empresa_id: variableFields.empresa_id,
+  password: variableFields.password.optional(),
+  confirmPassword: variableFields.confirmPassword.optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'As senhas não coincidem.',
   path: ['confirmPassword'],
@@ -78,39 +85,50 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
 
   // --- Lógica de Definição do Schema (Corrigida) ---
   const finalFormSchema = useMemo(() => {
-    // Começamos sempre com o esquema base
-    let schema = baseFormSchema;
+    let schema = universalSchema;
     
     if (isEditing) {
-      // Na EDIÇÃO: Email é opcional, Senha é opcional (para não alterar)
+      // EDIÇÃO: Email é opcional, Senha é opcional (para não alterar)
       schema = schema.extend({
-        email: z.string().email({ message: "Insira um email válido." }).optional(),
-        perfil_id: z.string().min(1, { message: t("select_profile") }),
+        email: variableFields.email.optional(), // Opcional na edição
+        password: variableFields.password.optional(),
+        confirmPassword: variableFields.confirmPassword.optional(),
       });
       
-      // Se for Super Admin, ajustamos o campo empresa_id na edição
+      // Se for Super Admin, o campo empresa_id é incluído (opcional/nullable)
       if (isSuperAdmin) {
         schema = schema.extend({
-          empresa_id: z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable(),
+          empresa_id: variableFields.empresa_id,
         });
       }
       
     } else {
-      // Na CRIAÇÃO: Email é obrigatório, Senha é obrigatória (min 6)
+      // CRIAÇÃO: Email é obrigatório, Senha é obrigatória (min 6)
       schema = schema.extend({
-        password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
-        confirmPassword: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+        email: variableFields.email, // Obrigatório na criação
+        password: variableFields.password.min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+        confirmPassword: variableFields.confirmPassword.min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+      }).refine((data) => data.password === data.confirmPassword, {
+        message: 'As senhas não coincidem.',
+        path: ['confirmPassword'],
       });
       
       if (isSuperAdmin) {
-        // Na criação, Super Admin deve selecionar a empresa
+        // Na criação, Super Admin deve selecionar a empresa (obrigatório)
         schema = schema.extend({
-            empresa_id: z.string().uuid({
-              message: t("select_valid_company"),
-            }).min(1, { message: t("company_required_super_admin") }),
+            empresa_id: variableFields.empresa_id.min(1, { message: t("company_required_super_admin") }),
           });
       }
     }
+    
+    // Adiciona a validação de senhas que não coincidem, se houver campos de senha
+    if (!isEditing) {
+        schema = schema.refine((data) => data.password === data.confirmPassword, {
+            message: 'As senhas não coincidem.',
+            path: ['confirmPassword'],
+        });
+    }
+    
     return schema;
   }, [isEditing, isSuperAdmin, t]);
   // --- Fim da Lógica de Definição do Schema ---
@@ -195,7 +213,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
 
     onSubmit({
       full_name: values.full_name,
-      email: values.email,
+      email: values.email!, // Email é obrigatório na criação, opcional na edição
       perfil_id: values.perfil_id, // Passa o UUID ou '1'
       telefone: telefone,
       endereco_completo: endereco_completo,

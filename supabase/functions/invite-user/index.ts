@@ -57,7 +57,9 @@ serve(async (req) => {
     return returnError("Missing required fields: email, full_name, perfil_id, or target_empresa_id", 400);
   }
   
-  // O perfil_id deve ser um UUID (customizado)
+  // O perfil_id deve ser um UUID (customizado) ou '1' (Super Admin)
+  const isCustomProfile = perfil_id !== '1';
+  
   if (perfil_id !== '1' && !perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
       return returnError("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", 400);
   }
@@ -123,7 +125,8 @@ serve(async (req) => {
       .from("usuarios")
       .update({ 
         empresa_id: final_empresa_id,
-        perfil_customizado_id: meta_perfil_id === '1' ? null : meta_perfil_id, // '1' é NULL no banco
+        // Se for '1' (Super Admin), o perfil_customizado_id deve ser NULL
+        perfil_customizado_id: meta_perfil_id === '1' ? null : meta_perfil_id, 
       })
       .eq("id", invitedUserId);
 
