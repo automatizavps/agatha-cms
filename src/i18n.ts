@@ -469,7 +469,7 @@ const resources = {
       
       // Auth UI Keys
       "login_hero_title": "Gerencie seu negócio com eficiência e estilo.",
-      "login_hero_subtitle": "Simplifique agendamentos, pedidos e estoque em uma única plataforma intuitiva.",
+      "login_hero_subtitle": "Simplifique a gestão de agendamentos, pedidos, clientes, produtos, categorias, equipes, metas, comissionamentos e estoque em uma única plataforma intuitiva.",
       "login_welcome": "Bem-vindo(a) de volta!",
       "email_label": "E-mail",
       "password_label": "Senha",

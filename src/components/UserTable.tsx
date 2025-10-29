@@ -357,6 +357,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
                       {user.nome_completo ? user.nome_completo[0] : <User className="h-4 w-4" />}
                     </AvatarFallback>
                   </Avatar>
+                  
                 </TableCell>
                 {/* Célula: Empresa */}
                 <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">

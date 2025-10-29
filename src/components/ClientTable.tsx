@@ -354,6 +354,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
                     </div>
                   </TableCell>
                 )}
+                
                 <TableCell className="hidden sm:table-cell">{client.email || 'N/A'}</TableCell>
                 <TableCell className="hidden md:table-cell">{client.telefone || 'N/A'}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{client.endereco_completo || 'N/A'}</TableCell>
