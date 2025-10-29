@@ -174,7 +174,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           cliente_id: defaultValues.cliente_id || "",
           responsavel_id: defaultValues.responsavel_id || "",
           date: defaultValues.date,
-          time: defaultValues.time || "HH:mm",
+          time: defaultValues.time || "09:00",
           status: defaultValues.status || 'pendente',
           items: itemsWithTypes,
           empresa_id: defaultValues.empresa_id,
@@ -223,7 +223,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
         
-        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
+        // Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         
         return false;
@@ -514,6 +514,33 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           />
         </div>
         
+        {isEditing && (
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('order_table_header_status')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("select_status")} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status} value={status} className="capitalize">
+                        {t(status)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('nav_products_services')}</CardTitle>
@@ -703,7 +730,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         <div className="flex justify-between items-center pt-2">
           <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
           <span className="text-2xl font-bold text-primary flex items-center gap-1">
-            {/* REMOVIDO O ÍCONE DollarSign */}
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
             {isPromotionValid && activePromotion && activePromotion.desconto_percentual > 0 && (
               <span className="text-base text-green-500 ml-2">
