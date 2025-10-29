@@ -203,40 +203,13 @@ export interface CommissionRecord {
   } | null;
 }
 
-const fetchCommissionRecords = async (companyId?: string): Promise<CommissionRecord[]> => {
-  let query = supabase
-    .from("comissionamentos")
-    .select(`
-      id,
-      usuario_id,
-      referencia_id,
-      tipo_referencia,
-      valor_comissao,
-      status,
-      created_at,
-      usuarios (nome_completo)
-    `);
-    
-  if (companyId) {
-    query = query.eq('empresa_id', companyId);
-  }
-
-  const { data, error } = await query.order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching commission records:", error);
-    throw new Error("Failed to fetch commission records");
-  }
-  
-  return data.map(c => ({
-    ...c,
-    valor_comissao: parseFloat(String(c.valor_comissao)) || 0,
-  })) as CommissionRecord[];
-};
-
+// REMOVIDO: fetchCommissionRecords (Duplicado, agora em reportHooks.ts)
 export const useCommissionRecords = (companyId?: string) => {
-  return useQuery<CommissionRecord[], Error>({
-    queryKey: ["commissionRecords", companyId],
-    queryFn: () => fetchCommissionRecords(companyId),
+  // Este hook agora deve ser usado apenas para a lista de regras, não para os registros.
+  // Se for para registros, deve usar useCommissionReport de reportHooks.
+  // Mantendo o nome para evitar quebras, mas o uso deve ser para regras.
+  return useQuery<CommissionRule[], Error>({
+    queryKey: ["commissionRules", companyId],
+    queryFn: () => fetchCommissionRules(companyId),
   });
 };
