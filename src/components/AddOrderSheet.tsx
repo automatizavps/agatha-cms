@@ -7,24 +7,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createOrder } from "@/integrations/supabase/orders";
 import { showSuccess, showError } from "@/utils/toast";
 import { useTranslation } from "react-i18next";
-import { useCanWrite } from "@/hooks/use-module-permission";
 
 const AddOrderSheet = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  
-  // Permissão de escrita para o módulo 'orders'
-  const canWriteOrders = useCanWrite('orders');
-  
-  if (!canWriteOrders) {
-    return null;
-  }
 
   const mutation = useMutation({
     mutationFn: createOrder,
-    onSuccess: (data) => {
-      showSuccess(`Pedido #${data.id.slice(0, 8)} criado com sucesso!`);
+    onSuccess: () => {
+      showSuccess("Pedido criado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       setIsOpen(false);
     },
@@ -33,13 +25,8 @@ const AddOrderSheet = () => {
     },
   });
 
-  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; valor_total: number; items: any[]; status?: string; empresa_id?: string; promocao_id?: string | null }) => {
-    // O status é definido como 'pendente_entrega' na função createOrder
-    mutation.mutate({ 
-      ...values, 
-      queryClient,
-      responsavel_id: values.responsavel_id || values.cliente_id, // Fallback para cliente_id se responsável for nulo (embora o form force a seleção)
-    });
+  const handleSubmit = (values: { cliente_id: string; valor_total: number; items: { produto_id: string; quantidade: number; preco_unitario: number; }[]; empresa_id?: string }) => {
+    mutation.mutate({ ...values, queryClient });
   };
 
   return (

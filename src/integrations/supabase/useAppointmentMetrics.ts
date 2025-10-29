@@ -12,10 +12,13 @@ export const useAppointmentMetrics = (companyId?: string) => {
   const todayStart = format(new Date(), 'yyyy-MM-dd');
   
   // Passamos companyId e o filtro 'today' para useAppointments
-  const { data: appointments, isLoading, isError, error } = useAppointments(companyId, {
+  // O hook agora retorna { appointments, totalCount }
+  const { data: paginatedData, isLoading, isError, error } = useAppointments(companyId, {
     startDate: todayStart,
     endDate: todayStart,
-  });
+  }, 1, 1000); // Usamos uma página grande para garantir que todas as métricas do dia sejam contadas
+
+  const appointments = paginatedData?.appointments;
 
   const metrics: AppointmentMetrics = {
     totalAppointments: 0,

@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAppointments, Appointment, deleteAppointment, useAppointmentItems, deleteAppointments } from "@/integrations/supabase/appointments";
-import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown, Search, RefreshCw, CalendarIcon, Filter } from "lucide-react";
+import { useAppointments, Appointment, deleteAppointment, useAppointmentItems, deleteAppointments, PaginatedAppointments } from "@/integrations/supabase/appointments";
+import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown, Search, RefreshCw, CalendarIcon, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, isToday } from "date-fns"; // Importando isToday
@@ -31,7 +31,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
-import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
+import { useCanWrite } from "@/hooks/use-module-permission";
+import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination"; // Importando Paginação
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -191,13 +192,14 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
+const PAGE_SIZES = [20, 50, 100]; // Definindo tamanhos de página
 
 const Appointments = () => {
   const { data: profile } = useCurrentUserProfile();
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('data_hora');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // ALTERADO PARA 'desc'
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   
@@ -209,6 +211,10 @@ const Appointments = () => {
   // --- Status Filter State ---
   const [statusFilter, setStatusFilter] = useState<Appointment['status'] | 'all'>('all');
   
+  // --- Paginação e Tamanho da Página ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+  
   // --- Selection State ---
   const [selectedAppointmentIds, setSelectedAppointmentIds] = useState<Set<string>>(new Set());
   
@@ -219,15 +225,21 @@ const Appointments = () => {
   // Permissões reintroduzidas
   const canWriteAppointments = useCanWrite('appointments');
 
-  // Fetch data using filters
-  const { data: appointments, isLoading, isError, error, refetch, isRefetching } = useAppointments(
+  // Fetch data using filters and pagination
+  const { data: paginatedData, isLoading, isError, error, refetch, isRefetching } = useAppointments(
     filteredCompanyId, // Passa o ID filtrado
     {
       startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
       endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
       status: statusFilter,
-    }
+    },
+    currentPage,
+    pageSize
   );
+  
+  const appointmentsToDisplay = paginatedData?.appointments;
+  const totalCount = paginatedData?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const isChecking = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
@@ -256,11 +268,11 @@ const Appointments = () => {
     }
   };
   
-  // Client-side search filtering
+  // Client-side search filtering (Apenas na página atual)
   const filteredAppointments = useMemo(() => {
-    if (!appointments) return [];
+    if (!appointmentsToDisplay) return [];
     
-    let filtered = appointments;
+    let filtered = appointmentsToDisplay;
     
     // 1. Search Term Filter (client-side)
     if (searchTerm) {
@@ -273,9 +285,9 @@ const Appointments = () => {
     }
     
     return filtered;
-  }, [appointments, searchTerm]);
+  }, [appointmentsToDisplay, searchTerm]);
   
-  // Sorting logic
+  // Sorting logic (client-side, apenas na página atual)
   const sortedAppointments = useMemo(() => {
     if (!filteredAppointments) return [];
     
@@ -367,6 +379,23 @@ const Appointments = () => {
   
   const isAllSelected = filteredAppointments.length > 0 && selectedAppointmentIds.size === filteredAppointments.length;
   const isIndeterminate = selectedAppointmentIds.size > 0 && selectedAppointmentIds.size < filteredAppointments.length;
+  
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setSelectedAppointmentIds(new Set()); // Limpa a seleção ao mudar de página
+    }
+  };
+  
+  const handlePageSizeChange = (size: string) => {
+    const newSize = parseInt(size);
+    setPageSize(newSize);
+    setCurrentPage(1); // Volta para a primeira página ao mudar o tamanho
+    setSelectedAppointmentIds(new Set()); // Limpa a seleção
+  };
+  
+  const finalStart = (currentPage - 1) * pageSize + 1;
+  const finalEnd = Math.min(currentPage * pageSize, totalCount);
 
 
   return (
@@ -391,7 +420,10 @@ const Appointments = () => {
             {isSuperAdmin && (
               <div className="w-full md:w-48">
                 <Select 
-                  onValueChange={setSelectedCompanyId} 
+                  onValueChange={(value) => {
+                    setSelectedCompanyId(value);
+                    setCurrentPage(1); // Resetar a página ao mudar o filtro
+                  }} 
                   value={selectedCompanyId} 
                   disabled={isLoadingCompanies || isChecking}
                 >
@@ -437,6 +469,7 @@ const Appointments = () => {
                   onSelect={(range) => {
                     setStartDate(range?.from);
                     setEndDate(range?.to);
+                    setCurrentPage(1); // Resetar a página ao mudar o filtro
                   }}
                   numberOfMonths={2}
                   locale={ptBR}
@@ -445,7 +478,10 @@ const Appointments = () => {
             </Popover>
             
             {/* Filtro de Status */}
-            <Select onValueChange={(val) => setStatusFilter(val as Appointment['status'] | 'all')} value={statusFilter} disabled={isLoading}>
+            <Select onValueChange={(val) => {
+              setStatusFilter(val as Appointment['status'] | 'all');
+              setCurrentPage(1); // Resetar a página ao mudar o filtro
+            }} value={statusFilter} disabled={isLoading}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
                 <SelectValue placeholder={t('filter_all_status')} />
@@ -532,114 +568,201 @@ const Appointments = () => {
               </Button>
             </div>
           ) : sortedAppointments && sortedAppointments.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {/* Checkbox Header */}
-                    <TableHead className="w-[50px] text-center">
-                      <Checkbox
-                        checked={isAllSelected || isIndeterminate}
-                        onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                        aria-label={t('select_all')}
-                        disabled={!canWriteAppointments}
-                      />
-                    </TableHead>
-                    <SortableHeader 
-                      sortKey="cliente" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                    >
-                      {t('order_table_header_client')}
-                    </SortableHeader>
-                    {isSuperAdmin && (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {/* Checkbox Header */}
+                      <TableHead className="w-[50px] text-center">
+                        <Checkbox
+                          checked={isAllSelected || isIndeterminate}
+                          onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                          aria-label={t('select_all')}
+                          disabled={!canWriteAppointments}
+                        />
+                      </TableHead>
                       <SortableHeader 
-                        sortKey="empresa" 
+                        sortKey="cliente" 
                         currentSortKey={sortKey} 
                         currentSortDirection={sortDirection} 
                         onSort={handleSort}
-                        className="hidden md:table-cell"
                       >
-                        {t('user_table_header_company')}
+                        {t('order_table_header_client')}
                       </SortableHeader>
-                    )}
-                    <TableHead>{t('nav_products')}</TableHead>
-                    <SortableHeader 
-                      sortKey="data_hora" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                    >
-                      {t('order_table_header_date')}
-                    </SortableHeader>
-                    <SortableHeader 
-                      sortKey="responsavel" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                    >
-                      {t('responsible')}
-                    </SortableHeader>
-                    <SortableHeader 
-                      sortKey="status" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="text-center"
-                    >
-                      {t('order_table_header_status')}
-                    </SortableHeader>
-                    <TableHead className="text-right">{t('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedAppointments.map((appointment) => (
-                    <TableRow 
-                      key={appointment.id}
-                      className={cn(
-                        selectedAppointmentIds.has(appointment.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30",
-                        // NOVO: Destaque para agendamentos do dia atual
-                        isToday(new Date(appointment.data_hora)) && "bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20"
-                      )}
-                    >
-                      {/* Checkbox Cell */}
-                      <TableCell className="text-center">
-                        <Checkbox
-                          checked={selectedAppointmentIds.has(appointment.id)}
-                          onCheckedChange={(checked) => handleSelectRow(appointment.id, !!checked)}
-                          disabled={!canWriteAppointments}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
                       {isSuperAdmin && (
-                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Building className="h-3 w-3" />
-                            {appointment.empresas?.nome || 'N/A'}
-                          </div>
-                        </TableCell>
+                        <SortableHeader 
+                          sortKey="empresa" 
+                          currentSortKey={sortKey} 
+                          currentSortDirection={sortDirection} 
+                          onSort={handleSort}
+                          className="hidden md:table-cell"
+                        >
+                          {t('user_table_header_company')}
+                        </SortableHeader>
                       )}
-                      <TableCell>
-                        <AppointmentItemDisplay appointmentId={appointment.id} />
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={getStatusBadge(appointment.status)}>
-                          {t(appointment.status)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <AppointmentActions appointment={appointment} onEdit={handleEdit} canWrite={canWriteAppointments} />
-                      </TableCell>
+                      <TableHead>{t('nav_products')}</TableHead>
+                      <SortableHeader 
+                        sortKey="data_hora" 
+                        currentSortKey={sortKey} 
+                        currentSortDirection={sortDirection} 
+                        onSort={handleSort}
+                      >
+                        {t('order_table_header_date')}
+                      </SortableHeader>
+                      <SortableHeader 
+                        sortKey="responsavel" 
+                        currentSortKey={sortKey} 
+                        currentSortDirection={sortDirection} 
+                        onSort={handleSort}
+                      >
+                        {t('responsible')}
+                      </SortableHeader>
+                      <SortableHeader 
+                        sortKey="status" 
+                        currentSortKey={sortKey} 
+                        currentSortDirection={sortDirection} 
+                        onSort={handleSort}
+                        className="text-center"
+                      >
+                        {t('order_table_header_status')}
+                      </SortableHeader>
+                      <TableHead className="text-right">{t('actions')}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedAppointments.map((appointment) => (
+                      <TableRow 
+                        key={appointment.id}
+                        className={cn(
+                          selectedAppointmentIds.has(appointment.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30",
+                          // NOVO: Destaque para agendamentos do dia atual
+                          isToday(new Date(appointment.data_hora)) && "bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20"
+                        )}
+                      >
+                        {/* Checkbox Cell */}
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={selectedAppointmentIds.has(appointment.id)}
+                            onCheckedChange={(checked) => handleSelectRow(appointment.id, !!checked)}
+                            disabled={!canWriteAppointments}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
+                        {isSuperAdmin && (
+                          <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Building className="h-3 w-3" />
+                              {appointment.empresas?.nome || 'N/A'}
+                            </div>
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          <AppointmentItemDisplay appointmentId={appointment.id} />
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
+                        <TableCell className="text-center">
+                          <span className={getStatusBadge(appointment.status)}>
+                            {t(appointment.status)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <AppointmentActions appointment={appointment} onEdit={handleEdit} canWrite={canWriteAppointments} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Componente de Paginação */}
+              {totalPages > 1 && (
+                <div className="mt-4 flex flex-col md:flex-row justify-end items-center gap-4">
+                  
+                  {/* Informação da Página (Alinhado à esquerda) */}
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {t('page_info', { 
+                      current: currentPage, 
+                      total: totalPages, 
+                      start: finalStart,
+                      end: finalEnd,
+                      count: totalCount
+                    })}
+                  </span>
+                  
+                  {/* Controles de Paginação e Seletor de Tamanho (Alinhado à direita) */}
+                  <div className="flex items-center gap-4">
+                    
+                    {/* Controles de Paginação */}
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1 || isRefetching}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                        </PaginationItem>
+                        
+                        {/* Exibição simplificada de páginas */}
+                        <PaginationItem className="flex items-center">
+                          <Input 
+                            type="number"
+                            value={currentPage}
+                            onChange={(e) => {
+                              const page = parseInt(e.target.value);
+                              if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                                setCurrentPage(page);
+                              }
+                            }}
+                            onBlur={() => {
+                              // Garante que o valor seja válido ao sair do foco
+                              if (currentPage < 1) setCurrentPage(1);
+                              if (currentPage > totalPages) setCurrentPage(totalPages);
+                            }}
+                            className="w-16 text-center h-9"
+                            disabled={isRefetching}
+                          />
+                          <span className="text-sm text-muted-foreground mx-2">/ {totalPages}</span>
+                        </PaginationItem>
+
+                        <PaginationItem>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || isRefetching}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    
+                    {/* Seletor de Tamanho da Página (Última Posição) */}
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground whitespace-nowrap">
+                      <span>{t('rows_per_page')}:</span>
+                      <Select onValueChange={handlePageSizeChange} value={String(pageSize)} disabled={isChecking}>
+                        <SelectTrigger className="w-[80px]">
+                          <SelectValue placeholder={String(pageSize)} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAGE_SIZES.map(size => (
+                            <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {t('no_data_found')}

@@ -45,24 +45,9 @@ const productStockMap = new Map<string, number | null>();
 // Esquema de validação para itens
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
-  // Garantimos que a coerção para número lide com strings vazias ou NaN, resultando em 0
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
     .refine((val, ctx) => {
-      // CORREÇÃO: Acessa o objeto pai de forma segura. Se não houver parent ou data, retorna true.
-      const item = (ctx.parent as any)?.data;
-      
-      // Se não houver dados do item (ocorre durante a montagem inicial), pulamos a validação de estoque.
-      if (!item) {
-        return true;
-      }
-      
-      const productId = item.produto_id;
-      
-      // Se não houver produto_id ou se a validação estiver em um estado inicial incompleto, pulamos
-      if (typeof productId !== 'string' || productId.length === 0) {
-        return true;
-      }
-      
+      const productId = ctx.parent.produto_id;
       const stock = productStockMap.get(productId);
       
       // Se for serviço (stock === null) ou se o estoque for suficiente, é válido
@@ -152,8 +137,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     resolver: zodResolver(finalFormSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
-      // CORREÇÃO: Inicializa responsavel_id como string vazia se não estiver editando
-      responsavel_id: defaultValues?.responsavel_id || "", 
+      responsavel_id: defaultValues?.responsavel_id || "", // NOVO DEFAULT
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
       empresa_id: defaultValues?.empresa_id || "",
@@ -192,9 +176,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   }, [services, products, selectedCompanyId, isCompanySelected]);
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
-  
-  // NOVO: Flag de carregamento de dados dependentes
-  const isLoadingDependentData = isLoadingClients || isLoadingUsers || isLoadingItems;
 
   // Efeito para popular o mapa de estoque
   useEffect(() => {
@@ -211,15 +192,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       });
     }
   }, [allItems]);
-  
-  // NOVO: Efeito para revalidar o formulário quando a empresa muda ou os itens carregam
-  useEffect(() => {
-    // Dispara a revalidação de todos os campos para aplicar as novas regras de estoque
-    if (isCompanySelected && !isLoadingItems) {
-      form.trigger();
-    }
-  }, [selectedCompanyId, isLoadingItems, form]);
-
 
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
@@ -291,8 +263,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   }, [form.watch("items"), activePromotion, isPromotionValid]);
   
   const handleAddItem = () => {
-    // Inicializa quantidade e preco_unitario como 0 para evitar NaN
-    append({ produto_id: "", quantidade: 0, preco_unitario: 0 });
+    append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
   };
   
   const handleProductChange = (index: number, productId: string) => {
@@ -353,10 +324,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const shouldShowCompanyField = isSuperAdmin || isEditing;
   
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
-  
-  // NOVO: Verifica se o formulário está inválido (apenas na criação)
-  const isFormInvalid = !isEditing && (!form.formState.isValid || !form.watch('cliente_id') || !form.watch('responsavel_id') || form.watch('items')?.length === 0);
-
 
   if (isCheckingPermissions) {
     return (
@@ -381,9 +348,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // Limpa campos dependentes
                       form.setValue('cliente_id', '');
-                      form.setValue('responsavel_id', ''); 
+                      form.setValue('responsavel_id', ''); // Limpa responsável
                       form.setValue('items', []);
                       form.setValue('promocao_id', null);
                       setActivePromotion(null);
@@ -432,11 +398,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           render={({ field }) => (
             <FormItem>
               <FormLabel>{t('order_table_header_client')}</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value} 
-                disabled={isLoadingDependentData || isSubmitting || isEditing || !isCompanySelected}
-              >
+              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingClients || isSubmitting || isEditing || !isCompanySelected}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingClients ? t("loading_clients") : t("select_client")} />
@@ -464,11 +426,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             return (
             <FormItem>
               <FormLabel>{t('responsible', { defaultValue: 'Responsável pelo Pedido' })}</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value} 
-                disabled={isLoadingDependentData || isSubmitting || !isCompanySelected}
-              >
+              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingUsers || isSubmitting || !isCompanySelected}>
                 <FormControl>
                   <SelectTrigger>
                     <User className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -520,6 +478,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('order_list_title')}</CardTitle>
+            {/* REMOVIDO O BOTÃO DAQUI */}
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => {
@@ -559,7 +518,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                                       "w-full justify-between",
                                       !itemField.value && "text-muted-foreground"
                                     )}
-                                    disabled={isLoadingDependentData || isSubmitting || !isCompanySelected}
+                                    disabled={isLoadingItems || isSubmitting || !isCompanySelected}
                                   >
                                     {itemField.value
                                       ? getItemName(itemField.value)
@@ -633,8 +592,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                                   value = maxQuantity;
                                 }
                                 
-                                // Garante que o valor seja um número (ou string vazia se o input permitir)
-                                field.onChange(e.target.value);
+                                field.onChange(value);
                               }}
                               disabled={isSubmitting || isEditing || (isProduct && maxQuantity === 0)}
                             />
@@ -746,11 +704,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           </span>
         </div>
         
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing) || isFormInvalid}
-        >
+        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
