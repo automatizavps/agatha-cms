@@ -194,7 +194,7 @@ const CommissionReportTab: React.FC = () => {
         <div className="mb-4 p-4 border rounded-lg bg-secondary/50 flex items-center justify-between">
           <span className="text-sm font-medium">{t('report_total_commission_value', { defaultValue: 'Valor Total de Comissões' })}:</span>
           <span className="text-xl font-bold text-primary flex items-center gap-1">
-            <DollarSign className="h-5 w-5" />
+            {/* ÍCONE DollarSign REMOVIDO */}
             {formatCurrency(totalCommissionValue)}
           </span>
         </div>
