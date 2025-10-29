@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, DollarSign, Search, Building } from "lucide-react";
+import { Loader2, RefreshCw, DollarSign, Search, Building, HandCoins } from "lucide-react";
 import { useCommissionRules } from "@/integrations/supabase/commissions";
 import { showError } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
@@ -10,17 +10,17 @@ import { useTranslation } from "react-i18next";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCanWrite } from "@/hooks/use-module-permission";
+import { useCanRead, useCanWrite } from "@/hooks/use-module-permission";
 import AddCommissionRuleSheet from "@/components/AddCommissionRuleSheet";
 import CommissionRuleTable from "@/components/CommissionRuleTable";
 
-const Commissions = () => {
+const CommissionRules = () => {
   const { t } = useTranslation();
   const { isSuperAdmin, selectedCompanyId, setSelectedCompanyId, filteredCompanyId, isLoadingFilter } = useDashboardFilter();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   // Permissões (Novo módulo 'commissions')
-  const canReadCommissions = useCanWrite('commissions'); // Usamos canWrite para ler/escrever por simplicidade
+  const canReadCommissions = useCanRead('commissions');
   const canWriteCommissions = useCanWrite('commissions');
   
   // Fetch data using filteredCompanyId
@@ -40,7 +40,7 @@ const Commissions = () => {
 
     const lowerCaseSearch = searchTerm.toLowerCase();
     return rules.filter(rule => 
-      rule.entidade?.nome?.toLowerCase().includes(lowerCaseSearch) ||
+      rule.entidades?.some(e => e.nome.toLowerCase().includes(lowerCaseSearch)) ||
       rule.tipo_entidade.toLowerCase().includes(lowerCaseSearch)
     );
   }, [rules, searchTerm]);
@@ -58,14 +58,14 @@ const Commissions = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_commissions', { defaultValue: 'Gestão de Comissionamento' })}</h1>
+        <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('commission_rules_title', { defaultValue: 'Regras de Comissionamento' })}</h1>
         {canWriteCommissions && <AddCommissionRuleSheet />}
       </div>
       
       <Card className="mt-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <DollarSign className="h-5 w-5" /> {t('commission_rules_title', { defaultValue: 'Regras de Comissionamento' })}
+            <HandCoins className="h-5 w-5" /> {t('commission_rules_title', { defaultValue: 'Regras de Comissionamento' })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -153,4 +153,4 @@ const Commissions = () => {
   );
 };
 
-export default Commissions;
+export default CommissionRules;

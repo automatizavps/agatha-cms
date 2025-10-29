@@ -20,15 +20,16 @@ import Teams from "./pages/Teams";
 import Notifications from "./pages/Notifications";
 import ProductHistory from "./pages/ProductHistory";
 import CustomProfiles from "./pages/CustomProfiles";
-import Categories from "./pages/Categories"; // IMPORTADO
-import ImageGallery from "./pages/ImageGallery"; // NOVO IMPORT
-import Promotions from "./pages/Promotions"; // NOVO IMPORT
-import Plans from "./pages/Plans"; // NOVO IMPORT
-import Commissions from "./pages/Commissions"; // NOVO IMPORT
+import Categories from "./pages/Categories";
+import ImageGallery from "./pages/ImageGallery";
+import Promotions from "./pages/Promotions";
+import Plans from "./pages/Plans";
+import CommissionRules from "./pages/CommissionRules"; // RENOMEADO
+import CommissionPayments from "./pages/CommissionPayments"; // NOVO IMPORT
 import { SessionContextProvider, ProtectedRoute, PublicRoute, useSession } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
 import React, { useState, useEffect } from "react";
-import ForcePasswordChangeDialog from "./components/ForcePasswordChangeDialog"; // Importando o modal
+import ForcePasswordChangeDialog from "./components/ForcePasswordChangeDialog";
 
 const queryClient = new QueryClient();
 
@@ -47,19 +48,23 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/clients" element={<Clients />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:productId" element={<ProductHistory />} />
-      <Route path="/products/categories" element={<Categories />} /> {/* ROTA ADICIONADA */}
+      <Route path="/products/categories" element={<Categories />} />
       <Route path="/services" element={<Services />} />
       <Route path="/orders" element={<Orders />} />
       <Route path="/teams" element={<Teams />} />
       <Route path="/companies" element={<Companies />} />
       <Route path="/companies/profiles" element={<CustomProfiles />} />
-      <Route path="/companies/plans" element={<Plans />} /> {/* NOVA ROTA */}
-      <Route path="/commissions" element={<Commissions />} /> {/* NOVA ROTA */}
+      <Route path="/companies/plans" element={<Plans />} />
+      
+      {/* ROTAS DE COMISSIONAMENTO (SUBMENU) */}
+      <Route path="/commissions/rules" element={<CommissionRules />} />
+      <Route path="/commissions/payments" element={<CommissionPayments />} />
+      
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/notifications" element={<Notifications />} />
-      <Route path="/gallery" element={<ImageGallery />} /> {/* NOVA ROTA */}
-      <Route path="/promotions" element={<Promotions />} /> {/* NOVA ROTA */}
+      <Route path="/gallery" element={<ImageGallery />} />
+      <Route path="/promotions" element={<Promotions />} />
       
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />

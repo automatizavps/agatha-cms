@@ -7,8 +7,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import React, { useState, useEffect } from "react"; // Importando useState e useEffect
-import { useCanRead } from "@/hooks/use-module-permission"; // REINTRODUZIDO
+import React, { useState, useEffect } from "react";
+import { useCanRead } from "@/hooks/use-module-permission";
 
 interface NavItemProps {
   to: string;
@@ -109,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadNotifications = useCanRead('notifications');
   const canReadCustomProfiles = useCanRead('custom_profiles'); 
   const canReadPromotions = useCanRead('promotions');
-  const canReadCommissions = useCanRead('commissions'); // NOVO
+  const canReadCommissions = useCanRead('commissions');
   
   // NOVO: Permissão para Planos (Apenas Super Admin)
   const canReadPlans = profile?.is_super_admin;
@@ -125,12 +125,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const [isCompaniesOpen, setIsCompaniesOpen] = useState(
     location.pathname.startsWith('/companies')
   );
+  // NOVO ESTADO: Comissionamento
+  const [isCommissionsOpen, setIsCommissionsOpen] = useState(
+    location.pathname.startsWith('/commissions')
+  );
   
   // 2. Efeito para fechar os submenus quando a barra lateral é colapsada
   useEffect(() => {
     if (isCollapsed) {
       setIsProductsServicesOpen(false);
       setIsCompaniesOpen(false);
+      setIsCommissionsOpen(false); // NOVO
     }
   }, [isCollapsed]);
   
@@ -138,12 +143,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   useEffect(() => {
     const isProductsServicesActive = location.pathname.startsWith('/products') || location.pathname.startsWith('/services');
     const isCompaniesActive = location.pathname.startsWith('/companies');
+    const isCommissionsActive = location.pathname.startsWith('/commissions'); // NOVO
     
     if (isProductsServicesActive && !isCollapsed) {
       setIsProductsServicesOpen(true);
     }
     if (isCompaniesActive && !isCollapsed) {
       setIsCompaniesOpen(true);
+    }
+    if (isCommissionsActive && !isCollapsed) { // NOVO
+      setIsCommissionsOpen(true);
     }
   }, [location.pathname, isCollapsed]);
 
@@ -153,6 +162,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   
   // Verifica se o grupo de Empresas deve ser exibido
   const showCompaniesGroup = canReadCompanies || canReadCustomProfiles || canReadPlans;
+  
+  // Verifica se o grupo de Comissionamento deve ser exibido
+  const showCommissionsGroup = canReadCommissions;
 
 
   return (
@@ -293,13 +305,39 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
           />
         )}
         
-        {canReadCommissions && (
-          <NavItem
-            to="/commissions"
-            icon={<HandCoins className="h-5 w-5" />}
-            label={t('page_title_commissions', { defaultValue: 'Comissionamento' })}
-            {...navItemProps}
-          />
+        {showCommissionsGroup && (
+          <Collapsible open={isCommissionsOpen} onOpenChange={setIsCommissionsOpen} disabled={isCollapsed}>
+            <CollapsibleTrigger 
+              className={cn(
+                "flex items-center justify-between w-full rounded-lg py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                isCollapsed ? "justify-start pl-6 pr-2" : "px-3"
+              )}
+            >
+              <div className={cn("flex items-center", isCollapsed ? "justify-start w-full gap-0" : "gap-3")}>
+                <HandCoins className="h-5 w-5" /> 
+                {!isCollapsed && t('page_title_commissions', { defaultValue: 'Comissionamento' })}
+              </div>
+              {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-1">
+                <NavItem
+                  to="/commissions/rules"
+                  icon={<Tag className="h-5 w-5" />}
+                  label={t('commission_rules_title', { defaultValue: 'Regras de Comissão' })}
+                  isSubItem
+                  {...navItemProps}
+                />
+                <NavItem
+                  to="/commissions/payments"
+                  icon={<DollarSign className="h-5 w-5" />}
+                  label={t('page_title_commission_payments', { defaultValue: 'Pagamentos' })}
+                  isSubItem
+                  {...navItemProps}
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
         
         <Separator className={cn("my-2 bg-sidebar-border", isCollapsed && "mx-auto w-1/2")} />

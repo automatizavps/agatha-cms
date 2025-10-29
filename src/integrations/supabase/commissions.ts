@@ -347,3 +347,24 @@ export const useCommissionRecords = (companyId?: string) => {
     queryFn: () => fetchCommissionRules(companyId),
   });
 };
+
+// --- Update Commission Status (NOVO) ---
+
+export const updateCommissionStatus = async (id: string, status: CommissionRecord['status'], queryClient: QueryClient) => {
+  const { data, error } = await supabase
+    .from("comissionamentos")
+    .update({ status: status })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating commission status:", error);
+    throw new Error(error.message);
+  }
+  
+  // Invalida o relatório para forçar o refresh
+  queryClient.invalidateQueries({ queryKey: ["commissionReport"] });
+
+  return data;
+};

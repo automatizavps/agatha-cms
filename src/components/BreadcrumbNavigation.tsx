@@ -33,7 +33,10 @@ const BreadcrumbNavigation = () => {
     "/appointments": "nav_appointments",
     "/promotions": "page_title_promotions",
     "/companies/profiles": "page_title_custom_profiles",
-    "/companies/plans": "page_title_plans", // NOVO
+    "/companies/plans": "page_title_plans",
+    "/commissions": "page_title_commissions", // Rota pai
+    "/commissions/rules": "commission_rules_title", // Rota filha
+    "/commissions/payments": "page_title_commission_payments", // Rota filha
   };
 
   // Se estiver na raiz, não exibe breadcrumbs
@@ -49,7 +52,7 @@ const BreadcrumbNavigation = () => {
             <Link to="/" className="flex items-center gap-1">
               <Home className="h-4 w-4" />
               {t('nav_home')}
-            </Link>
+            </BreadcrumbLink>
           </BreadcrumbLink>
         </BreadcrumbItem>
         

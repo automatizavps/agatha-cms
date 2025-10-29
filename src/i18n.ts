@@ -243,7 +243,6 @@ const resources = {
       "no_promotion": "Nenhuma Promoção",
       "loading_promotions": "Carregando promoções...",
       "promotion_applied": "Promoção \"{{promoName}}\" aplicada: {{discount}}% de desconto.",
-      "remove_promotion": "Remover promoção",
       "promotion_not_applicable_title": "Promoção Não Aplicável",
       "promotion_not_applicable_description": "Os itens selecionados não se qualificam para a promoção \"{{promoName}}\". Por favor, revise os itens ou selecione outra promoção.",
       
@@ -272,7 +271,14 @@ const resources = {
       
       // COMISSIONAMENTO (NOVO)
       "page_title_commissions": "Comissionamento",
-      "commission_rules_title": "Regras de Comissionamento",
+      "commission_rules_title": "Regras de Comissão", // ALTERADO
+      "page_title_commission_payments": "Pagamentos", // NOVO
+      "commission_payments_title": "Registros de Pagamento", // NOVO
+      "total_pending_commission": "Valor Total Pendente", // NOVO
+      "mark_as_paid": "Marcar como Pago", // NOVO
+      "mark_as_canceled": "Marcar como Cancelado", // NOVO
+      "commission_status_updated_success": "Status da comissão atualizado para {{status}}.", // NOVO
+      "confirm_change_status": "Tem certeza que deseja alterar o status para {{status}}?", // NOVO
       "add_new_commission_rule": "Nova Regra de Comissão",
       "no_commission_rules_found": "Nenhuma regra de comissionamento encontrada.",
       "commission_search_placeholder": "Buscar por entidade ou tipo...",
@@ -287,15 +293,15 @@ const resources = {
       "commission_rule_deleted_success": "Regra de comissionamento excluída com sucesso!",
       "fixo": "Fixo",
       "percentual": "Percentual",
-      "commission_report_title": "Relatório de Comissionamento", // NOVO
-      "commission_report_search_placeholder": "Buscar por usuário ou referência...", // NOVO
-      "report_total_commission_value": "Valor Total de Comissões", // NOVO
-      "commission_table_header_user": "Usuário", // NOVO
-      "commission_table_header_type": "Tipo", // NOVO
-      "commission_table_header_reference": "Referência", // NOVO
-      "no_commission_records_found": "Nenhum registro de comissão encontrado.", // NOVO
-      "paid": "Pago", // NOVO
-      "pending": "Pendente", // NOVO
+      "commission_report_title": "Relatório de Comissionamento",
+      "commission_report_search_placeholder": "Buscar por usuário ou referência...",
+      "report_total_commission_value": "Valor Total de Comissões",
+      "commission_table_header_user": "Usuário",
+      "commission_table_header_type": "Tipo",
+      "commission_table_header_reference": "Referência",
+      "no_commission_records_found": "Nenhum registro de comissão encontrado.",
+      "paid": "Pago",
+      "pending": "Pendente",
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -430,7 +436,7 @@ const resources = {
       "item": "Item",
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
       "add_new_appointment": "Novo Agendamento",
-      "search_item": "Buscar item...", // NOVO
+      "search_item": "Buscar item...",
       
       // Relatórios (Reports)
       "select_date_range": "Selecionar período",
