@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered, ShoppingCart, AlertTriangle } from "lucide-react";
+import { CalendarCheck, Clock, Users, Loader2, Target, DollarSign, Package, Building, ListOrdered, ShoppingCart, AlertTriangle, ShieldCheck } from "lucide-react";
 import { useAppointmentMetrics } from "@/integrations/supabase/useAppointmentMetrics";
 import { useTeams } from "@/integrations/supabase/teams";
 import TeamGoalsCard from "@/components/TeamGoalsCard";
@@ -22,6 +22,7 @@ import LatestAppointmentsCarousel from "@/components/LatestAppointmentsCarousel"
 import LatestOrdersCarousel from "@/components/LatestOrdersCarousel"; // NOVO IMPORT
 import TopClientsByOrdersCard from "@/components/TopClientsByOrdersCard"; // NOVO IMPORT
 import TopClientsByAppointmentsCard from "@/components/TopClientsByAppointmentsCard"; // NOVO IMPORT
+import { Badge } from "@/components/ui/badge"; // NOVO IMPORT
 
 const Index = () => {
   const { t } = useTranslation();
@@ -70,12 +71,23 @@ const Index = () => {
     }
     return <div className="text-xl font-bold">{value}</div>;
   };
+  
+  // Obtém o nome do plano da empresa do usuário logado
+  const userPlanName = profile?.empresas?.planos?.nome;
 
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        {/* Ajustado para text-2xl no mobile e text-2xl no desktop */}
-        <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('dashboard_title')}</h1>
+        {/* Título do Dashboard com o Badge do Plano */}
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('dashboard_title')}</h1>
+          {userPlanName && !isSuperAdmin && (
+            <Badge variant="secondary" className="text-sm font-semibold bg-primary/10 text-primary border border-primary/50">
+              <ShieldCheck className="h-4 w-4 mr-1" />
+              {userPlanName}
+            </Badge>
+          )}
+        </div>
         
         {/* Filtro de Empresa (Apenas Super Admin) */}
         {isSuperAdmin && (
