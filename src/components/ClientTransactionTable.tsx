@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Loader2, CalendarIcon, Filter, User, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
+import { Loader2, CalendarIcon, Filter, User, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, ListOrdered } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUsers } from "@/integrations/supabase/users";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useClientTransactions } from "@/integrations/supabase/clientHistory";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // IMPORTAÇÃO CORRIGIDA
 
 type TransactionType = 'Pedido' | 'Agendamento';
 type SortKey = 'data_transacao' | 'tipo_transacao' | 'valor_total' | 'responsavel_nome' | 'status';
