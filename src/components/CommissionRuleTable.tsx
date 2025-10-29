@@ -109,7 +109,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 
   return (
     <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className="flex items-center gap-1">
+      <div className={cn("flex items-center gap-1", className?.includes('text-right') && "justify-end", className?.includes('text-center') && "justify-center")}>
         {children}
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
