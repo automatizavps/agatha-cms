@@ -387,7 +387,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                 className="text-center"
               >
                 Status
-              </TableHead>
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -450,6 +450,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
       )}
     </>
   );
+  
 };
 
 export default CompanyTable;
