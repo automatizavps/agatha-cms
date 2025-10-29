@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { UserProfile, deleteUser } from "@/integrations/supabase/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building, ArrowUpDown, ArrowUp, ArrowDown, Mail } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +37,7 @@ interface UserActionsProps {
   canWrite: boolean; // NOVO
 }
 
-type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil';
+type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil' | 'email';
 type SortDirection = 'asc' | 'desc';
 
 const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => {
@@ -184,6 +184,10 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
           aValue = a.perfis?.nome || '';
           bValue = b.perfis?.nome || '';
           break;
+        case 'email':
+          aValue = a.email || '';
+          bValue = b.email || '';
+          break;
         default:
           return 0;
       }
@@ -215,6 +219,15 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
                 onSort={handleSort}
               >
                 {t('user_table_header_name')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="email" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden sm:table-cell"
+              >
+                {t('profile_email')}
               </SortableHeader>
               <SortableHeader 
                 sortKey="empresa" 
@@ -272,6 +285,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
                   </Avatar>
                 </TableCell>
                 <TableCell className="font-medium">{user.nome_completo}</TableCell>
+                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    {user.email || 'N/A'}
+                  </div>
+                </TableCell>
                 <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Building className="h-3 w-3" />

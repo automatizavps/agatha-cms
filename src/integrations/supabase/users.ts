@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { createNotification } from "./notifications"; // Importando createNotification
 import { QueryClient } from "@tanstack/react-query"; // Importando QueryClient
+import { useSession } from "./auth"; // Importando useSession
 
 export interface UserProfile {
   id: string;
@@ -21,20 +22,49 @@ export interface UserProfile {
   } | null;
 }
 
-const fetchUsers = async (): Promise<UserProfile[]> => {
-  // Query para buscar usuários, nome da empresa e nome do perfil customizado
-  const { data, error } = await supabase
+// Função auxiliar para buscar e-mails em lote
+const fetchEmailsInBatch = async (userIds: string[], accessToken: string): Promise<Record<string, string>> => {
+  if (userIds.length === 0) return {};
+  
+  const { data, error } = await supabase.functions.invoke("get-users-emails", {
+    body: { userIds },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (error) {
+    console.error("Error fetching user emails in batch:", error);
+    throw new Error(error.message);
+  }
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data.emails || {};
+};
+
+
+const fetchUsers = async (accessToken: string): Promise<UserProfile[]> => {
+  // 1. Buscar dados básicos do usuário (RLS já filtra por empresa)
+  const { data: usersData, error: fetchError } = await supabase
     .from("usuarios")
     .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, perfis:perfis_customizados (nome), empresa:empresas (nome)")
     .order("nome_completo", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching users:", error);
-    throw new Error("Failed to fetch users: " + error.message);
+  if (fetchError) {
+    console.error("Error fetching users:", fetchError);
+    throw new Error("Failed to fetch users: " + fetchError.message);
   }
   
-  // Mapeamos os dados, definindo o email como 'N/A' na lista
-  return data.map(user => {
+  const userIds = usersData.map(u => u.id);
+  
+  // 2. Buscar e-mails em lote
+  const emailMap = await fetchEmailsInBatch(userIds, accessToken);
+  
+  // 3. Mapear e-mails e perfis
+  return usersData.map(user => {
     let profileName = user.perfis?.nome;
     
     // Se não houver perfil customizado, determinamos o perfil global
@@ -53,7 +83,7 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
     
     return {
       ...user,
-      email: 'N/A', // O email real será buscado no EditUserSheet
+      email: emailMap[user.id] || 'N/A', // Adiciona o email
       // Mapeia o nome do perfil
       perfis: { nome: profileName || 'N/A' },
     };
@@ -61,9 +91,13 @@ const fetchUsers = async (): Promise<UserProfile[]> => {
 };
 
 export const useUsers = () => {
+  const { session, isLoading: isAuthLoading } = useSession();
+  const accessToken = session?.access_token;
+  
   return useQuery<UserProfile[], Error>({
     queryKey: ["users"],
-    queryFn: fetchUsers,
+    queryFn: () => fetchUsers(accessToken!),
+    enabled: !!accessToken && !isAuthLoading,
   });
 };
 
