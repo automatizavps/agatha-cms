@@ -27,7 +27,6 @@ import { ptBR } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // NOVO IMPORT
 
 interface OrderTableProps {
   orders: Order[];
@@ -174,7 +173,6 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectChange, canWrite }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const { data: profile } = useCurrentUserProfile();
   const [sortKey, setSortKey] = useState<SortKey>('data');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { t } = useTranslation();
@@ -286,7 +284,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                   disabled={!canWrite}
                 />
               </TableHead>
-              <TableHead className="w-[50px]">Avatar</TableHead> {/* NOVO: Coluna para Avatar */}
               <SortableHeader 
                 sortKey="id" 
                 currentSortKey={sortKey} 
@@ -359,15 +356,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                     onCheckedChange={(checked) => handleSelectRow(order.id, !!checked)}
                     disabled={!canWrite}
                   />
-                </TableCell>
-                {/* NOVO: Avatar do Cliente */}
-                <TableCell>
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={order.clientes?.avatar_url || undefined} alt={order.clientes?.nome} className="object-cover" />
-                    <AvatarFallback className="text-xs">
-                      {order.clientes?.nome ? order.clientes.nome.slice(0, 2).toUpperCase() : 'C'}
-                    </AvatarFallback>
-                  </Avatar>
                 </TableCell>
                 <TableCell className="font-medium text-xs text-muted-foreground">
                   {order.id.slice(0, 8)}

@@ -20,7 +20,6 @@ import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCanWrite } from "@/hooks/use-module-permission";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // NOVO IMPORT
 
 const PAGE_SIZES = [20, 50, 100];
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado']; // REINTRODUZIDO
@@ -258,7 +257,7 @@ const Orders = () => {
             </Button>
           </div>
           
-          {/* Barra de Ações em Massa (NOVA POSIÇÃO) */}
+          {/* Barra de Ações em Massa */}
           {canWriteOrders && selectedOrderIds.size > 0 && (
             <div className={cn(
               "mb-4 p-3 border border-destructive/50 shadow-lg rounded-lg transition-all duration-300",
@@ -318,7 +317,7 @@ const Orders = () => {
                   <span className="text-sm text-muted-foreground whitespace-nowrap">
                     {t('page_info', { 
                       current: currentPage, 
-                      total: totalCount > 0 ? totalPages : 0, // Garante que totalPages não seja NaN se totalCount for 0
+                      total: totalPages, 
                       start: finalStart,
                       end: finalEnd,
                       count: totalCount
@@ -397,19 +396,11 @@ const Orders = () => {
             </>
           ) : (
             <div className="text-center p-4 text-muted-foreground">
-              {t('no_data_found')}
+              {searchTerm ? t('no_data_found') : t('no_orders_found')}
             </div>
           )}
         </CardContent>
       </Card>
-      
-      {editingAppointment && (
-        <EditAppointmentSheet 
-          appointment={editingAppointment} 
-          isOpen={isEditSheetOpen} 
-          onOpenChange={handleCloseEditSheet} 
-        />
-      )}
     </DashboardLayout>
   );
 };
