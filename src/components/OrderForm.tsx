@@ -137,7 +137,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     resolver: zodResolver(finalFormSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
-      responsavel_id: defaultValues?.responsavel_id || "", // NOVO DEFAULT
+      // CORREÇÃO: Inicializa responsavel_id como string vazia se não estiver editando
+      responsavel_id: defaultValues?.responsavel_id || "", 
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
       empresa_id: defaultValues?.empresa_id || "",
@@ -324,6 +325,10 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const shouldShowCompanyField = isSuperAdmin || isEditing;
   
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
+  
+  // NOVO: Verifica se o formulário está inválido (apenas na criação)
+  const isFormInvalid = !isEditing && (!form.formState.isValid || !form.watch('cliente_id') || !form.watch('responsavel_id') || form.watch('items')?.length === 0);
+
 
   if (isCheckingPermissions) {
     return (
@@ -478,7 +483,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('order_list_title')}</CardTitle>
-            {/* REMOVIDO O BOTÃO DAQUI */}
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => {
@@ -704,7 +708,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           </span>
         </div>
         
-        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing) || isFormInvalid}
+        >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
