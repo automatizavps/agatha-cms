@@ -76,35 +76,40 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   const isSuperAdmin = currentProfile?.is_super_admin;
   const isCheckingPermissions = isLoadingCurrentProfile || (isSuperAdmin && isLoadingCompanies);
 
-  // Ajusta o schema dinamicamente: 
-  let finalFormSchema = baseFormSchema;
-  
-  if (isEditing) {
-    finalFormSchema = finalFormSchema.extend({
-      email: z.string().optional(),
-      empresa_id: isSuperAdmin 
-        ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
-        : z.string().optional().nullable(),
-      perfil_id: z.string().min(1, { message: t("select_profile") }),
-      password: z.string().optional(),
-      confirmPassword: z.string().optional(),
-    });
-  } else {
-    // Na CRIAÇÃO, a senha é obrigatória e deve ter pelo menos 6 caracteres
-    finalFormSchema = finalFormSchema.extend({
-      password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
-      confirmPassword: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
-    });
+  // --- Lógica de Definição do Schema (Corrigida) ---
+  const finalFormSchema = useMemo(() => {
+    let schema = baseFormSchema;
     
-    if (isSuperAdmin) {
-      // Na criação, Super Admin deve selecionar a empresa
-      finalFormSchema = finalFormSchema.extend({
-          empresa_id: z.string().uuid({
-            message: t("select_valid_company"),
-          }).min(1, { message: t("company_required_super_admin") }),
-        });
+    if (isEditing) {
+      // Na EDIÇÃO: Email é opcional, Senha é opcional (para não alterar)
+      schema = schema.extend({
+        email: z.string().email({ message: "Insira um email válido." }).optional(),
+        empresa_id: isSuperAdmin 
+          ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
+          : z.string().optional().nullable(),
+        perfil_id: z.string().min(1, { message: t("select_profile") }),
+        password: z.string().optional(),
+        confirmPassword: z.string().optional(),
+      });
+    } else {
+      // Na CRIAÇÃO: Email é obrigatório, Senha é obrigatória (min 6)
+      schema = schema.extend({
+        password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+        confirmPassword: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+      });
+      
+      if (isSuperAdmin) {
+        // Na criação, Super Admin deve selecionar a empresa
+        schema = schema.extend({
+            empresa_id: z.string().uuid({
+              message: t("select_valid_company"),
+            }).min(1, { message: t("company_required_super_admin") }),
+          });
+      }
     }
-  }
+    return schema;
+  }, [isEditing, isSuperAdmin, t]);
+  // --- Fim da Lógica de Definição do Schema ---
 
 
   const form = useForm<UserFormValues>({
