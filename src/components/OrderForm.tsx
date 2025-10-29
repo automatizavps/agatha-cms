@@ -558,7 +558,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         <div className="flex justify-between items-center pt-2">
           <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
           <span className="text-2xl font-bold text-primary flex items-center gap-1">
-            {/* REMOVIDO O ÍCONE DollarSign */}
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
             {isPromotionValid && activePromotion && activePromotion.desconto_percentual > 0 && (
               <span className="text-base text-green-500 ml-2">
