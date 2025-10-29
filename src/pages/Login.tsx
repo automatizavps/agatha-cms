@@ -50,7 +50,7 @@ function Login() {
           <div className="flex items-center justify-center mb-6">
             <Bot className="h-8 w-8 text-primary mr-3" /> {/* Usando o componente Bot */}
             <h2 className="text-2xl font-bold text-center tracking-tight">
-              {t('app_name', { defaultValue: 'Dyad Manager' })}
+              {t('app_name', { defaultValue: 'AGATHA IA' })}
             </h2>
           </div>
           

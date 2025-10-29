@@ -139,13 +139,13 @@ const resources = {
       "unknown_profile": "Perfil Desconhecido",
       
       "page_title_companies": "Gestão de Empresas",
-      "company_list_title": "Lista de Empresas",
+      "company_list_title": "Empresas",
       "add_new_company": "Nova Empresa",
       "no_companies_found": "Nenhuma empresa cadastrada.",
       "company_form_description": "Preencha os detalhes para cadastrar uma nova empresa.",
       
       "page_title_clients": "Gestão de Clientes",
-      "client_list_title": "Lista de Clientes",
+      "client_list_title": "Clientes",
       "add_new_client": "Novo Cliente",
       "client_search_placeholder": "Buscar por nome, email, telefone ou endereço...",
       "filter_all_companies": "Todas as Empresas",
@@ -199,7 +199,7 @@ const resources = {
       "create_service": "Cadastrar Serviço",
       
       // CATEGORIAS ADICIONADAS
-      "page_title_categories": "Gestão de Categorias",
+      "page_title_categories": "Categorias",
       "category_list_title": "Lista de Categorias",
       "add_new_category": "Nova Categoria",
       "no_categories_found": "Nenhuma categoria encontrada.",
@@ -215,7 +215,7 @@ const resources = {
       "select_category_placeholder": "Selecione ou deixe vazio",
       
       // PROMOÇÕES (NOVO)
-      "page_title_promotions": "Gestão de Promoções",
+      "page_title_promotions": "Promoções",
       "promotion_list_title": "Lista de Promoções",
       "add_new_promotion": "Nova Promoção",
       "no_promotions_found": "Nenhuma promoção encontrada.",
@@ -255,7 +255,7 @@ const resources = {
       "promotion_not_applicable_description": "Os itens selecionados não se qualificam para a promoção \"{{promoName}}\". Por favor, revise os itens ou selecione outra promoção.",
       
       // PLANOS (NOVO)
-      "page_title_plans": "Gestão de Planos",
+      "page_title_plans": "Planos",
       "plan_list_title": "Lista de Planos de Assinatura",
       "add_new_plan": "Novo Plano",
       "no_plans_found": "Nenhum plano de assinatura encontrado.",
@@ -337,7 +337,7 @@ const resources = {
       "page_subtitle_profile": "Visualize e gerencie suas informações de conta.",
       "profile_personal_info": "Informações Pessoais",
       "profile_full_name": "Nome Completo",
-      "profile_email": "Email",
+      "profile_email": "E-mail",
       "profile_role": "Perfil de Acesso",
       "profile_company_id": "ID da Empresa",
       
@@ -471,9 +471,9 @@ const resources = {
       "login_hero_title": "Gerencie seu negócio com eficiência e estilo.",
       "login_hero_subtitle": "Simplifique agendamentos, pedidos e estoque em uma única plataforma intuitiva.",
       "login_welcome": "Bem-vindo(a) de volta!",
-      "email_label": "Email",
+      "email_label": "E-mail",
       "password_label": "Senha",
-      "email_placeholder": "Seu email",
+      "email_placeholder": "Seu e-mail",
       "password_placeholder": "••••••••",
       "sign_in_button": "Entrar",
       "signing_in": "Entrando...",
