@@ -17,6 +17,7 @@ interface DateRange {
 
 interface OrderReport extends Omit<Order, 'pedido_itens'> {
   pedido_itens: OrderItem[];
+  empresas: { nome: string } | null; // NOVO: Adicionado empresas
 }
 
 const fetchOrderReport = async (companyId: string | undefined, filters: DateRange): Promise<OrderReport[]> => {
@@ -30,6 +31,7 @@ const fetchOrderReport = async (companyId: string | undefined, filters: DateRang
       status,
       created_at,
       clientes (nome, email, telefone, endereco_completo),
+      empresas (nome),
       pedido_itens (
         id,
         produto_id,
@@ -78,6 +80,7 @@ export const useOrderReport = (companyId: string | undefined, filters: DateRange
 
 interface AppointmentReport extends Omit<Appointment, 'agendamento_itens'> {
   agendamento_itens: AppointmentItem[];
+  empresas: { nome: string } | null; // NOVO: Adicionado empresas
 }
 
 const fetchAppointmentReport = async (companyId: string | undefined, filters: DateRange): Promise<AppointmentReport[]> => {
@@ -93,6 +96,7 @@ const fetchAppointmentReport = async (companyId: string | undefined, filters: Da
       created_at,
       clientes (nome, email, telefone, endereco_completo),
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
+      empresas (nome),
       agendamento_itens (
         id,
         produto_id,
@@ -252,6 +256,52 @@ export const useCompanyReport = () => {
   return useQuery<Company[], Error>({
     queryKey: ["companyReport"],
     queryFn: fetchCompanyReport,
+    enabled: true,
+  });
+};
+
+// --- Fetch de Comissionamentos para Relatório ---
+
+interface CommissionRecordReport extends CommissionRecord {
+  empresas: { nome: string } | null; // Adicionado empresas
+}
+
+const fetchCommissionRecordsReport = async (companyId: string | undefined): Promise<CommissionRecordReport[]> => {
+  let query = supabase
+    .from("comissionamentos")
+    .select(`
+      id,
+      usuario_id,
+      referencia_id,
+      tipo_referencia,
+      valor_comissao,
+      status,
+      created_at,
+      usuarios (nome_completo),
+      empresas (nome)
+    `);
+    
+  if (companyId) {
+    query = query.eq('empresa_id', companyId);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching commission records report:", error);
+    throw new Error("Failed to fetch commission records report: " + error.message);
+  }
+  
+  return data.map(c => ({
+    ...c,
+    valor_comissao: parseFloat(String(c.valor_comissao)) || 0,
+  })) as CommissionRecordReport[];
+};
+
+export const useCommissionReport = (companyId: string | undefined) => {
+  return useQuery<CommissionRecordReport[], Error>({
+    queryKey: ["commissionReport", companyId],
+    queryFn: () => fetchCommissionRecordsReport(companyId),
     enabled: true,
   });
 };

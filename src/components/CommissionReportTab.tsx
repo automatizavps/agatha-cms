@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
 import { useDashboardFilter } from '@/hooks/useDashboardFilter';
-import { useCommissionRecords, CommissionRecord } from '@/integrations/supabase/commissions';
+import { useCommissionReport, CommissionRecord } from '@/integrations/supabase/reportHooks'; // Alterado para useCommissionReport
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -13,21 +13,30 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import ExportButton from './ExportButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { showError } from '@/utils/toast';
+import { useCompanies } from '@/integrations/supabase/companies';
 
 const statusOptions: CommissionRecord['status'][] = ['pendente', 'pago', 'cancelado'];
 
 const CommissionReportTab: React.FC = () => {
   const { t } = useTranslation();
-  const { filteredCompanyId, isLoadingFilter, isSuperAdmin } = useDashboardFilter();
+  const { 
+    filteredCompanyId, 
+    isLoadingFilter, 
+    isSuperAdmin, 
+    selectedCompanyId, 
+    setSelectedCompanyId 
+  } = useDashboardFilter();
+  
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   
   // Estados de Filtro
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<CommissionRecord['status'] | 'all'>('all');
 
-  // Hook de Dados
-  const { data: records, isLoading, isError, error, refetch, isRefetching } = useCommissionRecords(filteredCompanyId);
+  // Hook de Dados (usando filteredCompanyId)
+  const { data: records, isLoading, isError, error, refetch, isRefetching } = useCommissionReport(filteredCompanyId);
   
-  const isDataLoading = isLoading || isLoadingFilter;
+  const isDataLoading = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
   const filteredRecords = useMemo(() => {
     if (!records) return [];
@@ -44,7 +53,8 @@ const CommissionReportTab: React.FC = () => {
       filtered = filtered.filter(record => 
         record.usuarios?.nome_completo.toLowerCase().includes(lowerCaseSearch) ||
         record.referencia_id.slice(0, 8).toLowerCase().includes(lowerCaseSearch) ||
-        record.tipo_referencia.toLowerCase().includes(lowerCaseSearch)
+        record.tipo_referencia.toLowerCase().includes(lowerCaseSearch) ||
+        (record.empresas?.nome && record.empresas.nome.toLowerCase().includes(lowerCaseSearch)) // NOVO: Busca por empresa
       );
     }
 
@@ -83,12 +93,13 @@ const CommissionReportTab: React.FC = () => {
       Usuario: record.usuarios?.nome_completo || 'N/A',
       Tipo_Referencia: record.tipo_referencia.toUpperCase(),
       ID_Referencia: record.referencia_id,
+      Empresa: record.empresas?.nome || 'N/A', // Adicionado Empresa
     }));
   }, [filteredRecords]);
 
 
   if (isError && error) {
-    showError(t("error_loading_data") + ": " + error.message);
+    // Removido showError para evitar loop infinito, o erro é tratado no componente pai
   }
 
   return (
@@ -102,6 +113,30 @@ const CommissionReportTab: React.FC = () => {
         
         {/* Filtros e Ações */}
         <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+          
+          {/* Filtro de Empresa (Apenas para Super Admin) */}
+          {isSuperAdmin && (
+            <div className="w-full md:w-48">
+              <Select 
+                onValueChange={(value) => setSelectedCompanyId(value)} 
+                value={selectedCompanyId} 
+                disabled={isLoadingCompanies || isDataLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder={t('filter_all_companies')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                  {companies?.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           {/* Filtro de Status */}
           <Select onValueChange={(val) => setStatusFilter(val as CommissionRecord['status'] | 'all')} value={statusFilter} disabled={isDataLoading}>
@@ -183,6 +218,7 @@ const CommissionReportTab: React.FC = () => {
                   <TableHead className="hidden md:table-cell">{t('commission_table_header_reference', { defaultValue: 'Referência' })}</TableHead>
                   <TableHead className="text-right">{t('commission_value', { defaultValue: 'Valor' })}</TableHead>
                   <TableHead className="text-center">{t('order_table_header_status')}</TableHead>
+                  {isSuperAdmin && <TableHead className="hidden xl:table-cell">{t('user_table_header_company')}</TableHead>}
                   <TableHead className="hidden lg:table-cell">{t('order_table_header_date')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -202,6 +238,11 @@ const CommissionReportTab: React.FC = () => {
                     <TableCell className="text-center">
                       {getStatusBadge(record.status)}
                     </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                        {record.empresas?.nome || 'N/A'}
+                      </TableCell>
+                    )}
                     <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                       {format(new Date(record.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                     </TableCell>

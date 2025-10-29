@@ -114,7 +114,7 @@ const OrderReportTab: React.FC = () => {
 
 
   if (isError && error) {
-    showError(t("error_loading_data") + ": " + error.message);
+    // Removido showError para evitar loop infinito, o erro é tratado no componente pai
   }
 
   return (
@@ -267,6 +267,7 @@ const OrderReportTab: React.FC = () => {
                   <TableHead className="text-right">{t('order_table_header_total')}</TableHead>
                   <TableHead className="text-center">{t('order_table_header_status')}</TableHead>
                   <TableHead className="hidden lg:table-cell">{t('order_list_title')}</TableHead>
+                  {isSuperAdmin && <TableHead className="hidden xl:table-cell">{t('user_table_header_company')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -292,6 +293,11 @@ const OrderReportTab: React.FC = () => {
                         `${item.produtos?.nome || 'N/A'} (x${item.quantidade})`
                       ).join(', ')}
                     </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                        {order.empresas?.nome || 'N/A'}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

@@ -10,10 +10,20 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ExportButton from './ExportButton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Importado
+import { useCompanies } from '@/integrations/supabase/companies'; // Importado
 
 const ClientReportTab: React.FC = () => {
   const { t } = useTranslation();
-  const { filteredCompanyId, isLoadingFilter, isSuperAdmin } = useDashboardFilter();
+  const { 
+    filteredCompanyId, 
+    isLoadingFilter, 
+    isSuperAdmin, 
+    selectedCompanyId, 
+    setSelectedCompanyId 
+  } = useDashboardFilter();
+  
+  const { data: companies, isLoading: isLoadingCompanies } = useCompanies(); // Novo
   
   // Estados de Filtro
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,7 +31,7 @@ const ClientReportTab: React.FC = () => {
   // Hook de Dados
   const { data: clients, isLoading, isError, error, refetch, isRefetching } = useClientReport(filteredCompanyId);
   
-  const isDataLoading = isLoading || isLoadingFilter;
+  const isDataLoading = isLoading || isLoadingFilter || (isSuperAdmin && isLoadingCompanies);
 
   const filteredClients = useMemo(() => {
     if (!clients) return [];
@@ -58,7 +68,7 @@ const ClientReportTab: React.FC = () => {
 
 
   if (isError && error) {
-    showError(t("error_loading_data") + ": " + error.message);
+    // Removido showError para evitar loop infinito, o erro é tratado no componente pai
   }
 
   return (
@@ -72,6 +82,30 @@ const ClientReportTab: React.FC = () => {
         
         {/* Filtros e Ações */}
         <div className="flex flex-col md:flex-row items-start md:items-center mb-4 gap-3 flex-wrap">
+          
+          {/* Filtro de Empresa (Apenas para Super Admin) */}
+          {isSuperAdmin && (
+            <div className="w-full md:w-48">
+              <Select 
+                onValueChange={(value) => setSelectedCompanyId(value)} 
+                value={selectedCompanyId} 
+                disabled={isLoadingCompanies || isDataLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder={t('filter_all_companies')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter_all_companies')}</SelectItem>
+                  {companies?.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           {/* Campo de Busca Textual */}
           <div className="relative w-full max-w-sm md:max-w-none md:flex-1">
