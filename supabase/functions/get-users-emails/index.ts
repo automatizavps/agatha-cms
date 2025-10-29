@@ -19,7 +19,7 @@ serve(async (req) => {
     });
   };
 
-  // 1. Inicializar cliente Admin
+  // 1. Inicializar cliente Admin (Service Role Key)
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -31,7 +31,7 @@ serve(async (req) => {
     },
   );
 
-  // 2. Autenticação (Verificar se o usuário está logado)
+  // 2. Autenticação (Verificar se o usuário está logado - usando o token do cliente)
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return returnError("Unauthorized: Missing Authorization header", 401);
@@ -60,30 +60,28 @@ serve(async (req) => {
   // 4. Buscar os dados de autenticação em lote
   const emailMap: Record<string, string> = {};
   
-  // Nota: O Supabase Admin SDK não tem uma função 'getUsersByIds' em lote.
-  // Precisamos iterar, mas como estamos em uma Edge Function, isso é muito mais rápido
-  // do que fazer as chamadas do cliente.
-  
-  for (const userId of userIds) {
+  // Usamos Promise.all para buscar os usuários em paralelo
+  const fetchPromises = userIds.map(async (userId: string) => {
     try {
       const { data: userData, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(userId);
       
       if (fetchError) {
         console.warn(`Warning: Failed to fetch auth user ${userId}: ${fetchError.message}`);
-        emailMap[userId] = "Erro ao buscar";
-        continue;
+        return { userId, email: "Erro ao buscar" };
       }
       
-      if (userData.user?.email) {
-        emailMap[userId] = userData.user.email;
-      } else {
-        emailMap[userId] = "N/A";
-      }
+      return { userId, email: userData.user?.email || "N/A" };
     } catch (e) {
       console.error(`Error processing user ${userId}:`, e);
-      emailMap[userId] = "Erro interno";
+      return { userId, email: "Erro interno" };
     }
-  }
+  });
+  
+  const results = await Promise.all(fetchPromises);
+  
+  results.forEach(result => {
+    emailMap[result.userId] = result.email;
+  });
 
   return new Response(JSON.stringify({ emails: emailMap }), {
     status: 200,
