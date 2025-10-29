@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany, updateCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2, AlertTriangle, ShieldCheck, Calendar } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2, AlertTriangle, ShieldCheck, Calendar, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge"; // IMPORTAÇÃO CORRIGIDA
 import { format, isPast, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // IMPORTADO AQUI
+import CompanyDetailsDialog from "./CompanyDetailsDialog"; // NOVO IMPORT
 
 interface CompanyTableProps {
   companies: Company[];
@@ -37,6 +38,7 @@ interface CompanyTableProps {
 interface CompanyActionsProps {
   company: Company;
   onEdit: (company: Company) => void;
+  onViewDetails: (company: Company) => void; // NOVO
   isSuperAdmin: boolean;
   canWrite: boolean; // NOVO
 }
@@ -44,7 +46,7 @@ interface CompanyActionsProps {
 type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj' | 'is_active' | 'plano' | 'vigencia';
 type SortDirection = 'asc' | 'desc';
 
-const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSuperAdmin, canWrite }) => {
+const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, onViewDetails, isSuperAdmin, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
@@ -87,7 +89,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
     },
   });
 
-  if (!canWrite) {
+  if (!isSuperAdmin) {
     return null;
   }
 
@@ -120,6 +122,11 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+        
+        <DropdownMenuItem onClick={() => onViewDetails(company)}>
+          <Eye className="mr-2 h-4 w-4" /> {t('view_details')}
+        </DropdownMenuItem>
+        
         <DropdownMenuItem onClick={() => onEdit(company)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
@@ -234,6 +241,11 @@ const getPlanVigencyStatus = (company: Company) => {
 const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  
+  // NOVO ESTADO para o modal de detalhes
+  const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  
   const [sortKey, setSortKey] = useState<SortKey>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { data: profile } = useCurrentUserProfile();
@@ -246,11 +258,23 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
     setEditingCompany(company);
     setIsEditSheetOpen(true);
   };
+  
+  const handleViewDetails = (company: Company) => {
+    setViewingCompany(company);
+    setIsDetailsDialogOpen(true);
+  };
 
   const handleCloseEditSheet = (open: boolean) => {
     setIsEditSheetOpen(open);
     if (!open) {
       setEditingCompany(null);
+    }
+  };
+  
+  const handleCloseDetailsDialog = (open: boolean) => {
+    setIsDetailsDialogOpen(open);
+    if (!open) {
+      setViewingCompany(null);
     }
   };
   
@@ -434,7 +458,13 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} canWrite={canWrite} />
+                  <CompanyActions 
+                    company={company} 
+                    onEdit={handleEdit} 
+                    onViewDetails={handleViewDetails} // NOVO
+                    isSuperAdmin={isSuperAdmin || false} 
+                    canWrite={canWrite} 
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -447,6 +477,15 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
           company={editingCompany} 
           isOpen={isEditSheetOpen} 
           onOpenChange={handleCloseEditSheet} 
+        />
+      )}
+      
+      {/* NOVO: Modal de Detalhes da Empresa */}
+      {viewingCompany && (
+        <CompanyDetailsDialog
+          company={viewingCompany}
+          isOpen={isDetailsDialogOpen}
+          onOpenChange={handleCloseDetailsDialog}
         />
       )}
     </>
