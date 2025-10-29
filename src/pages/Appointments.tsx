@@ -4,7 +4,7 @@ import { useAppointments, Appointment, deleteAppointment, useAppointmentItems, d
 import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown, Search, RefreshCw, CalendarIcon, Filter } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns"; // Importando isToday
 import { ptBR } from "date-fns/locale";
 import AddAppointmentSheet from "@/components/AddAppointmentSheet";
 import {
@@ -595,7 +595,9 @@ const Appointments = () => {
                     <TableRow 
                       key={appointment.id}
                       className={cn(
-                        selectedAppointmentIds.has(appointment.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30"
+                        selectedAppointmentIds.has(appointment.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30",
+                        // NOVO: Destaque para agendamentos do dia atual
+                        isToday(new Date(appointment.data_hora)) && "bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20"
                       )}
                     >
                       {/* Checkbox Cell */}
