@@ -6,46 +6,82 @@ import ServiceReportTab from "@/components/ServiceReportTab";
 import ClientReportTab from "@/components/ClientReportTab";
 import TeamReportTab from "@/components/TeamReportTab";
 import CompanyReportTab from "@/components/CompanyReportTab";
+import CommissionReportTab from "@/components/CommissionReportTab"; // NOVO IMPORT
+import { useCanRead } from "@/hooks/use-module-permission"; // Importando useCanRead
 
 const Analytics = () => {
   const { t } = useTranslation();
   
+  // Permissões para as abas
+  const canReadOrders = useCanRead('orders');
+  const canReadAppointments = useCanRead('appointments');
+  const canReadClients = useCanRead('clients');
+  const canReadTeams = useCanRead('teams');
+  const canReadCompanies = useCanRead('companies');
+  const canReadCommissions = useCanRead('commissions'); // NOVO
+  
+  // Determina a primeira aba visível como padrão
+  const defaultTab = canReadOrders ? 'orders' : 
+                     canReadAppointments ? 'services' : 
+                     canReadClients ? 'clients' : 
+                     canReadTeams ? 'teams' : 
+                     canReadCommissions ? 'commissions' : 
+                     'companies';
+  
+  // Se nenhuma aba for visível, o layout será vazio, mas o DashboardLayout lida com o acesso negado.
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_analytics')}</h1>
         <p className="text-muted-foreground">{t('page_subtitle_analytics')}</p>
         
-        <Tabs defaultValue="orders" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           {/* Usando flexbox para layout horizontal fluido em todos os tamanhos */}
           <TabsList className="w-full flex flex-nowrap overflow-x-auto">
-            {/* Usando flex-1 para que cada item ocupe uma parte igual do espaço disponível */}
-            <TabsTrigger value="orders" className="flex-1">{t('nav_orders')}</TabsTrigger>
-            <TabsTrigger value="services" className="flex-1">{t('nav_services')}</TabsTrigger>
-            <TabsTrigger value="clients" className="flex-1">{t('nav_clients')}</TabsTrigger>
-            <TabsTrigger value="teams" className="flex-1">{t('nav_teams')}</TabsTrigger>
-            <TabsTrigger value="companies" className="flex-1">{t('nav_companies')}</TabsTrigger>
+            {canReadOrders && <TabsTrigger value="orders" className="flex-1">{t('nav_orders')}</TabsTrigger>}
+            {canReadAppointments && <TabsTrigger value="services" className="flex-1">{t('nav_services')}</TabsTrigger>}
+            {canReadClients && <TabsTrigger value="clients" className="flex-1">{t('nav_clients')}</TabsTrigger>}
+            {canReadTeams && <TabsTrigger value="teams" className="flex-1">{t('nav_teams')}</TabsTrigger>}
+            {canReadCommissions && <TabsTrigger value="commissions" className="flex-1">{t('page_title_commissions')}</TabsTrigger>}
+            {canReadCompanies && <TabsTrigger value="companies" className="flex-1">{t('nav_companies')}</TabsTrigger>}
           </TabsList>
           
-          <TabsContent value="orders">
-            <OrderReportTab />
-          </TabsContent>
+          {canReadOrders && (
+            <TabsContent value="orders">
+              <OrderReportTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="services">
-            <ServiceReportTab />
-          </TabsContent>
+          {canReadAppointments && (
+            <TabsContent value="services">
+              <ServiceReportTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="clients">
-            <ClientReportTab />
-          </TabsContent>
+          {canReadClients && (
+            <TabsContent value="clients">
+              <ClientReportTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="teams">
-            <TeamReportTab />
-          </TabsContent>
+          {canReadTeams && (
+            <TabsContent value="teams">
+              <TeamReportTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="companies">
-            <CompanyReportTab />
-          </TabsContent>
+          {canReadCommissions && (
+            <TabsContent value="commissions">
+              <CommissionReportTab />
+            </TabsContent>
+          )}
+          
+          {canReadCompanies && (
+            <TabsContent value="companies">
+              <CompanyReportTab />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </DashboardLayout>

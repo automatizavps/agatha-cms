@@ -244,7 +244,6 @@ const resources = {
       "loading_promotions": "Carregando promoções...",
       "promotion_applied": "Promoção \"{{promoName}}\" aplicada: {{discount}}% de desconto.",
       "remove_promotion": "Remover promoção",
-      "select_company_to_load_promotions": "Selecione uma empresa para carregar promoções.",
       "promotion_not_applicable_title": "Promoção Não Aplicável",
       "promotion_not_applicable_description": "Os itens selecionados não se qualificam para a promoção \"{{promoName}}\". Por favor, revise os itens ou selecione outra promoção.",
       
@@ -288,6 +287,15 @@ const resources = {
       "commission_rule_deleted_success": "Regra de comissionamento excluída com sucesso!",
       "fixo": "Fixo",
       "percentual": "Percentual",
+      "commission_report_title": "Relatório de Comissionamento", // NOVO
+      "commission_report_search_placeholder": "Buscar por usuário ou referência...", // NOVO
+      "report_total_commission_value": "Valor Total de Comissões", // NOVO
+      "commission_table_header_user": "Usuário", // NOVO
+      "commission_table_header_type": "Tipo", // NOVO
+      "commission_table_header_reference": "Referência", // NOVO
+      "no_commission_records_found": "Nenhum registro de comissão encontrado.", // NOVO
+      "paid": "Pago", // NOVO
+      "pending": "Pendente", // NOVO
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -468,18 +476,6 @@ const resources = {
       "magic_link_link": "Entrar com link mágico",
       "send_magic_link": "Enviar link mágico",
       "sending_magic_link": "Enviando link...",
-      
-      // Auth UI Alert Messages
-      "auth_success_email_sent": "Verifique seu email para o link de redefinição de senha.",
-      "auth_success_confirmation_text": "Verifique seu email para o link de confirmação.",
-      "auth_success_no_session": "Sessão iniciada com sucesso.",
-      "auth_success_password_reset": "Sua senha foi redefinida com sucesso.",
-      "auth_success_update_user": "Usuário atualizado com sucesso.",
-      "auth_error_email_not_found": "Email não encontrado.",
-      "auth_error_invalid_email": "Email inválido.",
-      "auth_error_invalid_password": "Senha inválida.",
-      "auth_error_user_already_exists": "Usuário já existe.",
-      "auth_error_default": "Ocorreu um erro. Por favor, tente novamente.",
       
       // Product Sales History
       "sales_history_title": "Histórico de Vendas: {{name}}",
