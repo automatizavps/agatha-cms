@@ -265,6 +265,10 @@ const resources = {
       "plan_updated_success": "Plano {{name}} atualizado com sucesso!",
       "plan_deleted_success": "Plano {{name}} excluído com sucesso!",
       "confirm_delete_plan": "Tem certeza que deseja excluir o plano {{name}}? Empresas associadas ficarão sem plano.",
+      "plan_duration": "Vigência do Plano", // NOVO
+      "duration_type": "Tipo de Duração", // NOVO
+      "select_duration_type": "Selecione o tipo de vigência", // NOVO
+      "calculated_automatically": "Calculado automaticamente", // NOVO
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",

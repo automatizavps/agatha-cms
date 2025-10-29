@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plan, deletePlan } from "@/integrations/supabase/plans";
-import { MoreHorizontal, Trash2, Pencil, DollarSign, Users, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, DollarSign, Users, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,9 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import EditPlanSheet from "./EditPlanSheet";
+import { Badge } from "@/components/ui/badge";
+import { format, isPast, isFuture } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface PlanTableProps {
   plans: Plan[];
@@ -35,7 +38,7 @@ interface PlanActionsProps {
   canWrite: boolean;
 }
 
-type SortKey = 'nome' | 'limite_usuarios' | 'preco';
+type SortKey = 'nome' | 'limite_usuarios' | 'preco' | 'data_inicio';
 type SortDirection = 'asc' | 'desc';
 
 const PlanActions: React.FC<PlanActionsProps> = ({ plan, onEdit, canWrite }) => {
@@ -115,6 +118,28 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
   );
 };
 
+// Função para determinar o status da vigência
+const getPlanStatus = (plan: Plan) => {
+  if (!plan.data_inicio || !plan.data_fim) {
+    return <Badge variant="secondary">{plan.data_inicio ? 'Sem Fim' : 'Indefinido'}</Badge>;
+  }
+  
+  const start = new Date(plan.data_inicio);
+  const end = new Date(plan.data_fim);
+  const now = new Date();
+  
+  if (isPast(end)) {
+    return <Badge variant="destructive">Expirado</Badge>;
+  }
+  
+  if (isFuture(start)) {
+    return <Badge className="bg-blue-600 hover:bg-blue-600/90 text-white">Agendado</Badge>;
+  }
+  
+  // Se não expirou e não está agendado, está ativo
+  return <Badge className="bg-green-600 hover:bg-green-600/90 text-white">Ativo</Badge>;
+};
+
 
 const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -164,16 +189,19 @@ const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
           aValue = a.preco;
           bValue = b.preco;
           break;
+        case 'data_inicio':
+          aValue = a.data_inicio ? new Date(a.data_inicio).getTime() : 0;
+          bValue = b.data_inicio ? new Date(b.data_inicio).getTime() : 0;
+          break;
         default:
           return 0;
       }
       
-      if (typeof aValue === 'string') {
-        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      if (typeof aValue === 'string' || typeof aValue === 'number') {
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
       }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
     
@@ -212,6 +240,15 @@ const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
                 {t('user_limit', { defaultValue: 'Limite Usuários' })}
               </SortableHeader>
               <SortableHeader 
+                sortKey="data_inicio" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden md:table-cell"
+              >
+                {t('plan_duration', { defaultValue: 'Vigência' })}
+              </SortableHeader>
+              <SortableHeader 
                 sortKey="preco" 
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
@@ -220,6 +257,7 @@ const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
               >
                 {t('plan_price', { defaultValue: 'Preço' })}
               </SortableHeader>
+              <TableHead className="text-center">{t('order_table_header_status')}</TableHead>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -236,8 +274,17 @@ const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
                     {plan.limite_usuarios}
                   </div>
                 </TableCell>
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {plan.data_inicio ? format(new Date(plan.data_inicio), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'} - {plan.data_fim ? format(new Date(plan.data_fim), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
+                  </div>
+                </TableCell>
                 <TableCell className="text-right font-semibold text-primary">
                   {formatCurrency(plan.preco)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {getPlanStatus(plan)}
                 </TableCell>
                 <TableCell className="text-right">
                   <PlanActions plan={plan} onEdit={handleEdit} canWrite={canWrite} />

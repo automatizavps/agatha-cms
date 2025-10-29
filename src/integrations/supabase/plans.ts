@@ -16,6 +16,8 @@ export interface Plan {
   limite_usuarios: number;
   preco: number;
   created_at: string;
+  data_inicio: string | null; // NOVO
+  data_fim: string | null; // NOVO
   regras?: PlanModule[]; // Opcional, carregado separadamente
 }
 
@@ -25,7 +27,7 @@ const fetchPlans = async (): Promise<Plan[]> => {
   // A RLS garante que apenas o Super Admin possa ver todos os planos
   const { data, error } = await supabase
     .from("planos")
-    .select("id, nome, limite_usuarios, preco, created_at")
+    .select("id, nome, limite_usuarios, preco, created_at, data_inicio, data_fim") // Incluindo novas colunas
     .order("nome", { ascending: true });
 
   if (error) {
@@ -81,18 +83,22 @@ interface CreatePlanParams {
   nome: string;
   limite_usuarios: number;
   preco: number;
+  data_inicio: Date | null; // NOVO
+  data_fim: Date | null; // NOVO
   rules: { modulo_id: string; acesso: AccessType }[];
   queryClient: QueryClient;
 }
 
-export const createPlan = async ({ nome, limite_usuarios, preco, rules, queryClient }: CreatePlanParams) => {
+export const createPlan = async ({ nome, limite_usuarios, preco, data_inicio, data_fim, rules, queryClient }: CreatePlanParams) => {
   // 1. Criar o plano
   const { data: planData, error: planError } = await supabase
     .from("planos")
     .insert({ 
       nome, 
       limite_usuarios, 
-      preco 
+      preco,
+      data_inicio: data_inicio ? data_inicio.toISOString() : null, // NOVO
+      data_fim: data_fim ? data_fim.toISOString() : null, // NOVO
     })
     .select("id, nome")
     .single();
@@ -143,7 +149,7 @@ interface UpdatePlanParams extends Omit<CreatePlanParams, 'queryClient'> {
   queryClient: QueryClient;
 }
 
-export const updatePlan = async ({ id, nome, limite_usuarios, preco, rules, queryClient }: UpdatePlanParams) => {
+export const updatePlan = async ({ id, nome, limite_usuarios, preco, data_inicio, data_fim, rules, queryClient }: UpdatePlanParams) => {
   // 1. Atualizar o plano principal
   const { data: planData, error: planError } = await supabase
     .from("planos")
@@ -151,6 +157,8 @@ export const updatePlan = async ({ id, nome, limite_usuarios, preco, rules, quer
       nome: nome,
       limite_usuarios: limite_usuarios,
       preco: preco,
+      data_inicio: data_inicio ? data_inicio.toISOString() : null, // NOVO
+      data_fim: data_fim ? data_fim.toISOString() : null, // NOVO
     })
     .eq("id", id)
     .select("id, nome")
