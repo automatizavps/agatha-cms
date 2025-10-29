@@ -30,6 +30,7 @@ export interface Order {
   clientes: {
     nome: string;
     email: string | null;
+    avatar_url: string | null; // NOVO: Adicionado avatar_url
   } | null;
   responsavel: { // NOVO RELACIONAMENTO
     nome_completo: string;
@@ -67,7 +68,7 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}, page:
       status,
       created_at,
       promocao_id,
-      clientes (nome, email),
+      clientes (nome, email, avatar_url),
       responsavel:usuarios!pedidos_responsavel_id_fkey (nome_completo, avatar_url)
     `, { count: 'exact' }); // Solicita a contagem total
     
