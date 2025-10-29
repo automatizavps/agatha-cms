@@ -5,7 +5,6 @@ import { useOrders, deleteOrders, OrderStatus } from "@/integrations/supabase/or
 import { showError, showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
 import OrderTable from "@/components/OrderTable";
-import AddOrderSheet from "@/components/AddOrderSheet";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
@@ -140,7 +139,7 @@ const Orders = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_orders')}</h1>
-        {canWriteOrders && <AddOrderSheet />}
+        {/* {canWriteOrders && <AddOrderSheet />} */}
       </div>
       
       <Card className="mt-4">
