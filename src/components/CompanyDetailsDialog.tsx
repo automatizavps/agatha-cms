@@ -36,7 +36,7 @@ const CompanyDetailsDialog: React.FC<CompanyDetailsDialogProps> = ({ company, is
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col" aria-describedby={undefined}>
+      <DialogContent className="sm:max-w-4xl w-[90vw] max-w-[90vw] h-[90vh] max-h-[90vh] flex flex-col" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="h-6 w-6 text-primary" />
