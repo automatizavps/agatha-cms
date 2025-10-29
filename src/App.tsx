@@ -24,6 +24,7 @@ import Categories from "./pages/Categories"; // IMPORTADO
 import ImageGallery from "./pages/ImageGallery"; // NOVO IMPORT
 import Promotions from "./pages/Promotions"; // NOVO IMPORT
 import Plans from "./pages/Plans"; // NOVO IMPORT
+import Commissions from "./pages/Commissions"; // NOVO IMPORT
 import { SessionContextProvider, ProtectedRoute, PublicRoute, useSession } from "@/integrations/supabase/auth";
 import { DashboardFilterProvider } from "@/hooks/useDashboardFilter";
 import React, { useState, useEffect } from "react";
@@ -53,6 +54,7 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/companies" element={<Companies />} />
       <Route path="/companies/profiles" element={<CustomProfiles />} />
       <Route path="/companies/plans" element={<Plans />} /> {/* NOVA ROTA */}
+      <Route path="/commissions" element={<Commissions />} /> {/* NOVA ROTA */}
       <Route path="/settings" element={<Settings />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/notifications" element={<Notifications />} />

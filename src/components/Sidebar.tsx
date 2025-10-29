@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, Image as ImageIcon, DollarSign, ShieldCheck } from "lucide-react";
+import { Home, Settings, BarChart3, Users, Calendar, Briefcase, Package, Building, Clock, ShoppingCart, Target, Tag, Bot, Bell, UserCheck, Image as ImageIcon, DollarSign, ShieldCheck, HandCoins } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Separator } from "@/components/ui/separator";
@@ -109,6 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
   const canReadNotifications = useCanRead('notifications');
   const canReadCustomProfiles = useCanRead('custom_profiles'); 
   const canReadPromotions = useCanRead('promotions');
+  const canReadCommissions = useCanRead('commissions'); // NOVO
   
   // NOVO: Permissão para Planos (Apenas Super Admin)
   const canReadPlans = profile?.is_super_admin;
@@ -288,6 +289,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isCollapsed }) => {
             to="/promotions"
             icon={<DollarSign className="h-5 w-5" />}
             label={t('page_title_promotions', { defaultValue: 'Promoções' })}
+            {...navItemProps}
+          />
+        )}
+        
+        {canReadCommissions && (
+          <NavItem
+            to="/commissions"
+            icon={<HandCoins className="h-5 w-5" />}
+            label={t('page_title_commissions', { defaultValue: 'Comissionamento' })}
             {...navItemProps}
           />
         )}

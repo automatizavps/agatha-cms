@@ -269,8 +269,25 @@ const resources = {
       "confirm_delete_plan": "Tem certeza que deseja excluir o plano {{name}}? Empresas associadas ficarão sem plano.",
       "plan_duration": "Vigência do Plano", // NOVO
       "duration_type": "Tipo de Duração", // NOVO
-      "select_duration_type": "Selecione o tipo de vigência", // NOVO
       "calculated_automatically": "Calculado automaticamente", // NOVO
+      
+      // COMISSIONAMENTO (NOVO)
+      "page_title_commissions": "Comissionamento",
+      "commission_rules_title": "Regras de Comissionamento",
+      "add_new_commission_rule": "Nova Regra de Comissão",
+      "no_commission_rules_found": "Nenhuma regra de comissionamento encontrada.",
+      "commission_search_placeholder": "Buscar por entidade ou tipo...",
+      "commission_entity_type": "Aplicar a",
+      "commission_entity": "Entidade",
+      "commission_value_type": "Tipo de Valor",
+      "commission_value": "Valor",
+      "create_commission_rule": "Criar Regra",
+      "edit_commission_rule": "Editar Regra",
+      "commission_rule_created_success": "Regra de comissionamento criada com sucesso!",
+      "commission_rule_updated_success": "Regra de comissionamento atualizada com sucesso!",
+      "commission_rule_deleted_success": "Regra de comissionamento excluída com sucesso!",
+      "fixo": "Fixo",
+      "percentual": "Percentual",
       
       "page_title_orders": "Gestão de Pedidos",
       "order_list_title": "Lista de Pedidos",
@@ -514,6 +531,7 @@ const resources = {
       "custom_profiles": "Perfis Customizados",
       "categories": "Categorias",
       "promotions": "Promoções",
+      "commissions": "Comissionamento", // NOVO MÓDULO
     },
   },
 };
