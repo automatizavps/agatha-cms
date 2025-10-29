@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CommissionRecord } from "@/integrations/supabase/reportHooks";
+import { CommissionRecordReport } from "@/integrations/supabase/reportHooks";
 import { MoreHorizontal, CheckCheck, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Loader2, XCircle, RefreshCw, Download } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,11 +30,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { flattenDataForExport } from "@/utils/export";
 
 interface CommissionPaymentTableProps {
-  records: CommissionRecord[];
+  records: CommissionRecordReport[];
+  onRowClick: (record: CommissionRecordReport) => void; // NOVO: Propriedade de clique
 }
 
 interface PaymentActionsProps {
-  record: CommissionRecord;
+  record: CommissionRecordReport;
   t: (key: string, options?: any) => string; // Passando t
 }
 
@@ -45,7 +46,7 @@ const PaymentActions: React.FC<PaymentActionsProps> = ({ record, t }) => {
   const queryClient = useQueryClient();
   
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string, status: CommissionRecord['status'] }) => updateCommissionStatus(id, status, queryClient),
+    mutationFn: ({ id, status }: { id: string, status: CommissionRecordReport['status'] }) => updateCommissionStatus(id, status, queryClient),
     onSuccess: (data) => {
       showSuccess(t('commission_status_updated_success', { status: t(data.status) }));
       queryClient.invalidateQueries({ queryKey: ["commissionReport"] });
@@ -132,13 +133,13 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const CommissionPaymentTable: React.FC<CommissionPaymentTableProps> = ({ records }) => {
+const CommissionPaymentTable: React.FC<CommissionPaymentTableProps> = ({ records, onRowClick }) => {
   const { t } = useTranslation(); // CHAME O HOOK AQUI
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   
   // MOVIDO PARA DENTRO DO COMPONENTE
-  const getStatusBadge = (status: CommissionRecord['status']) => {
+  const getStatusBadge = (status: CommissionRecordReport['status']) => {
     const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
     switch (status) {
       case 'pago':
@@ -282,7 +283,14 @@ const CommissionPaymentTable: React.FC<CommissionPaymentTableProps> = ({ records
           </TableHeader>
           <TableBody>
             {sortedRecords.map((record) => (
-              <TableRow key={record.id} className={cn(record.status === 'pendente' && "bg-yellow-500/5 dark:bg-yellow-900/10")}>
+              <TableRow 
+                key={record.id} 
+                className={cn(
+                  record.status === 'pendente' && "bg-yellow-500/5 dark:bg-yellow-900/10",
+                  "cursor-pointer hover:bg-accent/50 transition-colors" // Torna a linha clicável
+                )}
+                onClick={() => onRowClick(record)} // Adiciona o manipulador de clique
+              >
                 <TableCell className="font-medium">{record.usuarios?.nome_completo || 'N/A'}</TableCell>
                 <TableCell className="hidden sm:table-cell text-sm text-muted-foreground capitalize">
                   {t(record.tipo_referencia)}

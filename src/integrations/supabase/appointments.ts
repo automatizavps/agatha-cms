@@ -27,9 +27,14 @@ export interface Appointment {
   // Relacionamentos
   responsavel: {
     nome_completo: string;
+    avatar_url: string | null; // Adicionado avatar_url
   } | null;
   clientes: {
     nome: string;
+    email: string | null; // Adicionado email
+    telefone: string | null; // Adicionado telefone
+    endereco_completo: string | null; // Adicionado endereco_completo
+    avatar_url: string | null; // Adicionado avatar_url
   } | null;
   empresas: { // NOVO: Adicionando relacionamento com a empresa
     nome: string;
@@ -117,6 +122,51 @@ export const useAppointments = (companyId?: string, filters: AppointmentFilters 
     enabled: true,
   });
 };
+
+// --- Fetch Single Appointment by ID (NOVO) ---
+const fetchAppointmentById = async (appointmentId: string): Promise<Appointment | null> => {
+  const { data, error } = await supabase
+    .from("agendamentos")
+    .select(`
+      id,
+      empresa_id,
+      cliente_id,
+      responsavel_id,
+      data_hora,
+      status,
+      created_by,
+      created_at,
+      promocao_id,
+      responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo, avatar_url),
+      clientes (nome, email, telefone, endereco_completo, avatar_url),
+      empresas (nome),
+      agendamento_itens (
+        id,
+        produto_id,
+        quantidade,
+        preco_unitario,
+        produtos (nome, tipo)
+      )
+    `)
+    .eq("id", appointmentId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching appointment by ID:", error);
+    throw new Error("Failed to fetch appointment details: " + error.message);
+  }
+
+  return data as Appointment;
+};
+
+export const useAppointmentById = (appointmentId: string | undefined) => {
+  return useQuery<Appointment | null, Error>({
+    queryKey: ["appointmentById", appointmentId],
+    queryFn: () => fetchAppointmentById(appointmentId!),
+    enabled: !!appointmentId,
+  });
+};
+
 
 // --- Fetch Appointment Items ---
 

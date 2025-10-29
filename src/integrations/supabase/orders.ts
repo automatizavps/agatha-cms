@@ -113,6 +113,55 @@ export const useOrders = (companyId?: string, filters: OrderFilters = {}, page: 
   });
 };
 
+// --- Fetch Single Order by ID (NOVO) ---
+const fetchOrderById = async (orderId: string): Promise<Order | null> => {
+  const { data, error } = await supabase
+    .from("pedidos")
+    .select(`
+      id,
+      empresa_id,
+      cliente_id,
+      responsavel_id,
+      valor_total,
+      status,
+      created_at,
+      promocao_id,
+      clientes (nome, email, telefone, endereco_completo, avatar_url),
+      responsavel:usuarios!pedidos_responsavel_id_fkey (nome_completo, avatar_url),
+      empresas (nome),
+      pedido_itens (
+        id,
+        produto_id,
+        quantidade,
+        preco_unitario,
+        produtos (nome, tipo)
+      )
+    `)
+    .eq("id", orderId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching order by ID:", error);
+    throw new Error("Failed to fetch order details: " + error.message);
+  }
+  
+  // Garante que valor_total seja um número
+  if (data) {
+    data.valor_total = parseFloat(String(data.valor_total)) || 0;
+  }
+
+  return data as Order;
+};
+
+export const useOrderById = (orderId: string | undefined) => {
+  return useQuery<Order | null, Error>({
+    queryKey: ["orderById", orderId],
+    queryFn: () => fetchOrderById(orderId!),
+    enabled: !!orderId,
+  });
+};
+
+
 // --- Fetch Order Items ---
 
 const fetchOrderItems = async (orderId: string): Promise<OrderItem[]> => {
