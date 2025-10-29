@@ -32,10 +32,16 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     },
   });
 
-  // A edição de agendamentos só permite alterar o status e dados principais neste componente
+  // O handleSubmit agora recebe todos os valores do AppointmentForm
   const handleSubmit = (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: any[]; status?: Appointment['status']; promocao_id?: string | null }) => {
     if (!values.status) {
       showError("Status do agendamento é obrigatório.");
+      return;
+    }
+    
+    // Se o usuário não tem permissão de escrita, não deve ser capaz de submeter
+    if (!canWriteAppointments) {
+      showError("Você não tem permissão para alterar o agendamento.");
       return;
     }
     
@@ -45,7 +51,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
       responsavel_id: values.responsavel_id,
       data_hora: values.data_hora,
       status: values.status,
-      promocao_id: values.promocao_id || null, // <--- CORRIGIDO: Usar values.promocao_id
+      promocao_id: values.promocao_id || null,
       queryClient: queryClient, // Passando o queryClient
     });
   };
@@ -58,8 +64,8 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
     date: appointmentDate,
     time: format(appointmentDate, "HH:mm"),
     status: appointment.status,
-    empresa_id: appointment.empresa_id, // <-- Adicionando empresa_id aqui
-    promocao_id: appointment.promocao_id, // NOVO: promocao_id
+    empresa_id: appointment.empresa_id,
+    promocao_id: appointment.promocao_id,
     // Mapeamos os itens carregados para o formato esperado pelo AppointmentForm
     items: appointmentItems?.map(item => ({
       produto_id: item.produto_id,

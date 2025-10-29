@@ -365,7 +365,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         "w-full justify-between",
                         !field.value && "text-muted-foreground"
                       )}
-                      disabled={isLoadingClients || isSubmitting || !isCompanySelected}
+                      disabled={isSubmitting || !isCompanySelected}
                     >
                       {field.value
                         ? selectedClient?.nome
@@ -506,7 +506,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                 <Select 
                   onValueChange={field.onChange} 
                   value={field.value} 
-                  disabled={isSubmitting || !canEditStatus} // DESABILITADO SE NÃO PUDER EDITAR STATUS
+                  disabled={isSubmitting || !canEditStatus} // USANDO canEditStatus
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -755,4 +755,4 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   );
 };
 
-export default AppointmentForm;
+export default OrderForm;

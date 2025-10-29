@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateOrder, Order, OrderStatus, useOrderItems } from "@/integrations/supabase/orders"; // Alterado para updateOrder
 import { showSuccess, showError } from "@/utils/toast";
 import { Loader2 } from "lucide-react";
+import { useCanWrite } from "@/hooks/use-module-permission"; // Importando useCanWrite
 
 interface EditOrderStatusSheetProps {
   order: Order;
@@ -14,6 +15,7 @@ interface EditOrderStatusSheetProps {
 const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
   const { data: orderItems, isLoading: isLoadingItems } = useOrderItems(order.id);
+  const canWriteOrders = useCanWrite('orders'); // Obtendo a permissão
 
   const mutation = useMutation({
     mutationFn: updateOrder, // Usando a função updateOrder mais completa
@@ -27,10 +29,17 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
     },
   });
 
-  // A edição de pedidos só permite alterar o status neste componente
+  // O handleSubmit agora recebe todos os valores do OrderForm, mas só usa o status e promocao_id
+  // para a mutação, mantendo os outros campos (cliente, valor) fixos.
   const handleSubmit = (values: { cliente_id: string; valor_total: number; items: any[]; status?: OrderStatus; promocao_id?: string | null }) => {
     if (!values.status) {
       showError("Status é obrigatório.");
+      return;
+    }
+    
+    // Se o usuário não tem permissão de escrita, não deve ser capaz de submeter
+    if (!canWriteOrders) {
+      showError("Você não tem permissão para alterar o status do pedido.");
       return;
     }
     
@@ -39,7 +48,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
       cliente_id: order.cliente_id, // Mantém o cliente original
       valor_total: order.valor_total, // Mantém o valor total original (não editável aqui)
       status: values.status,
-      promocao_id: order.promocao_id, // Mantém a promoção original (não editável aqui)
+      promocao_id: values.promocao_id, // NOVO: Passa o promocao_id do formulário
       queryClient: queryClient, // Passando o queryClient
     });
   };
@@ -48,7 +57,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
   const initialValues = {
     cliente_id: order.cliente_id,
     status: order.status,
-    promocao_id: order.promocao_id, // NOVO: promocao_id
+    promocao_id: order.promocao_id,
     // Mapeamos os itens carregados para o formato esperado pelo OrderForm
     items: orderItems?.map(item => ({
       produto_id: item.produto_id,
@@ -91,6 +100,8 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
             isSubmitting={mutation.isPending} 
             defaultValues={initialValues}
             isEditing={true}
+            // O OrderForm não precisa de uma prop canEditStatus, pois ele só exibe o campo na edição.
+            // A permissão é verificada no botão de submissão e no EditOrderStatusSheet.
           />
         </div>
       </SheetContent>
