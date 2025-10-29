@@ -129,12 +129,11 @@ export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_complet
     email: email,
   };
   
-  // 1. Se o plano_id foi fornecido ou se a empresa está sendo atualizada,
-  // precisamos verificar a vigência do plano.
+  // 1. Determinar o status de atividade com base no plano, se o plano for fornecido
   if (plano_id !== undefined) {
     updatePayload.plano_id = plano_id;
     
-    let is_currently_active = is_active; // Mantém o status se não houver plano
+    let is_vigent_by_plan = false;
     
     if (plano_id) {
       // Busca a vigência do novo plano
@@ -144,43 +143,32 @@ export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_complet
         .eq('id', plano_id)
         .single();
         
-      if (planError || !planData) {
-        console.warn("Could not fetch plan data for status check:", planError?.message);
-        // Se não puder buscar o plano, mantemos o status atual (ou o fornecido)
-      } else {
+      if (!planError && planData) {
         const now = new Date();
         const dataInicio = planData.data_inicio ? new Date(planData.data_inicio) : null;
         const dataFim = planData.data_fim ? new Date(planData.data_fim) : null;
         
         // Lógica de Vigência: Ativo se (data_inicio <= now) E (data_fim >= now)
-        const isVigent = (!dataInicio || dataInicio <= now) && (!dataFim || dataFim >= now);
-        
-        // Se o status de vigência for diferente do status atual da empresa, forçamos a mudança.
-        // Se is_active não foi fornecido, usamos o status de vigência.
-        if (is_active === undefined || is_active !== isVigent) {
-          is_currently_active = isVigent;
-        } else {
-          is_currently_active = is_active;
-        }
-      }
-    } else {
-      // Se o plano_id for NULL, a empresa deve ser desativada (a menos que seja o SA)
-      // Por segurança, se o plano for removido, desativamos, a menos que o is_active tenha sido explicitamente definido.
-      if (is_active === undefined) {
-        is_currently_active = false;
+        is_vigent_by_plan = (!dataInicio || dataInicio <= now) && (!dataFim || dataFim >= now);
       }
     }
     
-    // Força a atualização do status de atividade
-    if (is_currently_active !== undefined) {
-      updatePayload.is_active = is_currently_active;
+    // 2. Aplicar a lógica de ativação/desativação:
+    // Se o plano estiver vigente, a empresa DEVE estar ativa, a menos que 'is_active' tenha sido explicitamente definido como FALSE (desativação manual pelo SA).
+    if (is_vigent_by_plan) {
+      // Se o plano está vigente, forçamos a ativação, a menos que o SA tenha passado is_active=false
+      updatePayload.is_active = is_active === false ? false : true;
+    } else {
+      // Se o plano NÃO está vigente (expirado ou sem plano), forçamos a inativação, a menos que o SA tenha passado is_active=true
+      updatePayload.is_active = is_active === true ? true : false;
     }
+    
   } else if (is_active !== undefined) {
-    // Se is_active foi explicitamente fornecido, usamos ele (ex: toggle manual do SA)
+    // 3. Se o plano_id não foi alterado, mas is_active foi fornecido (toggle manual), usamos o valor fornecido.
     updatePayload.is_active = is_active;
   }
   
-  // 2. Executar a atualização
+  // 4. Executar a atualização
   const { data, error } = await supabase
     .from("empresas")
     .update(updatePayload)
