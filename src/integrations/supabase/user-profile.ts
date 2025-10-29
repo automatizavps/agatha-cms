@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "./client";
 import { useSession } from "./auth";
+import i18n from 'i18next'; // Importando i18n para tradução
 
 export interface CurrentUserProfile {
   id: string;
@@ -42,7 +43,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   const is_company_active = userProfile.empresas ? userProfile.empresas.is_active : true;
   
   let is_super_admin = false;
-  let profileName = "Funcionário";
+  let profileName = i18n.t('profile_role_employee'); // Default fallback: Funcionário
   
   // 2. Verificar se é Super Admin (usando a função RPC)
   const { data: isSaData, error: isSaError } = await supabase.rpc('is_super_admin');
@@ -50,16 +51,20 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
     is_super_admin = isSaData;
   }
   
-  // 3. Lógica de Perfil (simplificada, sem buscar permissões)
+  // 3. Lógica de Perfil
   if (is_super_admin) {
     profileName = "Super Admin";
+  } else if (userProfile.empresa_id && userProfile.perfil_customizado_id === null) {
+    // Usuário com empresa, mas sem perfil customizado = Admin de Empresa
+    profileName = i18n.t('profile_role_admin'); // Administrador
   } else if (userProfile.perfil_customizado_id) {
-    profileName = userProfile.perfis_customizados?.nome || "Perfil Customizado";
-  } else if (userProfile.empresa_id) {
-    profileName = "Admin";
-  } else {
-    profileName = "Usuário Básico";
+    // Usuário com perfil customizado
+    profileName = userProfile.perfis_customizados?.nome || i18n.t('unknown_profile');
+  } else if (userProfile.empresa_id === null) {
+    // Usuário sem empresa e sem perfil customizado (Usuário Básico)
+    profileName = i18n.t('profile_role_basic');
   }
+
 
   return {
     ...userProfile,

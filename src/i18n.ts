@@ -36,6 +36,11 @@ const resources = {
       "logout": "Sair", // NOVO
       "nav_people_management": "Gestão de Pessoas", // NOVO
       
+      // Perfis
+      "profile_role_admin": "Administrador", // NOVO
+      "profile_role_employee": "Funcionário", // NOVO
+      "profile_role_basic": "Usuário Básico", // NOVO
+
       // Bloqueio de Acesso (NOVO)
       "access_blocked_title": "Acesso Bloqueado",
       "company_inactive_message": "Sua empresa está atualmente **inativa**.",
