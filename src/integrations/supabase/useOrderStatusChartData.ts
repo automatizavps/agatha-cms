@@ -22,10 +22,13 @@ export const useOrderStatusChartData = () => {
   const todayStart = format(new Date(), 'yyyy-MM-dd');
   
   // Passamos filteredCompanyId e o filtro 'today' para useOrders
-  const { data: orders, isLoading, isError, error } = useOrders(filteredCompanyId, {
+  // CORREÇÃO: useOrders retorna { orders, totalCount }, então desestruturamos orders
+  const { data: paginatedData, isLoading, isError, error } = useOrders(filteredCompanyId, {
     startDate: todayStart,
     endDate: todayStart,
   });
+  
+  const orders = paginatedData?.orders; // Extrai o array de pedidos
 
   const metrics: ChartData[] = [];
 
