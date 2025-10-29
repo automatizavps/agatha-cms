@@ -19,6 +19,7 @@ import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCanWrite } from "@/hooks/use-module-permission";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
+import AddOrderSheet from "@/components/AddOrderSheet"; // IMPORTADO NOVAMENTE
 
 const PAGE_SIZES = [20, 50, 100];
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado']; // REINTRODUZIDO
@@ -139,7 +140,7 @@ const Orders = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('page_title_orders')}</h1>
-        {/* {canWriteOrders && <AddOrderSheet />} */}
+        {canWriteOrders && <AddOrderSheet />} {/* RE-ADICIONADO */}
       </div>
       
       <Card className="mt-4">
@@ -383,9 +384,9 @@ const Orders = () => {
                           <SelectValue placeholder={String(pageSize)} />
                         </SelectTrigger>
                         <SelectContent>
-                          {PAGE_SIZES.map(size => (
-                            <SelectItem key={size} value={String(size)}>{size}</SelectItem>
-                          ))}
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
