@@ -114,7 +114,12 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
+        <Button 
+          variant="ghost" 
+          className="h-8 w-8 p-0"
+          // Adicionado onClick para parar a propagação e evitar que o modal de detalhes abra
+          onClick={(e) => e.stopPropagation()} 
+        >
           <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
