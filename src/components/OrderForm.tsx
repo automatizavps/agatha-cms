@@ -192,6 +192,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   }, [services, products, selectedCompanyId, isCompanySelected]);
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
+  
+  // NOVO: Flag de carregamento de dados dependentes
+  const isLoadingDependentData = isLoadingClients || isLoadingUsers || isLoadingItems;
 
   // Efeito para popular o mapa de estoque
   useEffect(() => {
@@ -378,8 +381,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
+                      // Limpa campos dependentes
                       form.setValue('cliente_id', '');
-                      form.setValue('responsavel_id', ''); // Limpa responsável
+                      form.setValue('responsavel_id', ''); 
                       form.setValue('items', []);
                       form.setValue('promocao_id', null);
                       setActivePromotion(null);
@@ -428,7 +432,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           render={({ field }) => (
             <FormItem>
               <FormLabel>{t('order_table_header_client')}</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingClients || isSubmitting || isEditing || !isCompanySelected}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value} 
+                disabled={isLoadingDependentData || isSubmitting || isEditing || !isCompanySelected}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingClients ? t("loading_clients") : t("select_client")} />
@@ -456,7 +464,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             return (
             <FormItem>
               <FormLabel>{t('responsible', { defaultValue: 'Responsável pelo Pedido' })}</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingUsers || isSubmitting || !isCompanySelected}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value} 
+                disabled={isLoadingDependentData || isSubmitting || !isCompanySelected}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <User className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -547,7 +559,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                                       "w-full justify-between",
                                       !itemField.value && "text-muted-foreground"
                                     )}
-                                    disabled={isLoadingItems || isSubmitting || !isCompanySelected}
+                                    disabled={isLoadingDependentData || isSubmitting || !isCompanySelected}
                                   >
                                     {itemField.value
                                       ? getItemName(itemField.value)
