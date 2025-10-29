@@ -45,40 +45,8 @@ const productStockMap = new Map<string, number | null>();
 // Esquema de validação para itens
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }).min(1, { message: "Selecione um item válido." }),
-  // Garantimos que a coerção para número lide com strings vazias ou NaN, resultando em 0
-  quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
-    .refine((val, ctx) => {
-      // CORREÇÃO: Acessa o objeto pai de forma segura. Se não houver parent ou data, retorna true.
-      const item = (ctx.parent as any)?.data;
-      
-      // Se não houver dados do item (ocorre durante a montagem inicial), pulamos a validação de estoque.
-      if (!item) {
-        return true;
-      }
-      
-      const productId = item.produto_id;
-      
-      // Se não houver produto_id ou se a validação estiver em um estado inicial incompleto, pulamos
-      if (typeof productId !== 'string' || productId.length === 0) {
-        return true;
-      }
-      
-      const stock = productStockMap.get(productId);
-      
-      // Se for serviço (stock === null) ou se o estoque for suficiente, é válido
-      if (stock === null || stock === undefined) {
-        return true;
-      }
-      
-      if (val > stock) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Estoque insuficiente. Máximo disponível: ${stock}.`,
-        });
-        return false;
-      }
-      return true;
-    }, { path: ['quantidade'] }),
+  // Validação de estoque removida. Apenas validação de número inteiro positivo.
+  quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
 });
 
@@ -305,7 +273,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       // 2. Calcula a quantidade inicial (1 ou 0 se estoque for 0)
       const stock = productStockMap.get(firstItem.id);
       const isProduct = firstItem.tipo === 'produto';
-      const initialQuantity = isProduct && stock !== null && stock !== undefined ? (stock > 0 ? 1 : 0) : 1;
+      // Removida a lógica de estoque para definir a quantidade inicial
+      const initialQuantity = 1; 
       
       // 3. Adiciona o item pré-selecionado
       append({ 
@@ -332,15 +301,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
       
-      // Se for um produto, define a quantidade máxima para o estoque
-      const stock = productStockMap.get(productId);
-      if (stock !== null && stock !== undefined) {
-        // Se o estoque for 0, define a quantidade para 0
-        form.setValue(`items.${index}.quantidade`, stock > 0 ? 1 : 0);
-      } else {
-        // Se for serviço ou estoque nulo, define para 1
-        form.setValue(`items.${index}.quantidade`, 1);
-      }
+      // Define a quantidade para 1 (removida a lógica de estoque)
+      form.setValue(`items.${index}.quantidade`, 1);
       
       // Força a revalidação do campo quantidade E do produto_id
       form.trigger(`items.${index}.quantidade`);
@@ -655,21 +617,18 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                               type="number" 
                               min="1" 
                               // Define o max apenas para produtos com estoque conhecido
-                              max={isProduct && maxQuantity !== undefined ? maxQuantity : undefined}
+                              // REMOVIDO: max={isProduct && maxQuantity !== undefined ? maxQuantity : undefined}
                               placeholder="1" 
                               {...field} 
                               onChange={(e) => {
                                 let value = parseInt(e.target.value);
                                 
-                                // Restrição de estoque (apenas na criação)
-                                if (!isEditing && isProduct && maxQuantity !== undefined && value > maxQuantity) {
-                                  value = maxQuantity;
-                                }
+                                // Restrição de estoque (apenas na criação) - REMOVIDA
                                 
                                 // Garante que o valor seja um número (ou string vazia se o input permitir)
                                 field.onChange(e.target.value);
                               }}
-                              disabled={isSubmitting || isEditing || (isProduct && maxQuantity === 0)}
+                              disabled={isSubmitting || isEditing} // REMOVIDO: || (isProduct && maxQuantity === 0)
                             />
                           </FormControl>
                           <FormMessage />
