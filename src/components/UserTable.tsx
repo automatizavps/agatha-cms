@@ -7,9 +7,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserProfile, deleteUser } from "@/integrations/supabase/users";
+import { UserProfile, deleteUser, toggleUserActiveStatus } from "@/integrations/supabase/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building, ArrowUpDown, ArrowUp, ArrowDown, Mail } from "lucide-react";
+import { User, MoreHorizontal, Trash2, Pencil, Phone, MapPin, Building, ArrowUpDown, ArrowUp, ArrowDown, Mail, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +24,8 @@ import { showError, showSuccess } from "@/utils/toast";
 import EditUserSheet from "./EditUserSheet";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { useCurrentUserProfile } from "@/integrations/supabase/user-profile"; // IMPORTAÇÃO ADICIONADA
+import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
+import { Badge } from "@/components/ui/badge"; // Importando Badge
 
 interface UserTableProps {
   users: UserProfile[];
@@ -35,12 +36,13 @@ interface UserActionsProps {
   user: UserProfile;
   onEdit: (user: UserProfile) => void;
   canWrite: boolean; // NOVO
+  currentUserId: string; // ID do usuário logado
 }
 
-type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil' | 'email';
+type SortKey = 'nome_completo' | 'empresa' | 'telefone' | 'endereco_completo' | 'perfil' | 'email' | 'is_active';
 type SortDirection = 'asc' | 'desc';
 
-const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => {
+const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite, currentUserId }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
@@ -55,14 +57,41 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => 
       showError(t("error_loading_data") + ": " + error.message);
     },
   });
+  
+  const toggleActiveMutation = useMutation({
+    mutationFn: (newStatus: boolean) => toggleUserActiveStatus({
+      userIdToToggle: user.id,
+      newStatus: newStatus,
+      userName: user.nome_completo,
+      companyId: user.empresa_id,
+      queryClient: queryClient,
+    }),
+    onSuccess: (data) => {
+      const status = data.is_active ? "ativado" : "desativado";
+      showSuccess(`Usuário ${user.nome_completo} ${status} com sucesso.`);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (error) => {
+      showError(t("error_loading_data") + ": " + error.message);
+    },
+  });
 
-  if (!canWrite) {
+  // Não permite ações se não puder escrever ou se for o próprio usuário
+  if (!canWrite || user.id === currentUserId) {
     return null;
   }
 
   const handleDelete = () => {
     if (window.confirm(t('confirm_delete'))) {
       deleteMutation.mutate();
+    }
+  };
+  
+  const handleToggleActive = () => {
+    const newStatus = !user.is_active;
+    const action = newStatus ? "ativar" : "desativar";
+    if (window.confirm(`Tem certeza que deseja ${action} o usuário ${user.nome_completo}?`)) {
+      toggleActiveMutation.mutate(newStatus);
     }
   };
 
@@ -79,7 +108,29 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onEdit, canWrite }) => 
         <DropdownMenuItem onClick={() => onEdit(user)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
+        
+        {/* Botão Ativar/Desativar */}
+        <DropdownMenuItem 
+          onClick={handleToggleActive} 
+          disabled={toggleActiveMutation.isPending}
+          className={cn(
+            user.is_active ? "text-destructive focus:text-destructive" : "text-green-500 focus:text-green-500"
+          )}
+        >
+          {toggleActiveMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : user.is_active ? (
+            <XCircle className="mr-2 h-4 w-4" />
+          ) : (
+            <CheckCircle className="mr-2 h-4 w-4" />
+          )}
+          {user.is_active ? "Desativar Usuário" : "Ativar Usuário"}
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
         <DropdownMenuItem 
           onClick={handleDelete} 
           disabled={deleteMutation.isPending}
@@ -126,6 +177,8 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
   const [sortKey, setSortKey] = useState<SortKey>('nome_completo');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
+  
+  const currentUserId = profile?.id || ''; // ID do usuário logado
 
   const handleEdit = (user: UserProfile) => {
     setEditingUser(user);
@@ -187,6 +240,10 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
         case 'email':
           aValue = a.email || '';
           bValue = b.email || '';
+          break;
+        case 'is_active':
+          aValue = a.is_active ? 1 : 0;
+          bValue = b.is_active ? 1 : 0;
           break;
         default:
           return 0;
@@ -270,6 +327,16 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
               >
                 {t('user_table_header_address')}
               </SortableHeader>
+              {/* NOVO: Status */}
+              <SortableHeader 
+                sortKey="is_active" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-center"
+              >
+                Status
+              </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -277,9 +344,10 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
             {sortedUsers.map((user) => (
               <TableRow 
                 key={user.id}
-                // Adiciona destaque visual para o Super Admin
+                // Adiciona destaque visual para o Super Admin e inativos
                 className={cn(
-                  user.perfis?.nome === 'Super Admin' && "bg-primary/10 hover:bg-primary/20 transition-colors"
+                  user.perfis?.nome === 'Super Admin' && "bg-primary/10 hover:bg-primary/20 transition-colors",
+                  !user.is_active && "bg-destructive/10 hover:bg-destructive/20 transition-colors"
                 )}
               >
                 <TableCell>
@@ -323,8 +391,16 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
                     {user.endereco_completo || 'N/A'}
                   </div>
                 </TableCell>
+                {/* NOVO: Célula Status */}
+                <TableCell className="text-center">
+                  {user.is_active ? (
+                    <Badge className="bg-green-600 hover:bg-green-600/90 text-white">Ativo</Badge>
+                  ) : (
+                    <Badge variant="destructive">Inativo</Badge>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">
-                  <UserActions user={user} onEdit={handleEdit} canWrite={canWrite} />
+                  <UserActions user={user} onEdit={handleEdit} canWrite={canWrite} currentUserId={currentUserId} />
                 </TableCell>
               </TableRow>
             ))}

@@ -14,6 +14,7 @@ export interface UserProfile {
   endereco_completo: string | null; // Novo campo
   email: string; // Mantemos o campo, mas será 'N/A' na lista
   perfil_customizado_id: string | null; // NOVO: ID do perfil customizado (UUID)
+  is_active: boolean; // NOVO: Status de atividade
   perfis: {
     nome: string;
   } | null;
@@ -50,7 +51,7 @@ const fetchUsers = async (accessToken: string): Promise<UserProfile[]> => {
   // 1. Buscar dados básicos do usuário (RLS já filtra por empresa)
   const { data: usersData, error: fetchError } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, perfis:perfis_customizados (nome), empresa:empresas (nome)")
+    .select("id, nome_completo, empresa_id, avatar_url, telefone, endereco_completo, perfil_customizado_id, is_active, perfis:perfis_customizados (nome), empresa:empresas (nome)")
     .order("nome_completo", { ascending: true });
 
   if (fetchError) {
@@ -186,6 +187,50 @@ export const updateUser = async ({ userIdToUpdate, full_name, perfil_id, telefon
 
   return data;
 };
+
+// --- Toggle User Active Status ---
+
+interface ToggleUserActiveStatusParams {
+  userIdToToggle: string;
+  newStatus: boolean;
+  userName: string;
+  companyId: string | null;
+  queryClient: QueryClient;
+}
+
+export const toggleUserActiveStatus = async ({ userIdToToggle, newStatus, userName, companyId, queryClient }: ToggleUserActiveStatusParams) => {
+  const { data, error } = await supabase.functions.invoke("toggle-user-active-status", {
+    body: { userIdToToggle, newStatus },
+    headers: {
+      // O token de sessão é adicionado automaticamente pelo cliente Supabase
+    },
+  });
+
+  if (error) {
+    console.error("Error toggling user status:", error);
+    throw new Error(error.message);
+  }
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  
+  // Notificação de alteração de status
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: companyId,
+      titulo: `Usuário ${newStatus ? 'Ativado' : 'Desativado'}`,
+      mensagem: `O status de '${userName}' (ID: ${userIdToToggle.slice(0, 8)}) foi alterado para ${newStatus ? 'Ativo' : 'Inativo'}.`,
+      link: "/users",
+      queryClient: queryClient,
+    });
+  }
+
+  return data;
+};
+
 
 export const deleteUser = async (userIdToDelete: string, userName: string, companyId: string | null, queryClient: QueryClient) => {
   const { data, error } = await supabase.functions.invoke("delete-user", {
