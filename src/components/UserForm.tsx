@@ -42,6 +42,13 @@ const baseFormSchema = z.object({
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
   }).or(z.literal("")).optional().nullable(),
+  
+  // Novos campos de senha (opcionais no base)
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'As senhas não coincidem.',
+  path: ['confirmPassword'],
 });
 
 type UserFormValues = z.infer<typeof baseFormSchema>;
@@ -54,6 +61,7 @@ interface UserFormProps {
     telefone: string | null; 
     endereco_completo: string | null;
     empresa_id?: string | null;
+    password?: string; // NOVO
   }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<UserFormValues & { perfis?: { nome: string } | null }>;
@@ -74,23 +82,28 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   if (isEditing) {
     finalFormSchema = finalFormSchema.extend({
       email: z.string().optional(),
-      // Na edição, se for Super Admin, empresa_id é opcional (pode ser null)
       empresa_id: isSuperAdmin 
         ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
         : z.string().optional().nullable(),
-      // Na edição, o perfil pode ser '1' (antigo SA) ou um UUID
       perfil_id: z.string().min(1, { message: t("select_profile") }),
+      password: z.string().optional(),
+      confirmPassword: z.string().optional(),
     });
-  } else if (isSuperAdmin) {
-    // Na criação, Super Admin deve selecionar a empresa
-    finalFormSchema = finalFormSchema.extend({
-        empresa_id: z.string().uuid({
-          message: t("select_valid_company"),
-        }).min(1, { message: t("company_required_super_admin") }),
-      });
   } else {
-    // Se não for Super Admin, o convite não deveria ser possível
-    return <p className="text-destructive">{t("only_super_admin_can_invite")}</p>;
+    // Na CRIAÇÃO, a senha é obrigatória e deve ter pelo menos 6 caracteres
+    finalFormSchema = finalFormSchema.extend({
+      password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+      confirmPassword: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+    });
+    
+    if (isSuperAdmin) {
+      // Na criação, Super Admin deve selecionar a empresa
+      finalFormSchema = finalFormSchema.extend({
+          empresa_id: z.string().uuid({
+            message: t("select_valid_company"),
+          }).min(1, { message: t("company_required_super_admin") }),
+        });
+    }
   }
 
 
@@ -99,11 +112,12 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     defaultValues: {
       full_name: defaultValues?.full_name || "",
       email: defaultValues?.email || "", 
-      // Garante que perfil_id seja sempre uma string (UUID ou '1')
       perfil_id: String(defaultValues?.perfil_id || ""),
       telefone: defaultValues?.telefone || "",
       endereco_completo: defaultValues?.endereco_completo || "",
       empresa_id: defaultValues?.empresa_id || "",
+      password: "", // Adicionado
+      confirmPassword: "", // Adicionado
     },
   });
   
@@ -177,6 +191,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
       telefone: telefone,
       endereco_completo: endereco_completo,
       empresa_id: empresa_id,
+      password: values.password, // NOVO: Inclui a senha
     });
   };
   
@@ -260,6 +275,48 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
             </FormItem>
           )}
         />
+        
+        {/* Campos de Senha (Apenas na Criação) */}
+        {!isEditing && (
+          <>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('new_password')}</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field} 
+                      disabled={isSubmitting} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('confirm_new_password')}</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field} 
+                      disabled={isSubmitting} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
         
         <FormField
           control={form.control}

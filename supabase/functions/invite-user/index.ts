@@ -43,9 +43,6 @@ serve(async (req) => {
     return returnError("Unauthorized: Invalid token", 401);
   }
   
-  // **REMOVIDA A VERIFICAÇÃO DE SUPER ADMIN**
-  // Assumimos que o usuário autenticado pode convidar.
-
   // 2. Processar o corpo da requisição
   let data;
   try {
@@ -54,7 +51,7 @@ serve(async (req) => {
     return returnError("Invalid JSON body", 400);
   }
 
-  const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id } = data;
+  const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id, password } = data;
 
   if (!email || !full_name || !perfil_id || !target_empresa_id) {
     return returnError("Missing required fields: email, full_name, perfil_id, or target_empresa_id", 400);
@@ -68,43 +65,59 @@ serve(async (req) => {
   const final_empresa_id = target_empresa_id;
   const meta_perfil_id: string = perfil_id;
   
-  // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
+  // URL de redirecionamento para o fluxo de convite (se usado)
   const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
 
-  console.log("Attempting to invite user with metadata:", {
-    email,
-    full_name,
+  let authResult;
+  let authError;
+  let invitedUserId;
+  
+  const userMetadata = {
+    full_name: full_name,
     perfil_id: meta_perfil_id,
-    telefone,
-    endereco_completo,
-    final_empresa_id,
-  });
+    telefone: telefone,
+    endereco_completo: endereco_completo,
+  };
 
-  // 3. Convidar o usuário usando o Service Role Key
-  const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-    email,
-    {
-      data: {
-        full_name: full_name,
-        perfil_id: meta_perfil_id,
-        telefone: telefone,
-        endereco_completo: endereco_completo,
-      },
-      redirectTo: redirectUrl,
-      app_metadata: {
-        must_change_password: true,
+  if (password) {
+    // Opção 1: Criar usuário diretamente com senha (signUp)
+    console.log("Attempting to sign up user with password.");
+    const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
+      email: email,
+      password: password,
+      email_confirm: true, // Confirma o email automaticamente
+      user_metadata: userMetadata,
+    });
+    
+    authResult = signUpData;
+    authError = signUpError;
+    invitedUserId = signUpData.user?.id;
+    
+  } else {
+    // Opção 2: Enviar convite por email (inviteUserByEmail)
+    console.log("Attempting to invite user by email.");
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      email,
+      {
+        data: userMetadata,
+        redirectTo: redirectUrl,
+        app_metadata: {
+          must_change_password: true, // Mantém o flag para forçar a mudança no primeiro login
+        }
       }
-    }
-  );
+    );
+    
+    authResult = inviteData;
+    authError = inviteError;
+    invitedUserId = inviteData.user?.id;
+  }
 
-  if (inviteError) {
-    console.error("Supabase Invite Error:", inviteError);
-    return returnError(inviteError.message, 400);
+  if (authError) {
+    console.error("Supabase Auth Error:", authError);
+    return returnError(authError.message, 400);
   }
   
   // 4. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
-  const invitedUserId = inviteData.user?.id;
-
   if (invitedUserId) {
     const { error: updateProfileError } = await supabaseAdmin
       .from("usuarios")
@@ -120,7 +133,7 @@ serve(async (req) => {
   }
 
 
-  return new Response(JSON.stringify({ message: "User invited successfully", user: inviteData.user }), {
+  return new Response(JSON.stringify({ message: "User created/invited successfully", user: authResult.user }), {
     status: 200,
     headers: corsHeaders,
   });
