@@ -22,7 +22,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import EditOrderStatusSheet from "./EditOrderStatusSheet";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns"; // Importando isToday
 import { ptBR } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -325,7 +325,9 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
               <TableRow 
                 key={order.id}
                 className={cn(
-                  selectedIds.has(order.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30"
+                  selectedIds.has(order.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30",
+                  // NOVO: Destaque para pedidos criados no dia atual
+                  isToday(new Date(order.created_at)) && "bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20"
                 )}
               >
                 {/* Checkbox Cell */}
