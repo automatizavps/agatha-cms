@@ -105,9 +105,10 @@ const fetchClientCount = async (companyId: string | undefined): Promise<number> 
 
 /**
  * Busca os 10 itens mais vendidos (produtos e serviços) para a empresa.
+ * NOTA: Esta função busca o TOP 10 GERAL (produtos + serviços).
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
-const fetchTopSellingItems = async (companyId: string | undefined): Promise<TopSellingItem[]> => {
+const fetchTopSellingAllItems = async (companyId: string | undefined): Promise<TopSellingItem[]> => {
   let rpcName = 'get_top_selling_items';
   let rpcArgs: Record<string, any> = {};
   
@@ -135,7 +136,38 @@ const fetchTopSellingItems = async (companyId: string | undefined): Promise<TopS
 };
 
 /**
- * NOVO: Busca os 10 serviços mais vendidos para a empresa.
+ * NOVO: Busca os 10 produtos mais vendidos para a empresa.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
+ */
+const fetchTopSellingProducts = async (companyId: string | undefined): Promise<TopSellingItem[]> => {
+  let rpcName = 'get_top_selling_products';
+  let rpcArgs: Record<string, any> = {};
+  
+  if (companyId) {
+    rpcArgs = { company_id_input: companyId };
+  } else {
+    // Se companyId for undefined, usamos a versão ALL
+    rpcName = 'get_top_selling_products_all';
+  }
+  
+  const { data, error } = await supabase.rpc(rpcName, rpcArgs);
+
+  if (error) {
+    console.error("Error fetching top selling products:", error);
+    throw new Error("Failed to fetch top selling products: " + error.message);
+  }
+  
+  // Converte total_vendido para número
+  return data.map(item => ({
+    ...item,
+    total_vendido: parseInt(item.total_vendido) || 0,
+    fotos: item.fotos || null, 
+  })) as TopSellingItem[];
+};
+
+
+/**
+ * Busca os 10 serviços mais vendidos para a empresa.
  * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
  */
 const fetchTopSellingServices = async (companyId: string | undefined): Promise<TopSellingItem[]> => {
@@ -195,15 +227,25 @@ export const useClientCount = (companyId: string | undefined) => {
   });
 };
 
-export const useTopSellingItems = (companyId: string | undefined) => {
+// RENOMEADO: Agora busca todos os itens (produtos e serviços)
+export const useTopSellingAllItems = (companyId: string | undefined) => {
   return useQuery<TopSellingItem[], Error>({
-    queryKey: ["topSellingItems", companyId],
-    queryFn: () => fetchTopSellingItems(companyId),
+    queryKey: ["topSellingAllItems", companyId],
+    queryFn: () => fetchTopSellingAllItems(companyId),
     enabled: true,
   });
 };
 
-// Hook para buscar apenas os Top 10 Serviços (agora usa a nova RPC)
+// NOVO HOOK: Apenas produtos
+export const useTopSellingProducts = (companyId: string | undefined) => {
+  return useQuery<TopSellingItem[], Error>({
+    queryKey: ["topSellingProducts", companyId],
+    queryFn: () => fetchTopSellingProducts(companyId),
+    enabled: true,
+  });
+};
+
+// Hook para buscar apenas os Top 10 Serviços
 export const useTopSellingServices = (companyId: string | undefined) => {
   return useQuery<TopSellingItem[], Error>({
     queryKey: ["topSellingServices", companyId],

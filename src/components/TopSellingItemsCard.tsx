@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListOrdered, Loader2, Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useTopSellingItems } from '@/integrations/supabase/dashboardMetrics';
+import { useTopSellingProducts } from '@/integrations/supabase/dashboardMetrics'; // ALTERADO PARA useTopSellingProducts
 import {
   Table,
   TableBody,
@@ -21,7 +21,8 @@ interface TopSellingItemsCardProps {
 
 const TopSellingItemsCard: React.FC<TopSellingItemsCardProps> = ({ companyId }) => {
   const { t } = useTranslation();
-  const { data: items, isLoading, isError } = useTopSellingItems(companyId);
+  // Usando o novo hook que busca apenas produtos
+  const { data: items, isLoading, isError } = useTopSellingProducts(companyId);
 
   if (isLoading) {
     return (
@@ -71,7 +72,8 @@ const TopSellingItemsCard: React.FC<TopSellingItemsCardProps> = ({ companyId }) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.filter(item => item.tipo_produto === 'produto').map((item, index) => {
+              {/* Não precisamos mais filtrar por tipo_produto === 'produto' aqui */}
+              {items.map((item, index) => {
                 const firstPhotoUrl = item.fotos?.[0];
                 
                 return (
