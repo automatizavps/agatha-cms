@@ -118,7 +118,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
   );
 };
 
-// NOVO: Componente para exibir os usuários afetados
+// Componente para exibir os usuários afetados
 const RuleUsersDisplay: React.FC<{ ruleId: string }> = ({ ruleId }) => {
   const { data: members, isLoading } = useRuleUsers(ruleId);
   const { t } = useTranslation();
@@ -152,6 +152,46 @@ const RuleUsersDisplay: React.FC<{ ruleId: string }> = ({ ruleId }) => {
           <Users className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium">
             {displayMembers.map(m => m.usuarios?.nome_completo?.split(' ')[0] || 'Usuário').join(', ')}
+            {remainingCount > 0 && ` (+${remainingCount})`}
+          </span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        {tooltipContent}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+// NOVO: Componente para exibir as entidades afetadas
+const RuleEntitiesDisplay: React.FC<{ rule: CommissionRule }> = ({ rule }) => {
+  const { t } = useTranslation();
+  
+  if (!rule.entidades || rule.entidades.length === 0) {
+    return <span className="text-muted-foreground">N/A</span>;
+  }
+  
+  const displayEntities = rule.entidades.slice(0, 2);
+  const remainingCount = rule.entidades.length - displayEntities.length;
+
+  const tooltipContent = (
+    <div className="space-y-1 text-sm">
+      <p className="font-semibold mb-1">{t('commission_entity', { defaultValue: 'Entidades' })}:</p>
+      {rule.entidades.map((entity, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs capitalize">{t(entity.tipo || 'categoria')}</Badge>
+          <span>{entity.nome}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <div className="flex flex-col items-start cursor-default">
+          <span className="font-medium">
+            {displayEntities.map(e => e.nome).join(', ')}
             {remainingCount > 0 && ` (+${remainingCount})`}
           </span>
         </div>
@@ -208,8 +248,9 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
           bValue = b.tipo_entidade;
           break;
         case 'entidade':
-          aValue = a.entidade?.nome || '';
-          bValue = b.entidade?.nome || '';
+          // Ordena pelo nome da primeira entidade
+          aValue = a.entidades?.[0]?.nome || '';
+          bValue = b.entidades?.[0]?.nome || '';
           break;
         case 'tipo_valor':
           aValue = a.tipo_valor;
@@ -246,15 +287,6 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
       }).format(rule.valor);
     }
     return `${rule.valor}%`;
-  };
-  
-  const getEntityTypeIcon = (type: EntityType) => {
-    switch (type) {
-      case 'produto': return <Package className="h-4 w-4 text-muted-foreground" />;
-      case 'servico': return <Clock className="h-4 w-4 text-muted-foreground" />;
-      case 'categoria': return <Tag className="h-4 w-4 text-muted-foreground" />;
-      default: return null;
-    }
   };
   
   const getEntityTypeBadge = (type: EntityType) => {
@@ -337,9 +369,8 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
                 <TableCell className="font-medium">
                   {getEntityTypeBadge(rule.tipo_entidade)}
                 </TableCell>
-                <TableCell className="font-medium flex items-center gap-2">
-                  {getEntityTypeIcon(rule.tipo_entidade)}
-                  {rule.entidade?.nome || rule.entidade_id.slice(0, 8)}
+                <TableCell className="font-medium">
+                  <RuleEntitiesDisplay rule={rule} />
                 </TableCell>
                 <TableCell>
                   <RuleUsersDisplay ruleId={rule.id} />

@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Building, Tag, Package, Clock, DollarSign, Percent, Check, ChevronsUpDown, Users } from "lucide-react";
+import { Loader2, Building, Tag, Package, Clock, DollarSign, Percent, Check, ChevronsUpDown, Users, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,10 +22,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useCompanies } from "@/integrations/supabase/companies";
-import { CommissionRule, CommissionType, EntityType } from "@/integrations/supabase/commissions";
+import { CommissionRule, CommissionType, EntityType, useRuleEntities } from "@/integrations/supabase/commissions";
 import { useCategories } from "@/integrations/supabase/categories";
 import { useProductsOnly, useServicesOnly } from "@/integrations/supabase/products";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -50,16 +50,14 @@ const baseFormSchema = z.object({
   }).or(z.literal("")).optional(),
   
   tipo_entidade: z.enum(['produto', 'servico', 'categoria']),
-  entidade_id: z.string().uuid({
-    message: "Selecione uma entidade válida.",
-  }).min(1, { message: "A entidade é obrigatória." }),
+  // ALTERADO: Agora é um array de IDs
+  entidade_ids: z.array(z.string().uuid()).min(1, { message: "Selecione pelo menos uma entidade." }),
   
   tipo_valor: z.enum(['fixo', 'percentual']),
   valor: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "O valor deve ser um número positivo.",
   }),
   
-  // NOVO: IDs dos usuários que receberão a comissão (opcional)
   usuario_ids: z.array(z.string().uuid()).optional(),
 });
 
@@ -68,25 +66,28 @@ type CommissionRuleFormValues = z.infer<typeof baseFormSchema>;
 interface CommissionRuleFormProps {
   onSubmit: (values: { 
     tipo_entidade: EntityType; 
-    entidade_id: string; 
+    entidade_ids: string[]; // NOVO
     tipo_valor: CommissionType; 
     valor: number; 
     empresa_id?: string;
-    usuario_ids: string[]; // NOVO
+    usuario_ids: string[];
   }) => void;
   isSubmitting: boolean;
-  defaultRule?: CommissionRule & { usuario_ids?: string[] }; // Adicionando usuario_ids
+  defaultRule?: CommissionRule & { usuario_ids?: string[] };
   isEditing?: boolean;
 }
 
 const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSubmitting, defaultRule, isEditing = false }) => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
-  const { data: allUsers, isLoading: isLoadingAllUsers } = useUsers(); // Carrega todos os usuários
+  const { data: allUsers, isLoading: isLoadingAllUsers } = useUsers();
   const { t } = useTranslation();
   
+  // Carrega as entidades associadas para preencher o defaultValues na edição
+  const { data: defaultEntities, isLoading: isLoadingDefaultEntities } = useRuleEntities(defaultRule?.id || '');
+  
   const isSuperAdmin = profile?.is_super_admin;
-  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies) || isLoadingAllUsers;
+  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies) || isLoadingAllUsers || isLoadingDefaultEntities;
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
   const formSchema = isSuperAdmin && !isEditing
@@ -102,12 +103,20 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
     defaultValues: {
       empresa_id: defaultRule?.empresa_id || "",
       tipo_entidade: defaultRule?.tipo_entidade || 'produto',
-      entidade_id: defaultRule?.entidade_id || "",
+      // Inicializa com os IDs carregados
+      entidade_ids: defaultEntities?.map(e => e.id) || [], 
       tipo_valor: defaultRule?.tipo_valor || 'percentual',
       valor: defaultRule?.valor ? String(defaultRule.valor) : "0",
-      usuario_ids: defaultRule?.usuario_ids || [], // NOVO
+      usuario_ids: defaultRule?.usuario_ids || [],
     },
   });
+  
+  // Sincroniza entidades carregadas na edição
+  useEffect(() => {
+    if (isEditing && defaultEntities && defaultEntities.length > 0) {
+      form.setValue('entidade_ids', defaultEntities.map(e => e.id), { shouldValidate: true });
+    }
+  }, [isEditing, defaultEntities, form]);
   
   // Observa o ID da empresa e o tipo de entidade
   const selectedCompanyId = isEditing 
@@ -116,6 +125,7 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
     
   const isCompanySelected = !!selectedCompanyId;
   const currentEntityType = form.watch('tipo_entidade');
+  const selectedEntityIds = form.watch('entidade_ids') || [];
   
   // Carrega dados dependentes da empresa
   const { data: categories, isLoading: isLoadingCategories } = useCategories(selectedCompanyId || undefined);
@@ -158,6 +168,12 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
     return [];
   }, [currentEntityType, isCompanySelected, isLoadingEntities, categories, allItems]);
   
+  // Mapeia os IDs selecionados para nomes para exibição
+  const selectedEntityNames = useMemo(() => {
+    const selected = entityOptions.filter(e => selectedEntityIds.includes(e.id));
+    return selected.map(e => e.name);
+  }, [selectedEntityIds, entityOptions]);
+  
   // Encontra o nome da empresa para exibição desabilitada
   const companyName = companies?.find(c => c.id === defaultRule?.empresa_id)?.nome;
   
@@ -167,18 +183,14 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
   // Determina se o campo empresa deve ser exibido (Super Admin ou se estiver editando)
   const shouldShowCompanyField = isSuperAdmin || isEditing;
   
-  // Observa o ID da entidade para exibir o nome no ComboBox
-  const currentEntityId = form.watch('entidade_id');
-  const currentEntityName = useMemo(() => {
-    const entity = entityOptions.find(e => e.id === currentEntityId);
-    if (entity) return entity.name;
-    
-    // Se estiver editando, usa o nome do defaultRule como fallback
-    if (isEditing && defaultRule?.entidade?.nome && defaultRule.entidade_id === currentEntityId) {
-      return defaultRule.entidade.nome;
-    }
-    return t('select_entity', { defaultValue: 'Selecione a entidade' });
-  }, [currentEntityId, entityOptions, isEditing, defaultRule, t]);
+  const handleEntityToggle = (entityId: string) => {
+    const currentIds = form.getValues('entidade_ids') || [];
+    const newIds = currentIds.includes(entityId)
+      ? currentIds.filter(id => id !== entityId)
+      : [...currentIds, entityId];
+      
+    form.setValue('entidade_ids', newIds, { shouldValidate: true });
+  };
 
 
   const handleSubmit = (values: CommissionRuleFormValues) => {
@@ -188,11 +200,11 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
 
     onSubmit({
       tipo_entidade: values.tipo_entidade,
-      entidade_id: values.entidade_id,
+      entidade_ids: values.entidade_ids || [],
       tipo_valor: values.tipo_valor,
       valor: valor,
       empresa_id: empresa_id,
-      usuario_ids: values.usuario_ids || [], // NOVO
+      usuario_ids: values.usuario_ids || [],
     });
   };
   
@@ -221,7 +233,7 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
                     onValueChange={(value) => {
                       field.onChange(value);
                       // Limpa entidade e usuários ao mudar a empresa
-                      form.setValue('entidade_id', "");
+                      form.setValue('entidade_ids', []);
                       form.setValue('usuario_ids', []);
                     }} 
                     value={field.value} 
@@ -265,8 +277,8 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
               <Select 
                 onValueChange={(value) => {
                   field.onChange(value as EntityType);
-                  // Resetar entidade_id ao mudar o tipo
-                  form.setValue('entidade_id', "");
+                  // Resetar entidades ao mudar o tipo
+                  form.setValue('entidade_ids', []);
                 }} 
                 value={field.value} 
                 disabled={isSubmitting || !isCompanySelected}
@@ -291,10 +303,10 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
           )}
         />
         
-        {/* Entidade Específica (Produto/Serviço/Categoria) */}
+        {/* Entidade Específica (Multi-Select) */}
         <FormField
           control={form.control}
-          name="entidade_id"
+          name="entidade_ids"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>{t('commission_entity', { defaultValue: 'Entidade' })}</FormLabel>
@@ -306,12 +318,14 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
                       role="combobox"
                       className={cn(
                         "w-full justify-between",
-                        !field.value && "text-muted-foreground"
+                        selectedEntityIds.length === 0 && "text-muted-foreground"
                       )}
                       disabled={isLoadingEntities || isSubmitting || !isCompanySelected || entityOptions.length === 0}
                     >
                       <div className="flex items-center gap-2 truncate">
-                        {currentEntityName}
+                        {selectedEntityIds.length > 0
+                          ? t('members_selected', { count: selectedEntityIds.length, defaultValue: '{{count}} entidade(s) selecionada(s)' })
+                          : t('select_entity', { defaultValue: 'Selecione a(s) entidade(s)' })}
                       </div>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -322,35 +336,46 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
                     <CommandInput placeholder={t('search_entity', { defaultValue: 'Buscar entidade...' })} />
                     <CommandEmpty>{t('no_data_found')}</CommandEmpty>
                     <CommandGroup>
-                      {entityOptions.map((option) => (
-                        <CommandItem
-                          value={option.name}
-                          key={option.id}
-                          onSelect={() => {
-                            form.setValue("entidade_id", option.id, { shouldValidate: true });
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              option.id === field.value
-                                ? "opacity-100"
-                                : "opacity-0"
-                            )}
-                          />
-                          {option.name}
-                        </CommandItem>
-                      ))}
+                      {entityOptions.map((option) => {
+                        const isSelected = selectedEntityIds.includes(option.id);
+                        return (
+                          <CommandItem
+                            value={option.name}
+                            key={option.id}
+                            onSelect={() => handleEntityToggle(option.id)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                isSelected ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {option.name}
+                          </CommandItem>
+                        );
+                      })}
                     </CommandGroup>
                   </Command>
                 </PopoverContent>
               </Popover>
+              
+              {/* Exibição das entidades selecionadas */}
+              {selectedEntityNames.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {selectedEntityNames.map(name => (
+                    <Badge key={name} variant="secondary" className="text-xs">
+                      {name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              
               <FormMessage />
             </FormItem>
           )}
         />
         
-        {/* NOVO CAMPO: Usuários Aplicáveis */}
+        {/* Usuários Aplicáveis (Mantido) */}
         <FormField
           control={form.control}
           name="usuario_ids"
@@ -376,7 +401,7 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
                         <div className="flex items-center gap-2 truncate">
                           <Users className="h-4 w-4" />
                           {selectedUserIds.length > 0
-                            ? t('members_selected', { count: selectedUserIds.length })
+                            ? t('members_selected', { count: selectedUserIds.length, defaultValue: '{{count}} usuário(s) selecionado(s)' })
                             : t('general_rule', { defaultValue: 'Regra Geral (Todos os Usuários)' })}
                         </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
