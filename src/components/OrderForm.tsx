@@ -47,7 +47,7 @@ const itemSchema = z.object({
 const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
-  }),
+  }).min(1, { message: "O cliente é obrigatório." }),
   items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." }),
   status: z.enum(statusOptions, {
     required_error: "O status é obrigatório.",
@@ -220,6 +220,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const handleSubmit = (values: OrderFormValues) => {
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
+    // CORREÇÃO CRÍTICA: Garante que promocao_id seja NULL se for string vazia
+    const final_promocao_id = values.promocao_id === "" ? null : values.promocao_id;
+
     onSubmit({
       cliente_id: values.cliente_id,
       valor_total: calculateTotal,
@@ -230,7 +233,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       })),
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: isPromotionValid ? activePromotion?.id || null : null, // Só aplica se for válido
+      promocao_id: isPromotionValid ? final_promocao_id : null, // Só aplica se for válido
     });
   };
   

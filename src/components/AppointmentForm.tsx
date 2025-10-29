@@ -252,6 +252,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     data_hora.setHours(hours, minutes, 0, 0);
     
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
+    
+    // CORREÇÃO CRÍTICA: Garante que promocao_id seja NULL se for string vazia
+    const final_promocao_id = values.promocao_id === "" ? null : values.promocao_id;
 
     onSubmit({
       cliente_id: values.cliente_id,
@@ -264,7 +267,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       })),
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: isPromotionValid ? activePromotion?.id || null : null, // Só aplica se for válido
+      promocao_id: isPromotionValid ? final_promocao_id : null, // Só aplica se for válido
     });
   };
   
