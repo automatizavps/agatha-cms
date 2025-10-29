@@ -5,6 +5,7 @@ import { updateAppointment, Appointment, useAppointmentItems } from "@/integrati
 import { showSuccess, showError } from "@/utils/toast";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { useCanWrite } from "@/hooks/use-module-permission"; // NOVO IMPORT
 
 interface EditAppointmentSheetProps {
   appointment: Appointment;
@@ -15,6 +16,9 @@ interface EditAppointmentSheetProps {
 const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment, isOpen, onOpenChange }) => {
   const queryClient = useQueryClient();
   const { data: appointmentItems, isLoading: isLoadingItems } = useAppointmentItems(appointment.id);
+  
+  // Permissão de escrita para o módulo 'appointments'
+  const canWriteAppointments = useCanWrite('appointments');
 
   const mutation = useMutation({
     mutationFn: updateAppointment,
@@ -97,6 +101,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
             isSubmitting={mutation.isPending} 
             defaultValues={initialValues}
             isEditing={true}
+            canEditStatus={canWriteAppointments} // PASSANDO A PERMISSÃO
           />
         </div>
       </SheetContent>

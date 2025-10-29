@@ -85,9 +85,10 @@ interface AppointmentFormProps {
   isSubmitting: boolean;
   defaultValues?: Partial<AppointmentFormValues & { items: ItemToCreate }>;
   isEditing?: boolean;
+  canEditStatus?: boolean; // NOVA PROP
 }
 
-const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
+const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false, canEditStatus = false }) => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { data: users, isLoading: isLoadingUsers } = useUsers();
@@ -491,6 +492,43 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           />
         </div>
         
+        {/* Campo de Status (Apenas na Edição) */}
+        {isEditing && (
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('order_table_header_status')}</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value} 
+                  disabled={isSubmitting || !canEditStatus} // DESABILITADO SE NÃO PUDER EDITAR STATUS
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("select_status")} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status} value={status} className="capitalize">
+                        {t(status)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!canEditStatus && (
+                  <FormDescription className="text-destructive">
+                    {t('access_denied_write', { defaultValue: 'Você não tem permissão para alterar o status.' })}
+                  </FormDescription>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('nav_products_services')}</CardTitle>
