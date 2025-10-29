@@ -85,7 +85,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, isSubmitting, def
 
   const handleSubmit = (values: CategoryFormValues) => {
     // Se for Super Admin, envia o empresa_id selecionado. Caso contrário, não envia (será obtido via RPC).
-    const empresa_id = isSuperAdmin ? values.empresa_id : undefined;
+    // CORREÇÃO: Se for string vazia (seleção 'Nenhuma' no SA), enviamos undefined para que o RPC não tente usar "" como UUID.
+    const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
 
     onSubmit({
       nome: values.nome,
