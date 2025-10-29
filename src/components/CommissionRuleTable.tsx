@@ -37,7 +37,7 @@ interface RuleActionsProps {
   canWrite: boolean;
 }
 
-type SortKey = 'tipo_entidade' | 'entidade' | 'tipo_valor' | 'valor';
+type SortKey = 'tipo_entidade' | 'entidade' | 'tipo_valor' | 'valor' | 'empresa';
 type SortDirection = 'asc' | 'desc';
 
 const RuleActions: React.FC<RuleActionsProps> = ({ rule, onEdit, canWrite }) => {
@@ -173,6 +173,10 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
           aValue = a.valor;
           bValue = b.valor;
           break;
+        case 'empresa':
+          aValue = a.empresas?.nome || '';
+          bValue = b.empresas?.nome || '';
+          break;
         default:
           return 0;
       }
@@ -259,7 +263,15 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
                 {t('commission_value', { defaultValue: 'Valor' })}
               </SortableHeader>
               {isSuperAdmin && (
-                <TableHead className="hidden md:table-cell">{t('user_table_header_company')}</TableHead>
+                <SortableHeader 
+                  sortKey="empresa" 
+                  currentSortKey={sortKey} 
+                  currentSortDirection={sortDirection} 
+                  onSort={handleSort}
+                  className="hidden md:table-cell"
+                >
+                  {t('user_table_header_company')}
+                </SortableHeader>
               )}
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
@@ -282,7 +294,10 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
                 </TableCell>
                 {isSuperAdmin && (
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                    {rule.empresa_id.slice(0, 8)}
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3" />
+                      {rule.empresas?.nome || 'N/A'}
+                    </div>
                   </TableCell>
                 )}
                 <TableCell className="text-right">

@@ -20,6 +20,11 @@ export interface CommissionRule {
     nome: string;
     tipo?: 'produto' | 'servico';
   } | null;
+  
+  // NOVO: Nome da empresa
+  empresas: {
+    nome: string;
+  } | null;
 }
 
 // --- Fetch Rules ---
@@ -34,7 +39,8 @@ const fetchCommissionRules = async (companyId?: string): Promise<CommissionRule[
       entidade_id,
       tipo_valor,
       valor,
-      created_at
+      created_at,
+      empresas (nome)
     `);
     
   if (companyId) {
