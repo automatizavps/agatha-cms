@@ -28,7 +28,6 @@ import { Badge } from "@/components/ui/badge"; // IMPORTAÇÃO CORRIGIDA
 import { format, isPast, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // IMPORTADO AQUI
-import CompanyDetailsDialog from "./CompanyDetailsDialog"; // NOVO IMPORT
 
 interface CompanyTableProps {
   companies: Company[];
@@ -114,12 +113,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSupe
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className="h-8 w-8 p-0"
-          // Adicionado onClick para parar a propagação e evitar que o modal de detalhes abra
-          onClick={(e) => e.stopPropagation()} 
-        >
+        <Button variant="ghost" className="h-8 w-8 p-0">
           <span className="sr-only">{t('actions')}</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
@@ -188,7 +182,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 
   return (
     <TableHead className={cn("cursor-pointer hover:text-foreground transition-colors", className)} onClick={() => onSort(sortKey)}>
-      <div className={cn("flex items-center gap-1", className?.includes('text-right') && "justify-end", className?.includes('text-center') && "justify-center")}>
+      <div className="flex items-center gap-1">
         {children}
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
@@ -240,11 +234,6 @@ const getPlanVigencyStatus = (company: Company) => {
 const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  
-  // NOVO ESTADO para o modal de detalhes
-  const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  
   const [sortKey, setSortKey] = useState<SortKey>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { data: profile } = useCurrentUserProfile();
@@ -257,24 +246,11 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
     setEditingCompany(company);
     setIsEditSheetOpen(true);
   };
-  
-  // NOVO: Manipulador de clique na linha
-  const handleRowClick = (company: Company) => {
-    setViewingCompany(company);
-    setIsDetailsDialogOpen(true);
-  };
 
   const handleCloseEditSheet = (open: boolean) => {
     setIsEditSheetOpen(open);
     if (!open) {
       setEditingCompany(null);
-    }
-  };
-  
-  const handleCloseDetailsDialog = (open: boolean) => {
-    setIsDetailsDialogOpen(open);
-    if (!open) {
-      setViewingCompany(null);
     }
   };
   
@@ -418,14 +394,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
           </TableHeader>
           <TableBody>
             {sortedCompanies.map((company) => (
-              <TableRow 
-                key={company.id} 
-                className={cn(
-                  !company.is_active ? "bg-destructive/10 hover:bg-destructive/20" : "hover:bg-muted/50",
-                  "cursor-pointer" // Adiciona cursor pointer
-                )}
-                onClick={() => handleRowClick(company)} // Adiciona o clique na linha
-              >
+              <TableRow key={company.id} className={!company.is_active ? "bg-destructive/10 hover:bg-destructive/20" : ""}>
                 <TableCell className="font-medium flex items-center gap-2">
                   <Building className="h-4 w-4 text-muted-foreground" />
                   {company.nome}
@@ -464,7 +433,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                     {getPlanVigencyStatus(company)}
                   </div>
                 </TableCell>
-                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                <TableCell className="text-right">
                   <CompanyActions company={company} onEdit={handleEdit} isSuperAdmin={isSuperAdmin || false} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
@@ -478,15 +447,6 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
           company={editingCompany} 
           isOpen={isEditSheetOpen} 
           onOpenChange={handleCloseEditSheet} 
-        />
-      )}
-      
-      {/* NOVO: Modal de Detalhes da Empresa */}
-      {viewingCompany && (
-        <CompanyDetailsDialog
-          company={viewingCompany}
-          isOpen={isDetailsDialogOpen}
-          onOpenChange={handleCloseDetailsDialog}
         />
       )}
     </>
