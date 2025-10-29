@@ -39,7 +39,7 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
-  item_type: z.enum(['produto', 'servico']), // NOVO: Tipo de item
+  item_type: z.enum(['produto', 'servico']),
 });
 
 const baseFormSchema = z.object({
@@ -98,10 +98,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       cliente_id: defaultValues?.cliente_id || "",
       items: defaultValues?.items?.map(item => ({
         ...item,
-        // Na edição, precisamos inferir o tipo do item. Como não temos o tipo aqui,
-        // vamos assumir 'produto' como fallback, mas o ideal é que o item já venha com o tipo.
-        // No entanto, como a edição não permite alterar itens, isso não deve ser um problema.
-        // Para novos itens, o tipo será definido no handleAddItem.
         item_type: 'produto', 
       })) || [],
       status: defaultValues?.status || 'pendente_entrega',
@@ -138,7 +134,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
 
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
-      // Mapeia itens para incluir o item_type (assumindo 'produto' como fallback se não for serviço)
       const itemsWithTypes = defaultValues.items.map(item => {
         const productDetail = allItems.find(p => p.id === item.produto_id);
         return {
@@ -157,10 +152,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
   const { data: promotionRules, isLoading: isLoadingPromotionRules } = usePromotionRules(activePromotion?.id || '');
 
-  // Sincroniza a promoção inicial na edição
   useEffect(() => {
     if (isEditing && defaultValues?.promocao_id && !activePromotion) {
-      // Busca a promoção pelo ID para preencher o activePromotion
       const fetchInitialPromotion = async () => {
         const { data: promoData } = await supabase
           .from('promocoes')
@@ -173,20 +166,18 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       };
       fetchInitialPromotion();
     } else if (!isEditing) {
-      setActivePromotion(null); // Limpa a promoção ao criar um novo
+      setActivePromotion(null);
     }
   }, [isEditing, defaultValues?.promocao_id]);
 
 
-  // Validação da promoção
   const isPromotionValid = useMemo(() => {
-    if (!activePromotion || !promotionRules || promotionRules.length === 0) return true; // Sem promoção ou sem regras = válido
-    if (isLoadingPromotionRules) return true; // Ainda carregando, assume válido temporariamente
+    if (!activePromotion || !promotionRules || promotionRules.length === 0) return true;
+    if (isLoadingPromotionRules) return true;
 
     const currentItems = form.getValues("items");
-    if (currentItems.length === 0) return false; // Não há itens para aplicar a promoção
+    if (currentItems.length === 0) return false;
 
-    // Verifica se pelo menos um item do pedido se encaixa em alguma regra da promoção
     return currentItems.some(orderItem => {
       const productDetails = allItems.find(p => p.id === orderItem.produto_id);
       if (!productDetails) return false;
@@ -195,7 +186,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
         
-        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         
         return false;
@@ -215,7 +205,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   }, [form.watch("items"), activePromotion, isPromotionValid]);
   
   const handleAddItem = () => {
-    // Adiciona um novo item com o tipo padrão 'produto'
     append({ produto_id: "", quantidade: 1, preco_unitario: 0, item_type: 'produto' });
   };
   
@@ -224,12 +213,10 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     if (selectedItem) {
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
-      // O item_type já deve estar correto, mas garantimos que o produto_id seja atualizado
     }
   };
   
   const handleItemTypeChange = (index: number, type: 'produto' | 'servico') => {
-    // Atualiza o tipo e reseta o produto_id e preço
     form.setValue(`items.${index}.item_type`, type);
     form.setValue(`items.${index}.produto_id`, "");
     form.setValue(`items.${index}.preco_unitario`, 0);
@@ -253,7 +240,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       })),
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: isPromotionValid ? activePromotion?.id || null : null, // Só aplica se for válido
+      promocao_id: isPromotionValid ? activePromotion?.id || null : null,
     });
   };
   
@@ -603,4 +590,4 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   );
 };
 
-export default AppointmentForm;
+export default OrderForm;
