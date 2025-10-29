@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { usePromotionById } from '@/integrations/supabase/promotions';
+import { useCommissionRecordsByReference, CommissionRecord } from '@/integrations/supabase/commissions'; // NOVO IMPORT
 
 interface CommissionDetailsDialogProps {
   record: CommissionRecordReport | null;
@@ -45,15 +46,19 @@ const getStatusBadge = (status: string, t: (key: string, options?: any) => strin
 const CommissionDetailsDialog: React.FC<CommissionDetailsDialogProps> = ({ record, isOpen, onOpenChange }) => {
   const { t } = useTranslation();
   
+  const referenceId = record?.referencia_id;
   const isOrder = record?.tipo_referencia === 'pedido';
   const isAppointment = record?.tipo_referencia === 'agendamento';
   
   // Busca os dados do Pedido/Agendamento
-  const { data: order, isLoading: isLoadingOrder } = useOrderById(isOrder ? record?.referencia_id : undefined);
-  const { data: appointment, isLoading: isLoadingAppointment } = useAppointmentById(isAppointment ? record?.referencia_id : undefined);
+  const { data: order, isLoading: isLoadingOrder } = useOrderById(isOrder ? referenceId : undefined);
+  const { data: appointment, isLoading: isLoadingAppointment } = useAppointmentById(isAppointment ? referenceId : undefined);
+  
+  // Busca os registros de comissão detalhados (por item)
+  const { data: itemCommissions, isLoading: isLoadingItemCommissions } = useCommissionRecordsByReference(referenceId);
   
   const data = isOrder ? order : appointment;
-  const isLoading = isLoadingOrder || isLoadingAppointment;
+  const isLoading = isLoadingOrder || isLoadingAppointment || isLoadingItemCommissions;
   
   // Busca a promoção (se houver)
   const promotionId = data?.promocao_id;
@@ -72,6 +77,16 @@ const CommissionDetailsDialog: React.FC<CommissionDetailsDialogProps> = ({ recor
     const items = isOrderData ? data.pedido_itens : ('agendamento_itens' in data ? data.agendamento_itens : []);
     const client = data.clientes;
     const responsible = data.responsavel;
+    
+    // Mapeia os itens do pedido/agendamento com os valores de comissão
+    const itemsWithCommission = items.map(item => {
+      const commission = itemCommissions?.find(c => c.item_id === item.id);
+      return {
+        ...item,
+        valor_comissao: commission?.valor_comissao || 0,
+        comissionado: !!commission,
+      };
+    });
     
     // Calcula o valor total dos itens (sem desconto)
     const subtotal = items.reduce((sum, item) => sum + (item.quantidade * item.preco_unitario), 0);
@@ -127,7 +142,7 @@ const CommissionDetailsDialog: React.FC<CommissionDetailsDialogProps> = ({ recor
           </div>
         </div>
         
-        {/* Seção de Itens */}
+        {/* Seção de Itens e Comissão por Item */}
         <div className="space-y-2">
           <h4 className="font-semibold flex items-center gap-2"><Package className="h-4 w-4" /> {t('nav_products_services')}</h4>
           <Separator />
@@ -139,15 +154,19 @@ const CommissionDetailsDialog: React.FC<CommissionDetailsDialogProps> = ({ recor
                   <TableHead className="text-center">{t('quantity')}</TableHead>
                   <TableHead className="text-right">{t('unit_price')}</TableHead>
                   <TableHead className="text-right">{t('order_table_header_total')}</TableHead>
+                  <TableHead className="text-right text-green-600">{t('commission_value')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((item, index) => (
-                  <TableRow key={index}>
+                {itemsWithCommission.map((item, index) => (
+                  <TableRow key={index} className={cn(item.valor_comissao > 0 && "bg-green-500/5 dark:bg-green-900/10")}>
                     <TableCell className="font-medium text-sm">{item.produtos?.nome || t('unknown_item')}</TableCell>
                     <TableCell className="text-center">{item.quantidade}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{formatCurrency(item.preco_unitario)}</TableCell>
                     <TableCell className="text-right font-semibold">{formatCurrency(item.quantidade * item.preco_unitario)}</TableCell>
+                    <TableCell className="text-right font-bold text-green-600">
+                      {item.valor_comissao > 0 ? formatCurrency(item.valor_comissao) : 'N/A'}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -155,7 +174,7 @@ const CommissionDetailsDialog: React.FC<CommissionDetailsDialogProps> = ({ recor
           </div>
         </div>
         
-        {/* Seção de Totais e Comissão */}
+        {/* Seção de Totais e Comissão Resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
           <div className="space-y-2">
             <h4 className="font-semibold flex items-center gap-2"><DollarSign className="h-4 w-4" /> {t('commission_details', { defaultValue: 'Detalhes da Comissão' })}</h4>

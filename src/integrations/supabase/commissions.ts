@@ -333,6 +333,7 @@ export interface CommissionRecord {
   tipo_referencia: 'pedido' | 'agendamento';
   valor_comissao: number;
   status: 'pendente' | 'pago' | 'cancelado';
+  item_id: string; // NOVO: ID do item que gerou a comissão
   created_at: string;
   
   // Relacionamentos
@@ -340,6 +341,44 @@ export interface CommissionRecord {
     nome_completo: string;
   } | null;
 }
+
+// NOVO HOOK: Busca registros de comissão detalhados por referência
+const fetchCommissionRecordsByReference = async (referenceId: string): Promise<CommissionRecord[]> => {
+  const { data, error } = await supabase
+    .from("comissionamentos")
+    .select(`
+      id,
+      usuario_id,
+      referencia_id,
+      tipo_referencia,
+      valor_comissao,
+      status,
+      item_id,
+      created_at,
+      usuarios (nome_completo)
+    `)
+    .eq('referencia_id', referenceId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching commission records by reference:", error);
+    throw new Error("Failed to fetch commission records by reference: " + error.message);
+  }
+  
+  return data.map(c => ({
+    ...c,
+    valor_comissao: parseFloat(String(c.valor_comissao)) || 0,
+  })) as CommissionRecord[];
+};
+
+export const useCommissionRecordsByReference = (referenceId: string | undefined) => {
+  return useQuery<CommissionRecord[], Error>({
+    queryKey: ["commissionRecordsByReference", referenceId],
+    queryFn: () => fetchCommissionRecordsByReference(referenceId!),
+    enabled: !!referenceId,
+  });
+};
+
 
 export const useCommissionRecords = (companyId?: string) => {
   return useQuery<CommissionRule[], Error>({
