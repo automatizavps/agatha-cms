@@ -102,20 +102,24 @@ serve(async (req) => {
     return returnError(inviteError.message, 400);
   }
   
-  // 4. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
+  // 4. Inserir/Atualizar o perfil do usuário na tabela 'usuarios'
   const invitedUserId = inviteData.user?.id;
 
   if (invitedUserId) {
-    const { error: updateProfileError } = await supabaseAdmin
+    const { error: upsertProfileError } = await supabaseAdmin
       .from("usuarios")
-      .update({ 
+      .upsert({ 
+        id: invitedUserId, // Chave primária para upsert
+        nome_completo: full_name,
         empresa_id: final_empresa_id,
         perfil_customizado_id: meta_perfil_id === '1' ? null : meta_perfil_id, // '1' é NULL no banco
-      })
-      .eq("id", invitedUserId);
+        telefone: telefone,
+        endereco_completo: endereco_completo,
+      }, { onConflict: 'id' }); // Usa onConflict para garantir que o registro exista
 
-    if (updateProfileError) {
-      console.error("Supabase Update Profile Error:", updateProfileError);
+    if (upsertProfileError) {
+      console.error("Supabase Upsert Profile Error:", upsertProfileError);
+      // Não retornamos erro 400 aqui, pois o convite Auth já foi enviado.
     }
   }
 
