@@ -154,7 +154,8 @@ const CommissionDetailsDialog: React.FC<CommissionDetailsDialogProps> = ({ recor
                   <TableHead className="text-center">{t('quantity')}</TableHead>
                   <TableHead className="text-right">{t('unit_price')}</TableHead>
                   <TableHead className="text-right">{t('order_table_header_total')}</TableHead>
-                  <TableHead className="text-right text-green-600">{t('commission_value')}</TableHead>
+                  {/* ALTERADO: Cabeçalho da coluna de comissão */}
+                  <TableHead className="text-right text-green-600">{t('commission', { defaultValue: 'Comissão' })}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
