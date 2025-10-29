@@ -40,14 +40,21 @@ export interface Order {
   pedido_itens: OrderItem[];
 }
 
-// --- Fetch ---
+// --- Fetch Geral ---
 
 interface OrderFilters {
   startDate?: string; // ISO date string (YYYY-MM-DD)
   endDate?: string;   // ISO date string (YYYY-MM-DD)
 }
 
-const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Promise<Order[]> => {
+interface PaginatedOrders {
+  orders: Order[];
+  totalCount: number;
+}
+
+const fetchOrders = async (companyId?: string, filters: OrderFilters = {}, page: number = 1, pageSize: number = 20): Promise<PaginatedOrders> => {
+  const offset = (page - 1) * pageSize;
+  
   // Buscamos pedidos e o nome/email do cliente
   let query = supabase
     .from("pedidos")
@@ -62,7 +69,7 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
       promocao_id,
       clientes (nome, email),
       responsavel:usuarios!pedidos_responsavel_id_fkey (nome_completo, avatar_url)
-    `);
+    `, { count: 'exact' }); // Solicita a contagem total
     
   // 1. Filtrar por Empresa
   if (companyId) {
@@ -80,21 +87,29 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
     query = query.lt('created_at', end.toISOString());
   }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  // 3. Aplicar ordenação e paginação
+  query = query
+    .order("created_at", { ascending: false })
+    .range(offset, offset + pageSize - 1);
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error("Error fetching orders:", error);
     throw new Error("Failed to fetch orders");
   }
 
-  return data as Order[];
+  return {
+    orders: data as Order[],
+    totalCount: count || 0,
+  };
 };
 
-export const useOrders = (companyId?: string, filters: OrderFilters = {}) => {
-  // Adiciona companyId e filtros na queryKey
-  return useQuery<Order[], Error>({
-    queryKey: ["orders", companyId, filters],
-    queryFn: () => fetchOrders(companyId, filters),
+export const useOrders = (companyId?: string, filters: OrderFilters = {}, page: number = 1, pageSize: number = 20) => {
+  // Adiciona companyId, filtros e paginação na queryKey
+  return useQuery<PaginatedOrders, Error>({
+    queryKey: ["orders", companyId, filters, page, pageSize],
+    queryFn: () => fetchOrders(companyId, filters, page, pageSize),
   });
 };
 
