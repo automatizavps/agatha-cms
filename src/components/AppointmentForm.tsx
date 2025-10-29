@@ -49,15 +49,15 @@ const itemSchema = z.object({
 });
 
 const baseFormSchema = z.object({
-  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
-  cliente_id: z.string().uuid({
+  // CORREÇÃO: Aplica min(1) e uuid() ao string, e depois permite a string vazia
+  cliente_id: z.string().min(1, { message: "O cliente é obrigatório." }).uuid({
     message: "Selecione um cliente válido.",
-  }).or(z.literal("")).min(1, { message: "O cliente é obrigatório." }),
+  }).or(z.literal("")),
   
-  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
-  responsavel_id: z.string().uuid({
+  // CORREÇÃO: Aplica min(1) e uuid() ao string, e depois permite a string vazia
+  responsavel_id: z.string().min(1, { message: "O responsável é obrigatório." }).uuid({
     message: "Selecione um responsável válido.",
-  }).or(z.literal("")).min(1, { message: "O responsável é obrigatório." }),
+  }).or(z.literal("")),
   
   date: z.date({
     required_error: "A data do agendamento é obrigatória.",

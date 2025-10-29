@@ -51,15 +51,15 @@ const itemSchema = z.object({
 });
 
 const baseFormSchema = z.object({
-  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
-  cliente_id: z.string().uuid({
+  // CORREÇÃO: Aplica min(1) e uuid() ao string, e depois permite a string vazia
+  cliente_id: z.string().min(1, { message: "O cliente é obrigatório." }).uuid({
     message: "Selecione um cliente válido.",
-  }).or(z.literal("")).min(1, { message: "O cliente é obrigatório." }),
+  }).or(z.literal("")),
   
-  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
-  responsavel_id: z.string().uuid({ // NOVO CAMPO
+  // CORREÇÃO: Aplica min(1) e uuid() ao string, e depois permite a string vazia
+  responsavel_id: z.string().min(1, { message: "O responsável é obrigatório." }).uuid({ // NOVO CAMPO
     message: "Selecione um responsável válido.",
-  }).or(z.literal("")).min(1, { message: "O responsável é obrigatório." }),
+  }).or(z.literal("")),
   
   items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." }),
   status: z.enum(statusOptions, {
