@@ -61,7 +61,8 @@ const CompanyDetailsDialog: React.FC<CompanyDetailsDialogProps> = ({ company, is
         </div>
 
         <Tabs defaultValue="users" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="w-full flex flex-nowrap overflow-x-auto justify-start">
+          {/* Removidas classes de layout forçado (flex flex-nowrap overflow-x-auto justify-start) */}
+          <TabsList className="w-full">
             <TabsTrigger value="users" className="flex-shrink-0"><Users className="h-4 w-4 mr-2" /> {t('nav_users')}</TabsTrigger>
             <TabsTrigger value="clients" className="flex-shrink-0"><HandCoins className="h-4 w-4 mr-2" /> {t('nav_clients')}</TabsTrigger>
             <TabsTrigger value="products" className="flex-shrink-0"><Package className="h-4 w-4 mr-2" /> {t('nav_products')}</TabsTrigger>

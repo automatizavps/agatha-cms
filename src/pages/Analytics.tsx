@@ -37,10 +37,10 @@ const Analytics = () => {
         <p className="text-muted-foreground">{t('page_subtitle_analytics')}</p>
         
         <Tabs defaultValue={defaultTab} className="w-full">
-          {/* Usando flexbox para layout horizontal fluido em todos os tamanhos */}
-          <TabsList className="w-full flex flex-nowrap overflow-x-auto">
+          {/* Removidas classes de layout forçado (flex flex-nowrap overflow-x-auto justify-start) */}
+          <TabsList className="w-full">
             {canReadOrders && <TabsTrigger value="orders" className="flex-1">{t('nav_orders')}</TabsTrigger>}
-            {canReadAppointments && <TabsTrigger value="services" className="flex-1">{t('nav_services')}</TabsTrigger>}
+            {canReadAppointments && <TabsTrigger value="services" className="flex-1">{t('nav_appointments')}</TabsTrigger>}
             {canReadClients && <TabsTrigger value="clients" className="flex-1">{t('nav_clients')}</TabsTrigger>}
             {canReadTeams && <TabsTrigger value="teams" className="flex-1">{t('nav_teams')}</TabsTrigger>}
             {canReadCommissions && <TabsTrigger value="commissions" className="flex-1">{t('page_title_commissions')}</TabsTrigger>}
