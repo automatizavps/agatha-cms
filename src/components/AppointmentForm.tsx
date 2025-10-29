@@ -755,4 +755,4 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   );
 };
 
-export default OrderForm;
+export default AppointmentForm;
