@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Building, Tag, Package, Clock, DollarSign, Percent, Check, ChevronsUpDown } from "lucide-react";
+import { Loader2, Building, Tag, Package, Clock, DollarSign, Percent, Check, ChevronsUpDown, Users } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,6 +29,8 @@ import { useMemo } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useUsers } from "@/integrations/supabase/users"; // Importando usuários
+import { Badge } from "@/components/ui/badge";
 
 const entityTypeOptions: { value: EntityType, label: string, icon: React.ReactNode }[] = [
   { value: 'produto', label: 'Produto Específico', icon: <Package className="h-4 w-4" /> },
@@ -56,6 +58,9 @@ const baseFormSchema = z.object({
   valor: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "O valor deve ser um número positivo.",
   }),
+  
+  // NOVO: IDs dos usuários que receberão a comissão (opcional)
+  usuario_ids: z.array(z.string().uuid()).optional(),
 });
 
 type CommissionRuleFormValues = z.infer<typeof baseFormSchema>;
@@ -67,19 +72,21 @@ interface CommissionRuleFormProps {
     tipo_valor: CommissionType; 
     valor: number; 
     empresa_id?: string;
+    usuario_ids: string[]; // NOVO
   }) => void;
   isSubmitting: boolean;
-  defaultRule?: CommissionRule;
+  defaultRule?: CommissionRule & { usuario_ids?: string[] }; // Adicionando usuario_ids
   isEditing?: boolean;
 }
 
 const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSubmitting, defaultRule, isEditing = false }) => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  const { data: allUsers, isLoading: isLoadingAllUsers } = useUsers(); // Carrega todos os usuários
   const { t } = useTranslation();
   
   const isSuperAdmin = profile?.is_super_admin;
-  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
+  const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies) || isLoadingAllUsers;
 
   // Ajusta o schema dinamicamente: empresa_id é obrigatório na CRIAÇÃO para Super Admin
   const formSchema = isSuperAdmin && !isEditing
@@ -98,6 +105,7 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
       entidade_id: defaultRule?.entidade_id || "",
       tipo_valor: defaultRule?.tipo_valor || 'percentual',
       valor: defaultRule?.valor ? String(defaultRule.valor) : "0",
+      usuario_ids: defaultRule?.usuario_ids || [], // NOVO
     },
   });
   
@@ -115,6 +123,12 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
   
   const isLoadingEntities = isLoadingCategories || isLoadingProducts || isLoadingServices;
+  
+  // Filtra usuários que pertencem à empresa selecionada
+  const availableUsers = useMemo(() => {
+    if (!allUsers || !isCompanySelected) return [];
+    return allUsers.filter(user => user.empresa_id === selectedCompanyId);
+  }, [allUsers, selectedCompanyId, isCompanySelected]);
   
   // Combina todos os itens (produtos e serviços)
   const allItems = useMemo(() => {
@@ -178,6 +192,7 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
       tipo_valor: values.tipo_valor,
       valor: valor,
       empresa_id: empresa_id,
+      usuario_ids: values.usuario_ids || [], // NOVO
     });
   };
   
@@ -205,8 +220,9 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // Limpa entidade ao mudar a empresa
+                      // Limpa entidade e usuários ao mudar a empresa
                       form.setValue('entidade_id', "");
+                      form.setValue('usuario_ids', []);
                     }} 
                     value={field.value} 
                     disabled={isLoadingCompanies || isSubmitting}
@@ -332,6 +348,108 @@ const CommissionRuleForm: React.FC<CommissionRuleFormProps> = ({ onSubmit, isSub
               <FormMessage />
             </FormItem>
           )}
+        />
+        
+        {/* NOVO CAMPO: Usuários Aplicáveis */}
+        <FormField
+          control={form.control}
+          name="usuario_ids"
+          render={({ field }) => {
+            const selectedUserIds = field.value || [];
+            const selectedUsers = availableUsers.filter(u => selectedUserIds.includes(u.id));
+            
+            return (
+              <FormItem className="flex flex-col">
+                <FormLabel>{t('team_members', { defaultValue: 'Usuários Aplicáveis (Opcional)' })}</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between",
+                          selectedUserIds.length === 0 && "text-muted-foreground"
+                        )}
+                        disabled={isLoadingAllUsers || isSubmitting || !isCompanySelected}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Users className="h-4 w-4" />
+                          {selectedUserIds.length > 0
+                            ? t('members_selected', { count: selectedUserIds.length })
+                            : t('general_rule', { defaultValue: 'Regra Geral (Todos os Usuários)' })}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder={t('search_user')} />
+                      <CommandEmpty>{t('no_users_found')}</CommandEmpty>
+                      <CommandGroup>
+                        {/* Opção para Regra Geral */}
+                        <CommandItem
+                          value={t('general_rule', { defaultValue: 'Regra Geral' })}
+                          key="all"
+                          onSelect={() => {
+                            form.setValue("usuario_ids", [], { shouldValidate: true });
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedUserIds.length === 0 ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {t('general_rule', { defaultValue: 'Regra Geral (Aplicável a todos)' })}
+                        </CommandItem>
+                        
+                        {/* Usuários Específicos */}
+                        {availableUsers.map((user) => {
+                          const isSelected = selectedUserIds.includes(user.id);
+                          return (
+                            <CommandItem
+                              value={user.nome_completo}
+                              key={user.id}
+                              onSelect={() => {
+                                const currentIds = field.value || [];
+                                const newIds = isSelected
+                                  ? currentIds.filter((id) => id !== user.id)
+                                  : [...currentIds, user.id];
+                                form.setValue("usuario_ids", newIds, { shouldValidate: true });
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {user.nome_completo} ({user.perfis?.nome})
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                
+                {/* Exibição dos usuários selecionados */}
+                {selectedUsers.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {selectedUsers.map(user => (
+                      <Badge key={user.id} variant="secondary" className="text-xs">
+                        {user.nome_completo.split(' ')[0]}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
         
         {/* Tipo e Valor do Comissionamento */}

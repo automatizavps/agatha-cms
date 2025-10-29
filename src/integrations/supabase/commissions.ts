@@ -27,6 +27,41 @@ export interface CommissionRule {
   } | null;
 }
 
+export interface RuleUser {
+  usuario_id: string;
+  usuarios: {
+    nome_completo: string;
+  } | null;
+}
+
+// --- Fetch Rule Users ---
+
+const fetchRuleUsers = async (ruleId: string): Promise<RuleUser[]> => {
+  const { data, error } = await supabase
+    .from("comissionamento_regras_usuarios")
+    .select(`
+      usuario_id,
+      usuarios (nome_completo)
+    `)
+    .eq('regra_id', ruleId);
+
+  if (error) {
+    console.error("Error fetching rule users:", error);
+    throw new Error("Failed to fetch rule users");
+  }
+
+  return data as RuleUser[];
+};
+
+export const useRuleUsers = (ruleId: string) => {
+  return useQuery<RuleUser[], Error>({
+    queryKey: ["ruleUsers", ruleId],
+    queryFn: () => fetchRuleUsers(ruleId),
+    enabled: !!ruleId,
+  });
+};
+
+
 // --- Fetch Rules ---
 
 const fetchCommissionRules = async (companyId?: string): Promise<CommissionRule[]> => {
@@ -98,6 +133,37 @@ export const useCommissionRules = (companyId?: string) => {
   });
 };
 
+// --- Manage Rule Users (Internal Helper) ---
+
+const manageRuleUsers = async (ruleId: string, userIds: string[]) => {
+  // 1. Deletar todos os usuários existentes para esta regra
+  const { error: deleteError } = await supabase
+    .from("comissionamento_regras_usuarios")
+    .delete()
+    .eq("regra_id", ruleId);
+    
+  if (deleteError) {
+    throw new Error("Falha ao limpar usuários antigos da regra: " + deleteError.message);
+  }
+  
+  // 2. Inserir novos usuários (se houver)
+  if (userIds.length > 0) {
+    const insertPayload = userIds.map(usuario_id => ({
+      regra_id: ruleId,
+      usuario_id: usuario_id,
+    }));
+    
+    const { error: insertError } = await supabase
+      .from("comissionamento_regras_usuarios")
+      .insert(insertPayload);
+      
+    if (insertError) {
+      throw new Error("Falha ao inserir novos usuários na regra: " + insertError.message);
+    }
+  }
+};
+
+
 // --- Create Rule ---
 
 interface CreateRuleParams {
@@ -106,9 +172,10 @@ interface CreateRuleParams {
   tipo_valor: CommissionType;
   valor: number;
   empresa_id?: string;
+  usuario_ids: string[]; // NOVO
 }
 
-export const createCommissionRule = async ({ tipo_entidade, entidade_id, tipo_valor, valor, empresa_id: provided_empresa_id }: CreateRuleParams) => {
+export const createCommissionRule = async ({ tipo_entidade, entidade_id, tipo_valor, valor, empresa_id: provided_empresa_id, usuario_ids }: CreateRuleParams) => {
   let empresa_id: string;
 
   if (provided_empresa_id) {
@@ -124,7 +191,7 @@ export const createCommissionRule = async ({ tipo_entidade, entidade_id, tipo_va
     }
   }
   
-  // 1. Inserir a regra
+  // 1. Inserir a regra principal
   const { data, error } = await supabase
     .from("comissionamento_regras")
     .insert({
@@ -141,6 +208,11 @@ export const createCommissionRule = async ({ tipo_entidade, entidade_id, tipo_va
     console.error("Error creating commission rule:", error);
     throw new Error(error.message);
   }
+  
+  const ruleId = data.id;
+  
+  // 2. Gerenciar usuários da regra
+  await manageRuleUsers(ruleId, usuario_ids);
 
   return data;
 };
@@ -151,7 +223,8 @@ interface UpdateRuleParams extends CreateRuleParams {
   id: string;
 }
 
-export const updateCommissionRule = async ({ id, tipo_entidade, entidade_id, tipo_valor, valor }: UpdateRuleParams) => {
+export const updateCommissionRule = async ({ id, tipo_entidade, entidade_id, tipo_valor, valor, usuario_ids }: UpdateRuleParams) => {
+  // 1. Atualizar a regra principal
   const { data, error } = await supabase
     .from("comissionamento_regras")
     .update({
@@ -168,6 +241,9 @@ export const updateCommissionRule = async ({ id, tipo_entidade, entidade_id, tip
     console.error("Error updating commission rule:", error);
     throw new Error(error.message);
   }
+  
+  // 2. Gerenciar usuários da regra
+  await manageRuleUsers(id, usuario_ids);
 
   return data;
 };
@@ -175,6 +251,7 @@ export const updateCommissionRule = async ({ id, tipo_entidade, entidade_id, tip
 // --- Delete Rule ---
 
 export const deleteCommissionRule = async (id: string, queryClient: QueryClient) => {
+  // A exclusão em cascata cuidará dos usuários da regra
   const { error } = await supabase
     .from("comissionamento_regras")
     .delete()
@@ -203,11 +280,7 @@ export interface CommissionRecord {
   } | null;
 }
 
-// REMOVIDO: fetchCommissionRecords (Duplicado, agora em reportHooks.ts)
 export const useCommissionRecords = (companyId?: string) => {
-  // Este hook agora deve ser usado apenas para a lista de regras, não para os registros.
-  // Se for para registros, deve usar useCommissionReport de reportHooks.
-  // Mantendo o nome para evitar quebras, mas o uso deve ser para regras.
   return useQuery<CommissionRule[], Error>({
     queryKey: ["commissionRules", companyId],
     queryFn: () => fetchCommissionRules(companyId),

@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CommissionRule, deleteCommissionRule, CommissionType, EntityType } from "@/integrations/supabase/commissions";
-import { MoreHorizontal, Trash2, Pencil, DollarSign, Percent, ArrowUpDown, ArrowUp, ArrowDown, Tag, Package, Clock, Building } from "lucide-react";
+import { CommissionRule, deleteCommissionRule, CommissionType, EntityType, useRuleUsers } from "@/integrations/supabase/commissions";
+import { MoreHorizontal, Trash2, Pencil, DollarSign, Percent, ArrowUpDown, ArrowUp, ArrowDown, Tag, Package, Clock, Building, Users, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CommissionRuleTableProps {
   rules: CommissionRule[];
@@ -114,6 +115,51 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
         <Icon className="ml-1 h-3 w-3 opacity-50" />
       </div>
     </TableHead>
+  );
+};
+
+// NOVO: Componente para exibir os usuários afetados
+const RuleUsersDisplay: React.FC<{ ruleId: string }> = ({ ruleId }) => {
+  const { data: members, isLoading } = useRuleUsers(ruleId);
+  const { t } = useTranslation();
+
+  if (isLoading) {
+    return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+  }
+  
+  if (!members || members.length === 0) {
+    return <span className="text-muted-foreground">{t('general_rule', { defaultValue: 'Regra Geral' })}</span>;
+  }
+  
+  const displayMembers = members.slice(0, 3);
+  const remainingCount = members.length - displayMembers.length;
+
+  const tooltipContent = (
+    <div className="space-y-1 text-sm">
+      <p className="font-semibold mb-1">{t('team_members')}:</p>
+      {members.map((member, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <span>{member.usuarios?.nome_completo || t('no_data_found')}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <div className="flex items-center gap-1 cursor-default">
+          <Users className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium">
+            {displayMembers.map(m => m.usuarios?.nome_completo?.split(' ')[0] || 'Usuário').join(', ')}
+            {remainingCount > 0 && ` (+${remainingCount})`}
+          </span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        {tooltipContent}
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
@@ -255,6 +301,7 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
               >
                 {t('commission_entity', { defaultValue: 'Entidade' })}
               </SortableHeader>
+              <TableHead>{t('team_members', { defaultValue: 'Usuários' })}</TableHead>
               <SortableHeader 
                 sortKey="tipo_valor" 
                 currentSortKey={sortKey} 
@@ -293,6 +340,9 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
                 <TableCell className="font-medium flex items-center gap-2">
                   {getEntityTypeIcon(rule.tipo_entidade)}
                   {rule.entidade?.nome || rule.entidade_id.slice(0, 8)}
+                </TableCell>
+                <TableCell>
+                  <RuleUsersDisplay ruleId={rule.id} />
                 </TableCell>
                 <TableCell className="hidden sm:table-cell text-sm text-muted-foreground capitalize">
                   {t(rule.tipo_valor)}
