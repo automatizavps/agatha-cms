@@ -1,4 +1,4 @@
-import { LogOut, User, Settings, Building, Globe } from "lucide-react";
+import { LogOut, User, Settings, Building, Globe, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -57,6 +57,8 @@ export function UserMenu() {
   const userName = profile?.nome_completo || userEmail;
   const userRole = profile?.perfis?.nome || t("loading");
   const companyName = profile?.empresas?.nome;
+  const userPlanName = profile?.empresas?.planos?.nome; // NOVO: Nome do plano
+  const isSuperAdmin = profile?.is_super_admin; // NOVO: Flag Super Admin
   const initials = userName.slice(0, 2).toUpperCase();
 
   return (
@@ -91,11 +93,19 @@ export function UserMenu() {
           {t('profile_role')}: {isProfileLoading ? "..." : userRole}
         </DropdownMenuItem>
         
-        {/* Exibe a Empresa (se não for Super Admin ou se houver nome de empresa) */}
+        {/* Exibe a Empresa */}
         {companyName && (
           <DropdownMenuItem className="text-xs text-muted-foreground flex items-center gap-2">
             <Building className="h-3 w-3" />
             {t('user_table_header_company')}: {isProfileLoading ? "..." : companyName}
+          </DropdownMenuItem>
+        )}
+        
+        {/* NOVO: Exibe o Plano (Apenas se não for Super Admin e houver um plano) */}
+        {userPlanName && !isSuperAdmin && (
+          <DropdownMenuItem className="text-xs text-primary flex items-center gap-2 font-semibold">
+            <ShieldCheck className="h-3 w-3" />
+            {t('plan_name', { defaultValue: 'Plano' })}: {isProfileLoading ? "..." : userPlanName}
           </DropdownMenuItem>
         )}
         
