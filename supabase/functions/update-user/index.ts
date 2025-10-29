@@ -19,12 +19,7 @@ serve(async (req) => {
     });
   };
 
-  // 1. Autenticação (Verificar se o usuário está logado)
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return returnError("Unauthorized: Missing Authorization header", 401);
-  }
-
+  // 1. Inicializar cliente Admin
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -36,7 +31,12 @@ serve(async (req) => {
     },
   );
 
-  // Get user claims
+  // 2. Autenticação (Verificar se o usuário está logado)
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return returnError("Unauthorized: Missing Authorization header", 401);
+  }
+
   const { data: userResponse, error: userError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (userError || !userResponse.user) {
@@ -46,7 +46,7 @@ serve(async (req) => {
   // **REMOVIDA A VERIFICAÇÃO DE PERFIL/ADMIN**
   // Assumimos que o usuário autenticado pode atualizar outros usuários.
 
-  // 2. Processar o corpo da requisição
+  // 3. Processar o corpo da requisição
   let data;
   try {
     data = await req.json();
