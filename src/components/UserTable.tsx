@@ -212,23 +212,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">Avatar</TableHead>
-              <SortableHeader 
-                sortKey="nome_completo" 
-                currentSortKey={sortKey} 
-                currentSortDirection={sortDirection} 
-                onSort={handleSort}
-              >
-                {t('user_table_header_name')}
-              </SortableHeader>
-              <SortableHeader 
-                sortKey="email" 
-                currentSortKey={sortKey} 
-                currentSortDirection={sortDirection} 
-                onSort={handleSort}
-                className="hidden sm:table-cell"
-              >
-                {t('profile_email')}
-              </SortableHeader>
+              {/* NOVA ORDEM: Empresa */}
               <SortableHeader 
                 sortKey="empresa" 
                 currentSortKey={sortKey} 
@@ -238,6 +222,35 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
               >
                 {t('user_table_header_company')}
               </SortableHeader>
+              {/* NOVA ORDEM: Perfil */}
+              <SortableHeader 
+                sortKey="perfil" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('user_table_header_profile')}
+              </SortableHeader>
+              {/* NOVA ORDEM: Nome */}
+              <SortableHeader 
+                sortKey="nome_completo" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('user_table_header_name')}
+              </SortableHeader>
+              {/* NOVA ORDEM: Email */}
+              <SortableHeader 
+                sortKey="email" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden sm:table-cell"
+              >
+                {t('profile_email')}
+              </SortableHeader>
+              {/* NOVA ORDEM: Telefone */}
               <SortableHeader 
                 sortKey="telefone" 
                 currentSortKey={sortKey} 
@@ -247,6 +260,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
               >
                 {t('user_table_header_phone')}
               </SortableHeader>
+              {/* NOVA ORDEM: Endereço */}
               <SortableHeader 
                 sortKey="endereco_completo" 
                 currentSortKey={sortKey} 
@@ -255,14 +269,6 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
                 className="hidden xl:table-cell"
               >
                 {t('user_table_header_address')}
-              </SortableHeader>
-              <SortableHeader 
-                sortKey="perfil" 
-                currentSortKey={sortKey} 
-                currentSortDirection={sortDirection} 
-                onSort={handleSort}
-              >
-                {t('user_table_header_profile')}
               </SortableHeader>
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
@@ -284,13 +290,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium">{user.nome_completo}</TableCell>
-                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-3 w-3" />
-                    {user.email || 'N/A'}
-                  </div>
-                </TableCell>
+                {/* Célula: Empresa */}
                 <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Building className="h-3 w-3" />
@@ -298,19 +298,31 @@ const UserTable: React.FC<UserTableProps> = ({ users, canWrite }) => {
                     {user.empresa?.nome || (user.perfil_customizado_id === null && user.empresa_id === null ? 'Super Admin' : 'N/A')}
                   </div>
                 </TableCell>
+                {/* Célula: Perfil */}
+                <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
+                {/* Célula: Nome */}
+                <TableCell className="font-medium">{user.nome_completo}</TableCell>
+                {/* Célula: Email */}
+                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    {user.email || 'N/A'}
+                  </div>
+                </TableCell>
+                {/* Célula: Telefone */}
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Phone className="h-3 w-3" />
                     {user.telefone || 'N/A'}
                   </div>
                 </TableCell>
+                {/* Célula: Endereço */}
                 <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     {user.endereco_completo || 'N/A'}
                   </div>
                 </TableCell>
-                <TableCell>{user.perfis?.nome || "N/A"}</TableCell>
                 <TableCell className="text-right">
                   <UserActions user={user} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
