@@ -51,12 +51,16 @@ const itemSchema = z.object({
 });
 
 const baseFormSchema = z.object({
+  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
-  }).min(1, { message: "O cliente é obrigatório." }),
+  }).or(z.literal("")).min(1, { message: "O cliente é obrigatório." }),
+  
+  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
   responsavel_id: z.string().uuid({ // NOVO CAMPO
     message: "Selecione um responsável válido.",
-  }).min(1, { message: "O responsável é obrigatório." }),
+  }).or(z.literal("")).min(1, { message: "O responsável é obrigatório." }),
+  
   items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." }),
   status: z.enum(statusOptions, {
     required_error: "O status é obrigatório.",
@@ -105,7 +109,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       items: z.array(itemSchema).optional(),
       status: z.enum(statusOptions, { required_error: "O status é obrigatório." }),
       // Na edição, o responsável não é obrigatório no schema, mas é mantido
-      responsavel_id: z.string().uuid().optional().nullable(),
+      responsavel_id: z.string().uuid().or(z.literal("")).optional().nullable(),
+      cliente_id: z.string().uuid().or(z.literal("")).optional().nullable(),
     });
   } else if (isSuperAdmin) {
     // Na criação, Super Admin deve selecionar a empresa

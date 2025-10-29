@@ -49,12 +49,16 @@ const itemSchema = z.object({
 });
 
 const baseFormSchema = z.object({
+  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
-  }).min(1, { message: "O cliente é obrigatório." }),
+  }).or(z.literal("")).min(1, { message: "O cliente é obrigatório." }),
+  
+  // CORREÇÃO: Permite string vazia, mas exige min(1) para forçar a seleção
   responsavel_id: z.string().uuid({
     message: "Selecione um responsável válido.",
-  }).min(1, { message: "O responsável é obrigatório." }),
+  }).or(z.literal("")).min(1, { message: "O responsável é obrigatório." }),
+  
   date: z.date({
     required_error: "A data do agendamento é obrigatória.",
   }),
@@ -118,6 +122,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         }).min(1, { message: t("company_required_super_admin") }),
       });
     }
+  } else {
+    // Na edição, cliente_id e responsavel_id podem ser nulos/opcionais no schema, mas não vazios
+    finalFormSchema = finalFormSchema.extend({
+      cliente_id: z.string().uuid().or(z.literal("")).optional().nullable(),
+      responsavel_id: z.string().uuid().or(z.literal("")).optional().nullable(),
+    });
   }
 
 
@@ -751,7 +761,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           </span>
         </div>
         
-        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing) || !form.formState.isValid}
+        >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
