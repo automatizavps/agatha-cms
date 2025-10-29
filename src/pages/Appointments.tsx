@@ -63,7 +63,7 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
     }
   };
 
-  // Oculta o menu inteiro se não puder escrever
+  // Se não puder escrever, não renderiza o menu de ações
   if (!canWrite) {
     return null;
   }
@@ -79,9 +79,12 @@ const AppointmentActions: React.FC<AppointmentActionsProps> = ({ appointment, on
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
         
-        <DropdownMenuItem onClick={() => onEdit(appointment)}>
-          <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-        </DropdownMenuItem>
+        {/* Ação de Edição (Permite mudar status) - SÓ APARECE SE canWrite for TRUE */}
+        {canWrite && (
+          <DropdownMenuItem onClick={() => onEdit(appointment)}>
+            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
+          </DropdownMenuItem>
+        )}
         
         <DropdownMenuSeparator />
         
