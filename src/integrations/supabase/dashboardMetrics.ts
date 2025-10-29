@@ -134,6 +134,36 @@ const fetchTopSellingItems = async (companyId: string | undefined): Promise<TopS
   })) as TopSellingItem[];
 };
 
+/**
+ * NOVO: Busca os 10 serviços mais vendidos para a empresa.
+ * @param companyId O ID da empresa a ser filtrada (ou undefined para todas as empresas - Super Admin).
+ */
+const fetchTopSellingServices = async (companyId: string | undefined): Promise<TopSellingItem[]> => {
+  let rpcName = 'get_top_selling_services';
+  let rpcArgs: Record<string, any> = {};
+  
+  if (companyId) {
+    rpcArgs = { company_id_input: companyId };
+  } else {
+    // Se companyId for undefined, usamos a versão ALL
+    rpcName = 'get_top_selling_services_all';
+  }
+  
+  const { data, error } = await supabase.rpc(rpcName, rpcArgs);
+
+  if (error) {
+    console.error("Error fetching top selling services:", error);
+    throw new Error("Failed to fetch top selling services: " + error.message);
+  }
+  
+  // Converte total_vendido para número
+  return data.map(item => ({
+    ...item,
+    total_vendido: parseInt(item.total_vendido) || 0,
+    fotos: item.fotos || null, 
+  })) as TopSellingItem[];
+};
+
 
 // --- Hooks de Uso ---
 
@@ -173,19 +203,11 @@ export const useTopSellingItems = (companyId: string | undefined) => {
   });
 };
 
-// Novo hook para buscar apenas os Top 10 Serviços
+// Hook para buscar apenas os Top 10 Serviços (agora usa a nova RPC)
 export const useTopSellingServices = (companyId: string | undefined) => {
-  const { data: allItems, isLoading, isError, error } = useTopSellingItems(companyId);
-  
-  const services = allItems?.filter(item => item.tipo_produto === 'servico') || [];
-  
-  // Limita a 10, embora a RPC já limite, garantimos aqui
-  const top10Services = services.slice(0, 10);
-
-  return {
-    data: top10Services,
-    isLoading,
-    isError,
-    error,
-  };
+  return useQuery<TopSellingItem[], Error>({
+    queryKey: ["topSellingServices", companyId],
+    queryFn: () => fetchTopSellingServices(companyId),
+    enabled: true,
+  });
 };

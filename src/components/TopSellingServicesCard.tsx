@@ -21,6 +21,7 @@ interface TopSellingServicesCardProps {
 
 const TopSellingServicesCard: React.FC<TopSellingServicesCardProps> = ({ companyId }) => {
   const { t } = useTranslation();
+  // Usando o novo hook que busca apenas serviços
   const { data: items, isLoading, isError } = useTopSellingServices(companyId);
 
   if (isLoading) {
