@@ -78,19 +78,23 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
 
   // --- Lógica de Definição do Schema (Corrigida) ---
   const finalFormSchema = useMemo(() => {
+    // Começamos sempre com o esquema base
     let schema = baseFormSchema;
     
     if (isEditing) {
       // Na EDIÇÃO: Email é opcional, Senha é opcional (para não alterar)
       schema = schema.extend({
         email: z.string().email({ message: "Insira um email válido." }).optional(),
-        empresa_id: isSuperAdmin 
-          ? z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable()
-          : z.string().optional().nullable(),
         perfil_id: z.string().min(1, { message: t("select_profile") }),
-        password: z.string().optional(),
-        confirmPassword: z.string().optional(),
       });
+      
+      // Se for Super Admin, ajustamos o campo empresa_id na edição
+      if (isSuperAdmin) {
+        schema = schema.extend({
+          empresa_id: z.string().uuid({ message: t("select_valid_company") }).or(z.literal("")).optional().nullable(),
+        });
+      }
+      
     } else {
       // Na CRIAÇÃO: Email é obrigatório, Senha é obrigatória (min 6)
       schema = schema.extend({
