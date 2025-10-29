@@ -43,6 +43,9 @@ serve(async (req) => {
     return returnError("Unauthorized: Invalid token", 401);
   }
   
+  // **REMOVIDA A VERIFICAÇÃO DE SUPER ADMIN**
+  // Assumimos que o usuário autenticado pode convidar.
+
   // 2. Processar o corpo da requisição
   let data;
   try {
@@ -51,15 +54,13 @@ serve(async (req) => {
     return returnError("Invalid JSON body", 400);
   }
 
-  const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id, password } = data;
+  const { email, full_name, perfil_id, telefone, endereco_completo, empresa_id: target_empresa_id } = data;
 
   if (!email || !full_name || !perfil_id || !target_empresa_id) {
     return returnError("Missing required fields: email, full_name, perfil_id, or target_empresa_id", 400);
   }
   
-  // O perfil_id deve ser um UUID (customizado) ou '1' (Super Admin)
-  const isCustomProfile = perfil_id !== '1';
-  
+  // O perfil_id deve ser um UUID (customizado)
   if (perfil_id !== '1' && !perfil_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
       return returnError("Invalid profile ID provided. Must be a custom profile UUID or '1' for Super Admin.", 400);
   }
@@ -67,66 +68,49 @@ serve(async (req) => {
   const final_empresa_id = target_empresa_id;
   const meta_perfil_id: string = perfil_id;
   
-  // URL de redirecionamento para o fluxo de convite (se usado)
+  // Garantir que o redirectTo seja o URL de login fornecido pelo usuário
   const redirectUrl = `https://qdscirbsypclxzlojgug.supabase.co/auth/v1/verify?redirect_to=https://site-landing3.b9c03f.easypanel.host/login`;
 
-  let authResult;
-  let authError;
-  let invitedUserId;
-  
-  const userMetadata = {
-    full_name: full_name,
+  console.log("Attempting to invite user with metadata:", {
+    email,
+    full_name,
     perfil_id: meta_perfil_id,
-    telefone: telefone,
-    endereco_completo: endereco_completo,
-  };
+    telefone,
+    endereco_completo,
+    final_empresa_id,
+  });
 
-  if (password) {
-    // Opção 1: Criar usuário diretamente com senha (signUp)
-    console.log("Attempting to sign up user with password.");
-    const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: password,
-      email_confirm: true, // Confirma o email automaticamente
-      user_metadata: userMetadata,
-    });
-    
-    authResult = signUpData;
-    authError = signUpError;
-    invitedUserId = signUpData.user?.id;
-    
-  } else {
-    // Opção 2: Enviar convite por email (inviteUserByEmail)
-    console.log("Attempting to invite user by email.");
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      email,
-      {
-        data: userMetadata,
-        redirectTo: redirectUrl,
-        app_metadata: {
-          must_change_password: true, // Mantém o flag para forçar a mudança no primeiro login
-        }
+  // 3. Convidar o usuário usando o Service Role Key
+  const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+    email,
+    {
+      data: {
+        full_name: full_name,
+        perfil_id: meta_perfil_id,
+        telefone: telefone,
+        endereco_completo: endereco_completo,
+      },
+      redirectTo: redirectUrl,
+      app_metadata: {
+        must_change_password: true,
       }
-    );
-    
-    authResult = inviteData;
-    authError = inviteError;
-    invitedUserId = inviteData.user?.id;
-  }
+    }
+  );
 
-  if (authError) {
-    console.error("Supabase Auth Error:", authError);
-    return returnError(authError.message, 400);
+  if (inviteError) {
+    console.error("Supabase Invite Error:", inviteError);
+    return returnError(inviteError.message, 400);
   }
   
   // 4. Atualizar a empresa_id e perfil_customizado_id diretamente na tabela usuarios
+  const invitedUserId = inviteData.user?.id;
+
   if (invitedUserId) {
     const { error: updateProfileError } = await supabaseAdmin
       .from("usuarios")
       .update({ 
         empresa_id: final_empresa_id,
-        // Se for '1' (Super Admin), o perfil_customizado_id deve ser NULL
-        perfil_customizado_id: meta_perfil_id === '1' ? null : meta_perfil_id, 
+        perfil_customizado_id: meta_perfil_id === '1' ? null : meta_perfil_id, // '1' é NULL no banco
       })
       .eq("id", invitedUserId);
 
@@ -136,7 +120,7 @@ serve(async (req) => {
   }
 
 
-  return new Response(JSON.stringify({ message: "User created/invited successfully", user: authResult.user }), {
+  return new Response(JSON.stringify({ message: "User invited successfully", user: inviteData.user }), {
     status: 200,
     headers: corsHeaders,
   });

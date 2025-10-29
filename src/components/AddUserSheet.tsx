@@ -23,12 +23,8 @@ const AddUserSheet = () => {
 
   const mutation = useMutation({
     mutationFn: inviteUser,
-    onSuccess: (data, variables) => {
-      const message = variables.password 
-        ? `Usuário ${variables.full_name} cadastrado com sucesso!`
-        : "Convite enviado com sucesso! O usuário receberá um email.";
-        
-      showSuccess(message);
+    onSuccess: () => {
+      showSuccess("Convite enviado com sucesso! O usuário receberá um email.");
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsOpen(false);
     },
@@ -44,16 +40,15 @@ const AddUserSheet = () => {
     telefone: string | null; 
     endereco_completo: string | null;
     empresa_id?: string | null;
-    password?: string; // NOVO
   }) => {
     mutation.mutate({
       email: values.email,
       full_name: values.full_name,
+      // perfil_id é passado como string (UUID ou '1')
       perfil_id: values.perfil_id, 
       telefone: values.telefone,
       endereco_completo: values.endereco_completo,
       empresa_id: values.empresa_id || undefined,
-      password: values.password, // NOVO
     });
   };
 
