@@ -32,7 +32,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useDashboardFilter } from "@/hooks/useDashboardFilter";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { useCanWrite } from "@/hooks/use-module-permission";
-import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination"; // Importando Paginação
+import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // NOVO IMPORT
 
 interface AppointmentActionsProps {
   appointment: Appointment;
@@ -582,6 +583,7 @@ const Appointments = () => {
                           disabled={!canWriteAppointments}
                         />
                       </TableHead>
+                      <TableHead className="w-[50px]">Avatar</TableHead> {/* NOVO: Coluna para Avatar */}
                       <SortableHeader 
                         sortKey="cliente" 
                         currentSortKey={sortKey} 
@@ -648,6 +650,15 @@ const Appointments = () => {
                             disabled={!canWriteAppointments}
                           />
                         </TableCell>
+                        {/* NOVO: Avatar do Cliente */}
+                        <TableCell>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={appointment.clientes?.avatar_url || undefined} alt={appointment.clientes?.nome} className="object-cover" />
+                            <AvatarFallback className="text-xs">
+                              {appointment.clientes?.nome ? appointment.clientes.nome.slice(0, 2).toUpperCase() : 'C'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </TableCell>
                         <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
                         {isSuperAdmin && (
                           <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
@@ -686,7 +697,7 @@ const Appointments = () => {
                   <span className="text-sm text-muted-foreground whitespace-nowrap">
                     {t('page_info', { 
                       current: currentPage, 
-                      total: totalPages, 
+                      total: totalCount > 0 ? totalPages : 0, // Garante que totalPages não seja NaN se totalCount for 0
                       start: finalStart,
                       end: finalEnd,
                       count: totalCount
