@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Company, deleteCompany, updateCompany } from "@/integrations/supabase/companies";
-import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Building, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, Loader2, AlertTriangle, ShieldCheck, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,8 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Badge } from "@/components/ui/badge"; // IMPORTAÇÃO CORRIGIDA
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface CompanyTableProps {
   companies: Company[];
@@ -38,7 +40,7 @@ interface CompanyActionsProps {
   canWrite: boolean; // NOVO
 }
 
-type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj' | 'is_active' | 'plano';
+type SortKey = 'nome' | 'email' | 'telefone' | 'cnpj' | 'is_active' | 'plano' | 'vigencia';
 type SortDirection = 'asc' | 'desc';
 
 const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, isSuperAdmin, canWrite }) => {
@@ -187,6 +189,19 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
   );
 };
 
+// Função auxiliar para formatar a vigência
+const formatVigency = (start: string | null, end: string | null) => {
+  if (!start || !end) return 'N/A';
+  
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  
+  const formattedStart = format(startDate, "dd/MM/yyyy", { locale: ptBR });
+  const formattedEnd = format(endDate, "dd/MM/yyyy", { locale: ptBR });
+  
+  return `${formattedStart} - ${formattedEnd}`;
+};
+
 
 const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
@@ -252,6 +267,11 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
           aValue = a.planos?.nome || '';
           bValue = b.planos?.nome || '';
           break;
+        case 'vigencia':
+          // Ordena pela data de fim (mais próxima primeiro)
+          aValue = a.planos?.data_fim ? new Date(a.planos.data_fim).getTime() : 0;
+          bValue = b.planos?.data_fim ? new Date(b.planos.data_fim).getTime() : 0;
+          break;
         default:
           return 0;
       }
@@ -269,13 +289,6 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
   }, [companies, sortKey, sortDirection]);
 
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   return (
     <>
       <div className="overflow-x-auto">
@@ -291,22 +304,33 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                 {t('user_table_header_name')}
               </SortableHeader>
               {isSuperAdmin && (
-                <SortableHeader 
-                  sortKey="plano" 
-                  currentSortKey={sortKey} 
-                  currentSortDirection={sortDirection} 
-                  onSort={handleSort}
-                  className="hidden lg:table-cell"
-                >
-                  {t('plan_name', { defaultValue: 'Plano' })}
-                </SortableHeader>
+                <>
+                  <SortableHeader 
+                    sortKey="plano" 
+                    currentSortKey={sortKey} 
+                    currentSortDirection={sortDirection} 
+                    onSort={handleSort}
+                    className="hidden lg:table-cell"
+                  >
+                    {t('plan_name', { defaultValue: 'Plano' })}
+                  </SortableHeader>
+                  <SortableHeader 
+                    sortKey="vigencia" 
+                    currentSortKey={sortKey} 
+                    currentSortDirection={sortDirection} 
+                    onSort={handleSort}
+                    className="hidden xl:table-cell"
+                  >
+                    {t('plan_duration', { defaultValue: 'Vigência' })}
+                  </SortableHeader>
+                </>
               )}
               <SortableHeader 
                 sortKey="email" 
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
                 onSort={handleSort}
-                className="hidden xl:table-cell"
+                className="hidden 2xl:table-cell"
               >
                 {t('profile_email')}
               </SortableHeader>
@@ -348,14 +372,22 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ companies, canWrite }) => {
                   {company.nome}
                 </TableCell>
                 {isSuperAdmin && (
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <ShieldCheck className="h-3 w-3" />
-                      {company.planos?.nome || 'N/A'}
-                    </div>
-                  </TableCell>
+                  <>
+                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <ShieldCheck className="h-3 w-3" />
+                        {company.planos?.nome || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatVigency(company.planos?.data_inicio || null, company.planos?.data_fim || null)}
+                      </div>
+                    </TableCell>
+                  </>
                 )}
-                <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                <TableCell className="hidden 2xl:table-cell text-sm text-muted-foreground">
                   {company.email || 'N/A'}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">

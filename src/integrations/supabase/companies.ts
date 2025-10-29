@@ -17,6 +17,8 @@ export interface Company {
   plano_id: string | null; // NOVO CAMPO
   planos: { // NOVO RELACIONAMENTO
     nome: string;
+    data_inicio: string | null; // NOVO
+    data_fim: string | null; // NOVO
   } | null;
 }
 
@@ -27,7 +29,7 @@ const fetchCompanies = async (): Promise<Company[]> => {
   // Para o Super Admin (ID 1), a política 'Super Admin pode gerenciar todas as empresas' permite SELECT *.
   const { data, error } = await supabase
     .from("empresas")
-    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at, is_active, plano_id, planos (nome)") // Incluindo plano_id e relacionamento
+    .select("id, nome, cnpj, dono_id, telefone, endereco_completo, email, created_at, is_active, plano_id, planos (nome, data_inicio, data_fim)") // Incluindo data_inicio e data_fim
     .order("nome", { ascending: true });
 
   if (error) {
