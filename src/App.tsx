@@ -19,6 +19,7 @@ import Orders from "./pages/Orders";
 import Teams from "./pages/Teams";
 import Notifications from "./pages/Notifications";
 import ProductHistory from "./pages/ProductHistory";
+import ClientHistory from "./pages/ClientHistory"; // NOVO IMPORT
 import CustomProfiles from "./pages/CustomProfiles";
 import Categories from "./pages/Categories";
 import ImageGallery from "./pages/ImageGallery";
@@ -46,6 +47,7 @@ const RouteContentWrapper: React.FC = () => {
       <Route path="/users" element={<Users />} />
       <Route path="/appointments" element={<Appointments />} />
       <Route path="/clients" element={<Clients />} />
+      <Route path="/clients/:clientId" element={<ClientHistory />} /> {/* NOVA ROTA */}
       <Route path="/products" element={<Products />} />
       <Route path="/products/:productId" element={<ProductHistory />} />
       <Route path="/products/categories" element={<Categories />} />

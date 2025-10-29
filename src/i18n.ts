@@ -161,6 +161,14 @@ const resources = {
       "upload_failed": "Falha no upload: ",
       "avatar_removed_success": "Avatar removido com sucesso!",
       "remove_avatar_failed": "Falha ao remover avatar: ",
+      "view_history": "Ver Histórico", // NOVO
+      "client_report_title": "Relatório do Cliente", // NOVO
+      "client_report_subtitle": "Visão completa de todas as transações e dados de contato.", // NOVO
+      "client_not_found": "Cliente não encontrado.", // NOVO
+      "transaction_history_title": "Histórico de Transações", // NOVO
+      "no_transactions_found": "Nenhuma transação (pedido ou agendamento) encontrada para este cliente.", // NOVO
+      "contact_info": "Contato", // NOVO
+      "address_info": "Localização", // NOVO
       
       "page_title_products": "Gestão de Produtos",
       "product_list_title": "Lista de Produtos",

@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Client, deleteClient, deleteClients } from "@/integrations/supabase/clients";
-import { MoreHorizontal, Trash2, Pencil, User, Building, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, User, Building, ArrowUpDown, ArrowUp, ArrowDown, History } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
 import { useCanWrite } from "@/hooks/use-module-permission"; // REINTRODUZIDO
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // NOVO IMPORT
+import { Link } from "react-router-dom"; // NOVO IMPORT
 
 interface ClientTableProps {
   clients: Client[];
@@ -79,6 +80,14 @@ const ClientActions: React.FC<ClientActionsProps> = ({ client, onEdit, canWrite 
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+        
+        {/* NOVO: Ver Histórico */}
+        <DropdownMenuItem asChild>
+          <Link to={`/clients/${client.id}`}>
+            <History className="mr-2 h-4 w-4" /> {t('view_history', { defaultValue: 'Ver Histórico' })}
+          </Link>
+        </DropdownMenuItem>
+        
         <DropdownMenuItem onClick={() => onEdit(client)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
@@ -156,7 +165,6 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, selectedIds, onSelec
   
   // Função de exclusão em massa (chamada na página Clients.tsx)
   // NOTA: A função handleBulkDelete foi movida para Clients.tsx, mas a mutação precisa ser acessível lá.
-  // Como não podemos passar a mutação diretamente, vamos garantir que a página Clients.tsx tenha acesso à lógica de exclusão em massa.
   // Por enquanto, removemos a lógica de exclusão em massa daqui, pois ela deve estar na página pai.
 
   const handleEdit = (client: Client) => {
