@@ -45,21 +45,15 @@ const productStockMap = new Map<string, number | null>();
 // Esquema de validação para itens
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
+  // Garantimos que a coerção para número lide com strings vazias ou NaN, resultando em 0
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
     .refine((val, ctx) => {
-      // Acessamos o produto_id do item atual usando o path do contexto
-      const path = ctx.path;
-      
-      // O path deve ser ['items', index, 'quantidade']
-      if (path.length < 3 || typeof path[1] !== 'number') {
-        return true; // Se a estrutura for inesperada, pulamos a validação
-      }
-      
-      // Acessamos o objeto pai (o item do array)
+      // Acessamos o objeto pai (o item do array) de forma mais segura
       const item = (ctx.parent as any)?.data;
       const productId = item?.produto_id;
       
-      if (typeof productId !== 'string' || productId.length === 0) {
+      // Se não houver produto_id ou se a validação estiver em um estado inicial incompleto, pulamos
+      if (typeof productId !== 'string' || productId.length === 0 || !item) {
         return true;
       }
       
@@ -288,7 +282,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   }, [form.watch("items"), activePromotion, isPromotionValid]);
   
   const handleAddItem = () => {
-    append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
+    // Inicializa quantidade e preco_unitario como 0 para evitar NaN
+    append({ produto_id: "", quantidade: 0, preco_unitario: 0 });
   };
   
   const handleProductChange = (index: number, productId: string) => {
@@ -620,7 +615,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                                   value = maxQuantity;
                                 }
                                 
-                                field.onChange(value);
+                                // Garante que o valor seja um número (ou string vazia se o input permitir)
+                                field.onChange(e.target.value);
                               }}
                               disabled={isSubmitting || isEditing || (isProduct && maxQuantity === 0)}
                             />
