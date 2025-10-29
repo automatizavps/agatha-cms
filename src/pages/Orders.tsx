@@ -22,6 +22,7 @@ import { useCanWrite } from "@/hooks/use-module-permission";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 
 const PAGE_SIZES = [20, 50, 100];
+const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado']; // REINTRODUZIDO
 
 const Orders = () => {
   // --- Filter States ---
