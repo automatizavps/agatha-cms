@@ -80,7 +80,7 @@ serve(async (req) => {
           limit: pageSize,
           offset: currentPage * pageSize,
           sortBy: { column: 'name', order: 'asc' },
-          search: '', // Não usamos search, mas listamos o diretório
+          // search: '', // Removido, pois não estamos buscando por nome, mas listando um diretório
         });
 
       if (error) {
@@ -97,7 +97,10 @@ serve(async (req) => {
         if (file.id === null) continue; 
         
         // Constrói o fullPath corretamente
-        const fullPath = pathPrefix ? `${pathPrefix}/${file.name}` : file.name;
+        // O fullPath retornado pelo .list() já é o caminho completo dentro do bucket
+        // Ex: se pathPrefix é 'company1' e file.name é 'image.jpg', o fullPath já é 'company1/image.jpg'
+        // Não precisamos concatenar novamente.
+        const fullPath = file.name; 
         
         allFiles.push({
           ...file,
