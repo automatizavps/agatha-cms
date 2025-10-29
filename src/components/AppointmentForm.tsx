@@ -51,10 +51,10 @@ const itemSchema = z.object({
 const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
-  }),
+  }).min(1, { message: "O cliente é obrigatório." }), // Adicionado min(1)
   responsavel_id: z.string().uuid({
     message: "Selecione um responsável válido.",
-  }),
+  }).min(1, { message: "O responsável é obrigatório." }), // Adicionado min(1)
   date: z.date({
     required_error: "A data do agendamento é obrigatória.",
   }),
