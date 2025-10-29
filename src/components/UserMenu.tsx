@@ -101,8 +101,8 @@ export function UserMenu() {
           </DropdownMenuItem>
         )}
         
-        {/* NOVO: Exibe o Plano (Apenas se não for Super Admin e houver um plano) */}
-        {userPlanName && !isSuperAdmin && (
+        {/* Exibe o Plano (Agora sem a restrição !isSuperAdmin) */}
+        {userPlanName && (
           <DropdownMenuItem className="text-xs text-primary flex items-center gap-2 font-semibold">
             <ShieldCheck className="h-3 w-3" />
             {t('plan_name', { defaultValue: 'Plano' })}: {isProfileLoading ? "..." : userPlanName}
