@@ -31,7 +31,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
 
   // O handleSubmit agora recebe todos os valores do OrderForm, mas só usa o status e promocao_id
   // para a mutação, mantendo os outros campos (cliente, valor) fixos.
-  const handleSubmit = (values: { cliente_id: string; valor_total: number; items: any[]; status?: OrderStatus; promocao_id?: string | null }) => {
+  const handleSubmit = (values: { cliente_id: string; responsavel_id: string; valor_total: number; items: any[]; status?: OrderStatus; promocao_id?: string | null }) => {
     if (!values.status) {
       showError("Status é obrigatório.");
       return;
@@ -46,6 +46,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
     mutation.mutate({
       id: order.id,
       cliente_id: order.cliente_id, // Mantém o cliente original
+      responsavel_id: values.responsavel_id, // NOVO: Usa o responsável do formulário
       valor_total: order.valor_total, // Mantém o valor total original (não editável aqui)
       status: values.status,
       promocao_id: values.promocao_id, // NOVO: Passa o promocao_id do formulário
@@ -56,6 +57,7 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
   // Valores iniciais para o formulário (incluindo os itens carregados)
   const initialValues = {
     cliente_id: order.cliente_id,
+    responsavel_id: order.responsavel_id, // NOVO CAMPO
     status: order.status,
     promocao_id: order.promocao_id,
     // Mapeamos os itens carregados para o formato esperado pelo OrderForm
@@ -100,8 +102,6 @@ const EditOrderStatusSheet: React.FC<EditOrderStatusSheetProps> = ({ order, isOp
             isSubmitting={mutation.isPending} 
             defaultValues={initialValues}
             isEditing={true}
-            // O OrderForm não precisa de uma prop canEditStatus, pois ele só exibe o campo na edição.
-            // A permissão é verificada no botão de submissão e no EditOrderStatusSheet.
           />
         </div>
       </SheetContent>

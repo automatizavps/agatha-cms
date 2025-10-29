@@ -20,15 +20,20 @@ export interface Order {
   id: string;
   empresa_id: string;
   cliente_id: string;
+  responsavel_id: string | null; // NOVO CAMPO
   valor_total: number;
   status: OrderStatus;
   created_at: string;
-  promocao_id: string | null; // NOVO: promocao_id
+  promocao_id: string | null;
   
   // Relacionamentos
   clientes: {
     nome: string;
     email: string | null;
+  } | null;
+  responsavel: { // NOVO RELACIONAMENTO
+    nome_completo: string;
+    avatar_url: string | null;
   } | null;
   
   // Itens do pedido (carregados separadamente ou via join)
@@ -50,11 +55,13 @@ const fetchOrders = async (companyId?: string, filters: OrderFilters = {}): Prom
       id,
       empresa_id,
       cliente_id,
+      responsavel_id,
       valor_total,
       status,
       created_at,
       promocao_id,
-      clientes (nome, email)
+      clientes (nome, email),
+      responsavel:usuarios!pedidos_responsavel_id_fkey (nome_completo, avatar_url)
     `);
     
   // 1. Filtrar por Empresa
@@ -132,6 +139,7 @@ interface ItemToCreate {
 
 interface CreateOrderParams {
   cliente_id: string;
+  responsavel_id: string; // NOVO: Responsável é obrigatório na criação
   valor_total: number;
   items: ItemToCreate[];
   queryClient: QueryClient; // NOVO: Adicionando QueryClient
@@ -139,7 +147,7 @@ interface CreateOrderParams {
   promocao_id?: string | null; // NOVO: promocao_id
 }
 
-export const createOrder = async ({ cliente_id, valor_total, items, queryClient, empresa_id: provided_empresa_id, promocao_id }: CreateOrderParams) => {
+export const createOrder = async ({ cliente_id, responsavel_id, valor_total, items, queryClient, empresa_id: provided_empresa_id, promocao_id }: CreateOrderParams) => {
   let empresa_id: string;
 
   if (provided_empresa_id) {
@@ -167,6 +175,7 @@ export const createOrder = async ({ cliente_id, valor_total, items, queryClient,
     .insert({
       empresa_id: empresa_id,
       cliente_id: cliente_id,
+      responsavel_id: responsavel_id, // NOVO CAMPO
       valor_total: valor_total,
       status: 'pendente_entrega',
       promocao_id: promocao_id, // NOVO: promocao_id
@@ -222,17 +231,19 @@ export const createOrder = async ({ cliente_id, valor_total, items, queryClient,
 interface UpdateOrderParams {
   id: string;
   cliente_id: string;
+  responsavel_id: string; // NOVO CAMPO
   valor_total: number;
   status: OrderStatus;
   promocao_id: string | null; // NOVO: promocao_id
   queryClient: QueryClient; // Adicionando QueryClient aqui também, pois é usado na notificação
 }
 
-export const updateOrder = async ({ id, cliente_id, valor_total, status, promocao_id, queryClient }: UpdateOrderParams) => {
+export const updateOrder = async ({ id, cliente_id, responsavel_id, valor_total, status, promocao_id, queryClient }: UpdateOrderParams) => {
   const { data, error } = await supabase
     .from("pedidos")
     .update({
       cliente_id: cliente_id,
+      responsavel_id: responsavel_id, // NOVO CAMPO
       valor_total: valor_total,
       status: status,
       promocao_id: promocao_id, // NOVO: promocao_id
@@ -281,10 +292,10 @@ interface UpdateOrderStatusParams {
 }
 
 export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrderStatusParams) => {
-  // Primeiro, busca o pedido para obter o valor_total e promocao_id atuais
+  // Primeiro, busca o pedido para obter o valor_total, promocao_id e responsavel_id atuais
   const { data: currentOrder, error: fetchError } = await supabase
     .from("pedidos")
-    .select("cliente_id, valor_total, promocao_id, empresa_id")
+    .select("cliente_id, valor_total, promocao_id, empresa_id, responsavel_id") // Incluindo responsavel_id
     .eq("id", id)
     .single();
 
@@ -292,43 +303,17 @@ export const updateOrderStatus = async ({ id, status, queryClient }: UpdateOrder
     console.error("Error fetching current order for status update:", fetchError);
     throw new Error(fetchError?.message || "Falha ao buscar pedido para atualização de status.");
   }
-
-  const { data, error } = await supabase
-    .from("pedidos")
-    .update({ status: status })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Error updating order status:", error);
-    throw new Error(error.message);
-  }
   
-  // 2. Criar notificação para o usuário logado sobre a atualização
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    createNotification({
-      user_id: user.id,
-      empresa_id: data.empresa_id,
-      titulo: "Status do Pedido Atualizado",
-      mensagem: `O status do Pedido #${id.slice(0, 8)} foi alterado para ${status.replace('_', ' ')}.`,
-      link: "/orders",
-      queryClient: queryClient,
-    });
-  }
-
-  // 3. Invalida a query de métricas diárias se o status for 'entregue' ou se mudar de 'entregue'
-  // Isso garante que o dashboard seja atualizado quando o estoque é consumido/devolvido.
-  if (status === 'entregue' || data.status === 'entregue') {
-    const currentDate = new Date().toISOString().slice(0, 10);
-    // Invalida a query que alimenta o gráfico de pedidos por hora
-    queryClient.invalidateQueries({ queryKey: ["dailyOrderCountByHour", data.empresa_id, currentDate] });
-    // Invalida a query de métricas de receita (diária, semanal, mensal)
-    queryClient.invalidateQueries({ queryKey: ["revenueMetrics", data.empresa_id, currentDate] });
-  }
-
-  return data;
+  // Usamos a função updateOrder completa para garantir que o responsavel_id seja mantido
+  return updateOrder({
+    id,
+    cliente_id: currentOrder.cliente_id,
+    responsavel_id: currentOrder.responsavel_id!, // Assumimos que o responsável existe
+    valor_total: currentOrder.valor_total,
+    status,
+    promocao_id: currentOrder.promocao_id,
+    queryClient,
+  });
 };
 
 // --- Delete ---

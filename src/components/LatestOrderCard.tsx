@@ -43,6 +43,11 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order, onClick }) => 
   const clientAvatarUrl = order.clientes?.avatar_url;
   const clientInitials = clientName.slice(0, 2).toUpperCase();
   
+  // Dados do Responsável (NOVO)
+  const responsibleName = order.responsavel?.nome_completo || t('responsible');
+  const responsibleAvatarUrl = order.responsavel?.avatar_url;
+  const responsibleInitials = responsibleName.slice(0, 2).toUpperCase();
+  
   // Lógica para exibir os itens
   const items = order.pedido_itens || [];
   const mainItemName = items[0]?.produtos?.nome || t('no_data_found');
@@ -116,6 +121,15 @@ const LatestOrderCard: React.FC<LatestOrderCardProps> = ({ order, onClick }) => 
               <span className="text-xs text-muted-foreground ml-1"> (+{otherItemsCount} {t('items')})</span>
             )}
           </span>
+        </div>
+        
+        {/* Responsável (NOVO) */}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={responsibleAvatarUrl || undefined} alt={responsibleName} />
+            <AvatarFallback className="text-xs">{responsibleInitials}</AvatarFallback>
+          </Avatar>
+          <span className="text-sm truncate">{responsibleName}</span>
         </div>
         
         {/* Data e Hora do Pedido (Separados) */}

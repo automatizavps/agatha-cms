@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Order, deleteOrder, OrderStatus } from "@/integrations/supabase/orders";
-import { MoreHorizontal, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +41,7 @@ interface OrderActionsProps {
   canWrite: boolean; // NOVO: Permissão de escrita
 }
 
-type SortKey = 'id' | 'cliente' | 'data' | 'valor_total' | 'status';
+type SortKey = 'id' | 'cliente' | 'responsavel' | 'data' | 'valor_total' | 'status'; // NOVO: responsavel
 type SortDirection = 'asc' | 'desc';
 
 const OrderActions: React.FC<OrderActionsProps> = ({ order, onEditStatus, canWrite }) => {
@@ -214,6 +214,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
           aValue = a.clientes?.nome || '';
           bValue = b.clientes?.nome || '';
           break;
+        case 'responsavel': // NOVO
+          aValue = a.responsavel?.nome_completo || '';
+          bValue = b.responsavel?.nome_completo || '';
+          break;
         case 'data':
           aValue = new Date(a.created_at).getTime();
           bValue = new Date(b.created_at).getTime();
@@ -297,6 +301,15 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 {t('order_table_header_client')}
               </SortableHeader>
               <SortableHeader 
+                sortKey="responsavel" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="hidden lg:table-cell"
+              >
+                {t('responsible')}
+              </SortableHeader>
+              <SortableHeader 
                 sortKey="data" 
                 currentSortKey={sortKey} 
                 currentSortDirection={sortDirection} 
@@ -349,6 +362,12 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
                 </TableCell>
                 <TableCell className="font-medium">
                   {order.clientes?.nome || t('no_data_found')}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {order.responsavel?.nome_completo || 'N/A'}
+                  </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}

@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Trash2, DollarSign, Building, Tag, Check, ChevronsUpDown } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, DollarSign, Building, Tag, Check, ChevronsUpDown, User } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useUsers } from "@/integrations/supabase/users"; // Importando useUsers
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -48,6 +49,9 @@ const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
   }).min(1, { message: "O cliente é obrigatório." }),
+  responsavel_id: z.string().uuid({ // NOVO CAMPO
+    message: "Selecione um responsável válido.",
+  }).min(1, { message: "O responsável é obrigatório." }),
   items: z.array(itemSchema).min(1, { message: "O pedido deve ter pelo menos um item." }),
   status: z.enum(statusOptions, {
     required_error: "O status é obrigatório.",
@@ -67,7 +71,7 @@ interface ItemToCreate {
 }
 
 interface OrderFormProps {
-  onSubmit: (values: { cliente_id: string; valor_total: number; items: ItemToCreate[]; status?: OrderStatus; empresa_id?: string; promocao_id?: string | null }) => void;
+  onSubmit: (values: { cliente_id: string; responsavel_id: string; valor_total: number; items: ItemToCreate[]; status?: OrderStatus; empresa_id?: string; promocao_id?: string | null }) => void;
   isSubmitting: boolean;
   defaultValues?: Partial<OrderFormValues>; 
   isEditing?: boolean;
@@ -78,6 +82,7 @@ const NONE_VALUE = "__NONE__";
 const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
+  const { data: users, isLoading: isLoadingUsers } = useUsers(); // NOVO: Carrega usuários
   const { data: clients, isLoading: isLoadingClients } = useClients();
   const { data: products, isLoading: isLoadingProducts } = useProductsOnly();
   const { data: services, isLoading: isLoadingServices } = useServicesOnly();
@@ -86,18 +91,31 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
-  const formSchema = isSuperAdmin && !isEditing
-    ? baseFormSchema.extend({
+  // Ajusta o schema dinamicamente: 
+  let finalFormSchema = baseFormSchema;
+  
+  if (isEditing) {
+    // Na edição, items não é obrigatório (não pode ser alterado) e status é obrigatório
+    finalFormSchema = finalFormSchema.extend({
+      items: z.array(itemSchema).optional(),
+      status: z.enum(statusOptions, { required_error: "O status é obrigatório." }),
+      // Na edição, o responsável não é obrigatório no schema, mas é mantido
+      responsavel_id: z.string().uuid().optional().nullable(),
+    });
+  } else if (isSuperAdmin) {
+    // Na criação, Super Admin deve selecionar a empresa
+    finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
         }).min(1, { message: t("company_required_super_admin") }),
-      })
-    : baseFormSchema;
-
+      });
+  } 
+  
   const form = useForm<OrderFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(finalFormSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
+      responsavel_id: defaultValues?.responsavel_id || "", // NOVO DEFAULT
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
       empresa_id: defaultValues?.empresa_id || "",
@@ -120,6 +138,12 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     if (!clients || !isCompanySelected) return [];
     return clients.filter(client => client.empresa_id === selectedCompanyId);
   }, [clients, selectedCompanyId, isCompanySelected]);
+  
+  // NOVO: Filtra usuários que pertencem à empresa selecionada
+  const filteredUsers = useMemo(() => {
+    if (!users || !isCompanySelected) return [];
+    return users.filter(user => user.empresa_id === selectedCompanyId);
+  }, [users, selectedCompanyId, isCompanySelected]);
 
   const allItems = useMemo(() => {
     if (!isCompanySelected) return [];
@@ -150,7 +174,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       const fetchInitialPromotion = async () => {
         const { data: promoData } = await supabase
           .from('promocoes')
-          .select('*')
+          .select('id, nome, desconto_percentual, data_inicio, data_fim, is_active')
           .eq('id', defaultValues.promocao_id)
           .single();
         if (promoData) {
@@ -181,7 +205,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
         
-        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
+        // Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         
         return false;
@@ -222,15 +246,19 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     
     // CORREÇÃO CRÍTICA: Garante que promocao_id seja NULL se for string vazia
     const final_promocao_id = values.promocao_id === "" ? null : values.promocao_id;
+    
+    // Na edição, o valor total é recalculado, mas os itens não são enviados
+    const itemsPayload = isEditing ? [] : values.items!.map(item => ({
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      preco_unitario: item.preco_unitario,
+    }));
 
     onSubmit({
       cliente_id: values.cliente_id,
+      responsavel_id: values.responsavel_id!, // NOVO CAMPO
       valor_total: calculateTotal,
-      items: values.items.map(item => ({
-        produto_id: item.produto_id,
-        quantidade: item.quantidade,
-        preco_unitario: item.preco_unitario,
-      })),
+      items: itemsPayload,
       status: values.status,
       empresa_id: empresa_id,
       promocao_id: isPromotionValid ? final_promocao_id : null, // Só aplica se for válido
@@ -270,6 +298,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                     onValueChange={(value) => {
                       field.onChange(value);
                       form.setValue('cliente_id', '');
+                      form.setValue('responsavel_id', ''); // Limpa responsável
                       form.setValue('items', []);
                       form.setValue('promocao_id', null);
                       setActivePromotion(null);
@@ -335,6 +364,37 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
               <FormMessage />
             </FormItem>
           )}
+        />
+        
+        {/* NOVO CAMPO: Responsável pelo Pedido */}
+        <FormField
+          control={form.control}
+          name="responsavel_id"
+          render={({ field }) => {
+            const selectedUser = filteredUsers.find(u => u.id === field.value);
+            return (
+            <FormItem>
+              <FormLabel>{t('responsible', { defaultValue: 'Responsável pelo Pedido' })}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingUsers || isSubmitting || !isCompanySelected}>
+                <FormControl>
+                  <SelectTrigger>
+                    <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder={isLoadingUsers ? t("loading_users") : t("select_responsible")}>
+                      {selectedUser ? `${selectedUser.nome_completo} (${selectedUser.perfis?.nome})` : t("select_responsible")}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {filteredUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.nome_completo} ({user.perfis?.nome})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}}
         />
         
         {isEditing && (
