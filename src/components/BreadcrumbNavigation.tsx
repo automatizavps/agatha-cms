@@ -29,7 +29,7 @@ const BreadcrumbNavigation = () => {
     "/companies": "nav_companies",
     "/settings": "nav_settings",
     "/profile": "nav_profile",
-    "/products/categories": "nav_categories",
+    "/products/categories": "page_title_categories",
     "/appointments": "nav_appointments",
     "/promotions": "page_title_promotions",
     "/companies/profiles": "page_title_custom_profiles",
@@ -37,6 +37,7 @@ const BreadcrumbNavigation = () => {
     "/commissions": "page_title_commissions", // Rota pai (prefixo)
     "/commissions/rules": "commission_rules_title", // Rota filha
     "/commissions/payments": "page_title_commission_payments", // Rota filha
+    "/notifications": "page_title_notifications", // ADICIONADO
   };
 
   // Se estiver na raiz, não exibe breadcrumbs
