@@ -88,10 +88,9 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
           message: t("select_valid_company"),
         }).min(1, { message: t("company_required_super_admin") }),
       });
-  } else {
-    // Se não for Super Admin, o convite não deveria ser possível
-    return <p className="text-destructive">{t("only_super_admin_can_invite")}</p>;
-  }
+  } 
+  // Se não for Super Admin e não estiver editando, o empresa_id é fixo (do perfil logado)
+  // e não precisamos estender o schema, pois ele não será usado no formulário.
 
 
   const form = useForm<UserFormValues>({
@@ -108,7 +107,10 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
   });
   
   // Observa o ID da empresa selecionada (relevante para carregar perfis customizados)
-  const selectedCompanyId = isSuperAdmin ? form.watch('empresa_id') : defaultValues?.empresa_id;
+  // Se não for SA e não estiver editando, usa o ID da empresa do usuário logado
+  const selectedCompanyId = isSuperAdmin 
+    ? form.watch('empresa_id') 
+    : currentProfile?.empresa_id;
   
   // Carrega perfis customizados filtrados pela empresa selecionada
   const { data: customProfiles, isLoading: isLoadingCustomProfiles } = useCustomProfiles(selectedCompanyId || undefined);
@@ -162,13 +164,12 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
     
     if (isSuperAdmin) {
       // Se for Super Admin, enviamos o ID da empresa (ou null se for string vazia)
-      // Na criação, values.empresa_id é garantido ser uma string UUID
       empresa_id = values.empresa_id || null;
-    } else {
-      // Se não for Super Admin, o convite não deveria ser possível, mas se for edição,
-      // o empresa_id é o do usuário logado (que não é usado na mutação de edição, mas é bom ter).
+    } else if (!isEditing) {
+      // Se for criação por um Admin de Empresa, usamos o ID da empresa do Admin logado
       empresa_id = currentProfile?.empresa_id || null;
     }
+    // Se for edição por um Admin de Empresa, o empresa_id não é enviado (é resolvido na Edge Function)
 
     onSubmit({
       full_name: values.full_name,
@@ -179,6 +180,14 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
       empresa_id: empresa_id,
     });
   };
+  
+  // Verifica se o Admin de Empresa pode convidar (se ele tiver empresa_id)
+  const canAdminInvite = !isSuperAdmin && !isEditing && !!currentProfile?.empresa_id;
+  
+  // Se for criação e o usuário não for SA e não tiver empresa, bloqueamos a renderização
+  if (!isEditing && !isSuperAdmin && !currentProfile?.empresa_id) {
+    return <p className="text-destructive">{t("error_loading_data")}: {t("company_not_found")}</p>;
+  }
   
   if (isCheckingPermissions) {
     return (
@@ -226,6 +235,14 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
               </FormItem>
             )}
           />
+        )}
+        
+        {/* Exibe a empresa fixa para Admin de Empresa na Criação */}
+        {canAdminInvite && currentProfile?.empresas?.nome && (
+          <FormItem>
+            <FormLabel>{t('user_table_header_company')}</FormLabel>
+            <Input value={currentProfile.empresas.nome} disabled className="bg-muted/50" />
+          </FormItem>
         )}
         
         <FormField
@@ -308,7 +325,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value} 
-                disabled={isSubmitting || (isSuperAdmin && !selectedCompanyId)}
+                disabled={isSubmitting || (!selectedCompanyId && !isEditing)}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -330,7 +347,11 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isSubmitting, defaultValu
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting || (!isEditing && isSuperAdmin && !selectedCompanyId)}
+        >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
