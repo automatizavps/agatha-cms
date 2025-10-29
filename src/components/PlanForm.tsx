@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, DollarSign, Users, ShieldCheck, CalendarIcon, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { AccessType, useModules } from "@/integrations/supabase/customProfiles";
+import { AccessType, useModules, Module } from "@/integrations/supabase/customProfiles";
 import { Plan } from "@/integrations/supabase/plans";
 import PlanModuleSelector from "./PlanModuleSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,6 +83,17 @@ interface PlanFormProps {
 const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, isSubmitting, defaultPlan, isEditing = false }) => {
   const { data: modules, isLoading: isLoadingModules } = useModules();
   const { t } = useTranslation();
+  
+  // Ordena os módulos pelo nome traduzido
+  const sortedModules = useMemo(() => {
+    if (!modules) return [];
+    
+    return [...modules].sort((a: Module, b: Module) => {
+      const nameA = t(a.nome);
+      const nameB = t(b.nome);
+      return nameA.localeCompare(nameB);
+    });
+  }, [modules, t]);
   
   // Determina o tipo de duração inicial
   const initialDurationType = useMemo(() => {
@@ -420,7 +431,8 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, isSubmitting, defaultPlan
             
             <Separator />
 
-            {modules?.map((module) => (
+            {/* Renderiza os módulos ordenados */}
+            {sortedModules.map((module) => (
               <div key={module.id} className="grid grid-cols-3 items-center gap-4">
                 <div className="col-span-2">
                   <FormLabel className="font-normal">{t(module.nome)}</FormLabel>

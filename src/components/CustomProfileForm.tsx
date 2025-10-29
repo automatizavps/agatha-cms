@@ -16,11 +16,11 @@ import { Loader2, Building, Tag, ShieldCheck } from "lucide-react";
 import { useCompanies } from "@/integrations/supabase/companies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
-import { AccessType, CustomProfile, useModules } from "@/integrations/supabase/customProfiles";
+import { AccessType, CustomProfile, useModules, Module } from "@/integrations/supabase/customProfiles";
 import PermissionSelector from "./PermissionSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox"; // Importando Checkbox
 
 // Definimos o esquema base
@@ -58,6 +58,17 @@ const CustomProfileForm: React.FC<CustomProfileFormProps> = ({ onSubmit, isSubmi
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
   const { data: modules, isLoading: isLoadingModules } = useModules();
   const { t } = useTranslation();
+  
+  // Ordena os módulos pelo nome traduzido
+  const sortedModules = useMemo(() => {
+    if (!modules) return [];
+    
+    return [...modules].sort((a: Module, b: Module) => {
+      const nameA = t(a.nome);
+      const nameB = t(b.nome);
+      return nameA.localeCompare(nameB);
+    });
+  }, [modules, t]);
   
   // Inicializa o estado de permissões
   const initialPermissions: PermissionState = {};
@@ -162,11 +173,7 @@ const CustomProfileForm: React.FC<CustomProfileFormProps> = ({ onSubmit, isSubmi
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('user_table_header_company')}</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value} 
-                    disabled={isLoadingCompanies || isSubmitting || isEditing} // Empresa é fixa na edição
-                  >
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingCompanies || isSubmitting || isEditing}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={t("select_company")} />
@@ -237,7 +244,8 @@ const CustomProfileForm: React.FC<CustomProfileFormProps> = ({ onSubmit, isSubmi
             
             <Separator />
 
-            {modules?.map((module) => (
+            {/* Renderiza os módulos ordenados */}
+            {sortedModules.map((module) => (
               <div key={module.id} className="grid grid-cols-3 items-center gap-4">
                 <div className="col-span-2">
                   <FormLabel className="font-normal">{t(module.nome)}</FormLabel>
