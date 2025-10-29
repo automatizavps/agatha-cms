@@ -166,6 +166,15 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
+  // NOVO: Efeito para revalidar o formulário quando a empresa muda ou os itens carregam
+  useEffect(() => {
+    // Dispara a revalidação de todos os campos para aplicar as novas regras de estoque
+    if (isCompanySelected && !isLoadingItems) {
+      form.trigger();
+    }
+  }, [selectedCompanyId, isLoadingItems, form]);
+
+
   useEffect(() => {
     // Sincroniza defaultValues na edição, se necessário
     if (isEditing && defaultValues) {
@@ -251,6 +260,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     if (selectedItem) {
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
+      
+      // Para agendamentos, a quantidade é 1 por padrão e não há validação de estoque
+      form.setValue(`items.${index}.quantidade`, 1);
     }
   };
   
@@ -296,6 +308,10 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   const shouldShowCompanyField = isSuperAdmin || isEditing;
   
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
+  
+  // NOVO: Verifica se o formulário está inválido (apenas na criação)
+  const isFormInvalid = !isEditing && (!form.formState.isValid || !form.watch('cliente_id') || !form.watch('responsavel_id') || form.watch('items')?.length === 0);
+
   
   if (isCheckingPermissions) {
     return (
@@ -751,7 +767,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           </span>
         </div>
         
-        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing) || isFormInvalid}
+        >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (

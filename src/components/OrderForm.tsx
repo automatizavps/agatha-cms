@@ -56,14 +56,6 @@ const itemSchema = z.object({
       }
       
       // Acessamos o objeto pai (o item do array)
-      // Usamos 'parent' de forma defensiva, mas o erro original era aqui.
-      // Vamos tentar acessar o produto_id diretamente do objeto que está sendo validado (ctx.data)
-      // Nota: ctx.data é o valor do campo 'quantidade', o objeto pai é ctx.parent.data
-      
-      // Se o Zod estiver validando o item inteiro, o produto_id estará em ctx.data.produto_id
-      // Se estiver validando apenas a quantidade, o produto_id deve ser acessado via parent.
-      
-      // Para evitar o erro de 'parent' undefined, vamos usar uma abordagem mais defensiva:
       const item = (ctx.parent as any)?.data;
       const productId = item?.produto_id;
       
@@ -167,7 +159,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       empresa_id: defaultValues?.empresa_id || "",
       promocao_id: defaultValues?.promocao_id || null,
     },
-    // REMOVIDO: context: form.getValues(), para evitar o erro de inicialização
   });
   
   const { fields, append, remove } = useFieldArray({
@@ -217,6 +208,15 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       });
     }
   }, [allItems]);
+  
+  // NOVO: Efeito para revalidar o formulário quando a empresa muda ou os itens carregam
+  useEffect(() => {
+    // Dispara a revalidação de todos os campos para aplicar as novas regras de estoque
+    if (isCompanySelected && !isLoadingItems) {
+      form.trigger();
+    }
+  }, [selectedCompanyId, isLoadingItems, form]);
+
 
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
