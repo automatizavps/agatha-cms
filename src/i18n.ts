@@ -430,6 +430,7 @@ const resources = {
       "item": "Item",
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
       "add_new_appointment": "Novo Agendamento",
+      "search_item": "Buscar item...", // NOVO
       
       // Relatórios (Reports)
       "select_date_range": "Selecionar período",

@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Trash2, DollarSign, Building, Tag } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, DollarSign, Building, Tag, Check, ChevronsUpDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -32,6 +32,9 @@ import PromotionSelector from "./PromotionSelector";
 import { Promotion, usePromotionRules } from "@/integrations/supabase/promotions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
@@ -373,40 +376,71 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                 <FormField
                   control={form.control}
                   name={`items.${index}.produto_id`}
-                  render={({ field: itemField }) => (
-                    <FormItem>
-                      <FormLabel>{t('service_product')}</FormLabel>
-                      {isEditing ? (
-                        <FormControl>
-                          <Input 
-                            value={getItemName(itemField.value)} 
-                            disabled 
-                            className="bg-muted/50"
-                          />
-                        </FormControl>
-                      ) : (
-                        <Select 
-                          onValueChange={(val) => handleProductChange(index, val)} 
-                          value={itemField.value} 
-                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected}
-                        >
+                  render={({ field: itemField }) => {
+                    const selectedItem = allItems.find(item => item.id === itemField.value);
+                    return (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>{t('service_product')}</FormLabel>
+                        {isEditing ? (
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={allItems.length === 0 ? t("loading_items") : t("select_item")} />
-                            </SelectTrigger>
+                            <Input 
+                              value={getItemName(itemField.value)} 
+                              disabled 
+                              className="bg-muted/50"
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {allItems.map((item) => (
-                              <SelectItem key={item.id} value={item.id}>
-                                {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                        ) : (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className={cn(
+                                    "w-full justify-between",
+                                    !itemField.value && "text-muted-foreground"
+                                  )}
+                                  disabled={isLoadingItems || isSubmitting || !isCompanySelected}
+                                >
+                                  {itemField.value
+                                    ? getItemName(itemField.value)
+                                    : allItems.length === 0 ? t("loading_items") : t("select_item")}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                              <Command>
+                                <CommandInput placeholder={t('search_item', { defaultValue: 'Buscar item...' })} />
+                                <CommandEmpty>{t('no_data_found')}</CommandEmpty>
+                                <CommandGroup>
+                                  {allItems.map((item) => (
+                                    <CommandItem
+                                      value={`${item.nome} (${item.tipo})`}
+                                      key={item.id}
+                                      onSelect={() => {
+                                        handleProductChange(index, item.id);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          item.id === itemField.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                       <FormMessage />
                     </FormItem>
-                  )}
+                  )}}
                 />
                 
                 <div className="grid grid-cols-2 gap-4">

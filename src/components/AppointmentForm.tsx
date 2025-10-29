@@ -506,40 +506,71 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                 <FormField
                   control={form.control}
                   name={`items.${index}.produto_id`}
-                  render={({ field: itemField }) => (
-                    <FormItem>
-                      <FormLabel>{t('service_product')}</FormLabel>
-                      {isEditing ? (
-                        <FormControl>
-                          <Input 
-                            value={getItemName(itemField.value)} 
-                            disabled 
-                            className="bg-muted/50"
-                          />
-                        </FormControl>
-                      ) : (
-                        <Select 
-                          onValueChange={(val) => handleProductChange(index, val)} 
-                          value={itemField.value} 
-                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected}
-                        >
+                  render={({ field: itemField }) => {
+                    const selectedItem = allItems.find(item => item.id === itemField.value);
+                    return (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>{t('service_product')}</FormLabel>
+                        {isEditing ? (
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={allItems.length === 0 ? t("loading_items") : t("select_item")} />
-                            </SelectTrigger>
+                            <Input 
+                              value={getItemName(itemField.value)} 
+                              disabled 
+                              className="bg-muted/50"
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {allItems.map((item) => (
-                              <SelectItem key={item.id} value={item.id}>
-                                {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                        ) : (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className={cn(
+                                    "w-full justify-between",
+                                    !itemField.value && "text-muted-foreground"
+                                  )}
+                                  disabled={isLoadingItems || isSubmitting || !isCompanySelected}
+                                >
+                                  {itemField.value
+                                    ? getItemName(itemField.value)
+                                    : allItems.length === 0 ? t("loading_items") : t("select_item")}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                              <Command>
+                                <CommandInput placeholder={t('search_item', { defaultValue: 'Buscar item...' })} />
+                                <CommandEmpty>{t('no_data_found')}</CommandEmpty>
+                                <CommandGroup>
+                                  {allItems.map((item) => (
+                                    <CommandItem
+                                      value={`${item.nome} (${item.tipo})`}
+                                      key={item.id}
+                                      onSelect={() => {
+                                        handleProductChange(index, item.id);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          item.id === itemField.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                       <FormMessage />
                     </FormItem>
-                  )}
+                  )}}
                 />
                 
                 <div className="grid grid-cols-2 gap-4">
