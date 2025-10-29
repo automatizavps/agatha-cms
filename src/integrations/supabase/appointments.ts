@@ -38,12 +38,6 @@ export interface Appointment {
   agendamento_itens: AppointmentItem[];
 }
 
-// --- Tipagem para Paginação ---
-export interface PaginatedAppointments {
-  appointments: Appointment[];
-  totalCount: number;
-}
-
 // --- Fetch Geral ---
 
 interface AppointmentFilters {
@@ -52,9 +46,7 @@ interface AppointmentFilters {
   status?: Appointment['status'] | 'all';
 }
 
-const fetchAppointments = async (companyId?: string, filters: AppointmentFilters = {}, page: number = 1, pageSize: number = 20): Promise<PaginatedAppointments> => {
-  const offset = (page - 1) * pageSize;
-  
+const fetchAppointments = async (companyId?: string, filters: AppointmentFilters = {}): Promise<Appointment[]> => {
   let query = supabase
     .from("agendamentos")
     .select(`
@@ -69,7 +61,7 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
       clientes (nome),
       empresas (nome)
-    `, { count: 'exact' }); // Solicita a contagem total
+    `);
     
   // 1. Filtrar por Empresa
   if (companyId) {
@@ -92,28 +84,20 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
     query = query.lt('data_hora', end.toISOString());
   }
 
-  // 4. Aplicar ordenação e paginação
-  query = query
-    .order("data_hora", { ascending: false }) // Ordena por data mais recente primeiro
-    .range(offset, offset + pageSize - 1);
-
-  const { data, error, count } = await query;
+  const { data, error } = await query.order("data_hora", { ascending: true });
 
   if (error) {
     console.error("Error fetching appointments:", error);
     throw new Error("Failed to fetch appointments");
   }
 
-  return {
-    appointments: data as Appointment[],
-    totalCount: count || 0,
-  };
+  return data as Appointment[];
 };
 
-export const useAppointments = (companyId?: string, filters: AppointmentFilters = {}, page: number = 1, pageSize: number = 20) => {
-  return useQuery<PaginatedAppointments, Error>({
-    queryKey: ["appointments", companyId, filters, page, pageSize],
-    queryFn: () => fetchAppointments(companyId, filters, page, pageSize),
+export const useAppointments = (companyId?: string, filters: AppointmentFilters = {}) => {
+  return useQuery<Appointment[], Error>({
+    queryKey: ["appointments", companyId, filters],
+    queryFn: () => fetchAppointments(companyId, filters),
     enabled: true,
   });
 };

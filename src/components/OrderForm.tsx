@@ -47,24 +47,7 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
     .refine((val, ctx) => {
-      // SOLUÇÃO ROBUSTA: Usar ctx.path para obter o índice do item no array
-      const path = ctx.path;
-      // O path deve ser ['items', index, 'quantidade']
-      if (path.length < 3 || typeof path[1] !== 'number') {
-        // Se a estrutura do path for inesperada, pulamos a validação de estoque
-        return true;
-      }
-      
-      // Acessamos o produto_id do item atual no array de itens
-      const items = (ctx.formContext as OrderFormValues)?.items;
-      const itemIndex = path[1];
-      const productId = items?.[itemIndex]?.produto_id;
-      
-      // Se o produto_id não for uma string válida, pulamos a validação de estoque
-      if (typeof productId !== 'string' || productId.length === 0) {
-        return true;
-      }
-      
+      const productId = ctx.parent.produto_id;
       const stock = productStockMap.get(productId);
       
       // Se for serviço (stock === null) ou se o estoque for suficiente, é válido
@@ -154,15 +137,12 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     resolver: zodResolver(finalFormSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
-      // CORREÇÃO: Inicializa responsavel_id como string vazia se não estiver editando
-      responsavel_id: defaultValues?.responsavel_id || "", 
+      responsavel_id: defaultValues?.responsavel_id || "", // NOVO DEFAULT
       items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
       empresa_id: defaultValues?.empresa_id || "",
       promocao_id: defaultValues?.promocao_id || null,
     },
-    // Passa o contexto do formulário para o Zod usar na validação de array
-    context: form.getValues(), 
   });
   
   const { fields, append, remove } = useFieldArray({
@@ -344,11 +324,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const shouldShowCompanyField = isSuperAdmin || isEditing;
   
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
-  
-  // NOVO: Verifica se o formulário está inválido (apenas na criação)
-  // MOVIDO PARA DEPOIS DA INICIALIZAÇÃO DO FORM
-  const isFormInvalid = !isEditing && (!form.formState.isValid || !form.watch('cliente_id') || !form.watch('responsavel_id') || form.watch('items')?.length === 0);
-
 
   if (isCheckingPermissions) {
     return (
@@ -503,6 +478,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('order_list_title')}</CardTitle>
+            {/* REMOVIDO O BOTÃO DAQUI */}
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => {
@@ -728,11 +704,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
           </span>
         </div>
         
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing) || isFormInvalid}
-        >
+        <Button type="submit" className="w-full" disabled={isSubmitting || (isSuperAdmin && !isCompanySelected && !isEditing)}>
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : isEditing ? (
