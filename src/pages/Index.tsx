@@ -81,6 +81,7 @@ const Index = () => {
         {/* Título do Dashboard com o Badge do Plano */}
         <div className="flex items-center gap-3">
           <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('dashboard_title')}</h1>
+          {/* Exibe o badge se houver nome do plano E o usuário não for Super Admin */}
           {userPlanName && !isSuperAdmin && (
             <Badge variant="secondary" className="text-sm font-semibold bg-primary/10 text-primary border border-primary/50">
               <ShieldCheck className="h-4 w-4 mr-1" />
