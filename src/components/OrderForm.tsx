@@ -346,7 +346,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
   
   // NOVO: Verifica se o formulário está inválido (apenas na criação)
-  // Usamos form.formState.isValid para capturar todas as validações Zod, incluindo as de estoque.
+  // MOVIDO PARA DEPOIS DA INICIALIZAÇÃO DO FORM
   const isFormInvalid = !isEditing && (!form.formState.isValid || !form.watch('cliente_id') || !form.watch('responsavel_id') || form.watch('items')?.length === 0);
 
 
