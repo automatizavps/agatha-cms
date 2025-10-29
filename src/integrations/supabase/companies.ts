@@ -129,16 +129,58 @@ export const updateCompany = async ({ id, nome, cnpj, telefone, endereco_complet
     email: email,
   };
   
-  // Adiciona is_active apenas se for fornecido
-  if (is_active !== undefined) {
+  // 1. Se o plano_id foi fornecido ou se a empresa está sendo atualizada,
+  // precisamos verificar a vigência do plano.
+  if (plano_id !== undefined) {
+    updatePayload.plano_id = plano_id;
+    
+    let is_currently_active = is_active; // Mantém o status se não houver plano
+    
+    if (plano_id) {
+      // Busca a vigência do novo plano
+      const { data: planData, error: planError } = await supabase
+        .from('planos')
+        .select('data_inicio, data_fim')
+        .eq('id', plano_id)
+        .single();
+        
+      if (planError || !planData) {
+        console.warn("Could not fetch plan data for status check:", planError?.message);
+        // Se não puder buscar o plano, mantemos o status atual (ou o fornecido)
+      } else {
+        const now = new Date();
+        const dataInicio = planData.data_inicio ? new Date(planData.data_inicio) : null;
+        const dataFim = planData.data_fim ? new Date(planData.data_fim) : null;
+        
+        // Lógica de Vigência: Ativo se (data_inicio <= now) E (data_fim >= now)
+        const isVigent = (!dataInicio || dataInicio <= now) && (!dataFim || dataFim >= now);
+        
+        // Se o status de vigência for diferente do status atual da empresa, forçamos a mudança.
+        // Se is_active não foi fornecido, usamos o status de vigência.
+        if (is_active === undefined || is_active !== isVigent) {
+          is_currently_active = isVigent;
+        } else {
+          is_currently_active = is_active;
+        }
+      }
+    } else {
+      // Se o plano_id for NULL, a empresa deve ser desativada (a menos que seja o SA)
+      // Por segurança, se o plano for removido, desativamos, a menos que o is_active tenha sido explicitamente definido.
+      if (is_active === undefined) {
+        is_currently_active = false;
+      }
+    }
+    
+    // Força a atualização do status de atividade
+    if (is_currently_active !== undefined) {
+      updatePayload.is_active = is_currently_active;
+    }
+  } else if (is_active !== undefined) {
+    // Se is_active foi explicitamente fornecido, usamos ele (ex: toggle manual do SA)
     updatePayload.is_active = is_active;
   }
   
-  // Adiciona plano_id apenas se for fornecido
-  if (plano_id !== undefined) {
-    updatePayload.plano_id = plano_id;
-  }
-  
+  // 2. Executar a atualização
   const { data, error } = await supabase
     .from("empresas")
     .update(updatePayload)
