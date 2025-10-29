@@ -60,27 +60,24 @@ serve(async (req) => {
     return returnError("Missing required field: bucketName", 400);
   }
   
-  // 4. Listar arquivos recursivamente (com tratamento de paginação implícito)
-  const listAllFiles = async (path: string = ''): Promise<any[]> => {
+  // 4. Listar arquivos recursivamente (usando a opção search do list)
+  try {
     let allFiles: any[] = [];
-    let offset = 0;
-    const limit = 100; // Max limit per call
+    let currentPage = 0;
+    const pageSize = 100; // Limite máximo por chamada
 
     while (true) {
-      // Se o pathPrefix for fornecido, garantimos que a listagem comece no diretório correto.
-      // Se estivermos em uma chamada recursiva, o 'path' já inclui o prefixo.
-      const currentPath = path || '';
-      
       const { data: files, error } = await supabaseAdmin.storage
         .from(bucketName)
-        .list(currentPath, {
-          limit: limit,
-          offset: offset,
+        .list(pathPrefix || '', {
+          limit: pageSize,
+          offset: currentPage * pageSize,
           sortBy: { column: 'name', order: 'asc' },
+          search: '', // Não usamos search, mas listamos o diretório
         });
 
       if (error) {
-        console.error(`Error listing files in ${bucketName}/${currentPath}:`, error);
+        console.error(`Error listing files in ${bucketName}/${pathPrefix || ''}:`, error);
         throw new Error(error.message);
       }
       
@@ -89,41 +86,28 @@ serve(async (req) => {
       }
 
       for (const file of files) {
-        const fullPath = currentPath ? `${currentPath}/${file.name}` : file.name;
+        // Ignora diretórios (itens sem 'id' são diretórios)
+        if (file.id === null) continue; 
         
-        if (file.id === null) { // É uma pasta
-          // Recursivamente lista o conteúdo da pasta
-          const subFiles = await listAllFiles(fullPath);
-          allFiles = allFiles.concat(subFiles);
-        } else {
-          // É um arquivo, adiciona o caminho completo e a URL pública
-          allFiles.push({
-            ...file,
-            fullPath: fullPath,
-            publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
-          });
-        }
+        // Constrói o fullPath corretamente
+        const fullPath = pathPrefix ? `${pathPrefix}/${file.name}` : file.name;
+        
+        allFiles.push({
+          ...file,
+          fullPath: fullPath,
+          publicUrl: supabaseAdmin.storage.from(bucketName).getPublicUrl(fullPath).data.publicUrl,
+        });
       }
       
       // Se o número de arquivos retornados for menor que o limite, terminamos.
-      if (files.length < limit) {
+      if (files.length < pageSize) {
         break;
       }
       
-      offset += limit;
+      currentPage++;
     }
     
-    return allFiles;
-  };
-  
-  try {
-    // Se pathPrefix for fornecido, começamos a listagem a partir desse prefixo.
-    // Se for undefined (Super Admin em 'Todas as Empresas'), listamos a partir da raiz ('').
-    const startPath = pathPrefix || '';
-    
-    const files = await listAllFiles(startPath);
-    
-    return new Response(JSON.stringify({ files }), {
+    return new Response(JSON.stringify({ files: allFiles }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
