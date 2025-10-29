@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ExportButton from "./ExportButton";
-import { updateCommissionStatus } from "@/integrations/supabase/commissions"; // Será criado no próximo passo
+import { updateCommissionStatus } from "@/integrations/supabase/commissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { flattenDataForExport } from "@/utils/export";
 
@@ -35,14 +35,14 @@ interface CommissionPaymentTableProps {
 
 interface PaymentActionsProps {
   record: CommissionRecord;
+  t: (key: string, options?: any) => string; // Passando t
 }
 
 type SortKey = 'usuario' | 'tipo_referencia' | 'valor_comissao' | 'status' | 'created_at';
 type SortDirection = 'asc' | 'desc';
 
-const PaymentActions: React.FC<PaymentActionsProps> = ({ record }) => {
+const PaymentActions: React.FC<PaymentActionsProps> = ({ record, t }) => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
   
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string, status: CommissionRecord['status'] }) => updateCommissionStatus(id, status, queryClient),
@@ -98,19 +98,6 @@ const PaymentActions: React.FC<PaymentActionsProps> = ({ record }) => {
   );
 };
 
-const getStatusBadge = (status: CommissionRecord['status']) => {
-  const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
-  switch (status) {
-    case 'pago':
-      return <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>{t('paid')}</span>;
-    case 'cancelado':
-      return <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>{t('cancelado')}</span>;
-    case 'pendente':
-    default:
-      return <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>{t('pending')}</span>;
-  }
-};
-
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -146,9 +133,23 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 
 
 const CommissionPaymentTable: React.FC<CommissionPaymentTableProps> = ({ records }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(); // CHAME O HOOK AQUI
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // MOVIDO PARA DENTRO DO COMPONENTE
+  const getStatusBadge = (status: CommissionRecord['status']) => {
+    const baseClasses = "capitalize px-3 py-1 rounded-full text-xs font-semibold";
+    switch (status) {
+      case 'pago':
+        return <span className={cn(baseClasses, "bg-green-700/80 text-green-200 dark:bg-green-900/80 dark:text-green-300")}>{t('paid')}</span>;
+      case 'cancelado':
+        return <span className={cn(baseClasses, "bg-red-700/80 text-red-200 dark:bg-red-900/80 dark:text-red-300")}>{t('cancelado')}</span>;
+      case 'pendente':
+      default:
+        return <span className={cn(baseClasses, "bg-yellow-700/80 text-yellow-200 dark:bg-yellow-900/80 dark:text-yellow-300")}>{t('pending')}</span>;
+    }
+  };
   
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -304,7 +305,7 @@ const CommissionPaymentTable: React.FC<CommissionPaymentTableProps> = ({ records
                   {format(new Date(record.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                 </TableCell>
                 <TableCell className="text-right">
-                  <PaymentActions record={record} />
+                  <PaymentActions record={record} t={t} />
                 </TableCell>
               </TableRow>
             ))}
