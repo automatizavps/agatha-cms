@@ -48,12 +48,18 @@ const itemSchema = z.object({
   // Garantimos que a coerção para número lide com strings vazias ou NaN, resultando em 0
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
     .refine((val, ctx) => {
-      // Acessamos o objeto pai (o item do array) de forma mais segura
+      // CORREÇÃO: Acessa o objeto pai de forma segura. Se não houver parent ou data, retorna true.
       const item = (ctx.parent as any)?.data;
-      const productId = item?.produto_id;
+      
+      // Se não houver dados do item (ocorre durante a montagem inicial), pulamos a validação de estoque.
+      if (!item) {
+        return true;
+      }
+      
+      const productId = item.produto_id;
       
       // Se não houver produto_id ou se a validação estiver em um estado inicial incompleto, pulamos
-      if (typeof productId !== 'string' || productId.length === 0 || !item) {
+      if (typeof productId !== 'string' || productId.length === 0) {
         return true;
       }
       
