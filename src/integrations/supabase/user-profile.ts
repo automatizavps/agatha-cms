@@ -17,6 +17,9 @@ export interface CurrentUserProfile {
   } | null;
   empresas: {
     nome: string;
+    planos: { // NOVO: Incluindo o relacionamento com planos
+      nome: string;
+    } | null;
   } | null;
   // Permissões removidas, mas mantemos o tipo para evitar quebra em outros lugares
   permissions: {}; 
@@ -27,7 +30,7 @@ const fetchCurrentUserProfile = async (userId: string): Promise<CurrentUserProfi
   // 1. Buscar dados básicos do usuário (RLS está desabilitado, então todos os dados são visíveis)
   const { data, error } = await supabase
     .from("usuarios")
-    .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active, nome), perfis_customizados (nome)")
+    .select("id, nome_completo, avatar_url, telefone, endereco_completo, empresa_id, perfil_customizado_id, empresas (is_active, nome, planos (nome)), perfis_customizados (nome)")
     .eq("id", userId)
     .limit(1); 
 
