@@ -47,7 +47,14 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
     .refine((val, ctx) => {
-      const productId = ctx.parent.produto_id;
+      // CORREÇÃO: Acessa o produto_id de forma segura
+      const productId = (ctx.parent as any)?.produto_id;
+      
+      // Se o produto_id não for uma string válida, pula a validação de estoque
+      if (typeof productId !== 'string' || productId.length === 0) {
+        return true;
+      }
+      
       const stock = productStockMap.get(productId);
       
       // Se for serviço (stock === null) ou se o estoque for suficiente, é válido
@@ -327,6 +334,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
   
   // NOVO: Verifica se o formulário está inválido (apenas na criação)
+  // Usamos form.formState.isValid para capturar todas as validações Zod, incluindo as de estoque.
   const isFormInvalid = !isEditing && (!form.formState.isValid || !form.watch('cliente_id') || !form.watch('responsavel_id') || form.watch('items')?.length === 0);
 
 
