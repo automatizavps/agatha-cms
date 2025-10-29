@@ -4,7 +4,7 @@ import { useAppointments, Appointment, deleteAppointment, useAppointmentItems, d
 import { Loader2, CalendarCheck, MoreHorizontal, Pencil, Trash2, Clock, Building, ArrowUpDown, ArrowUp, ArrowDown, Search, RefreshCw, CalendarIcon, Filter } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns"; // IMPORTADO isToday
 import { ptBR } from "date-fns/locale";
 import AddAppointmentSheet from "@/components/AddAppointmentSheet";
 import {
@@ -187,7 +187,237 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
   );
 };
 
-const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
+interface AppointmentTableProps {
+  appointments: Appointment[];
+  selectedIds: Set<string>;
+  onSelectChange: (newSelectedIds: Set<string>) => void;
+  canWrite: boolean;
+  isToday: (date: Date | number) => boolean; // NOVO: Função para verificar se é hoje
+}
+
+const AppointmentTable: React.FC<AppointmentTableProps> = ({ appointments, selectedIds, onSelectChange, canWrite, isToday }) => {
+  const { data: profile } = useCurrentUserProfile();
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('data_hora');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const { t } = useTranslation();
+  
+  const isSuperAdmin = profile?.is_super_admin;
+
+  const handleEdit = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setIsEditSheetOpen(true);
+  };
+
+  const handleCloseEditSheet = (open: boolean) => {
+    setIsEditSheetOpen(open);
+    if (!open) {
+      setEditingAppointment(null);
+    }
+  };
+  
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('desc');
+    }
+  };
+  
+  const sortedAppointments = useMemo(() => {
+    if (!appointments) return [];
+    
+    const sorted = [...appointments].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortKey) {
+        case 'cliente':
+          aValue = a.clientes?.nome || '';
+          bValue = b.clientes?.nome || '';
+          break;
+        case 'empresa':
+          aValue = a.empresas?.nome || '';
+          bValue = b.empresas?.nome || '';
+          break;
+        case 'data_hora':
+          aValue = new Date(a.data_hora).getTime();
+          bValue = new Date(b.data_hora).getTime();
+          break;
+        case 'responsavel':
+          aValue = a.responsavel?.nome_completo || '';
+          bValue = b.responsavel?.nome_completo || '';
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return sorted;
+  }, [appointments, sortKey, sortDirection]);
+  
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(appointments.map(a => a.id));
+      onSelectChange(allIds);
+    } else {
+      onSelectChange(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const newSelectedIds = new Set(selectedIds);
+    if (checked) {
+      newSelectedIds.add(id);
+    } else {
+      newSelectedIds.delete(id);
+    }
+    onSelectChange(newSelectedIds);
+  };
+  
+  const isAllSelected = appointments.length > 0 && selectedIds.size === appointments.length;
+  const isIndeterminate = selectedIds.size > 0 && selectedIds.size < appointments.length;
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {/* Checkbox Header */}
+              <TableHead className="w-[50px] text-center">
+                <Checkbox
+                  checked={isAllSelected || isIndeterminate}
+                  onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                  aria-label={t('select_all')}
+                  disabled={!canWrite}
+                />
+              </TableHead>
+              <SortableHeader 
+                sortKey="cliente" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('order_table_header_client')}
+              </SortableHeader>
+              {isSuperAdmin && (
+                <SortableHeader 
+                  sortKey="empresa" 
+                  currentSortKey={sortKey} 
+                  currentSortDirection={sortDirection} 
+                  onSort={handleSort}
+                  className="hidden md:table-cell"
+                >
+                  {t('user_table_header_company')}
+                </SortableHeader>
+              )}
+              <TableHead>{t('nav_products')}</TableHead>
+              <SortableHeader 
+                sortKey="data_hora" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('order_table_header_date')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="responsavel" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+              >
+                {t('responsible')}
+              </SortableHeader>
+              <SortableHeader 
+                sortKey="status" 
+                currentSortKey={sortKey} 
+                currentSortDirection={sortDirection} 
+                onSort={handleSort}
+                className="text-center"
+              >
+                {t('order_table_header_status')}
+              </SortableHeader>
+              <TableHead className="text-right">{t('actions')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedAppointments.map((appointment) => {
+              const isAppointmentToday = isToday(new Date(appointment.data_hora));
+              
+              return (
+                <TableRow 
+                  key={appointment.id}
+                  className={cn(
+                    selectedIds.has(appointment.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30",
+                    // Destaque para agendamentos de hoje
+                    isAppointmentToday && "bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20"
+                  )}
+                >
+                  {/* Checkbox Cell */}
+                  <TableCell className="text-center">
+                    <Checkbox
+                      checked={selectedIds.has(appointment.id)}
+                      onCheckedChange={(checked) => handleSelectRow(appointment.id, !!checked)}
+                      disabled={!canWrite}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
+                  {isSuperAdmin && (
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Building className="h-3 w-3" />
+                        {appointment.empresas?.nome || 'N/A'}
+                      </div>
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <AppointmentItemDisplay appointmentId={appointment.id} />
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
+                  <TableCell className="text-center">
+                    <span className={getStatusBadge(appointment.status)}>
+                      {t(appointment.status)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <AppointmentActions appointment={appointment} onEdit={handleEdit} canWrite={canWrite} />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {editingAppointment && (
+        <EditAppointmentSheet 
+          appointment={editingAppointment} 
+          isOpen={isEditSheetOpen} 
+          onOpenChange={handleCloseEditSheet} 
+        />
+      )}
+    </>
+  );
+};
+
 
 const Appointments = () => {
   const { data: profile } = useCurrentUserProfile();
@@ -529,112 +759,13 @@ const Appointments = () => {
               </Button>
             </div>
           ) : sortedAppointments && sortedAppointments.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {/* Checkbox Header */}
-                    <TableHead className="w-[50px] text-center">
-                      <Checkbox
-                        checked={isAllSelected || isIndeterminate}
-                        onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                        aria-label={t('select_all')}
-                        disabled={!canWriteAppointments}
-                      />
-                    </TableHead>
-                    <SortableHeader 
-                      sortKey="cliente" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                    >
-                      {t('order_table_header_client')}
-                    </SortableHeader>
-                    {isSuperAdmin && (
-                      <SortableHeader 
-                        sortKey="empresa" 
-                        currentSortKey={sortKey} 
-                        currentSortDirection={sortDirection} 
-                        onSort={handleSort}
-                        className="hidden md:table-cell"
-                      >
-                        {t('user_table_header_company')}
-                      </SortableHeader>
-                    )}
-                    <TableHead>{t('nav_products')}</TableHead>
-                    <SortableHeader 
-                      sortKey="data_hora" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                    >
-                      {t('order_table_header_date')}
-                    </SortableHeader>
-                    <SortableHeader 
-                      sortKey="responsavel" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                    >
-                      {t('responsible')}
-                    </SortableHeader>
-                    <SortableHeader 
-                      sortKey="status" 
-                      currentSortKey={sortKey} 
-                      currentSortDirection={sortDirection} 
-                      onSort={handleSort}
-                      className="text-center"
-                    >
-                      {t('order_table_header_status')}
-                    </SortableHeader>
-                    <TableHead className="text-right">{t('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedAppointments.map((appointment) => (
-                    <TableRow 
-                      key={appointment.id}
-                      className={cn(
-                        selectedAppointmentIds.has(appointment.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30"
-                      )}
-                    >
-                      {/* Checkbox Cell */}
-                      <TableCell className="text-center">
-                        <Checkbox
-                          checked={selectedAppointmentIds.has(appointment.id)}
-                          onCheckedChange={(checked) => handleSelectRow(appointment.id, !!checked)}
-                          disabled={!canWriteAppointments}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{appointment.clientes?.nome || t('no_data_found')}</TableCell>
-                      {isSuperAdmin && (
-                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Building className="h-3 w-3" />
-                            {appointment.empresas?.nome || 'N/A'}
-                          </div>
-                        </TableCell>
-                      )}
-                      <TableCell>
-                        <AppointmentItemDisplay appointmentId={appointment.id} />
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(appointment.data_hora), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>{appointment.responsavel?.nome_completo || "N/A"}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={getStatusBadge(appointment.status)}>
-                          {t(appointment.status)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <AppointmentActions appointment={appointment} onEdit={handleEdit} canWrite={canWriteAppointments} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <AppointmentTable 
+              appointments={sortedAppointments} 
+              selectedIds={selectedAppointmentIds}
+              onSelectChange={setSelectedAppointmentIds}
+              canWrite={canWriteAppointments}
+              isToday={isToday} // PASSANDO isToday
+            />
           ) : (
             <div className="text-center p-4 text-muted-foreground">
               {t('no_data_found')}
