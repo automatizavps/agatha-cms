@@ -18,8 +18,24 @@ export interface ClientTransaction {
   itens: TransactionItem[];
 }
 
-const fetchClientTransactions = async (clientId: string): Promise<ClientTransaction[]> => {
-  const { data, error } = await supabase.rpc('get_client_transactions', { client_id_input: clientId });
+// NOVO: Interface para os filtros
+interface TransactionFilters {
+  type?: 'Pedido' | 'Agendamento' | 'all';
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string;   // YYYY-MM-DD
+  responsibleId?: string; // UUID
+}
+
+const fetchClientTransactions = async (clientId: string, filters: TransactionFilters): Promise<ClientTransaction[]> => {
+  const { type, startDate, endDate, responsibleId } = filters;
+  
+  const { data, error } = await supabase.rpc('get_client_transactions', { 
+    client_id_input: clientId,
+    tipo_transacao_input: type === 'all' ? null : type,
+    start_date_input: startDate || null,
+    end_date_input: endDate || null,
+    responsavel_id_input: responsibleId || null,
+  });
 
   if (error) {
     console.error("Error fetching client transactions:", error);
@@ -34,10 +50,10 @@ const fetchClientTransactions = async (clientId: string): Promise<ClientTransact
   })) as ClientTransaction[];
 };
 
-export const useClientTransactions = (clientId: string) => {
+export const useClientTransactions = (clientId: string, filters: TransactionFilters = {}) => {
   return useQuery<ClientTransaction[], Error>({
-    queryKey: ["clientTransactions", clientId],
-    queryFn: () => fetchClientTransactions(clientId),
+    queryKey: ["clientTransactions", clientId, filters],
+    queryFn: () => fetchClientTransactions(clientId, filters),
     enabled: !!clientId,
   });
 };
