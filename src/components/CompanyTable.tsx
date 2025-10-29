@@ -27,6 +27,7 @@ import { useCurrentUserProfile } from "@/integrations/supabase/user-profile";
 import { Badge } from "@/components/ui/badge"; // IMPORTAÇÃO CORRIGIDA
 import { format, isPast, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // IMPORTADO AQUI
 
 interface CompanyTableProps {
   companies: Company[];
