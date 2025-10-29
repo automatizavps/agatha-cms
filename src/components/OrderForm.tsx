@@ -47,11 +47,12 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
     .refine((val, ctx) => {
-      // CORREÇÃO: Acessa o produto_id de forma segura, verificando a existência de ctx.parent
+      // CORREÇÃO ROBUSTA: Verifica se ctx.parent existe antes de tentar acessar produto_id
       const parent = ctx.parent as any;
-      const productId = parent?.produto_id;
+      const productId = parent?.produto_id as string | undefined;
       
-      // Se o produto_id não for uma string válida, pula a validação de estoque
+      // Se o produto_id não for uma string válida ou não estiver presente no contexto,
+      // pulamos a validação de estoque para evitar o erro 'parent' undefined.
       if (typeof productId !== 'string' || productId.length === 0) {
         return true;
       }
