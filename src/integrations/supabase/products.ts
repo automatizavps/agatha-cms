@@ -20,10 +20,15 @@ export interface Product {
   
   // Novos campos de metadados
   marca: string | null;
-  categoria: string | null;
+  categoria: string | null; // ID da categoria
   
-  // Relacionamento com a empresa
+  // Relacionamentos
   empresa: {
+    nome: string;
+  } | null;
+  
+  // NOVO: Relacionamento com a categoria
+  categorias: {
     nome: string;
   } | null;
 }
@@ -33,7 +38,7 @@ export interface Product {
 const fetchAllProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome), categorias (nome)")
     .order("nome", { ascending: true });
 
   if (error) {
@@ -56,7 +61,7 @@ export const useProducts = () => {
 const fetchProductsOnly = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome), categorias (nome)")
     .eq('tipo', 'produto')
     .order("nome", { ascending: true });
 
@@ -80,7 +85,7 @@ export const useProductsOnly = () => {
 const fetchServicesOnly = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome), categorias (nome)")
     .eq('tipo', 'servico')
     .order("nome", { ascending: true });
 
@@ -104,7 +109,7 @@ export const useServicesOnly = () => {
 const fetchLatestProductsOnly = async (companyId: string | undefined): Promise<Product[]> => {
   let query = supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome), categorias (nome)")
     .eq('tipo', 'produto');
     
   if (companyId) {
@@ -136,7 +141,7 @@ export const useLatestProductsOnly = (companyId: string | undefined) => {
 const fetchProductById = async (productId: string): Promise<Product | null> => {
   const { data, error } = await supabase
     .from("produtos")
-    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome)")
+    .select("id, empresa_id, nome, preco, created_at, tipo, tempo_servico, estoque_total, fotos, marca, categoria, empresa:empresas (nome), categorias (nome)")
     .eq('id', productId)
     .single();
 

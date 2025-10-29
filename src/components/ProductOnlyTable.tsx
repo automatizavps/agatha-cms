@@ -189,8 +189,9 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
           bValue = b.empresa?.nome || '';
           break;
         case 'categoria':
-          aValue = a.categoria || '';
-          bValue = b.categoria || '';
+          // ALTERADO: Ordena pelo nome da categoria
+          aValue = a.categorias?.nome || '';
+          bValue = b.categorias?.nome || '';
           break;
         case 'marca':
           aValue = a.marca || '';
@@ -315,7 +316,8 @@ const ProductOnlyTable: React.FC<ProductTableProps> = ({ products, onEdit: onEdi
                   </TableCell>
                 )}
                 <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                  {product.categoria || 'N/A'}
+                  {/* ALTERADO: Exibe o nome da categoria */}
+                  {product.categorias?.nome || 'N/A'}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
