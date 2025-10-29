@@ -72,7 +72,7 @@ const fetchAppointments = async (companyId?: string, filters: AppointmentFilters
       created_at,
       promocao_id,
       responsavel:usuarios!agendamentos_responsavel_id_fkey (nome_completo),
-      clientes (nome),
+      clientes (nome, avatar_url),
       empresas (nome)
     `, { count: 'exact' }); // Solicita a contagem total
     
