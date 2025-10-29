@@ -45,7 +45,7 @@ const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({ appointment
       responsavel_id: values.responsavel_id,
       data_hora: values.data_hora,
       status: values.status,
-      promocao_id: appointment.promocao_id, // NOVO: Mantém a promoção original (não editável aqui)
+      promocao_id: values.promocao_id || null, // <--- CORRIGIDO: Usar values.promocao_id
       queryClient: queryClient, // Passando o queryClient
     });
   };
