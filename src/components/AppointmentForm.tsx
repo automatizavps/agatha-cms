@@ -46,6 +46,7 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
   preco_unitario: z.coerce.number().min(0, { message: "Preço deve ser positivo." }),
+  item_type: z.enum(['produto', 'servico']), // NOVO: Tipo de item
 });
 
 const baseFormSchema = z.object({
@@ -115,7 +116,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       date: defaultValues?.date,
       time: defaultValues?.time || "09:00",
       status: defaultValues?.status || 'pendente',
-      items: defaultValues?.items || [],
+      items: defaultValues?.items?.map(item => ({
+        ...item,
+        // Na edição, precisamos inferir o tipo do item.
+        item_type: 'servico', // Assumindo 'servico' como padrão para agendamentos se não houver dados
+      })) || [],
       empresa_id: defaultValues?.empresa_id || "",
       promocao_id: defaultValues?.promocao_id || null,
     },
@@ -155,19 +160,29 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   useEffect(() => {
     if (isEditing && defaultValues) {
       if (defaultValues.items && defaultValues.items.length > 0 && defaultValues.empresa_id) {
+        
+        // Mapeia itens para incluir o item_type
+        const itemsWithTypes = defaultValues.items.map(item => {
+          const productDetail = allItems.find(p => p.id === item.produto_id);
+          return {
+            ...item,
+            item_type: productDetail?.tipo || 'servico', // Usa o tipo real ou 'servico' como fallback
+          };
+        });
+        
         form.reset({
           cliente_id: defaultValues.cliente_id || "",
           responsavel_id: defaultValues.responsavel_id || "",
           date: defaultValues.date,
           time: defaultValues.time || "HH:mm",
           status: defaultValues.status || 'pendente',
-          items: defaultValues.items,
+          items: itemsWithTypes,
           empresa_id: defaultValues.empresa_id,
           promocao_id: defaultValues.promocao_id || null,
         });
       }
     }
-  }, [defaultValues, isEditing, form]);
+  }, [defaultValues, isEditing, form, allItems]);
 
   const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
   const { data: promotionRules, isLoading: isLoadingPromotionRules } = usePromotionRules(activePromotion?.id || '');
@@ -228,7 +243,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   }, [form.watch("items"), activePromotion, isPromotionValid]);
   
   const handleAddItem = () => {
-    append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
+    // Adiciona um novo item com o tipo padrão 'servico' para agendamentos
+    append({ produto_id: "", quantidade: 1, preco_unitario: 0, item_type: 'servico' });
   };
   
   const handleProductChange = (index: number, productId: string) => {
@@ -237,6 +253,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
     }
+  };
+  
+  const handleItemTypeChange = (index: number, type: 'produto' | 'servico') => {
+    // Atualiza o tipo e reseta o produto_id e preço
+    form.setValue(`items.${index}.item_type`, type);
+    form.setValue(`items.${index}.produto_id`, "");
+    form.setValue(`items.${index}.preco_unitario`, 0);
   };
   
   const getItemName = (productId: string) => {
@@ -499,10 +522,44 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {fields.map((field, index) => (
+            {fields.map((field, index) => {
+              // Observa o tipo de item para filtrar a lista de produtos/serviços
+              const currentItemType = form.watch(`items.${index}.item_type`);
+              
+              const filteredItemsByType = allItems.filter(item => item.tipo === currentItemType);
+              
+              return (
               <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
                 <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
                 
+                {/* NOVO: Seletor de Tipo de Item */}
+                <FormField
+                  control={form.control}
+                  name={`items.${index}.item_type`}
+                  render={({ field: typeField }) => (
+                    <FormItem>
+                      <FormLabel>{t('item_type', { defaultValue: 'Tipo de Item' })}</FormLabel>
+                      <Select 
+                        onValueChange={(val) => handleItemTypeChange(index, val as 'produto' | 'servico')} 
+                        value={typeField.value} 
+                        disabled={isSubmitting || isEditing || !isCompanySelected}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("select_item_type", { defaultValue: 'Selecione o tipo' })} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="produto">{t('nav_products')}</SelectItem>
+                          <SelectItem value="servico">{t('nav_services')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Seletor de Item Específico */}
                 <FormField
                   control={form.control}
                   name={`items.${index}.produto_id`}
@@ -521,17 +578,17 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         <Select 
                           onValueChange={(val) => handleProductChange(index, val)} 
                           value={itemField.value} 
-                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected}
+                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected || !currentItemType}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={allItems.length === 0 ? t("loading_items") : t("select_item")} />
+                              <SelectValue placeholder={filteredItemsByType.length === 0 ? t("no_items_of_type", { type: t(currentItemType) }) : t("select_item")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {allItems.map((item) => (
+                            {filteredItemsByType.map((item) => (
                               <SelectItem key={item.id} value={item.id}>
-                                {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
+                                {item.nome}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -599,7 +656,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                   </Button>
                 )}
               </div>
-            ))}
+            )}}
             
             {fields.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">

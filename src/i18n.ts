@@ -422,6 +422,9 @@ const resources = {
       "item": "Item",
       "select_company_to_load_data": "Selecione uma empresa para carregar clientes, usuários e itens.",
       "add_new_appointment": "Novo Agendamento",
+      "item_type": "Tipo de Item", // NOVO
+      "select_item_type": "Selecione o tipo", // NOVO
+      "no_items_of_type": "Nenhum {{type}} encontrado.", // NOVO
       
       // Relatórios (Reports)
       "select_date_range": "Selecionar período",
