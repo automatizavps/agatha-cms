@@ -279,16 +279,23 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     });
   }, [activePromotion, promotionRules, form.watch("items"), allItems, isLoadingPromotionRules]);
 
+  // NOVO: Observa todos os campos de item e a promoção para recalcular o total
+  const watchedItems = form.watch("items");
+  const watchedPromotionId = form.watch("promocao_id");
+  
   const calculateTotal = useMemo(() => {
-    let total = form.getValues("items").reduce((sum, item) => {
-      return sum + (item.quantidade * item.preco_unitario);
+    let total = watchedItems.reduce((sum, item) => {
+      // Garante que quantidade e preco_unitario sejam números válidos
+      const quantity = parseFloat(String(item.quantidade)) || 0;
+      const price = parseFloat(String(item.preco_unitario)) || 0;
+      return sum + (quantity * price);
     }, 0);
 
     if (isPromotionValid && activePromotion && activePromotion.desconto_percentual > 0) {
       total = total * (1 - activePromotion.desconto_percentual / 100);
     }
     return total;
-  }, [form.watch("items"), activePromotion, isPromotionValid]);
+  }, [watchedItems, activePromotion, isPromotionValid, watchedPromotionId]); // Adicionado watchedPromotionId para garantir re-execução
   
   const handleAddItem = () => {
     // 1. Encontra o primeiro item disponível
@@ -355,8 +362,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     // Na edição, o valor total é recalculado, mas os itens não são enviados
     const itemsPayload = isEditing ? [] : values.items!.map(item => ({
       produto_id: item.produto_id,
-      quantidade: item.quantidade,
-      preco_unitario: item.preco_unitario,
+      quantidade: parseFloat(String(item.quantidade)) || 0, // Garante que seja número
+      preco_unitario: parseFloat(String(item.preco_unitario)) || 0, // Garante que seja número
     }));
 
     onSubmit({
@@ -380,6 +387,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   const shouldShowWarning = isSuperAdmin && !isCompanySelected && !isEditing;
   
   // NOVO: Verifica se o formulário está inválido (apenas na criação)
+  // Usamos form.formState.isValid para capturar todas as validações Zod, incluindo a de items.
   const isFormInvalid = !isEditing && (!form.formState.isValid || !isCompanySelected);
 
 
