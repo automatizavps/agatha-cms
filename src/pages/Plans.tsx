@@ -15,18 +15,34 @@ import { cn } from "@/lib/utils";
 
 const Plans = () => {
   const { t } = useTranslation();
+  
+  // 1. CHAME TODOS OS HOOKS INCONDICIONALMENTE NO TOPO
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
+  const { data: plans, isLoading, isError, error, refetch, isRefetching } = usePlans();
+  
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Acesso a planos é restrito ao Super Admin
   const isSuperAdmin = profile?.is_super_admin;
   const canWritePlans = isSuperAdmin; // Apenas SA pode escrever
   
-  const { data: plans, isLoading, isError, error, refetch, isRefetching } = usePlans();
-  
-  const [searchTerm, setSearchTerm] = useState("");
-  
   const isChecking = isLoading || isLoadingProfile;
 
+  if (isError && error) {
+    showError(t("error_loading_data") + ": " + error.message);
+  }
+  
+  const filteredPlans = useMemo(() => {
+    if (!plans) return [];
+    if (!searchTerm) return plans;
+
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return plans.filter(plan => 
+      plan.nome.toLowerCase().includes(lowerCaseSearch)
+    );
+  }, [plans, searchTerm]);
+
+  // 2. RETORNO CONDICIONAL DE PERMISSÃO
   if (!isSuperAdmin) {
     return (
       <DashboardLayout>
@@ -46,20 +62,6 @@ const Plans = () => {
       </DashboardLayout>
     );
   }
-
-  if (isError && error) {
-    showError(t("error_loading_data") + ": " + error.message);
-  }
-  
-  const filteredPlans = useMemo(() => {
-    if (!plans) return [];
-    if (!searchTerm) return plans;
-
-    const lowerCaseSearch = searchTerm.toLowerCase();
-    return plans.filter(plan => 
-      plan.nome.toLowerCase().includes(lowerCaseSearch)
-    );
-  }, [plans, searchTerm]);
 
   return (
     <DashboardLayout>
