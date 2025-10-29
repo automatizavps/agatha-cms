@@ -212,6 +212,87 @@ export const updatePlan = async ({ id, nome, limite_usuarios, preco, data_inicio
   return planData;
 };
 
+// --- Duplicate Plan ---
+
+export const duplicatePlan = async (planId: string, newName: string, queryClient: QueryClient) => {
+  // 1. Buscar o plano original
+  const { data: originalPlan, error: fetchPlanError } = await supabase
+    .from("planos")
+    .select("nome, limite_usuarios, preco, data_inicio, data_fim")
+    .eq("id", planId)
+    .single();
+
+  if (fetchPlanError || !originalPlan) {
+    throw new Error("Falha ao buscar plano original para duplicação.");
+  }
+  
+  // 2. Buscar as regras do plano original
+  const { data: originalRules, error: fetchRulesError } = await supabase
+    .from("plano_modulos")
+    .select("modulo_id, acesso")
+    .eq("plano_id", planId);
+    
+  if (fetchRulesError) {
+    throw new Error("Falha ao buscar regras do plano original.");
+  }
+
+  // 3. Criar o novo plano
+  const { data: newPlanData, error: createPlanError } = await supabase
+    .from("planos")
+    .insert({
+      nome: newName,
+      limite_usuarios: originalPlan.limite_usuarios,
+      preco: originalPlan.preco,
+      data_inicio: originalPlan.data_inicio,
+      data_fim: originalPlan.data_fim,
+    })
+    .select("id, nome, limite_usuarios")
+    .single();
+
+  if (createPlanError || !newPlanData) {
+    console.error("Error creating duplicate plan:", createPlanError);
+    throw new Error(createPlanError?.message || "Falha ao criar plano duplicado.");
+  }
+  
+  const newPlanId = newPlanData.id;
+
+  // 4. Inserir as regras duplicadas
+  if (originalRules && originalRules.length > 0) {
+    const rulesPayload = originalRules.map(rule => ({
+      plano_id: newPlanId,
+      modulo_id: rule.modulo_id,
+      acesso: rule.acesso,
+    }));
+
+    const { error: insertRulesError } = await supabase
+      .from("plano_modulos")
+      .insert(rulesPayload);
+
+    if (insertRulesError) {
+      console.error("Error inserting duplicate plan rules:", insertRulesError);
+      // Se falhar, tentamos deletar o plano principal para evitar lixo
+      await supabase.from("planos").delete().eq("id", newPlanId);
+      throw new Error("Plano duplicado, mas falha ao adicionar regras: " + insertRulesError.message);
+    }
+  }
+  
+  // 5. Notificação
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    createNotification({
+      user_id: user.id,
+      empresa_id: null,
+      titulo: "Plano Duplicado",
+      mensagem: `O plano '${newName}' foi criado como cópia.`,
+      link: "/companies/plans",
+      queryClient: queryClient,
+    });
+  }
+
+  return newPlanData;
+};
+
+
 // --- Delete Plan ---
 
 export const deletePlan = async (id: string, planName: string, queryClient: QueryClient) => {

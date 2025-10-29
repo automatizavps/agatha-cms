@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plan, deletePlan } from "@/integrations/supabase/plans";
-import { MoreHorizontal, Trash2, Pencil, DollarSign, Users, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Calendar } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, DollarSign, Users, ArrowUpDown, ArrowUp, ArrowDown, ShieldCheck, Calendar, Copy } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +26,7 @@ import EditPlanSheet from "./EditPlanSheet";
 import { Badge } from "@/components/ui/badge";
 import { format, isPast, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import DuplicatePlanSheet from "./DuplicatePlanSheet"; // NOVO IMPORT
 
 interface PlanTableProps {
   plans: Plan[];
@@ -35,13 +36,14 @@ interface PlanTableProps {
 interface PlanActionsProps {
   plan: Plan;
   onEdit: (plan: Plan) => void;
+  onDuplicate: (plan: Plan) => void; // NOVO
   canWrite: boolean;
 }
 
 type SortKey = 'nome' | 'limite_usuarios' | 'preco' | 'data_inicio';
 type SortDirection = 'asc' | 'desc';
 
-const PlanActions: React.FC<PlanActionsProps> = ({ plan, onEdit, canWrite }) => {
+const PlanActions: React.FC<PlanActionsProps> = ({ plan, onEdit, onDuplicate, canWrite }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
@@ -76,6 +78,11 @@ const PlanActions: React.FC<PlanActionsProps> = ({ plan, onEdit, canWrite }) => 
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+        
+        <DropdownMenuItem onClick={() => onDuplicate(plan)}>
+          <Copy className="mr-2 h-4 w-4" /> {t('duplicate', { defaultValue: 'Duplicar' })}
+        </DropdownMenuItem>
+        
         <DropdownMenuItem onClick={() => onEdit(plan)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
         </DropdownMenuItem>
@@ -144,6 +151,10 @@ const getPlanStatus = (plan: Plan) => {
 const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  
+  const [duplicatingPlan, setDuplicatingPlan] = useState<Plan | null>(null); // NOVO ESTADO
+  const [isDuplicateSheetOpen, setIsDuplicateSheetOpen] = useState(false); // NOVO ESTADO
+  
   const [sortKey, setSortKey] = useState<SortKey>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { t } = useTranslation();
@@ -152,11 +163,23 @@ const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
     setEditingPlan(plan);
     setIsEditSheetOpen(true);
   };
+  
+  const handleDuplicate = (plan: Plan) => { // NOVO HANDLER
+    setDuplicatingPlan(plan);
+    setIsDuplicateSheetOpen(true);
+  };
 
   const handleCloseEditSheet = (open: boolean) => {
     setIsEditSheetOpen(open);
     if (!open) {
       setEditingPlan(null);
+    }
+  };
+  
+  const handleCloseDuplicateSheet = (open: boolean) => { // NOVO HANDLER
+    setIsDuplicateSheetOpen(open);
+    if (!open) {
+      setDuplicatingPlan(null);
     }
   };
   
@@ -287,7 +310,7 @@ const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
                   {getPlanStatus(plan)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <PlanActions plan={plan} onEdit={handleEdit} canWrite={canWrite} />
+                  <PlanActions plan={plan} onEdit={handleEdit} onDuplicate={handleDuplicate} canWrite={canWrite} />
                 </TableCell>
               </TableRow>
             ))}
@@ -300,6 +323,14 @@ const PlanTable: React.FC<PlanTableProps> = ({ plans, canWrite }) => {
           plan={editingPlan} 
           isOpen={isEditSheetOpen} 
           onOpenChange={handleCloseEditSheet} 
+        />
+      )}
+      
+      {duplicatingPlan && (
+        <DuplicatePlanSheet
+          plan={duplicatingPlan}
+          isOpen={isDuplicateSheetOpen}
+          onOpenChange={handleCloseDuplicateSheet}
         />
       )}
     </>

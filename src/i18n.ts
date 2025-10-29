@@ -35,6 +35,8 @@ const resources = {
       "language": "Idioma", // NOVO
       "logout": "Sair", // NOVO
       "nav_people_management": "Gestão de Pessoas", // NOVO
+      "duplicate": "Duplicar", // NOVO
+      "duplicate_of": "Duplicata de", // NOVO
       
       // Perfis
       "profile_role_admin": "Administrador", // NOVO
