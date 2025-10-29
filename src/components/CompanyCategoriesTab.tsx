@@ -3,6 +3,8 @@ import { useCategories } from '@/integrations/supabase/categories';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Tag } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface CompanyCategoriesTabProps {
   companyId: string;
