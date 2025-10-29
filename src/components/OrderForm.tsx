@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Trash2, DollarSign, Building, Tag, Check, ChevronsUpDown, User } from "lucide-react";
+import { Loader2, PlusCircle, Trash2, DollarSign, Building, Tag, Check, ChevronsUpDown, User, Package } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -39,9 +39,31 @@ import { useUsers } from "@/integrations/supabase/users"; // Importando useUsers
 
 const statusOptions: OrderStatus[] = ['pendente_entrega', 'entregue', 'cancelado'];
 
+// Definindo um mapa para armazenar o estoque de cada produto
+const productStockMap = new Map<string, number | null>();
+
+// Esquema de validação para itens
 const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
-  quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
+  quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." })
+    .refine((val, ctx) => {
+      const productId = ctx.parent.produto_id;
+      const stock = productStockMap.get(productId);
+      
+      // Se for serviço (stock === null) ou se o estoque for suficiente, é válido
+      if (stock === null || stock === undefined) {
+        return true;
+      }
+      
+      if (val > stock) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Estoque insuficiente. Máximo disponível: ${stock}.`,
+        });
+        return false;
+      }
+      return true;
+    }, { path: ['quantidade'] }),
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
 });
 
@@ -155,6 +177,22 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
+  // Efeito para popular o mapa de estoque
+  useEffect(() => {
+    productStockMap.clear();
+    if (allItems) {
+      allItems.forEach(item => {
+        // Apenas produtos têm estoque_total
+        if (item.tipo === 'produto' && item.estoque_total !== null) {
+          productStockMap.set(item.id, item.estoque_total);
+        } else {
+          // Serviços e produtos sem estoque definido têm estoque nulo
+          productStockMap.set(item.id, null);
+        }
+      });
+    }
+  }, [allItems]);
+
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
       form.reset({
@@ -233,6 +271,19 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     if (selectedItem) {
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
+      
+      // Se for um produto, define a quantidade máxima para o estoque
+      const stock = productStockMap.get(productId);
+      if (stock !== null && stock !== undefined) {
+        // Se o estoque for 0, define a quantidade para 0
+        form.setValue(`items.${index}.quantidade`, stock > 0 ? 1 : 0);
+      } else {
+        // Se for serviço ou estoque nulo, define para 1
+        form.setValue(`items.${index}.quantidade`, 1);
+      }
+      
+      // Força a revalidação do campo quantidade
+      form.trigger(`items.${index}.quantidade`);
     }
   };
   
@@ -430,138 +481,164 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             {/* REMOVIDO O BOTÃO DAQUI */}
           </CardHeader>
           <CardContent className="space-y-4">
-            {fields.map((field, index) => (
-              <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
-                <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
-                
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.produto_id`}
-                  render={({ field: itemField }) => {
-                    const selectedItem = allItems.find(item => item.id === itemField.value);
-                    return (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>{t('service_product')}</FormLabel>
-                        {isEditing ? (
-                          <FormControl>
-                            <Input 
-                              value={getItemName(itemField.value)} 
-                              disabled 
-                              className="bg-muted/50"
-                            />
-                          </FormControl>
-                        ) : (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  className={cn(
-                                    "w-full justify-between",
-                                    !itemField.value && "text-muted-foreground"
-                                  )}
-                                  disabled={isLoadingItems || isSubmitting || !isCompanySelected}
-                                >
-                                  {itemField.value
-                                    ? getItemName(itemField.value)
-                                    : allItems.length === 0 ? t("loading_items") : t("select_item")}
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                              <Command>
-                                <CommandInput placeholder={t('search_item', { defaultValue: 'Buscar item...' })} />
-                                <CommandEmpty>{t('no_data_found')}</CommandEmpty>
-                                <CommandGroup>
-                                  {allItems.map((item) => (
-                                    <CommandItem
-                                      value={`${item.nome} (${item.tipo})`}
-                                      key={item.id}
-                                      onSelect={() => {
-                                        handleProductChange(index, item.id);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          item.id === itemField.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                      {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                      <FormMessage />
-                    </FormItem>
-                  )}}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.quantidade`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('quantity')}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            placeholder="1" 
-                            {...field} 
-                            onChange={(e) => field.onChange(e.target.value)}
-                            disabled={isSubmitting || isEditing}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            {fields.map((field, index) => {
+              const productId = form.watch(`items.${index}.produto_id`);
+              const stock = productStockMap.get(productId);
+              const isProduct = allItems.find(i => i.id === productId)?.tipo === 'produto';
+              const maxQuantity = stock !== null && stock !== undefined ? stock : undefined;
+              
+              return (
+                <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
+                  <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
                   
                   <FormField
                     control={form.control}
-                    name={`items.${index}.preco_unitario`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('unit_price')} (R$)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="0.00" 
-                            {...field} 
-                            onChange={(e) => field.onChange(e.target.value)}
-                            disabled={isSubmitting || isEditing}
-                          />
-                        </FormControl>
+                    name={`items.${index}.produto_id`}
+                    render={({ field: itemField }) => {
+                      const selectedItem = allItems.find(item => item.id === itemField.value);
+                      return (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>{t('service_product')}</FormLabel>
+                          {isEditing ? (
+                            <FormControl>
+                              <Input 
+                                value={getItemName(itemField.value)} 
+                                disabled 
+                                className="bg-muted/50"
+                              />
+                            </FormControl>
+                          ) : (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                      "w-full justify-between",
+                                      !itemField.value && "text-muted-foreground"
+                                    )}
+                                    disabled={isLoadingItems || isSubmitting || !isCompanySelected}
+                                  >
+                                    {itemField.value
+                                      ? getItemName(itemField.value)
+                                      : allItems.length === 0 ? t("loading_items") : t("select_item")}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command>
+                                  <CommandInput placeholder={t('search_item', { defaultValue: 'Buscar item...' })} />
+                                  <CommandEmpty>{t('no_data_found')}</CommandEmpty>
+                                  <CommandGroup>
+                                    {allItems.map((item) => (
+                                      <CommandItem
+                                        value={`${item.nome} (${item.tipo})`}
+                                        key={item.id}
+                                        onSelect={() => {
+                                          handleProductChange(index, item.id);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            item.id === itemField.value
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          )}
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.quantidade`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex justify-between items-center">
+                            {t('quantity')}
+                            {isProduct && stock !== null && (
+                              <span className={cn("text-xs font-normal", stock === 0 ? "text-destructive" : "text-muted-foreground")}>
+                                <Package className="h-3 w-3 inline mr-1" />
+                                {t('product_table_header_stock')}: {stock}
+                              </span>
+                            )}
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="1" 
+                              // Define o max apenas para produtos com estoque conhecido
+                              max={isProduct && maxQuantity !== undefined ? maxQuantity : undefined}
+                              placeholder="1" 
+                              {...field} 
+                              onChange={(e) => {
+                                let value = parseInt(e.target.value);
+                                
+                                // Restrição de estoque (apenas na criação)
+                                if (!isEditing && isProduct && maxQuantity !== undefined && value > maxQuantity) {
+                                  value = maxQuantity;
+                                }
+                                
+                                field.onChange(value);
+                              }}
+                              disabled={isSubmitting || isEditing || (isProduct && maxQuantity === 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.preco_unitario`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('unit_price')} (R$)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01" 
+                              placeholder="0.00" 
+                              {...field} 
+                              onChange={(e) => field.onChange(e.target.value)}
+                              disabled={isSubmitting || isEditing}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  {!isEditing && (
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute top-3 right-3 h-6 w-6"
+                      onClick={() => remove(index)}
+                      disabled={isSubmitting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-                
-                {!isEditing && (
-                  <Button 
-                    type="button" 
-                    variant="destructive" 
-                    size="icon" 
-                    className="absolute top-3 right-3 h-6 w-6"
-                    onClick={() => remove(index)}
-                    disabled={isSubmitting}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+              );
+            })}
             
             {fields.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
