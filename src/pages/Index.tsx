@@ -72,8 +72,18 @@ const Index = () => {
     return <div className="text-xl font-bold">{value}</div>;
   };
   
-  // Obtém o nome do plano da empresa do usuário logado
-  const userPlanName = profile?.empresas?.planos?.nome;
+  // 1. Obtém o nome do plano para usuários normais
+  let planName = profile?.empresas?.planos?.nome;
+  
+  // 2. Se for Super Admin E uma empresa estiver selecionada, busca o plano dessa empresa
+  if (isSuperAdmin && selectedCompanyId !== 'all' && companies) {
+    const selectedCompany = companies.find(c => c.id === selectedCompanyId);
+    planName = selectedCompany?.planos?.nome;
+  }
+  
+  // 3. Determina se o badge deve ser exibido
+  const shouldShowPlanBadge = planName && (!isSuperAdmin || (isSuperAdmin && selectedCompanyId !== 'all'));
+
 
   return (
     <DashboardLayout>
@@ -81,11 +91,11 @@ const Index = () => {
         {/* Título do Dashboard com o Badge do Plano */}
         <div className="flex items-center gap-3">
           <h1 className="text-2xl lg:text-2xl font-bold tracking-tight">{t('dashboard_title')}</h1>
-          {/* Exibe o badge se houver nome do plano E o usuário não for Super Admin */}
-          {userPlanName && !isSuperAdmin && (
+          {/* Exibe o badge se houver nome do plano */}
+          {shouldShowPlanBadge && (
             <Badge variant="secondary" className="text-sm font-semibold bg-primary/10 text-primary border border-primary/50">
               <ShieldCheck className="h-4 w-4 mr-1" />
-              {userPlanName}
+              {planName}
             </Badge>
           )}
         </div>
