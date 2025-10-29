@@ -494,9 +494,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('nav_products_services')}</CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddItem} disabled={isSubmitting || isEditing || !isCompanySelected}>
-              <PlusCircle className="mr-2 h-4 w-4" /> {t('add_item')}
-            </Button>
+            {/* REMOVIDO O BOTÃO DAQUI */}
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
@@ -640,6 +638,15 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             
             <FormMessage>{form.formState.errors.items?.message}</FormMessage>
           </CardContent>
+          
+          {/* NOVO: Botão Adicionar Item fora do CardHeader */}
+          {!isEditing && (
+            <div className="p-4 pt-0">
+              <Button type="button" variant="outline" className="w-full" onClick={handleAddItem} disabled={isSubmitting || !isCompanySelected}>
+                <PlusCircle className="mr-2 h-4 w-4" /> {t('add_item')}
+              </Button>
+            </div>
+          )}
         </Card>
 
         <FormField
