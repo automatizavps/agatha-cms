@@ -194,7 +194,7 @@ const Appointments = () => {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('data_hora');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // ALTERADO PARA 'desc'
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   
@@ -249,7 +249,7 @@ const Appointments = () => {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortKey(key);
-      setSortDirection('asc');
+      setSortDirection('desc'); // Padrão para 'desc' em data/hora
     }
   };
   
@@ -515,8 +515,18 @@ const Appointments = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : isError ? (
-            <div className="text-center text-destructive p-4 border border-destructive rounded-md">
-              {t('error_loading_data')}
+            <div className="text-center p-8 space-y-4 border border-destructive rounded-md bg-red-50/50 dark:bg-red-900/10">
+              <p className="text-destructive">
+                {t('error_loading_data')}
+              </p>
+              <Button onClick={() => refetch()} disabled={isRefetching}>
+                {isRefetching ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                {t('try_again')}
+              </Button>
             </div>
           ) : sortedAppointments && sortedAppointments.length > 0 ? (
             <div className="overflow-x-auto">
