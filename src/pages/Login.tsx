@@ -9,7 +9,8 @@ function Login() {
   const { t } = useTranslation();
   
   // URL de placeholder para a imagem de fundo
-  const backgroundImageUrl = "https://images.unsplash.com/photo-1543730698-ea2a214991af?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170";
+
+    const backgroundImageUrl = "https://images.unsplash.com/photo-1581182815808-b6eb627a8798?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1665";
   
   // URL de redirecionamento para o fluxo de autenticação (deve ser o URL base da aplicação + /login)
   // O Supabase adicionará o hash #access_token=... ou #type=recovery
