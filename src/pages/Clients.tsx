@@ -176,12 +176,7 @@ const Clients = () => {
                   <RefreshCw className="h-4 w-4" />
                 )}
               </Button>
-              <ExportButton 
-                data={exportData} 
-                fileName={`Relatorio_Clientes_${format(new Date(), 'yyyyMMdd')}`}
-                disabled={isChecking || filteredClients.length === 0}
-                isLoading={false}
-              />
+              {/* BOTÃO EXPORTAR DADOS REMOVIDO */}
             </div>
           </div>
           
