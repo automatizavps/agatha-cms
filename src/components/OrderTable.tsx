@@ -33,7 +33,6 @@ interface OrderTableProps {
   selectedIds: Set<string>; // NOVO
   onSelectChange: (newSelectedIds: Set<string>) => void; // NOVO
   canWrite: boolean; // NOVO: Permissão de escrita
-  isToday: (date: Date | number) => boolean; // NOVO: Função para verificar se é hoje
 }
 
 interface OrderActionsProps {
@@ -165,7 +164,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({ children, sortKey, curr
 };
 
 
-const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectChange, canWrite, isToday }) => {
+const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectChange, canWrite }) => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('data');
@@ -322,47 +321,41 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, selectedIds, onSelectCh
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedOrders.map((order) => {
-              const isOrderToday = isToday(new Date(order.created_at));
-              
-              return (
-                <TableRow 
-                  key={order.id}
-                  className={cn(
-                    selectedIds.has(order.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30",
-                    // Destaque para pedidos de hoje
-                    isOrderToday && "bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20"
-                  )}
-                >
-                  {/* Checkbox Cell */}
-                  <TableCell className="text-center">
-                    <Checkbox
-                      checked={selectedIds.has(order.id)}
-                      onCheckedChange={(checked) => handleSelectRow(order.id, !!checked)}
-                      disabled={!canWrite}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium text-xs text-muted-foreground">
-                    {order.id.slice(0, 8)}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {order.clientes?.nome || t('no_data_found')}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                    {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {formatCurrency(order.valor_total)}
-                  </TableCell>
-                  <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
-                    {getStatusBadge(order.status)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <OrderActions order={order} onEditStatus={handleEditStatus} canWrite={canWrite} />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {sortedOrders.map((order) => (
+              <TableRow 
+                key={order.id}
+                className={cn(
+                  selectedIds.has(order.id) && "bg-accent/50 dark:bg-accent/20 hover:bg-accent/70 dark:hover:bg-accent/30"
+                )}
+              >
+                {/* Checkbox Cell */}
+                <TableCell className="text-center">
+                  <Checkbox
+                    checked={selectedIds.has(order.id)}
+                    onCheckedChange={(checked) => handleSelectRow(order.id, !!checked)}
+                    disabled={!canWrite}
+                  />
+                </TableCell>
+                <TableCell className="font-medium text-xs text-muted-foreground">
+                  {order.id.slice(0, 8)}
+                </TableCell>
+                <TableCell className="font-medium">
+                  {order.clientes?.nome || t('no_data_found')}
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                </TableCell>
+                <TableCell className="text-right font-semibold">
+                  {formatCurrency(order.valor_total)}
+                </TableCell>
+                <TableCell className="text-center"> {/* Adicionando text-center ao conteúdo */}
+                  {getStatusBadge(order.status)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <OrderActions order={order} onEditStatus={handleEditStatus} canWrite={canWrite} />
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
