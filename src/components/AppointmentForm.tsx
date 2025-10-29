@@ -43,7 +43,7 @@ import { supabase } from "@/integrations/supabase/client"; // Importando supabas
 const statusOptions: Appointment['status'][] = ['pendente', 'confirmado', 'cancelado', 'concluido'];
 
 const itemSchema = z.object({
-  produto_id: z.string().uuid({ message: "Selecione um item válido." }),
+  produto_id: z.string().uuid({ message: "Selecione um item válido." }).min(1, { message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
   preco_unitario: z.coerce.number().min(0, { message: "Preço deve ser positivo." }),
 });
@@ -51,10 +51,10 @@ const itemSchema = z.object({
 const baseFormSchema = z.object({
   cliente_id: z.string().uuid({
     message: "Selecione um cliente válido.",
-  }).min(1, { message: "O cliente é obrigatório." }), // Adicionado min(1)
+  }).min(1, { message: "O cliente é obrigatório." }),
   responsavel_id: z.string().uuid({
     message: "Selecione um responsável válido.",
-  }).min(1, { message: "O responsável é obrigatório." }), // Adicionado min(1)
+  }).min(1, { message: "O responsável é obrigatório." }),
   date: z.date({
     required_error: "A data do agendamento é obrigatória.",
   }),
@@ -64,7 +64,8 @@ const baseFormSchema = z.object({
   status: z.enum(statusOptions, {
     required_error: "O status é obrigatório.",
   }).optional(),
-  items: z.array(itemSchema).min(1, { message: "O agendamento deve ter pelo menos um serviço/produto." }),
+  // Items é opcional no base, mas será forçado na criação
+  items: z.array(itemSchema).optional(),
   
   empresa_id: z.string().uuid({
     message: "Selecione uma empresa válida.",
@@ -83,7 +84,7 @@ interface ItemToCreate {
 interface AppointmentFormProps {
   onSubmit: (values: { cliente_id: string; responsavel_id: string; data_hora: Date; items: ItemToCreate[]; status?: Appointment['status']; empresa_id?: string; promocao_id?: string | null }) => void;
   isSubmitting: boolean;
-  defaultValues?: Partial<AppointmentFormValues & { items: ItemToCreate }>;
+  defaultValues?: Partial<AppointmentFormValues & { items: ItemToCreate[] }>;
   isEditing?: boolean;
   canEditStatus?: boolean; // NOVA PROP
 }
@@ -100,16 +101,28 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   const isSuperAdmin = profile?.is_super_admin;
   const isCheckingPermissions = isLoadingProfile || (isSuperAdmin && isLoadingCompanies);
 
-  const formSchema = isSuperAdmin && !isEditing
-    ? baseFormSchema.extend({
+  // Ajusta o schema dinamicamente: 
+  let finalFormSchema = baseFormSchema;
+  
+  if (!isEditing) {
+    // Na criação, items é obrigatório
+    finalFormSchema = finalFormSchema.extend({
+      items: z.array(itemSchema).min(1, { message: "O agendamento deve ter pelo menos um serviço/produto." }),
+    });
+    
+    // Na criação, Super Admin deve selecionar a empresa
+    if (isSuperAdmin) {
+      finalFormSchema = finalFormSchema.extend({
         empresa_id: z.string().uuid({
           message: t("select_valid_company"),
         }).min(1, { message: t("company_required_super_admin") }),
-      })
-    : baseFormSchema;
+      });
+    }
+  }
+
 
   const form = useForm<AppointmentFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(finalFormSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
       responsavel_id: defaultValues?.responsavel_id || "",
@@ -154,6 +167,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   const isLoadingItems = isLoadingServices || isLoadingProducts;
 
   useEffect(() => {
+    // Sincroniza defaultValues na edição, se necessário
     if (isEditing && defaultValues) {
       if (defaultValues.items && defaultValues.items.length > 0 && defaultValues.empresa_id) {
         form.reset({
@@ -180,7 +194,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       const fetchInitialPromotion = async () => {
         const { data: promoData } = await supabase
           .from('promocoes')
-          .select('*')
+          .select('id, nome, desconto_percentual, data_inicio, data_fim, is_active')
           .eq('id', defaultValues.promocao_id)
           .single();
         if (promoData) {
@@ -209,7 +223,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
         
-        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
+        // Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         
         return false;
@@ -253,21 +267,24 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
     
     const empresa_id = isSuperAdmin && values.empresa_id ? values.empresa_id : undefined;
     
-    // CORREÇÃO CRÍTICA: Garante que promocao_id seja NULL se for string vazia
+    // Garante que promocao_id seja NULL se for string vazia
     const final_promocao_id = values.promocao_id === "" ? null : values.promocao_id;
+
+    // Se estiver editando, não enviamos o array de items, apenas os dados principais
+    const itemsPayload = isEditing ? [] : values.items!.map(item => ({
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      preco_unitario: item.preco_unitario,
+    }));
 
     onSubmit({
       cliente_id: values.cliente_id,
       responsavel_id: values.responsavel_id,
       data_hora: data_hora,
-      items: values.items.map(item => ({
-        produto_id: item.produto_id,
-        quantidade: item.quantidade,
-        preco_unitario: item.preco_unitario,
-      })),
+      items: itemsPayload, // Vazio na edição, preenchido na criação
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: isPromotionValid ? final_promocao_id : null, // Só aplica se for válido
+      promocao_id: isPromotionValid ? final_promocao_id : null,
     });
   };
   
@@ -535,7 +552,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('nav_products_services')}</CardTitle>
-            {/* REMOVIDO O BOTÃO DAQUI */}
           </CardHeader>
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
