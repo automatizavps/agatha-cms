@@ -228,6 +228,17 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
         <Table>
           <TableHeader>
             <TableRow>
+              {isSuperAdmin && (
+                <SortableHeader 
+                  sortKey="empresa" 
+                  currentSortKey={sortKey} 
+                  currentSortDirection={sortDirection} 
+                  onSort={handleSort}
+                  className="hidden md:table-cell"
+                >
+                  {t('user_table_header_company')}
+                </SortableHeader>
+              )}
               <SortableHeader 
                 sortKey="tipo_entidade" 
                 currentSortKey={sortKey} 
@@ -262,23 +273,20 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
               >
                 {t('commission_value', { defaultValue: 'Valor' })}
               </SortableHeader>
-              {isSuperAdmin && (
-                <SortableHeader 
-                  sortKey="empresa" 
-                  currentSortKey={sortKey} 
-                  currentSortDirection={sortDirection} 
-                  onSort={handleSort}
-                  className="hidden md:table-cell"
-                >
-                  {t('user_table_header_company')}
-                </SortableHeader>
-              )}
               <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedRules.map((rule) => (
               <TableRow key={rule.id}>
+                {isSuperAdmin && (
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3" />
+                      {rule.empresas?.nome || 'N/A'}
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell className="font-medium">
                   {getEntityTypeBadge(rule.tipo_entidade)}
                 </TableCell>
@@ -292,14 +300,6 @@ const CommissionRuleTable: React.FC<CommissionRuleTableProps> = ({ rules, canWri
                 <TableCell className="text-right font-semibold text-primary">
                   {formatValue(rule)}
                 </TableCell>
-                {isSuperAdmin && (
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Building className="h-3 w-3" />
-                      {rule.empresas?.nome || 'N/A'}
-                    </div>
-                  </TableCell>
-                )}
                 <TableCell className="text-right">
                   <RuleActions rule={rule} onEdit={handleEdit} canWrite={canWrite} />
                 </TableCell>
