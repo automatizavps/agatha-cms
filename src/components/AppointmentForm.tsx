@@ -46,7 +46,6 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
   preco_unitario: z.coerce.number().min(0, { message: "Preço deve ser positivo." }),
-  item_type: z.enum(['produto', 'servico']), // NOVO: Tipo de item
 });
 
 const baseFormSchema = z.object({
@@ -116,11 +115,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       date: defaultValues?.date,
       time: defaultValues?.time || "09:00",
       status: defaultValues?.status || 'pendente',
-      items: defaultValues?.items?.map(item => ({
-        ...item,
-        // Na edição, precisamos inferir o tipo do item.
-        item_type: 'servico', // Assumindo 'servico' como padrão para agendamentos se não houver dados
-      })) || [],
+      items: defaultValues?.items || [],
       empresa_id: defaultValues?.empresa_id || "",
       promocao_id: defaultValues?.promocao_id || null,
     },
@@ -160,29 +155,19 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   useEffect(() => {
     if (isEditing && defaultValues) {
       if (defaultValues.items && defaultValues.items.length > 0 && defaultValues.empresa_id) {
-        
-        // Mapeia itens para incluir o item_type
-        const itemsWithTypes = defaultValues.items.map(item => {
-          const productDetail = allItems.find(p => p.id === item.produto_id);
-          return {
-            ...item,
-            item_type: productDetail?.tipo || 'servico', // Usa o tipo real ou 'servico' como fallback
-          };
-        });
-        
         form.reset({
           cliente_id: defaultValues.cliente_id || "",
           responsavel_id: defaultValues.responsavel_id || "",
           date: defaultValues.date,
-          time: defaultValues.time || "09:00",
+          time: defaultValues.time || "HH:mm",
           status: defaultValues.status || 'pendente',
-          items: itemsWithTypes,
+          items: defaultValues.items,
           empresa_id: defaultValues.empresa_id,
           promocao_id: defaultValues.promocao_id || null,
         });
       }
     }
-  }, [defaultValues, isEditing, form, allItems]);
+  }, [defaultValues, isEditing, form]);
 
   const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
   const { data: promotionRules, isLoading: isLoadingPromotionRules } = usePromotionRules(activePromotion?.id || '');
@@ -223,7 +208,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
         
-        // Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
+        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         
         return false;
@@ -243,8 +228,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
   }, [form.watch("items"), activePromotion, isPromotionValid]);
   
   const handleAddItem = () => {
-    // Adiciona um novo item com o tipo padrão 'servico' para agendamentos
-    append({ produto_id: "", quantidade: 1, preco_unitario: 0, item_type: 'servico' });
+    append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
   };
   
   const handleProductChange = (index: number, productId: string) => {
@@ -253,13 +237,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
     }
-  };
-  
-  const handleItemTypeChange = (index: number, type: 'produto' | 'servico') => {
-    // Atualiza o tipo e reseta o produto_id e preço
-    form.setValue(`items.${index}.item_type`, type);
-    form.setValue(`items.${index}.produto_id`, "");
-    form.setValue(`items.${index}.preco_unitario`, 0);
   };
   
   const getItemName = (productId: string) => {
@@ -514,33 +491,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
           />
         </div>
         
-        {isEditing && (
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('order_table_header_status')}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("select_status")} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status} value={status} className="capitalize">
-                        {t(status)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">{t('nav_products_services')}</CardTitle>
@@ -549,44 +499,10 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {fields.map((field, index) => {
-              // Observa o tipo de item para filtrar a lista de produtos/serviços
-              const currentItemType = form.watch(`items.${index}.item_type`);
-              
-              const filteredItemsByType = allItems.filter(item => item.tipo === currentItemType);
-              
-              return (
+            {fields.map((field, index) => (
               <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
                 <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
                 
-                {/* NOVO: Seletor de Tipo de Item */}
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.item_type`}
-                  render={({ field: typeField }) => (
-                    <FormItem>
-                      <FormLabel>{t('item_type', { defaultValue: 'Tipo de Item' })}</FormLabel>
-                      <Select 
-                        onValueChange={(val) => handleItemTypeChange(index, val as 'produto' | 'servico')} 
-                        value={typeField.value} 
-                        disabled={isSubmitting || isEditing || !isCompanySelected}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("select_item_type", { defaultValue: 'Selecione o tipo' })} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="produto">{t('nav_products')}</SelectItem>
-                          <SelectItem value="servico">{t('nav_services')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Seletor de Item Específico */}
                 <FormField
                   control={form.control}
                   name={`items.${index}.produto_id`}
@@ -605,17 +521,17 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                         <Select 
                           onValueChange={(val) => handleProductChange(index, val)} 
                           value={itemField.value} 
-                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected || !currentItemType}
+                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={filteredItemsByType.length === 0 ? t("no_items_of_type", { type: t(currentItemType) }) : t("select_item")} />
+                              <SelectValue placeholder={allItems.length === 0 ? t("loading_items") : t("select_item")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {filteredItemsByType.map((item) => (
+                            {allItems.map((item) => (
                               <SelectItem key={item.id} value={item.id}>
-                                {item.nome}
+                                {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -683,7 +599,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
                   </Button>
                 )}
               </div>
-            )}}
+            ))}
             
             {fields.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
@@ -730,6 +646,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit, isSubmittin
         <div className="flex justify-between items-center pt-2">
           <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
           <span className="text-2xl font-bold text-primary flex items-center gap-1">
+            {/* REMOVIDO O ÍCONE DollarSign */}
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
             {isPromotionValid && activePromotion && activePromotion.desconto_percentual > 0 && (
               <span className="text-base text-green-500 ml-2">

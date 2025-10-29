@@ -39,7 +39,6 @@ const itemSchema = z.object({
   produto_id: z.string().uuid({ message: "Selecione um item válido." }),
   quantidade: z.coerce.number().int().min(1, { message: "Mínimo 1." }),
   preco_unitario: z.coerce.number().min(0.01, { message: "Preço deve ser positivo." }),
-  item_type: z.enum(['produto', 'servico']),
 });
 
 const baseFormSchema = z.object({
@@ -71,6 +70,8 @@ interface OrderFormProps {
   isEditing?: boolean;
 }
 
+const NONE_VALUE = "__NONE__";
+
 const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultValues, isEditing = false }) => {
   const { data: profile, isLoading: isLoadingProfile } = useCurrentUserProfile();
   const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
@@ -94,10 +95,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
     resolver: zodResolver(formSchema),
     defaultValues: {
       cliente_id: defaultValues?.cliente_id || "",
-      items: defaultValues?.items?.map(item => ({
-        ...item,
-        item_type: 'produto', 
-      })) || [],
+      items: defaultValues?.items || [],
       status: defaultValues?.status || 'pendente_entrega',
       empresa_id: defaultValues?.empresa_id || "",
       promocao_id: defaultValues?.promocao_id || null,
@@ -132,26 +130,20 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
 
   useEffect(() => {
     if (isEditing && defaultValues?.items && defaultValues.items.length > 0 && fields.length === 0) {
-      const itemsWithTypes = defaultValues.items.map(item => {
-        const productDetail = allItems.find(p => p.id === item.produto_id);
-        return {
-          ...item,
-          item_type: productDetail?.tipo || 'produto',
-        };
-      });
-      
       form.reset({
         ...form.getValues(),
-        items: itemsWithTypes,
+        items: defaultValues.items,
       });
     }
-  }, [defaultValues?.items, fields.length, form, isEditing, allItems]);
+  }, [defaultValues?.items, fields.length, form, isEditing]);
 
   const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
   const { data: promotionRules, isLoading: isLoadingPromotionRules } = usePromotionRules(activePromotion?.id || '');
 
+  // Sincroniza a promoção inicial na edição
   useEffect(() => {
     if (isEditing && defaultValues?.promocao_id && !activePromotion) {
+      // Busca a promoção pelo ID para preencher o activePromotion
       const fetchInitialPromotion = async () => {
         const { data: promoData } = await supabase
           .from('promocoes')
@@ -164,18 +156,20 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       };
       fetchInitialPromotion();
     } else if (!isEditing) {
-      setActivePromotion(null);
+      setActivePromotion(null); // Limpa a promoção ao criar um novo
     }
   }, [isEditing, defaultValues?.promocao_id]);
 
 
+  // Validação da promoção
   const isPromotionValid = useMemo(() => {
-    if (!activePromotion || !promotionRules || promotionRules.length === 0) return true;
-    if (isLoadingPromotionRules) return true;
+    if (!activePromotion || !promotionRules || promotionRules.length === 0) return true; // Sem promoção ou sem regras = válido
+    if (isLoadingPromotionRules) return true; // Ainda carregando, assume válido temporariamente
 
     const currentItems = form.getValues("items");
-    if (currentItems.length === 0) return false;
+    if (currentItems.length === 0) return false; // Não há itens para aplicar a promoção
 
+    // Verifica se pelo menos um item do pedido se encaixa em alguma regra da promoção
     return currentItems.some(orderItem => {
       const productDetails = allItems.find(p => p.id === orderItem.produto_id);
       if (!productDetails) return false;
@@ -184,6 +178,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         if (rule.tipo_regra === 'produto' && rule.entidade_id === productDetails.id) return true;
         if (rule.tipo_regra === 'servico' && rule.entidade_id === productDetails.id) return true;
         
+        // CORREÇÃO: Verifica se o ID da categoria do produto/serviço corresponde ao ID da entidade da regra
         if (rule.tipo_regra === 'categoria' && productDetails.categoria && rule.entidade_id === productDetails.categoria) return true;
         
         return false;
@@ -203,7 +198,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
   }, [form.watch("items"), activePromotion, isPromotionValid]);
   
   const handleAddItem = () => {
-    append({ produto_id: "", quantidade: 1, preco_unitario: 0, item_type: 'produto' });
+    append({ produto_id: "", quantidade: 1, preco_unitario: 0 });
   };
   
   const handleProductChange = (index: number, productId: string) => {
@@ -212,12 +207,6 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       form.setValue(`items.${index}.preco_unitario`, selectedItem.preco);
       form.setValue(`items.${index}.produto_id`, productId);
     }
-  };
-  
-  const handleItemTypeChange = (index: number, type: 'produto' | 'servico') => {
-    form.setValue(`items.${index}.item_type`, type);
-    form.setValue(`items.${index}.produto_id`, "");
-    form.setValue(`items.${index}.preco_unitario`, 0);
   };
   
   const getItemName = (productId: string) => {
@@ -238,7 +227,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
       })),
       status: values.status,
       empresa_id: empresa_id,
-      promocao_id: isPromotionValid ? activePromotion?.id || null : null,
+      promocao_id: isPromotionValid ? activePromotion?.id || null : null, // Só aplica se for válido
     });
   };
   
@@ -377,44 +366,10 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {fields.map((field, index) => {
-              // Observa o tipo de item para filtrar a lista de produtos/serviços
-              const currentItemType = form.watch(`items.${index}.item_type`);
-              
-              const filteredItemsByType = allItems.filter(item => item.tipo === currentItemType);
-              
-              return (
+            {fields.map((field, index) => (
               <div key={field.id} className="border p-3 rounded-md space-y-3 relative">
                 <h4 className="text-sm font-medium text-muted-foreground">{t('item')} #{index + 1}</h4>
                 
-                {/* NOVO: Seletor de Tipo de Item */}
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.item_type`}
-                  render={({ field: typeField }) => (
-                    <FormItem>
-                      <FormLabel>{t('item_type', { defaultValue: 'Tipo de Item' })}</FormLabel>
-                      <Select 
-                        onValueChange={(val) => handleItemTypeChange(index, val as 'produto' | 'servico')} 
-                        value={typeField.value} 
-                        disabled={isSubmitting || isEditing || !isCompanySelected}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("select_item_type", { defaultValue: 'Selecione o tipo' })} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="produto">{t('nav_products')}</SelectItem>
-                          <SelectItem value="servico">{t('nav_services')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Seletor de Item Específico */}
                 <FormField
                   control={form.control}
                   name={`items.${index}.produto_id`}
@@ -433,17 +388,17 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                         <Select 
                           onValueChange={(val) => handleProductChange(index, val)} 
                           value={itemField.value} 
-                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected || !currentItemType}
+                          disabled={isLoadingItems || isSubmitting || isEditing || !isCompanySelected}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={filteredItemsByType.length === 0 ? t("no_items_of_type", { type: t(currentItemType) }) : t("select_item")} />
+                              <SelectValue placeholder={allItems.length === 0 ? t("loading_items") : t("select_item")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {filteredItemsByType.map((item) => (
+                            {allItems.map((item) => (
                               <SelectItem key={item.id} value={item.id}>
-                                {item.nome}
+                                {item.nome} ({item.tipo === 'produto' ? t('nav_products') : t('nav_services')})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -511,7 +466,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
                   </Button>
                 )}
               </div>
-            )}}
+            ))}
             
             {fields.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
@@ -558,6 +513,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, isSubmitting, defaultVa
         <div className="flex justify-between items-center pt-2">
           <span className="text-lg font-semibold">{t('order_table_header_total')}:</span>
           <span className="text-2xl font-bold text-primary flex items-center gap-1">
+            {/* REMOVIDO O ÍCONE DollarSign */}
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculateTotal)}
             {isPromotionValid && activePromotion && activePromotion.desconto_percentual > 0 && (
               <span className="text-base text-green-500 ml-2">
